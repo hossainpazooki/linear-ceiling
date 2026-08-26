@@ -1,0 +1,23 @@
+# E0: W_K vs W_V canonical coordinates, weights only, no forward pass.
+seed = 0
+
+# Set by ledger entry 0003 BEFORE the first real matrix is loaded. While this is "", the E0
+# CLI refuses to run. Allowed values: "A" | "B" | "C" (see ledger entry 0003).
+operationalization = "C"
+
+[models]
+ladder = ["Qwen/Qwen3-0.6B", "Qwen/Qwen3-1.7B", "Qwen/Qwen3-4B"]
+optional = ["Qwen/Qwen3-8B"]
+
+[e0]
+results_dir = "results/e0"
+reg_sweep = [1e-3, 1e-2, 1e-1]   # C only: ridge added to each covariance, as a fraction of its mean eigenvalue
+heldout_frac = 0.2               # reserved; not used in W1
+
+# G1 decision-rule thresholds. Absent until entry 0003 writes them; the CLI refuses to run
+# without every key its operationalization needs.
+[e0.rule]
+delta_separate = 0.05
+delta_same = 0.02
+layer_fraction = 0.67
+pair_scope = "all"
