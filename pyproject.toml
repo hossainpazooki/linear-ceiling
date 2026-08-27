@@ -1,0 +1,25 @@
+[project]
+name = "linear-ceiling"
+version = "0.0.1"
+description = "The Linear Ceiling: pre-fit screen, seal protocol, and ledger for cross-model KV cache transfer"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy>=1.26",
+    "torch>=2.4",
+    "safetensors>=0.4",
+    "huggingface_hub>=0.23",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

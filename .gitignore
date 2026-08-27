@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+# results tree: nothing tracked except the placeholders. Numbers reach the ledger only via
+# the fail-closed summarizer, never by committing artifacts.
+results/*
+!results/.gitkeep
+# results/mapper is one of the seal's local artifact roots (config/seal.toml) and must exist
+# in a fresh clone or find_mapper_artifacts fails closed on "root does not exist" before it
+# can ever detect a real conflict. Un-ignore the directory itself (results/* would otherwise
+# prune it, and git cannot see inside an excluded directory to apply a nested negation), then
+# re-ignore its own contents one level down so real per-pair r2.json reports stay ignored and
+# only the tracked placeholder ships.
+!results/mapper
+results/mapper/*
+!results/mapper/.gitkeep
+# upstream-style artifact trees, if an upstream script is ever run with this repo as CWD.
+# mappers is also a seal local artifact root (config/seal.toml); same reasoning as
+# results/mapper above -- ignore contents one level down, not the directory itself, so the
+# placeholder ships but real fitted-mapper artifacts never do.
+mappers/*
+!mappers/.gitkeep
+data/
