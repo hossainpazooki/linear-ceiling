@@ -8,14 +8,14 @@ immutable — an amendment is a new entry, never an edit; status tags are `[VALI
 (ran, and survived an independent attempt to refute it), `[BASELINE]` (ran; numbers here),
 `[STRETCH]` (designed, not run), `[FUTURE]` (not designed), `[SUPERSEDED]`.
 
-**Nothing in this repository has run.** Every verdict below is `unresolved`.
+E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other verdict below is `unresolved`.
 
 ## Hypotheses (pre-registered; verdict column is the only cell that ever changes, and only via a numbered entry)
 
 | id | statement (H-S1–H-S4: verbatim from docs/2026-08-26-kv-handoff-screen-design.md §1, less the bold **H-Sn (…).** id prefix, dropped because the id is already this row's first column; H-E7a/H-E7b: verbatim from the "Ledger entry 0005 (register verbatim)" text in Appendix C of docs/2026-08-26-seed-w1.md, which does not appear in §1) | decided by | verdict |
 |---|---|---|---|
 | H-S1 | (identity holds on real models) For a read-out W (target's W_K, W_V), predicted fidelity Σρᵢ²cᵢ²/Σcᵢ² from regularized CCA of residual streams matches the fitted ridge mapper's **held-out** R² within a tolerance band stated in the ledger before E1 runs, on the 0.6B→1.7B pair. The identity is verified exactly on synthetic data; E1 is first real-model contact. | E1 (tolerance band: a numbered entry before E1 runs) | unresolved |
-| H-S2 | (screen discriminates) rowspace(W_K) and rowspace(W_V) occupy measurably different canonical coordinates, and the predicted R² ordering reproduces the measured K>V gap (Run 1 held-out: 0.76 vs 0.55; paper: ~0.2 at 14B→32B). Failure → G1 degrade. | E0 (first clause; rule in entry 0003), E1 (second clause) | unresolved |
+| H-S2 | (screen discriminates) rowspace(W_K) and rowspace(W_V) occupy measurably different canonical coordinates, and the predicted R² ordering reproduces the measured K>V gap (Run 1 held-out: 0.76 vs 0.55; paper: ~0.2 at 14B→32B). Failure → G1 degrade. | E0 (first clause; rule in entry 0003), E1 (second clause) | NOT CONFIRMED |
 | H-S3 | (chain reaches retention) Screen-predicted R² rank-correlates with floor-normalized retention **across pairs and k** — because held-out R² does (Run 2, within-pair: rank correlation +1 across k; in-sample rank-correlates −1), and the screen predicts held-out R². The source paper's r = −0.20 is quarantined explicitly as an in-sample artifact. Falsification mode: screen predicts fidelity but not retention → the contribution becomes the decomposition (symmetric predictable factor + receiver residual), stated in the abstract, not conceded to a reviewer. | E2 | unresolved |
 | H-S4 | (economics load-bearing, not decorative) Composition (H-C1/C2/C3 as already registered in the ledger) and the calibration curve (H-L1–L4) convert the screen from a correlation into a build policy: which pairs, which direction, how many calibration tokens, n−1 vs n(n−1) mappers. | E4, E5 | unresolved |
 | H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | unresolved |
@@ -151,3 +151,78 @@ is tuned after seeing results.
 
 Thresholds frozen in config/e0.toml at this commit. Seed 0. No weight had been read by this
 repository when this entry was written.
+
+### 0004 — 2026-08-26 — E0 verdict `[VALIDATED]`
+
+Run: `.venv/Scripts/python.exe -m linear_ceiling.e0 --config config/e0.toml`, operationalization
+C, seed 0, package 0.0.1, upstream f3594458f73d70a15f195c863d52ea6592f61578, config/e0.toml
+sha256 9814b08d610ce29839cb603b542ffc9419d6e91a949ac290577ff3c347772cd3. Models: 0.6B, 1.7B, 4B
+(all six required ordered pairs; no 8B units present). Entry 0003 (the rule) and config/e0.toml
+were committed together as `2361c72` at 2026-08-26 17:33:05-04:00; the earliest required-unit
+result on disk (qwen3-0.6b-to-1.7b.json) carries a write timestamp of 17:50:05, seventeen
+minutes later, and the latest required unit (qwen3-4b-to-1.7b.json / verdict.json) is timestamped
+18:17:09 -- confirming entry 0003's own claim that no weight had been read when the rule was
+frozen. Wall-clock across the six required units: ~27 minutes (17:50:05-18:17:09), including
+per-pair weight downloads.
+
+| pair | tokens | median delta (frac K>V) per lambda 0.001 / 0.01 / 0.1 | verdict |
+|---|---|---|---|
+| qwen3-0.6b-to-1.7b | 151936 | +0.0193 (1.00) / +0.0192 (1.00) / +0.0175 (1.00) | SAME |
+| qwen3-0.6b-to-4b | 151936 | +0.0109 (0.97) / +0.0108 (0.97) / +0.0099 (0.97) | SAME |
+| qwen3-1.7b-to-0.6b | 151936 | +0.0062 (0.79) / +0.0062 (0.79) / +0.0065 (0.86) | SAME |
+| qwen3-1.7b-to-4b | 151936 | +0.0043 (0.72) / +0.0044 (0.72) / +0.0046 (0.81) | SAME |
+| qwen3-4b-to-0.6b | 151936 | +0.0074 (0.82) / +0.0074 (0.82) / +0.0076 (0.93) | SAME |
+| qwen3-4b-to-1.7b | 151936 | +0.0108 (0.93) / +0.0107 (0.93) / +0.0103 (0.93) | SAME |
+
+ladder verdict: **SAME** (required units: qwen3-0.6b-to-1.7b, qwen3-0.6b-to-4b,
+qwen3-1.7b-to-0.6b, qwen3-1.7b-to-4b, qwen3-4b-to-0.6b, qwen3-4b-to-1.7b)
+
+verdict.json sha256: 59fd962f92788eb4323594226e053ce121fe4ba17a1e821af0f9a43409e0c3bf
+
+**Verdict against the rule as written in entry 0003: SAME.** Applying the per-pair rule (SAME
+iff |med| < delta_same = 0.02 at every lambda in the sweep) to each row above: every pair
+satisfies it at all three lambdas, so all six per-pair verdicts are SAME, and the ladder rule
+("SAME if any pair is SAME") makes the ladder verdict SAME. No pair reaches the SEPARATE bar
+(med >= 0.05 and frac >= 0.67 at every lambda); none is UNRESOLVED or sign-flipped. Both halves
+of the result: the sign is consistent K>V on every pair at every lambda (all medians positive,
+frac_positive 0.72-1.00, matching Run 1's ordering from entry 0002) -- but the magnitude sits
+well under the SAME bar rather than on a boundary. qwen3-0.6b-to-1.7b (+0.0193) is the only pair
+close to the 0.02 line, at 96.5% of it; the other five range from 54.5% of the threshold
+(+0.0108/+0.0109) down to 21.5% of it (+0.0043). This is a comfortable SAME carried by every
+pair, not a close vote.
+
+**Independent checks (cited, not re-derived here):**
+- *Determinism.* A first invocation of `linear_ceiling.e0` was killed mid-run by a tool timeout
+  after completing qwen3-0.6b-to-1.7b; the later full run recomputed that pair byte-identically
+  to full float precision (medians 0.019341651670144205 / 0.019157713844428076 /
+  0.017489865798854545, frac_positive 1.0, verdict SAME). Two independent invocations, identical
+  output.
+- *Independent recomputation of one cell*, on a path using neither `e0_vocab.analyze_pair` nor
+  `screen.py`: raw safetensors read directly, own RMS normalisation, chunked float64 normal
+  equations, pooled R^2 per definition A5. For qwen3-0.6b-to-1.7b, target layer 0, K read-out:
+  independent pooled OLS R^2 (lambda=0) = 0.661176, against the artifact's screen-predicted
+  r2_K = 0.660187 at lambda=1e-3 (diff -0.000989), 0.651449 at lambda=1e-2 (diff -0.009727),
+  0.576301 at lambda=1e-1 (diff -0.084875): the gap is ~1e-3 at the smallest lambda and grows
+  monotonically with lambda in the direction regularization predicts. This verifies the screen's
+  computation against in-sample OLS on the same vocabulary data on real 151,936x1024 matrices,
+  not only synthetic data. It is NOT H-S1, which requires matching a fitted mapper's held-out R^2
+  on residual streams -- that is E1's job in W2.
+- `linear_ceiling.summarize_e0` reruns clean (exit 0) against the committed artifacts,
+  reproducing this table and the verdict.json sha256 above.
+
+**G1 consequence:** SAME -> the screen is killed at G1 per entry 0003's rule; the Variant 3
+degrade path activates. This is the rule's dictated consequence, not a recommendation.
+
+**Known limits (entry 0003), bearing on this verdict:** the layer-0 embedding stands in for
+every layer's residual stream, and a uniform token prior is used, in this operationalization. A
+SAME verdict on this vocabulary proxy is a claim about rowspace(W_K) vs rowspace(W_V) as seen
+through shared-vocabulary embeddings paired at layer 0 -- it is not a SAME verdict on residual
+streams, and does not by itself settle H-S1 or H-S2's second clause, both of which remain E1's
+job.
+
+H-S2's verdict cell is set to `NOT CONFIRMED` by this entry (first clause; decided by E0 per
+entry 0003's assignment). H-S1, H-S3, H-S4, H-E7a, H-E7b are unchanged.
+
+Tag: `[VALIDATED]` -- determinism reproduced across two independent invocations, the independent
+recomputation agrees with the screen's own computation to ~1e-3 at the smallest lambda, and
+`summarize_e0` (fail-closed) ran clean against the committed artifacts.

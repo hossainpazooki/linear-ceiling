@@ -1,5 +1,5 @@
 from linear_ceiling import REPO_ROOT
-from linear_ceiling.ledger_check import REQUIRED_IDS, check, parse_ledger
+from linear_ceiling.ledger_check import REQUIRED_IDS, VERDICTS, check, parse_ledger
 
 GOOD = """# Ledger
 | id | statement | decided by | verdict |
@@ -53,8 +53,13 @@ def test_required_ids_covers_all_six_registered_hypotheses():
 
 
 def test_repo_ledger_is_clean():
+    # Durable invariants only: the lint passes, the registered entries are all present,
+    # and every verdict cell holds a value from the lint's own allowed vocabulary. This
+    # must keep holding as E1 and later experiments resolve more hypotheses — it does not
+    # pin today's specific verdicts (e.g. H-S2 == "NOT CONFIRMED"), which would just bake
+    # in a moment and break again on the next legitimate ledger entry.
     text = (REPO_ROOT / "ledger" / "ledger.md").read_text(encoding="utf-8")
     assert check(text) == []
     d = parse_ledger(text)
-    assert {1, 2, 5} <= set(d["entries"])
-    assert all(v == "unresolved" for v in d["hypotheses"].values())   # W1: nothing has run
+    assert {1, 2, 3, 4, 5} <= set(d["entries"])
+    assert all(v in VERDICTS for v in d["hypotheses"].values())
