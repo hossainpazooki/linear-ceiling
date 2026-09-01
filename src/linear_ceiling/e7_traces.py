@@ -44,6 +44,11 @@ class Msg:
     tool_names: tuple[str, ...] = ()
     model: str | None = None       # per-step serving model, None when the trace has none
     timestamp: float | None = None # epoch seconds, None when the trace has none
+    # Provider-reported prompt tokens for the request this message completed, when the trace
+    # carries them (tau2-bench does). This is GROUND TRUTH for token counting -- independent of
+    # both the exact encoder and the calibrated divisors of entry 0009 -- so it is the only
+    # thing that can validate the estimator rather than compare it to another estimator.
+    reported_tokens: int | None = None
 
 
 @dataclass(frozen=True)
