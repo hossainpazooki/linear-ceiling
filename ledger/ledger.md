@@ -1169,3 +1169,52 @@ parts:
   alone (0007, 0015, 0018) and Lane B never had a hypothesis.
 
 prior-entries-sha256: 50d9bd4ffde65814712ff8b3a532f0e4f611e3e6220edeb53b419872f7f68209
+
+### 0022 — 2026-09-01 — Entry 0009's SWE-bench calibration precondition was not met by 0013/0015/0018; the verdicts stand by bound and by measurement
+
+**The breach, recorded.** Entry 0009 registered the per-content-type divisors as descriptive of
+tau-bench and said, verbatim: "the divisors are descriptive of tau-bench and are NOT claimed to
+transfer to another suite. **SWE-bench requires its own calibration before its numbers ship.**"
+That calibration was never done, and SWE-bench numbers shipped anyway: the headroom figures of
+0013 (since superseded) and 0018, and the H-E7a ratio of 0015 (superseded) and 0018, all count
+SWE-bench text with tau-bench-calibrated divisors. tau2-bench is not in the same position: its
+counts were validated against provider-reported usage (entry 0012's ground-truth check), which
+is a stronger per-suite check than calibration. SWE-bench had neither. Event counts, coverage,
+and the taxonomy are untouched (they count events, not tokens).
+
+**Why the verdicts stand — the bound.** H-E7a is a RATIO of token counts made by the same
+counter over overlapping content: a uniform miscount cancels exactly, and only the differential
+per-content-type bias can move it. Entry 0009 measured that bias at at most ~28% for any single
+content type; numerator and denominator share their content mix closely enough that the ratio
+cannot plausibly move by the ~50x needed to reach the 10% cutoff.
+
+**The measured sensitivity (recon, stated as recon — computed by this entry's append script at
+append time, not retyped; the calibrated side agrees with the summarizer-verified record).**
+Recounting the entire composio family with exact `o200k_base` in place of the calibrated
+divisors — exact is the TRUE billed encoder for the 64 of 68 switches whose
+receiver is o1-mini, and a labelled proxy for the 4 Claude-receiver switches and for
+the Claude-thread denominator text:
+
+| figure | calibrated (the 0018 record) | o200k exact | exact / calibrated |
+|---|---|---|---|
+| composio input tokens (H-E7a denominator) | 244,739,122 | 255,690,850 | 1.0447 |
+| recoverable upper bound (H-E7a numerator) | 496,798 | 565,025 | 1.1373 |
+| **H-E7a ratio, measurable subset** | **0.2030%** | **0.2210%** | 1.0886 |
+| receiver prefill at the switch, median tokens | 7,492 | 8,620 | — |
+
+The calibrated counter undercounts the o1-mini receiver prompts (code-heavy re-rendered
+transcripts) by roughly the numerator ratio above; the miscalibration therefore worked AGAINST
+the verdict, and correcting it moves the ratio from 0.203% to 0.221% — still
+roughly 45x under the cutoff. The upper-bound fraction of paid is unchanged
+(~88.9%; it is ~0.9 x overlap and
+insensitive to the counter). Both remain visible-messages-only LOWER bounds (0012).
+
+**Disposition.** The verdicts of 0015/0018 (H-E7a `NOT CONFIRMED`) stand under both the bound
+and the measurement. 0018's calibrated figures remain the record — they are what the
+registered counter produces — with this entry as their registered sensitivity. The proper
+repair is a successor to 0009 in the MLSys cycle: per-suite calibration or exact-where-the-
+true-encoder-is-public as a config change (bundled with the pending gpt-4.1 exactness item),
+after which one replay supersedes the figures once, not piecemeal. Until then, no further
+SWE-bench token figure ships without citing this entry's sensitivity.
+
+prior-entries-sha256: e275cb5a4b45dc3a2bb3dcd69b1a9802347c39248a46ab0368799d36e2ea2d63
