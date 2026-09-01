@@ -26,6 +26,7 @@ recomputed by `ledger_check` in CI.
 | H-S4 | (economics load-bearing, not decorative) Composition (H-C1/C2/C3 as already registered in the ledger) and the calibration curve (H-L1–L4) convert the screen from a correlation into a build policy: which pairs, which direction, how many calibration tokens, n−1 vs n(n−1) mappers. | E4, E5 | SHELVED |
 | H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | unresolved |
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | unresolved |
+| H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | unresolved |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -454,3 +455,92 @@ Until that entry exists, the E7 instrument may be run and its output inspected, 
 figure it produces may enter a ledger entry, a paper, or a claim.
 
 prior-entries-sha256: 95977ca0bf9e413c493608cbb7579856b0da15a1a491f6ec505dc82a781654ab
+
+### 0009 — 2026-09-01 — Tokenizer registered (measured, not assumed); E8 transfer leg registered; 0006's half-registered clause resolved
+
+Operator rulings of 2026-09-01: approximate the tokenizer; keep LCFM trace-only and add the
+Qwen transfer leg to the MLSys program, registered with its own hypothesis before anything
+runs. This entry executes both and closes entry 0008's open question.
+
+**(1) A defect found before any number shipped `[BASELINE]`.** tau-bench stores a tool call's
+`arguments` inconsistently BY AGENT: gpt-4o records a JSON string (4,438 calls), sonnet-35-new
+records a parsed dict (9,847 calls). The skeleton's character-based counter received the dict
+directly, so it counted its KEYS -- an undercount affecting only one agent. Fixed by
+normalizing dicts to compact JSON (`e7_traces.tool_arguments_text`), justified empirically:
+the sibling agent's own wire format in the same suite is compact
+(`{"user_id":"mia_li_3668"}`, 25 chars, byte-equal to `json.dumps(separators=(",",":"))`).
+Measured impact on estimated input tokens: **+1.5% for sonnet-35-new, 0.0% for gpt-4o, +1.0%
+overall.** Small in aggregate but ASYMMETRIC BY AGENT, which is the damaging shape -- it
+would have biased every cross-agent comparison in one direction. Regression tests pin both
+storage shapes to identical counts. Original bytes are unrecoverable from a parsed dict, so
+key order follows the trace and the compact-vs-spaced choice moves the count by ~1 char per
+key: a stated, unmeasured limitation.
+
+**(2) The token counter, registered with its bias MEASURED.** Entry 0008 left this open. A
+blanket chars/N estimator was the intended ruling; measurement showed it is unsafe, so the
+ruling is honored where approximation is actually necessary and dropped where it is not.
+Calibrated against `o200k_base` over the full corpus (34,444,409 chars / 9,250,735 tokens,
+2026-09-01, after the fix in (1)):
+
+| content type | chars/token | chars/4 error |
+|---|---|---|
+| tool_output (JSON-ish) | 2.890 | -27.8% |
+| tool_call_args (JSON) | 3.467 | -13.3% |
+| assistant (prose) | 4.005 | +0.1% |
+| user (prose) | 4.322 | +8.0% |
+| system (prompt) | 4.817 | +20.4% |
+| OVERALL | 3.723 | -6.9% |
+
+The bias is not uniform: chars-per-token spans 2.890 to 4.817, a 1.67x spread. A uniform
+multiplicative bias would cancel in both verdict-bearing quantities, since H-E7a and H-E7b are
+ratios; this one does not, and it is worst on tool output -- exactly the content that context
+compaction preferentially removes -- so a blanket chars/4 would push H-E7b's break-even in a
+systematic direction. Registered instead, in `config/e7.toml [e7.tokenizer]`:
+
+- **gpt-4o: `exact`** -- its public encoder `o200k_base` (pinned by name, via tiktoken). No
+  estimate at all for 660 of the 1,980 trajectories.
+- **sonnet-35-new and any future agent: `calibrated`** -- the per-content-type divisors above,
+  measured on the exact half of the same suite.
+- **Stated assumption, unverifiable offline:** that the target model's tokenizer has similar
+  chars-per-token to `o200k_base` on this content. Anthropic publishes no tokenizer, so this
+  cannot be checked without a network call to their counting endpoint. Every `calibrated`
+  number carries it, and the report records which strategy produced each agent's counts.
+- Divisors are config, not code; `load_e7_config` refuses a config with no measured divisors.
+- Determinism: tiktoken caches its BPE file on first use and is offline and deterministic
+  after that; the encoding is pinned by name, never "the default for model X".
+
+Residual risk, stated rather than resolved: the calibration set and the measured corpus are
+the same corpus, so the divisors are descriptive of tau-bench and are NOT claimed to transfer
+to another suite. SWE-bench requires its own calibration before its numbers ship.
+
+**(3) E8 registered -- transfer under the agent-trace distribution shift.** Entry 0006 named a
+"transfer-fidelity leg" only inside its numbers-freeze gate clause, with no registered output
+and no hypothesis: half-registered, which is worse than either. Resolved: the leg is IN, as
+experiment **E8** deciding new hypothesis **H-E8** (registered in the table above), and it
+belongs to the MLSys program only.
+
+- **Design.** Take the EXISTING fitted mapper for qwen3-0.6b-to-1.7b (upstream artifact, fit
+  on generic calibration text; no refit), and evaluate its held-out pooled R² (definition A5,
+  borrowed with provenance from the upstream at the pin) on KV states generated two ways
+  under one protocol: (a) generic calibration text, (b) agent-trace text drawn from the E7
+  corpus. The difference is the distribution-shift effect.
+- **Tolerance band, frozen here, before any dump is generated:** HOLDS if the absolute drop in
+  held-out pooled R² is <= 0.05; DEGRADES if the drop is >= 0.15; UNRESOLVED in between.
+  Reported for K and V read-outs separately; a single number is never reported alone.
+- **Scope limits that the paper must carry.** Qwen did not generate these traces, so the text
+  is off-policy for Qwen: E8 tests CONTENT distribution shift, never on-policy agent
+  behaviour. E8 is not a transfer at a real mid-trajectory switch point and must never be
+  written as one. Only one ordered pair has fitted mappers upstream, so E8 is a single-pair
+  result.
+- **The seal is not involved.** E8 makes no pre-fit claim -- it evaluates an already-fitted
+  mapper -- so no sealed prediction is written and nothing here may later be read as one
+  (the D2 post-fit exception of entry 0002 governs why this pair can never be sealed pre-fit).
+- **Known cost, not yet paid.** The upstream has NO `dumps/` directory: the KV dumps are gone
+  and both arms must be regenerated by forward passes on 0.6B and 1.7B. CPU-feasible; the
+  wall-clock is unmeasured, and E8 is scheduled only if it fits before MLSys (2026-10-30).
+
+**(4) LCFM stays trace-only.** The 4-page submission, if the gates pass, carries Lane A/B
+premise numbers and the taxonomy. E8 appears in no LCFM submission. Entry 0006's
+numbers-freeze scope cap is otherwise unchanged.
+
+prior-entries-sha256: 19612bc72156fa045457c234efef450ea1c8dcf8c68594b8d72374c3c78390b3

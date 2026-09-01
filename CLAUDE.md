@@ -27,8 +27,9 @@ On Linux/web the interpreter is `.venv/bin/python`.
 ## Layout
 `src/linear_ceiling/` — `hashing` (canonical sha256) · `rng` · `config` · `pairs` · `seal` ·
 `run_experiment` (E1+ gate stub) · `screen` (CCA math) · `weights` (safetensors reader) ·
-`e0*` · `summarize_e0` · `summarize_e0_depth` · `e7_traces` (adapters; token counts are a
-chars/4 ESTIMATE, non-verdict-bearing until a tokenizer is registered) · `e7_cost` (two-bound
+`e0*` · `summarize_e0` · `summarize_e0_depth` · `e7_traces` (adapters; normalizes tau-bench's
+per-agent str/dict `arguments` split) · `e7_tokens` (exact `o200k_base` where a public encoder
+exists, per-content-type calibrated divisors otherwise — ledger 0009) · `e7_cost` (two-bound
 timeline) · `e7_lanes` (Lane A measured / Lane B cascade) · `e7` (gate + skeleton driver) ·
 `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. Program state: screen line
 closed; the E7 measurement program is registered (entries 0006 + 0007 are the authority —
