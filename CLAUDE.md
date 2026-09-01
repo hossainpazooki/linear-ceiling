@@ -37,15 +37,19 @@ driver, `build_report`) · `summarize_e7` (fail-closed; recomputes every recorde
 traces via a recursive comparator, refuses on tamper) · `e7_swe` (LangChain family +
 layout-aware `discover_trajectories`) · `e7_rolecontent` (4 variants) · `e7_tau2` (ground-truth
 usage/timestamps) · `e7_headroom` (entry 0010 measure + rows/summary) · `e7_usage`
-(reported-vs-estimated, per role) · `e7_stats` (the ONE pinned quantile convention) ·
-`lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+(reported-vs-estimated, per role) · `e7_taxonomy` (entry 0014's six event classes, each with a
+measurability rule; H-E7a ratio over the Lane A measurable subset) · `e7_stats` (the ONE pinned
+quantile convention) · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); the E7 measurement program is
 registered **and built** across three corpora (tau-bench, tau2-bench, SWE-bench), coverage floor
-**met**, headroom and reported-usage figures now **summarizer-recomputed** (admissible to the
-record) — **no hypothesis decided**. **Entries 0006–0012 are the authority; read them whole
-before touching E7 code.** Quantiles come only from `e7_stats` (lower nearest-rank; no
-interpolation) — a second convention would silently change a p90. The rules newcomers break first: Lane A
+**met**, headroom on the record (entry 0013, via the summarizer), taxonomy definitions + the
+H-E7a denominator registered (entry 0014) and implemented but **not yet replayed** — the gate
+refuses until 0013/0014 are committed. **No hypothesis decided.** **Entries 0006–0014 are the
+authority; read them whole before touching E7 code.** Every taxonomy class carries its own
+NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
+Quantiles come only from `e7_stats` (lower nearest-rank; no interpolation) — a second
+convention would silently change a p90. The rules newcomers break first: Lane A
 ALONE decides H-E7a and Lane B never resolves anything (0007/0010); unmeasurable is never a zero
 (0006); a narrow detector is a defect, not a null — search `model|model_id|model_name` minimum
 (0010); a trajectory is one agent run on one task instance, not one file (0011); every
