@@ -10,10 +10,20 @@ authoritative — the ledger is; where this file and an entry disagree, the entr
 screen predict what a fitted linear KV mapper will achieve, before fitting it? The discipline
 was built for that question — sealed predictions written before any fit, a decision rule
 committed before any weight was read. E0 ran on a vocabulary proxy across the Qwen3 ladder and
-returned SAME under the frozen rule (entry 0004); the per-layer depth structure was recorded
-with both readings left open (0006), and the line E1–E6 was closed on opportunity-cost grounds
-(0006): the mechanism lane of this niche is crowded with top-track work, the measurement lane
-was open. H-S1/H-S3/H-S4 carry `SHELVED` — no experiment decided them, and none is scheduled.
+returned SAME under the frozen rule (entry 0004). One caveat deserves a first-time reader's
+attention: nominally six ordered pairs, E0 is effectively n = 1 in every dimension that
+matters — one model family, one training recipe, one proxy — and **all three checkpoints tie
+their embedding and unembedding matrices**, which makes the vocabulary proxy structurally most
+faithful at exactly the layers where the per-layer gap was large and least faithful in the
+middle, where SAME was won. Entry 0003 named this escape before any data ("depth-dependent
+nulls are the proxy's"), so the verdict is scoped to this operationalization and was never
+generalized; the depth structure is recorded with both readings — real end-of-network
+geometry vs proxy artifact — explicitly open (0006). The line E1–E6 was then closed on
+opportunity-cost grounds (0006), a decision distinct from the verdict: the mechanism lane of
+this niche is crowded with top-track work, the measurement lane was open. H-S1/H-S3/H-S4
+carry `SHELVED` — no experiment decided them, and none is scheduled; reopening is one numbered
+entry away, and E9's real-stream KV comparisons on the same pair may shed side-channel light
+on which depth reading was right.
 
 **The trace-replay measurement program (live).** The motivating claim of the cross-model
 KV-transfer literature is that agentic serving crosses model boundaries mid-trajectory, so

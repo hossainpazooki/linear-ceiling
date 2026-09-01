@@ -55,14 +55,14 @@ fingerprinted tensors) · `lint_scope` · `ledger_check`. Tests mirror modules u
 `docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora
-(tau-bench, tau2-bench, SWE-bench), floor **met**, all three registered outputs on the record:
-headroom (0013), taxonomy frequencies (0015), break-even `UNESTIMABLE` (0015). **H-E7a is
-`NOT CONFIRMED`** (1.41% vs the 10% cutoff, Lane A alone, measurable-subset denominator) —
-entry 0005's kill condition applies and the motivation reverts to fleet mixing. Entry 0017
-supersedes the FIGURES of 0013 and 0015's ratio (composio adapter shape defect; `paid` is the
-receiver's request prefill, never the trajectory prefix); the corrected figures land as 0018,
-E9 registers as 0019. Live hypotheses: H-E8 (built, gated on 0016) and H-E9. **Entries
-0006–0017 (and successors) are the authority; read them whole before touching E7/E8 code.** Every taxonomy class carries its own
+(tau-bench, tau2-bench, SWE-bench), floor **met**, all registered outputs on the record.
+Decided: **H-E7a `NOT CONFIRMED`** (an order of magnitude under the 10% cutoff after the 0017
+correction; corrected figures in 0018 — 0005's kill condition applies, the motivation reverts
+to fleet mixing), **H-E7b `UNESTIMABLE`** (0015), **H-E8 `NOT CONFIRMED`** (0020: K UNRESOLVED
+/ V DEGRADES at the verdict k, neither read-out alone). Live: **H-E9** (0019; registered,
+built, gated on the `7e41f792` upstream pin; awaiting the A100 run — see
+`docs/2026-09-02-e9-gpu-runbook.md`). **Entries 0006–0020 are the authority; read them whole
+before touching E7/E8/E9 code.** Every taxonomy class carries its own
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
 Quantiles come only from `e7_stats` (lower nearest-rank; no interpolation) — a second
 convention would silently change a p90. The rules newcomers break first: Lane A

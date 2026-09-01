@@ -1,8 +1,10 @@
 # LCFM plan with GPU runs — resources, what runs where, and what must be registered first
 
-**Date:** 2026-09-01 · **Status:** PLAN (nothing here is built or registered; entries named
-below are drafts until they are in the ledger). LCFM deadline 2026-09-10 AoE; numbers-freeze
-gate EOD 2026-09-08 (entry 0006). Anchor venue unchanged: MLSys 2027.
+**Date:** 2026-09-01, statuses updated in place through 2026-09-02 · **Status:** Tier 1 (E8)
+RAN and decided (0020); Tier 2 (E9) BUILT, registered (0019), gate READY — awaiting the A100.
+LCFM deadline 2026-09-10 AoE; numbers-freeze gate EOD 2026-09-08 (entry 0006). Anchor venue
+unchanged: MLSys 2027. Design paragraphs below are the plan as written; where a registered
+entry refined one (alignment method, S/R slices), the entry wins and is noted.
 
 ## The resource (Algoverse A100 portal, as described 2026-09-01)
 
@@ -40,8 +42,8 @@ this machine. Consequences:
 ## Tier 1 — E8 on CPU, this week (registered; needs one amendment)
 
 Design as registered in entry 0009 (existing mapper, no refit; held-out pooled R² on generic
-vs agent-trace KV; HOLDS ≤ 0.05 drop, DEGRADES ≥ 0.15, K and V separately). Still to register
-BEFORE arm (b) is dumped, in one amendment entry:
+vs agent-trace KV; HOLDS ≤ 0.05 drop, DEGRADES ≥ 0.15, K and V separately). What had to be
+registered before arm (b) was dumped — all landed as entry 0016:
 
 1. **E8 may appear in the LCFM 4-pager** if it clears the same fail-closed summarizer gate as
    every other number — restoring entry 0006's allowance ("the transfer-fidelity leg ... appear
@@ -63,15 +65,14 @@ BEFORE arm (b) is dumped, in one amendment entry:
 6. **Gate**: `e8.assert_ready` mirrors `e7.assert_ready` — refuses until the amendment entry
    and `config/e8.toml` (seed, n, k list, band) are committed unmodified.
 
-**Status 2026-09-01 (late): BUILT and gated, not run.** `config/e8.toml`; `e8_text.py`
+**Status 2026-09-02: RAN — H-E8 `NOT CONFIRMED` (entry 0020; K UNRESOLVED / V DEGRADES at k = 1; arm (a) cross-checked against the archive exactly; two independent end-to-end runs byte-identical).** Build record: `config/e8.toml`; `e8_text.py`
 (sampling rule → token `.npy` in linear-ceiling's own `data/`); `e8.py` (gate incl. the
 upstream pin + subprocess `dump_kv.py --tokens … --out …` and `score_mapper.py` in the
 upstream env, writing `results/e8/`); `summarize_e8` (fail-closed: re-runs the upstream scorer
 on fingerprinted dumps and compares; states the band outcome, never a verdict); 23 tests on a
-fake upstream. `scripts/score_mapper.py` is written in the upstream tree, uncommitted, and
-verified to reproduce the archived k=1 `r2.json` exactly. Entry 0016 is drafted
-(`docs/drafts/append_0016.py`, takes the upstream sha). Then a `[BASELINE]`/verdict entry
-from the summarizer.
+fake upstream. `scripts/score_mapper.py` landed upstream as `71df4504`, verified to reproduce
+the archived k=1 `r2.json` exactly; entry 0016 registered the amendments; entry 0020 states
+the verdict from the summarizer's output.
 
 ## Tier 2 — E9 on the A100: how much of the upper bound is achievable at a re-rendered handoff
 
@@ -81,10 +82,11 @@ measured here". E9 measures it, on the 68 real handoffs, and is the run the GPU 
 **Unit.** One observed Lane A switch: sender context `S` (every message before the switch) and
 receiver prompt `R` (the re-rendered prompt), both as text from `e7_swe.load_composio_detailed`.
 
-**Alignment (CPU).** Tokenize `S` and `R` with the Qwen3 tokenizer; match tokens by a
-longest-common-subsequence over token ids (registered method; the token-level analogue of
-0010's word multiset); the matched set `M` with positions `(p_S, p_R)` per token. Report
-`|M| / |R|` beside 0010's word overlap.
+**Alignment (CPU).** Tokenize `S` and `R` with the Qwen3 tokenizer and match tokens into `M`
+with positions `(p_S, p_R)`. As registered (0019), the method is difflib's longest matching
+blocks over token ids, `autojunk=False` — exact LCS is quadratic at 32k tokens, so `|M|` is a
+floor. Reported beside 0010's word overlap. The S/R slices are request-level per the 0017
+correction: `R` is the receiver's own request prompt, never the trajectory prefix.
 
 **Two measurements, both pooled R² (definition A5), K and V separately, on `M` only:**
 
@@ -98,8 +100,7 @@ longest-common-subsequence over token ids (registered method; the token-level an
   receiver positions) and compare against the receiver's KV at `p_R`. Reported as a fraction of
   E9-same, so mapper error and re-render loss are never conflated.
 
-**Hypothesis H-E9 and band — APPROVED by the operator 2026-09-01, drafted verbatim in
-`docs/drafts/append_0017.py`:** *at a re-rendered handoff, the same-model KV agreement on
+**Hypothesis H-E9 and band — APPROVED 2026-09-01, REGISTERED as entry 0019 (2026-09-02):** *at a re-rendered handoff, the same-model KV agreement on
 content-matched tokens (E9-same) retains the transfer-relevant fidelity.* HOLDS if median
 E9-same pooled K R² ≥ 0.70, DEGRADES if ≤ 0.40, UNRESOLVED between; V reported alongside,
 verdict-bearing for nothing. Reason: 0.70 ≈ the k = 1 mapper's own same-text held-out K R²
@@ -116,7 +117,7 @@ would do; it bounds what a transfer could recover at the one public instance of 
 model; alignment and scoring on CPU. Whole run < 1 h on the A100; budget 4 h for the dump
 files and the sync. A 1-day grant is enough; request 2 days only if E8 slips onto the box.
 
-**Status 2026-09-02: BUILT and gated, not run.** `config/e9.toml` (sha TBD until the re-pin);
+**Status 2026-09-02: BUILT and gated, not run.** `config/e9.toml` (upstream pinned `7e41f792`);
 `e9_align` (difflib matched blocks; over-cap and empty-receiver handoffs EXCLUDED and
 counted); upstream `scripts/score_positions.py` (no new dump code needed — `dump_kv.py
 --stride 1` on a `[1, L]` file already dumps every position); `e9` (gate + per-handoff
@@ -132,9 +133,9 @@ registered.
 
 | when | what | gate |
 |---|---|---|
-| 09-01 | ~~commit 0013/0014; taxonomy run + summarizer; entry 0015~~ **DONE**: H-E7a `NOT CONFIRMED` (1.41%), H-E7b `UNESTIMABLE` | — |
-| 09-02 | submit the A100 request (1 day; 2 if E8 slips); draft + commit the E8 amendment entry; build E8; run E8 on CPU; `summarize_e8`; E8 verdict entry | nothing reads a dump before the entry is in HEAD |
-| 09-03/04 | draft + commit the E9 registration entry (H-E9, band, alignment method, cap); build E9 end-to-end on CPU at toy sizes; re-pin upstream with the two scripts | **go/no-go EOD 09-04**: E9 runs on the GPU only if its CPU toy run is green and the entry is committed; otherwise LCFM ships trace-only + E8 |
+| 09-01 | ~~commit 0013/0014; taxonomy run + summarizer; entry 0015~~ **DONE**: H-E7a `NOT CONFIRMED` (then stated at 1.41%; figure corrected to 0.20% by 0017/0018, verdict unchanged), H-E7b `UNESTIMABLE` | — |
+| 09-02 | ~~E8 amendment (0016), build, CPU run, summarizer, verdict entry~~ **DONE**: H-E8 `NOT CONFIRMED` (0020) | — |
+| 09-02/03 | ~~E9 registration (0019), build, CPU toy run, upstream re-pin `7e41f792`~~ **DONE**; gate prints ready; **submit the A100 request** | **go/no-go EOD 09-04** stands: no GPU by then means LCFM ships trace-only + E8 |
 | approval day (est. 09-04/05) | E9 batch on the A100 within the first 2 h; sync; log off | per-handoff checkpoints synced |
 | 09-06/07 | `summarize_e9`; E9 verdict entry; draft the 4-pager from summarizer output only | every number recomputes clean |
 | 09-08 EOD | numbers freeze | entry 0006 |

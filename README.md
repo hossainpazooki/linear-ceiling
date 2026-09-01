@@ -14,27 +14,23 @@ lives there or in `docs/`, never here.
 
 ```mermaid
 flowchart LR
-    RULE[every rule committed<br/>before its run] --> E0[E0: weights-only<br/>screen test]
-    RULE --> E7[E7 trace-replay: taxonomy,<br/>switch-point headroom,<br/>compaction -- replayed]
-    RULE --> E8[E8 transfer under agent-trace<br/>distribution shift -- ran]
-    RULE --> E9[E9 achievable fraction at the<br/>re-rendered handoff:<br/>registered, gated]
-    E0 -->|verdict SAME under<br/>the frozen rule| VS[H-S2 first clause NOT CONFIRMED<br/>depth structure recorded,<br/>real vs proxy both readings open]
+    RULE[every rule committed<br/>before its run] --> E0
+    RULE --> E7
+    RULE --> E8
+    RULE --> E9
+    E0["E0 -- pre-fit screen: can the weight<br/>matrices alone forecast transfer<br/>fidelity, before anything is fitted?"] -->|verdict SAME under<br/>the frozen rule| VS[H-S2 first clause NOT CONFIRMED<br/>depth structure recorded,<br/>real vs proxy both readings open]
     E0 -.->|operator decision,<br/>opportunity cost| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
-    E7 --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
-    E8 --> V8[H-E8 NOT CONFIRMED]
+    E7["E7 -- trace replay: do switches and<br/>compaction occur in public agent traces,<br/>and at what recoverable cost?"] --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
+    E8["E8 -- content shift: does the fitted<br/>cross-model map keep its held-out<br/>fidelity on agent text? no refit"] --> V8[H-E8 NOT CONFIRMED]
+    E9["E9 -- the real handoff: how much of a<br/>matched token's KV survives the observed<br/>re-render? registered, gated"] --> ANCHOR
     V7 --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
     V8 --> ANCHOR
-    E9 --> ANCHOR
     E7 -.->|numbers-freeze gate| WS[workshop 4-pager]
     E8 -.->|admitted by 0016,<br/>same gate| WS
     classDef rule fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
-    classDef exp fill:#d8e9ff,stroke:#388bfd,color:#0d2b52;
     classDef verdict fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
-    classDef outp fill:#ecdfff,stroke:#a371f7,color:#3a1060;
     class RULE,CLOSED,E9 rule;
-    class E0,E7,E8 exp;
     class VS,V7,V8 verdict;
-    class ANCHOR,WS outp;
 ```
 
 The scope sentence, held verbatim:
@@ -86,10 +82,8 @@ flowchart LR
     S3 --> E
     S3 -.->|hash / NaN / recompute mismatch| REF[REFUSE, exit 1]
     E --> H[prior-entries-sha256] -->|recomputed in CI| LC[ledger_check]
-    classDef store fill:#d8e9ff,stroke:#388bfd,color:#0d2b52;
     classDef ok fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
     classDef halt fill:#ffe0e0,stroke:#f85149,color:#6a0d0d;
-    class RAW,S1,S2,S3 store;
     class E,H,LC ok;
     class REF halt;
 ```
@@ -116,10 +110,8 @@ flowchart TD
     B -.->|never resolves a hypothesis| DESC[labeled counterfactual]
     C --> TAX[invalidation taxonomy<br/>six classes, each with its own<br/>NOT MEASURABLE state]
     TAX --> CB[compaction events: measured zero<br/>where measurable, so H-E7b UNESTIMABLE]
-    classDef data fill:#d8e9ff,stroke:#388bfd,color:#0d2b52;
     classDef verdict fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
     classDef bounded fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
-    class T1,T2,T3,P,C,A,TAX data;
     class HA,CB verdict;
     class B,HR,DESC bounded;
 ```
@@ -157,10 +149,6 @@ flowchart LR
     I5[detector breadth] --> C5[recorded key set + tests]
     I6[determinism] --> C6[single rng + suite grep]
     I7[scope sentence] --> C7[lint_scope]
-    classDef rule fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
-    classDef check fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
-    class I1,I2,I3,I4,I5,I6,I7 rule;
-    class C1,C2,C3,C4,C5,C6,C7 check;
 ```
 
 ## When the instrument is wrong
@@ -177,11 +165,9 @@ flowchart TD
     R --> N[new entry with the corrected figures,<br/>from the summarizer only]
     C -.-> V[verdicts are re-examined, not assumed:<br/>they change only if the rule as written now says so]
     classDef bad fill:#ffe0e0,stroke:#f85149,color:#6a0d0d;
-    classDef work fill:#d8e9ff,stroke:#388bfd,color:#0d2b52;
     classDef record fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
     classDef guard fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
     class D bad;
-    class F,R work;
     class L,C,N record;
     class V guard;
 ```
@@ -215,12 +201,6 @@ flowchart LR
     V[uv venv] --> D[install -e .dev] --> P[pytest: synthetic, offline] --> G[seal + scope + ledger gates]
     U[("../kv-transfer-replication<br/>pinned, read-only")] -.->|seal writer, E8, E9| G
     TR[("traces/ (gitignored)")] -.->|E7/E8/E9 replay only| G
-    classDef step fill:#d8e9ff,stroke:#388bfd,color:#0d2b52;
-    classDef gate fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
-    classDef ext fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
-    class V,D,P step;
-    class G gate;
-    class U,TR ext;
 ```
 
 ## Docs map
@@ -251,12 +231,8 @@ flowchart TD
     LED --> PLAN[GPU plan + E9 runbook]
     LED --> SPEC[design spec + seed + gap map<br/>verbatim, immutable]
     LED --> UP[UPSTREAM.md<br/>pin + borrow provenance]
-    classDef here fill:#ecdfff,stroke:#a371f7,color:#3a1060;
     classDef record fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
-    classDef doc fill:#d8e9ff,stroke:#388bfd,color:#0d2b52;
-    class README here;
-    class LED,LRN record;
-    class BG,HOF,EV,RECON,PLAN,SPEC,UP doc;
+    class LED record;
 ```
 
 Status tags used in the ledger: `[VALIDATED]` ran and survived refutation · `[BASELINE]` ran,
