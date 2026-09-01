@@ -9,18 +9,21 @@ immutable — an amendment is a new entry, never an edit; status tags are `[VALI
 `[STRETCH]` (designed, not run), `[FUTURE]` (not designed), `[SUPERSEDED]`.
 
 E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other verdict below is
-`unresolved`. The screen-validation line is CLOSED and E7 is promoted to a standalone
-measurement program with pre-registered thresholds (entry 0006, 2026-09-01) — H-S1/H-S3/H-S4
-are shelved-not-decided, and only E7 has a live path to a verdict.
+`unresolved` or `SHELVED`. The screen-validation line is CLOSED and E7 is promoted to a
+standalone measurement program with pre-registered thresholds (entry 0006, amended by 0007) —
+H-S1/H-S3/H-S4 carry `SHELVED` (no experiment decided them; none is scheduled), and only
+H-E7a/H-E7b have a live path to a verdict, decided by Lane A alone per entry 0007. From entry
+0007 on, each entry records a `prior-entries-sha256:` over the entries section above it,
+recomputed by `ledger_check` in CI.
 
 ## Hypotheses (pre-registered; verdict column is the only cell that ever changes, and only via a numbered entry)
 
 | id | statement (H-S1–H-S4: verbatim from docs/2026-08-26-kv-handoff-screen-design.md §1, less the bold **H-Sn (…).** id prefix, dropped because the id is already this row's first column; H-E7a/H-E7b: verbatim from the "Ledger entry 0005 (register verbatim)" text in Appendix C of docs/2026-08-26-seed-w1.md, which does not appear in §1) | decided by | verdict |
 |---|---|---|---|
-| H-S1 | (identity holds on real models) For a read-out W (target's W_K, W_V), predicted fidelity Σρᵢ²cᵢ²/Σcᵢ² from regularized CCA of residual streams matches the fitted ridge mapper's **held-out** R² within a tolerance band stated in the ledger before E1 runs, on the 0.6B→1.7B pair. The identity is verified exactly on synthetic data; E1 is first real-model contact. | E1 (tolerance band: a numbered entry before E1 runs) | unresolved |
+| H-S1 | (identity holds on real models) For a read-out W (target's W_K, W_V), predicted fidelity Σρᵢ²cᵢ²/Σcᵢ² from regularized CCA of residual streams matches the fitted ridge mapper's **held-out** R² within a tolerance band stated in the ledger before E1 runs, on the 0.6B→1.7B pair. The identity is verified exactly on synthetic data; E1 is first real-model contact. | E1 (tolerance band: a numbered entry before E1 runs) | SHELVED |
 | H-S2 | (screen discriminates) rowspace(W_K) and rowspace(W_V) occupy measurably different canonical coordinates, and the predicted R² ordering reproduces the measured K>V gap (Run 1 held-out: 0.76 vs 0.55; paper: ~0.2 at 14B→32B). Failure → G1 degrade. | E0 (first clause; rule in entry 0003), E1 (second clause) | NOT CONFIRMED |
-| H-S3 | (chain reaches retention) Screen-predicted R² rank-correlates with floor-normalized retention **across pairs and k** — because held-out R² does (Run 2, within-pair: rank correlation +1 across k; in-sample rank-correlates −1), and the screen predicts held-out R². The source paper's r = −0.20 is quarantined explicitly as an in-sample artifact. Falsification mode: screen predicts fidelity but not retention → the contribution becomes the decomposition (symmetric predictable factor + receiver residual), stated in the abstract, not conceded to a reviewer. | E2 | unresolved |
-| H-S4 | (economics load-bearing, not decorative) Composition (H-C1/C2/C3 as already registered in the ledger) and the calibration curve (H-L1–L4) convert the screen from a correlation into a build policy: which pairs, which direction, how many calibration tokens, n−1 vs n(n−1) mappers. | E4, E5 | unresolved |
+| H-S3 | (chain reaches retention) Screen-predicted R² rank-correlates with floor-normalized retention **across pairs and k** — because held-out R² does (Run 2, within-pair: rank correlation +1 across k; in-sample rank-correlates −1), and the screen predicts held-out R². The source paper's r = −0.20 is quarantined explicitly as an in-sample artifact. Falsification mode: screen predicts fidelity but not retention → the contribution becomes the decomposition (symmetric predictable factor + receiver residual), stated in the abstract, not conceded to a reviewer. | E2 | SHELVED |
+| H-S4 | (economics load-bearing, not decorative) Composition (H-C1/C2/C3 as already registered in the ledger) and the calibration curve (H-L1–L4) convert the screen from a correlation into a build policy: which pairs, which direction, how many calibration tokens, n−1 vs n(n−1) mappers. | E4, E5 | SHELVED |
 | H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | unresolved |
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | unresolved |
 
@@ -329,3 +332,68 @@ Terminal-Bench 2.0 runs.
 E7 replay must not begin until this entry is committed and unmodified; the replay harness
 must enforce this the way linear_ceiling.e0's assert_ready enforced entry 0003 (requirement
 registered here; enforcement lands with the harness).
+
+### 0007 — 2026-09-01 — Review amendments: Lane A decides H-E7a; per-agent coverage; cost-model parameters; SHELVED; entry chain
+
+Source: operator review of the tree at `1f7ad90` (independent clone-and-check, 2026-09-01).
+Entry 0006's registered text stands as written; the clauses below supersede it where named,
+per house style.
+
+**(1) H-E7a is decided by Lane A alone.** Entry 0006's materiality clause "in at least one
+lane" is superseded. Lane B inserts a switch point at every tier boundary of a policy this
+program chose, so Lane B headroom is material by construction -- it measures the policy, not
+the workload -- and under the superseded wording a Lane A zero plus a Lane B clearance would
+have resolved H-E7a positive, softening the premise finding. Amended rule: H-E7a's verdict is
+determined solely by Lane A against the 10% cutoff of entry 0006. Lane B output is
+descriptive counterfactual only and shall never resolve any hypothesis, in this entry or any
+successor.
+
+**(2) The coverage floor counts agents, not runs.** Entry 0006's floor (>= 50 trajectories
+per suite, >= 2 suites) is satisfiable by many runs of one scaffold, which yields the
+invalidation habits of one agent, not a suite-level property. Amended floor: >= 50
+trajectories per suite AND >= 3 distinct agents/scaffolds (distinct leaderboard submissions
+or harness configurations) per suite, over >= 2 suites. Invalidation frequencies are reported
+per-agent alongside pooled, so no single scaffold's behavior can masquerade as the suite's.
+
+**(3) Cost-model parameters, registered before any replay.** Entry 0006 pinned prices but not
+the model that consumes them; these were the free parameters a reviewer would assume were
+tuned:
+
+- **TTL base case:** Anthropic 5-minute ephemeral cache (write 1.25x, read 0.1x). The 1-hour
+  tier (write 2.0x) is reported as sensitivity only and is verdict-bearing for nothing.
+- **Idle-gap expiry IS modeled**, from trace timestamps, wherever the trace carries them: a
+  cached prefix older than the TTL at the next request is expired and re-prefills at full
+  price.
+- **Traces without timestamps:** H-E7b is computed under two bounds -- cache-always-warm (no
+  expiry ever) and cache-always-cold (expired at every inter-step gap) -- and the >= 25%
+  negative-mass threshold must hold under BOTH bounds to resolve H-E7b positive. Stated bias
+  direction: the warm bound overstates the value of retaining tokens and therefore biases
+  toward finding compaction net-negative (toward H-E7b positive); the cold bound biases the
+  other way; requiring both removes the parameter as a degree of freedom.
+- **Tool-latency gaps come only from trace timestamps, never from an assumed distribution.**
+  A trajectory with no timestamps contributes to the taxonomy and to Lane A/B counts, but not
+  to any expiry-sensitive number outside the two-bound H-E7b computation above.
+
+**(4) `SHELVED` enters the verdict vocabulary.** Entry 0006 left H-S1/H-S3/H-S4 at
+`unresolved`, indistinguishable in the table from live-and-pending. `SHELVED` is added to
+`ledger_check`'s vocabulary (code change in this commit set) and this entry moves H-S1, H-S3,
+and H-S4 from `unresolved` to `SHELVED`: no experiment decided them, and none is scheduled.
+Distinct from `WITHDRAWN` (a claim retracted) and `SUPERSEDED` (a claim replaced). A future
+program that reopens one moves it back to `unresolved` by a numbered entry.
+
+**(5) The entry chain begins here.** From this entry on, every entry carries a
+`prior-entries-sha256:` line -- the sha256 of the ledger text from the `## Entries` heading
+(inclusive) up to the entry's own heading (exclusive), computed over the
+universal-newline-decoded text encoded as UTF-8, recomputed by `ledger_check` in CI. What it
+protects: registered entry text, byte-for-byte. What it deliberately excludes: the header
+prose and the hypotheses table above `## Entries`, which are editable commentary (verdict
+cells change only via a numbered entry -- a convention this hash cannot enforce). What it
+cannot detect: a history rewrite that regenerates the chain, exactly as the README already
+says of the seal.
+
+**(6) The evidence entry 0006 cited now lives in the tree:**
+`docs/2026-09-01-measurement-lane-evidence.md` -- the four-paper delta table with arXiv IDs
+and retrieval dates, the trace-metadata probe result behind the two-lane design, and the
+venue facts. A handoff brief for this re-scope is indexed in `docs/handoff/HANDOFF.md`.
+
+prior-entries-sha256: 0b180f2473877c0e7d7826e4c1eefacd7fc15a94d3f7ce82de1d7b93f598d92e
