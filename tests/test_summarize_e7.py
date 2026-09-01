@@ -1,7 +1,8 @@
 """The summarizer's REFUSALS are the point: a summarizer that cannot fail closed is decoration.
 
-Each test tampers with exactly one thing and proves the refusal names it. Fixtures are
-synthetic tau-bench-shaped files written to tmp_path, so these run offline with no real traces.
+Each test tampers with exactly one thing and proves the refusal names it. The fixture is the
+synthetic three-suite corpus from test_e7_corpus written to tmp_path, so these run offline
+with no real traces and still exercise headroom rows, reported usage, and the unparsed set.
 """
 import json
 
@@ -19,28 +20,20 @@ PRICING = {"provider": "anthropic", "read_mult": 0.1, "write_mult": 1.25,
 THRESHOLDS = {"materiality_fraction": 0.10, "negative_mass_fraction": 0.25,
               "min_trajectories_per_suite": 1, "min_agents_per_suite": 1, "min_suites": 1}
 
-RECORDS = [
-    {"task_id": 0, "reward": 1.0, "trial": 0, "info": {},
-     "traj": [{"role": "system", "content": "s" * 400},
-              {"role": "user", "content": "u" * 40},
-              {"role": "assistant", "content": "a" * 80},
-              {"role": "assistant", "content": None,
-               "tool_calls": [{"id": "c", "type": "function",
-                               "function": {"name": "look", "arguments": {"q": "x"}}}]},
-              {"role": "tool", "content": "t" * 120},
-              {"role": "assistant", "content": "done"}]},
-]
-
-
 @pytest.fixture
 def env(tmp_path):
-    """Build a config + traces + a genuine report by running the driver's own logic."""
-    (tmp_path / "traces" / "tau-bench").mkdir(parents=True)
+    """Build a config + a three-suite corpus + a genuine report by running the driver's own logic.
+
+    The corpus fixture is shared with test_e7_corpus: tau-bench, tau2-bench (reported usage),
+    and swe-bench with a role/content submission, a nested instance, a LangChain submission that
+    switches model (headroom rows), and one unparseable file.
+    """
+    from tests.test_e7_corpus import write_corpus
+    write_corpus(tmp_path / "traces", garbage=True)
     (tmp_path / "results").mkdir()
     cfgp = tmp_path / "e7.toml"
     cfgp.write_text("# synthetic\n", encoding="utf-8")
     tf = tmp_path / "traces" / "tau-bench" / "gpt-4o-airline.json"
-    tf.write_text(json.dumps(RECORDS), encoding="utf-8")
     cfg = E7Config(traces_dir=tmp_path / "traces", results_dir=tmp_path / "results",
                    pricing=PRICING, thresholds=THRESHOLDS, tokenizer=TOKENIZER,
                    lane_b_policy="two-tier-cascade", config_path=cfgp)
@@ -63,12 +56,17 @@ def test_clean_report_summarizes(env):
     cfg, _, _ = env
     md = summarize(cfg)
     assert "recomputed from the raw traces" in md and "gpt-4o" in md
+    assert "tau2-bench" in md and "swe-bench" in md
+    assert "UPPER BOUND" in md and "LOWER BOUND" in md
+    assert "switches measured: 1" in md and "byte-identical handoffs: 0/1" in md
+    assert "unparsed trajectories (recorded, never counted): 1" in md
+    assert "Lane A only, excluded from floor arithmetic (entry 0011): composio_swekit: 1" in md
 
 
 def test_refuses_when_a_trace_file_changed(env):
     cfg, _, tf = env
     doctored = json.loads(tf.read_text(encoding="utf-8"))
-    doctored[0]["traj"][1]["content"] = "u" * 41          # one character
+    doctored[0]["traj"][0]["content"] = "u" * 41          # one character
     _write(tf, doctored)
     with pytest.raises(ValueError, match="does not match the hash recorded"):
         summarize(cfg)
@@ -142,4 +140,148 @@ def test_refuses_missing_provenance(env):
     del rep["trace_files"]
     _write(rp, rep)
     with pytest.raises(ValueError, match="provenance is unverifiable"):
+        summarize(cfg)
+
+
+def test_refuses_edited_headroom_row(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    assert len(rep["headroom"]["rows"]) == 1
+    rep["headroom"]["rows"][0]["overlap_fraction"] = 1.0        # claim a perfect handoff
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"headroom\.rows\[0\]\.overlap_fraction"):
+        summarize(cfg)
+
+
+def test_refuses_edited_headroom_summary(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["headroom"]["summary"]["recoverable_fraction"]["median"] += 0.05   # the paper's headline
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"headroom\.summary\.recoverable_fraction\.median"):
+        summarize(cfg)
+
+
+def test_refuses_headroom_flipped_to_byte_identical(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["headroom"]["rows"][0]["byte_identical"] = True
+    rep["headroom"]["summary"]["byte_identical"] = 1
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="byte_identical"):
+        summarize(cfg)
+
+
+def test_refuses_dropped_headroom_row(env):
+    """Deleting a switch row is the quiet way to move a median."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["headroom"]["rows"] = []
+    rep["headroom"]["summary"] = None
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="headroom"):
+        summarize(cfg)
+
+
+def test_refuses_edited_reported_usage_offset(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["reported_usage"]["per_role"]["assistant"]["offset"]["median"] = 0   # "no hidden prefix"
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"reported_usage\.per_role\.assistant\.offset\.median"):
+        summarize(cfg)
+
+
+def test_refuses_pooled_usage_series(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    pooled = rep["reported_usage"]["per_role"].pop("user")
+    rep["reported_usage"]["per_role"]["all"] = pooled
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="key set differs"):
+        summarize(cfg)
+
+
+def test_refuses_lane_a_only_agent_folded_into_coverage(env):
+    """Entry 0011: composio is a Lane A subject, not a coverage contributor."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["coverage"]["swe-bench"]["agents"].append("composio_swekit")
+    rep["coverage"]["swe-bench"]["trajectories"] += 1
+    rep["lane_a_only"] = {}
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="coverage"):
+        summarize(cfg)
+
+
+def test_refuses_unparsed_trajectory_erased(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    assert len(rep["unparsed"]) == 1
+    rep["unparsed"] = []
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="unparsed"):
+        summarize(cfg)
+
+
+def test_refuses_per_suite_floor_verdict_edit(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["suite_floor"]["tau-bench"] = not rep["suite_floor"]["tau-bench"]
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="suite_floor"):
+        summarize(cfg)
+
+
+def test_refuses_narrowed_detector_key_set(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["lane_a_detector_keys"] = ["model"]
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="lane_a_detector_keys"):
+        summarize(cfg)
+
+
+def test_refuses_trace_file_added_after_the_run(env):
+    cfg, _, tf = env
+    (tf.parent / "gpt-4o-retail.json").write_text(tf.read_text(encoding="utf-8"), encoding="utf-8")
+    with pytest.raises(ValueError, match="trace set changed since the run"):
+        summarize(cfg)
+
+
+def test_refuses_edited_task_count(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["coverage"]["tau2-bench"]["tasks"] += 1
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"coverage\.tau2-bench\.tasks"):
+        summarize(cfg)
+
+
+def test_provenance_keys_are_relative_posix_paths(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    keys = list(rep["trace_files"])
+    assert all("\\" not in k and not k.startswith("/") for k in keys)
+    assert "swe-bench/20250122_autocoderover/inst-2/attempt_0/patch_0.diff" in keys
+    assert "tau2-bench/agent-x_airline.json" in keys
+
+
+def test_refuses_relabelled_tokenizer_strategy(env):
+    """Calling a calibrated estimate 'exact' is a provenance lie about every token count."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["tokenizer"]["per_agent_strategy"]["composio_swekit"] = "exact"
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"tokenizer\.per_agent_strategy"):
+        summarize(cfg)
+
+
+def test_refuses_cost_basis_label_edit(env):
+    """Dropping the LOWER BOUND wording is a claim change, not a typo."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["cost_basis"] = "full billed prompt"
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="cost_basis"):
         summarize(cfg)

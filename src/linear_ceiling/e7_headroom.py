@@ -26,9 +26,13 @@ prompt and tool schemas the provider billed.
 """
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
+from linear_ceiling.e7_stats import summary
 from linear_ceiling.e7_traces import Trajectory
+
+METHOD = ("multiset whitespace-token overlap of the receiving prompt with everything the sender "
+          "processed; headroom_upper_bound = overlap_tokens x (1 - read_mult)")
 
 _WORD = re.compile(r"\S+")
 
@@ -97,3 +101,36 @@ def measure(traj: Trajectory, texts: list[str], read_mult: float) -> list[Headro
             byte_identical=bool(sender_text) and sender_text in receiver_text,
         ))
     return out
+
+
+def rows(trajectories: list[Trajectory], texts: dict[str, list[str]], read_mult: float) -> list[dict]:
+    """One row per observed Lane A switch across every trajectory whose text is available.
+
+    A trajectory with a switch but no text (an adapter that returns token counts only) cannot
+    be measured here and is NOT a zero: `rows` skips it, and the caller's Lane A count is what
+    says how many switches exist. Keyed by traj_id so the summarizer can compare row-for-row.
+    """
+    out = []
+    for t in trajectories:
+        if t.traj_id not in texts:
+            continue
+        for h in measure(t, texts[t.traj_id], read_mult):
+            out.append({"traj_id": t.traj_id, **asdict(h),
+                        "recoverable_fraction": h.recoverable_fraction})
+    return out
+
+
+def rows_summary(rs: list[dict]) -> dict | None:
+    """Aggregate over switch rows; None when there is nothing to aggregate (never a zero)."""
+    if not rs:
+        return None
+    return {"switches": len(rs),
+            "submissions": sorted({r["traj_id"].split("/", 1)[0] for r in rs}),
+            "byte_identical": sum(1 for r in rs if r["byte_identical"]),
+            "overlap_fraction": summary([r["overlap_fraction"] for r in rs]),
+            "paid_tokens": summary([r["paid_tokens"] for r in rs]),
+            "recoverable_fraction": summary([r["recoverable_fraction"] for r in rs]),
+            "method": METHOD,
+            "label": "UPPER BOUND, never an achievable saving: re-rendering changes the token "
+                     "sequence and positions (entry 0010); paid tokens are a visible-only LOWER "
+                     "BOUND (entry 0012)"}

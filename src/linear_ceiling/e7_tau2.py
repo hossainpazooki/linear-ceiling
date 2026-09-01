@@ -70,12 +70,22 @@ def _message(m: dict, counter) -> Msg:
                reported_tokens=reported if isinstance(reported, int) else None)
 
 
-def load_tau2(path: Path, counter) -> list[Trajectory]:
-    """One tau2 results file -> one Trajectory per simulation (task x trial)."""
+def read_tau2(path: Path) -> dict:
+    """Parse and shape-check a tau2 results file (so a caller can name the agent before it
+    builds the agent's counter, without parsing the file twice)."""
     path = Path(path)
     doc = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(doc, dict) or "simulations" not in doc:
         raise ValueError(f"{path}: not a tau2 results file (no 'simulations' key)")
+    return doc
+
+
+def load_tau2(path: Path, counter) -> list[Trajectory]:
+    """One tau2 results file -> one Trajectory per simulation (task x trial)."""
+    return load_tau2_doc(read_tau2(path), counter)
+
+
+def load_tau2_doc(doc: dict, counter) -> list[Trajectory]:
     agent = agent_of(doc)
     out = []
     for sim in doc["simulations"]:
@@ -87,5 +97,6 @@ def load_tau2(path: Path, counter) -> list[Trajectory]:
             traj_id=f"{agent}/{sim.get('task_id')}/{sim.get('trial')}",
             reward=(sim.get("reward_info") or {}).get("reward"),
             messages=tuple(_message(m, counter) for m in msgs),
+            task=str(sim.get("task_id")),
         ))
     return out

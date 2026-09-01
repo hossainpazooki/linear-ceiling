@@ -58,6 +58,9 @@ class Trajectory:
     traj_id: str
     reward: float | None
     messages: tuple[Msg, ...] = field(default_factory=tuple)
+    # The task instance this run was on. Entry 0011: repeated trials are distinct trajectories
+    # but NOT independent samples, so coverage reports DISTINCT TASKS beside trajectories.
+    task: str | None = None
 
     @property
     def has_step_model_metadata(self) -> bool:
@@ -129,15 +132,43 @@ def load_tau_bench(path: Path, agent: str, counter=approx_tokens) -> list[Trajec
             traj_id=f"{path.stem}/{it.get('task_id')}/{it.get('trial')}",
             reward=it.get("reward"),
             messages=tuple(_tau_msg(m, counter) for m in traj),
+            task=f"{path.stem.rsplit('-', 1)[-1]}/{it.get('task_id')}",   # domain/task_id
         ))
     return out
 
 
-def coverage(trajectories: list[Trajectory]) -> dict:
-    """Per-suite coverage against entry 0007's floor units: trajectories AND distinct agents."""
+def coverage(trajectories: list[Trajectory], exclude_agents: tuple[str, ...] = ()) -> dict:
+    """Per-suite coverage against entry 0007's floor units: trajectories AND distinct agents,
+    with DISTINCT TASKS alongside (entry 0011: trials are not independent samples).
+
+    `exclude_agents` are agents that are a Lane A subject, not a coverage contributor (entry
+    0011 names composio: two submissions of one system). Their trajectories are dropped from
+    every count here; the caller reports them separately so they are never invisible.
+    """
     suites: dict[str, dict] = {}
     for t in trajectories:
-        s = suites.setdefault(t.suite, {"trajectories": 0, "agents": set()})
+        if t.agent in exclude_agents:
+            continue
+        s = suites.setdefault(t.suite, {"trajectories": 0, "agents": set(), "tasks": set()})
         s["trajectories"] += 1
         s["agents"].add(t.agent)
-    return {k: {"trajectories": v["trajectories"], "agents": sorted(v["agents"])} for k, v in suites.items()}
+        if t.task is not None:
+            s["tasks"].add(t.task)
+    return {k: {"trajectories": v["trajectories"], "agents": sorted(v["agents"]),
+                "tasks": len(v["tasks"])} for k, v in suites.items()}
+
+
+def suite_floor(cov: dict, thresholds: dict) -> dict[str, bool]:
+    """Per suite: does it clear entry 0007's per-suite floor (trajectories AND distinct agents)?"""
+    return {s: (v["trajectories"] >= thresholds["min_trajectories_per_suite"]
+                and len(v["agents"]) >= thresholds["min_agents_per_suite"])
+            for s, v in cov.items()}
+
+
+def meets_floor(cov: dict, thresholds: dict) -> bool:
+    """Entry 0007's floor: at least `min_suites` suites, EACH clearing its per-suite floor.
+
+    A suite that fails its own floor does not count toward the suite minimum (entry 0011:
+    tau-bench v1 is reported but excluded from floor arithmetic).
+    """
+    return sum(1 for ok in suite_floor(cov, thresholds).values() if ok) >= thresholds["min_suites"]

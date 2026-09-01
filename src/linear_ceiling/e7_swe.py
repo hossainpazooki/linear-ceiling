@@ -157,5 +157,6 @@ def load_composio_detailed(path: Path, agent: str, counter) -> tuple[Trajectory,
     if not messages:
         raise ValueError(f"{path}: no LangChain message nodes found; wrong adapter for this shape")
     traj = Trajectory(suite="swe-bench", agent=agent, traj_id=f"{agent}/{path.stem}",
-                      reward=None, messages=tuple(messages))
+                      reward=None, messages=tuple(messages),
+                      task=path.stem[:-5] if path.stem.endswith("_traj") else path.stem)
     return traj, texts

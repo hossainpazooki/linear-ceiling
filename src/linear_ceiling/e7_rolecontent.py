@@ -97,7 +97,7 @@ def load_role_content_trajectory(files: list[Path], agent: str, traj_id: str, co
     if not msgs:
         raise ValueError(f"{traj_id}: no role/content messages in {len(files)} file(s); wrong adapter")
     return Trajectory(suite="swe-bench", agent=agent, traj_id=f"{agent}/{traj_id}",
-                      reward=None, messages=tuple(msgs))
+                      reward=None, messages=tuple(msgs), task=traj_id)
 
 
 def load_role_content(path: Path, agent: str, counter) -> Trajectory:
@@ -110,7 +110,7 @@ def load_role_content(path: Path, agent: str, counter) -> Trajectory:
     if not messages:
         raise ValueError(f"{path}: message list contained no role-bearing messages")
     return Trajectory(suite="swe-bench", agent=agent, traj_id=f"{agent}/{path.stem}",
-                      reward=None, messages=tuple(messages))
+                      reward=None, messages=tuple(messages), task=path.stem)
 
 
 def _messages_from_list(lst, counter) -> list[Msg]:

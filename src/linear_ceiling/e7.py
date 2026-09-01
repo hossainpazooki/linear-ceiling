@@ -6,12 +6,15 @@ refuses to read any trajectory until ledger/ledger.md and config/e7.toml are com
 byte-identical to HEAD, and until the COMMITTED ledger contains entries 0006 and 0007 (the
 registration and its amendments). The refusal happens before any trace file is opened.
 
-The driver is the day-2-gate skeleton: it loads every tau-bench file found under traces_dir,
-computes per-trajectory token/cost timelines (two bounds) and both lanes, checks coverage
-against the registered floor, and writes results/e7/skeleton_report.json. It produces
-intermediate state, not claims: nothing here writes to the ledger, and any number that would
-decide a hypothesis still travels only through a fail-closed summarizer (to be built before
-the numbers-freeze gate).
+The driver replays every corpus under traces_dir (tau-bench, tau2-bench, swe-bench -- see
+e7_corpus), computes per-trajectory token/cost timelines (two bounds) and both lanes, checks
+coverage against the registered floor with the entry-0011 exclusions, measures headroom at
+every observed Lane A switch (entry 0010), validates the estimator against provider-reported
+usage where a corpus carries it (entry 0012), and writes results/e7/skeleton_report.json.
+
+It produces intermediate state, not claims: nothing here writes to the ledger, and every
+number that could reach a ledger entry travels only through `summarize_e7`, which walks the
+raw traces again and refuses on any disagreement.
 """
 import argparse
 import json
@@ -20,13 +23,18 @@ from pathlib import Path
 
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E7Config, load_e7_config
+from linear_ceiling.e7_corpus import LANE_A_ONLY_AGENTS, load_corpus
 from linear_ceiling.e7_cost import timeline, totals
+from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
 from linear_ceiling.e7_lanes import lane_a, lane_b
-from linear_ceiling.e7_tokens import make_counter, strategy_for
+from linear_ceiling.e7_swe import MODEL_KEYS
+from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
+from linear_ceiling.e7_usage import validation
 from linear_ceiling.hashing import sha256_file_bytes
-from linear_ceiling.e7_traces import coverage, load_tau_bench
 
 REQUIRED_ENTRIES = ("### 0006 ", "### 0007 ")
+COST_BASIS = ("visible messages only -- every cost and token figure is a LOWER BOUND on what the "
+              "provider billed (entry 0012: the system prompt and tool schemas are not in the trace)")
 
 
 def assert_ready(cfg: E7Config, repo_root: Path) -> None:
@@ -50,50 +58,57 @@ def assert_ready(cfg: E7Config, repo_root: Path) -> None:
             )
 
 
-def run(cfg: E7Config, *, repo_root: Path) -> Path:
-    assert_ready(cfg, repo_root)
-    files = sorted(cfg.traces_dir.glob("tau-bench/*.json"))
-    if not files:
-        raise RuntimeError(f"E7 REFUSED: no trajectory files under {cfg.traces_dir / 'tau-bench'}; "
-                           "acquire traces first (they are gitignored, never committed)")
-    trajs, strategies = [], {}
-    counters: dict = {}
-    for f in files:
-        agent = f.stem.rsplit("-", 1)[0]  # gpt-4o-airline -> gpt-4o (agent identity, domain stripped)
-        if agent not in counters:
-            counters[agent] = make_counter(agent, cfg.tokenizer)
-            strategies[agent] = strategy_for(agent, cfg.tokenizer)
-        trajs.extend(load_tau_bench(f, agent=agent, counter=counters[agent]))
+def build_report(cfg: E7Config) -> dict:
+    """Everything the driver computes, as one JSON-able dict (shared with the summarizer's
+    fixture builder; the gate is the caller's job)."""
+    corpus = load_corpus(cfg)
     per_traj = []
-    for t in trajs:
+    for t in corpus.trajectories:
         rows = timeline(t, cfg.pricing)
         a, b = lane_a(t), lane_b(t)
         per_traj.append({
-            "traj_id": t.traj_id, "suite": t.suite, "agent": t.agent,
+            "traj_id": t.traj_id, "suite": t.suite, "agent": t.agent, "task": t.task,
             "totals": totals(rows),
             "lane_a": {"measurable": a.measurable,
                        "switches": list(a.switches) if a.switches is not None else None},
             "lane_b": {"switch_count": len(b.switches), "turns": len(b.tiers)},
         })
-    cov = coverage(trajs)
-    floor = cfg.thresholds
-    cov_ok = (
-        len(cov) >= floor["min_suites"]
-        and all(v["trajectories"] >= floor["min_trajectories_per_suite"]
-                and len(v["agents"]) >= floor["min_agents_per_suite"] for v in cov.values())
-    )
-    report = {
+    cov = coverage(corpus.trajectories, exclude_agents=LANE_A_ONLY_AGENTS)
+    lane_a_only: dict[str, dict] = {}
+    for t in corpus.trajectories:
+        if t.agent in LANE_A_ONLY_AGENTS:
+            d = lane_a_only.setdefault(t.agent, {"suite": t.suite, "trajectories": 0})
+            d["trajectories"] += 1
+    hr = headroom_rows(corpus.trajectories, corpus.texts, cfg.pricing["read_mult"])
+    return {
         "config_sha256": sha256_file_bytes(cfg.config_path),
-        "trace_files": {f.name: sha256_file_bytes(f) for f in files},
+        "trace_files": {corpus.relkey(cfg.traces_dir, f): sha256_file_bytes(f) for f in corpus.files},
+        "cost_basis": COST_BASIS,
         "coverage": cov,
-        "coverage_meets_floor": cov_ok,
-        "coverage_note": "below-floor output ships only as partial with coverage stated (entries 0005/0007)",
+        "suite_floor": suite_floor(cov, cfg.thresholds),
+        "coverage_meets_floor": meets_floor(cov, cfg.thresholds),
+        "coverage_note": "below-floor output ships only as partial with coverage stated (entries "
+                         "0005/0007); trajectory = one agent run on one task instance, distinct "
+                         "tasks reported beside it (entry 0011)",
+        "lane_a_only": lane_a_only,
+        "unparsed": sorted(corpus.unparsed, key=lambda u: u["traj_id"]),
+        "lane_a_detector_keys": list(MODEL_KEYS),
         "lane_a_measurable": sum(1 for p in per_traj if p["lane_a"]["measurable"]),
         "lane_a_unmeasurable": sum(1 for p in per_traj if not p["lane_a"]["measurable"]),
-        "tokenizer": {"encoding": cfg.tokenizer.get("encoding"), "per_agent_strategy": strategies,
+        "tokenizer": {"encoding": cfg.tokenizer.get("encoding"), "per_agent_strategy": corpus.strategies,
                       "divisors": cfg.tokenizer.get("divisors")},
+        "headroom": {"read_mult": cfg.pricing["read_mult"], "rows": hr, "summary": rows_summary(hr)},
+        "reported_usage": validation(corpus.trajectories),
         "trajectories": per_traj,
     }
+
+
+def run(cfg: E7Config, *, repo_root: Path) -> Path:
+    assert_ready(cfg, repo_root)
+    try:
+        report = build_report(cfg)
+    except ValueError as e:
+        raise RuntimeError(f"E7 REFUSED: {e}") from e
     cfg.results_dir.mkdir(parents=True, exist_ok=True)
     out = cfg.results_dir / "skeleton_report.json"
     out.write_text(json.dumps(report, indent=1), encoding="utf-8")
