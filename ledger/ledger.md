@@ -694,3 +694,111 @@ lower bounds without a measured gap.
 This entry decides no hypothesis. It constrains how every later figure must be stated.
 
 prior-entries-sha256: 51971a4ad1f56f75853d3f7e8e8c130abe4b495f60267cdb7f519d582e64f8a7
+
+### 0013 — 2026-09-01 — Headroom at observed handoffs `[BASELINE]`, through the fail-closed summarizer
+
+**What this entry records.** The entry-0010 measure, computed for the first time through
+`summarize_e7` rather than a probe. Every figure below is a value the summarizer recomputed
+from the raw traces and compared against the driver's report (config sha256
+6915666d452d; 188 trace files hashed); the summarizer refuses on
+any disagreement, and three live tampers on this report (aggregate median, a usage offset, one
+deleted switch row) were each refused by path before this entry was written.
+
+**Corpus at this run.** 2904 trajectories over three suites. Coverage (entry 0011 units;
+composio excluded as Lane A subject): swe-bench 64 trajectories /
+5 agents / 15 distinct tasks; tau2-bench
+800 / 4 / 50;
+tau-bench 1980 / 2 / 165
+(reported, below the agent floor, excluded from floor arithmetic). Floor: **MET**.
+Lane A (detector keys ['model', 'model_id', 'model_name']): **60 of 2904 trajectories measurable**,
+all of them composio (60 trajectories); 2844 recorded NOT MEASURABLE, never zero.
+Unparsed trajectories: 0.
+
+**Headroom at the 68 observed Lane A switches** (20241016_composio_swekit, 20241025_composio_swekit), read_mult 0.1:
+
+| figure | value |
+|---|---|
+| observed switches (Lane A, per-step metadata) | 68, all in the composio family |
+| byte-identical handoffs | **0/68** |
+| overlap of the receiving prompt with sender-processed content | 0.903 (p10 0.353, p90 0.982) |
+| paid prefill at the switch, tokens (visible-only LOWER BOUND) | 19,972 (p10 624, p90 93,805) |
+| headroom UPPER BOUND as a fraction of paid | **81.3% (p10 31.7%, p90 88.4%)** |
+
+Method, as registered in 0010 and pinned in code: multiset whitespace-token overlap of the receiving prompt with everything the sender processed; headroom_upper_bound = overlap_tokens x (1 - read_mult). Quantiles are the
+repository's one convention (`e7_stats`: median = statistics.median; p = sorted[floor(p x n)],
+lower nearest-rank, no interpolation).
+
+**What these numbers are and are not.**
+
+- The upper bound is what a transfer could recover **if** the re-rendered prompt's content
+  overlap were fully reusable. It is not: re-rendering changes the token sequence and every
+  position, so the achievable fraction is strictly below this and is not measured here.
+- `paid` counts only visible messages (entry 0012); the provider also billed a hidden prefix
+  the trace omits, so both paid and the absolute headroom are floors.
+- The 68 switches come from two submissions of ONE system (entry 0011) that switches by
+  design (Claude solves, o1-mini summarizes/selects). They evidence that the expensive form of
+  the motivating use case exists in a public trace; they are not a sample of agent practice.
+
+**What this entry decides: nothing.** H-E7a's rule is recoverable prefill spend at Lane A
+switch points as a fraction of the trajectory set's total input spend (entry 0006, Lane A
+alone per 0007). That ratio is not stated here because its denominator's scope -- which
+trajectory set -- is not yet fixed by any entry (the measurable subset, the suite, or the
+whole corpus give different answers by orders of magnitude). A successor entry fixes the
+denominator before the ratio is computed; this entry records the numerator's ingredients.
+
+prior-entries-sha256: 161b38359f50b631de6639e8f878c6489943bfd01338bf24e17cffa9f84c78c2
+
+### 0014 — 2026-09-01 — Invalidation taxonomy registered (event definitions and measurability, before any frequency); H-E7a denominator fixed
+
+Entry 0005 promised "an invalidation taxonomy with event frequencies per trace suite" and no
+entry has yet said what an event IS. Frequencies computed before the definitions are
+registered would be definitions fitted to the data; this entry registers them first. Two recon
+probes informed the definitions and are stated as recon, not results: (a) tau2-bench's
+provider-reported prompt tokens never decrease across 8,114 consecutive agent requests; (b)
+no tau2 inter-request gap exceeds 300 s (max 235 s). Neither is a registered number until it
+recomputes through `summarize_e7`.
+
+**The taxonomy: why a cached prefix dies, one event class per cause.** Each class carries a
+DETECTION RULE and a MEASURABILITY RULE. A trajectory that cannot evidence a class is recorded
+NOT MEASURABLE for that class and contributes to neither numerator nor denominator of its
+frequency -- never a zero (entry 0006's rule, generalized from Lane A to every class).
+
+| class | detection rule (per trajectory) | measurable iff |
+|---|---|---|
+| `model_switch` | Lane A exactly as registered (0006/0010): consecutive assistant turns whose per-step serving model differs | every assistant turn records a serving model (detector keys per 0010) |
+| `rerender_at_switch` | a `model_switch` whose handoff is not byte-identical (entry 0010's `byte_identical` = false) | `model_switch` measurable AND per-message text available to the adapter |
+| `compaction` | the provider-reported prompt size of an agent request is SMALLER than that of the preceding agent request in the same trajectory (the context was rewritten to fewer tokens; append-only growth is the null) | at least two consecutive agent requests carry provider-reported prompt tokens |
+| `idle_expiry` | an inter-request gap between consecutive agent requests exceeds the TTL of entry 0007's base case (300 s) | at least two consecutive agent requests carry timestamps |
+| `branch` | more than one attempt on the same task instance within one trajectory directory (nested layout `attempt_N`, N >= 1) | the layout records attempts (nested); flat layouts cannot evidence a branch and are NOT MEASURABLE |
+| `edit` | an earlier message modified in place between requests | NO current corpus records per-request prompts for the same model, so `edit` is NOT MEASURABLE everywhere; it is registered so its absence from every table is a stated unmeasurable, not an omission |
+
+Rules that bind the frequencies when they ship:
+
+- **Per agent alongside pooled** (entry 0007) for every class: measurable trajectories,
+  trajectories with >= 1 event, total events, and the NOT MEASURABLE count, in one row.
+- A final-transcript trace (every role/content SWE-bench family, tau-bench v1) is append-only
+  by construction and therefore NOT MEASURABLE for `compaction`, `idle_expiry`, and `edit`.
+  This is the expected shape of the table, and it is the finding, not a gap in the tooling.
+- Tool-output truncation applied before a message enters the context is NOT a compaction
+  event: the prompt still grows. Only a decrease in what the provider was asked to prefill
+  counts.
+- No class is added, merged, or re-defined after the first frequency table is computed.
+
+**H-E7a's denominator, fixed before the ratio is computed.** Entry 0006's rule is "recoverable
+prefill spend at switch points >= 10% of the trajectory set's total input-token spend" and does
+not say which trajectory set. Registered here: **the Lane A MEASURABLE subset, per suite and
+pooled.** Reason: an unmeasurable trajectory cannot contribute switches to the numerator, and
+placing it in the denominator would count it as a measured zero -- the one thing entry 0006
+forbids. The numerator is the entry-0010 upper bound summed over observed switches (so the
+ratio is itself an upper bound), both sides in base-input-price token units (the ratio is
+price-independent). Recon over the current corpus, stated so that this choice cannot later be
+read as outcome-selected: the ratio is below the cutoff under EVERY candidate denominator
+(whole corpus, suite, measurable subset), by roughly an order of magnitude. The verdict is
+still not stated here: it enters by a successor entry only from the summarizer's recomputed
+ratio, against the 10% cutoff, with Lane A alone (entry 0007).
+
+**Enforcement.** `summarize_e7` recomputes every class count, measurability flag, per-agent row
+and the H-E7a ratio from the raw traces and refuses on any disagreement; replay must not begin
+until this entry is committed unmodified (`e7.assert_ready`, entry 0006).
+
+prior-entries-sha256: 5a2eaea7cc174b727cac9c8dcc0446091f650abc6f7df2bc8849a9f7408905b1
