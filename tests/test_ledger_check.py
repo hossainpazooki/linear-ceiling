@@ -1,5 +1,7 @@
+import re
+
 from linear_ceiling import REPO_ROOT
-from linear_ceiling.ledger_check import REQUIRED_IDS, VERDICTS, check, parse_ledger
+from linear_ceiling.ledger_check import REQUIRED_IDS, VERDICTS, chain_hash, check, parse_ledger
 
 GOOD = """# Ledger
 | id | statement | decided by | verdict |
@@ -50,6 +52,40 @@ def test_check_requires_all_registered_ids():
 def test_required_ids_covers_all_six_registered_hypotheses():
     # Guards against a future narrowing (like the one this ticket corrects) going unnoticed.
     assert set(REQUIRED_IDS) == {"H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b"}
+
+
+def test_shelved_is_a_valid_verdict():
+    # Entry 0007 vocabulary: shelved-not-decided must be expressible in the table.
+    assert check(GOOD.replace("| H-S1 | s | E1 | unresolved |", "| H-S1 | s | E1 | SHELVED |")) == []
+
+
+def _with_chain(text: str) -> str:
+    """Append an entry 0003 whose prior-entries-sha256 correctly hashes the section above it."""
+    entries_start = re.search(r"^## Entries\s*$", text, re.M).start()
+    heading = "### 0003 — 2026-09-01 — chained\n"
+    chain = chain_hash(text, len(text), entries_start)
+    return text + heading + f"prior-entries-sha256: {chain}\n"
+
+
+def test_chain_accepts_correct_hash():
+    assert check(_with_chain(GOOD)) == []
+
+
+def test_chain_detects_edit_to_prior_entry():
+    # The exact hole the chain closes: a registered entry is edited after a later entry
+    # recorded the hash. ledger_check without the chain would still say "ledger ok".
+    chained = _with_chain(GOOD)
+    tampered = chained.replace("### 0001 — 2026-08-26 — first", "### 0001 — 2026-08-26 — first (reworded)")
+    problems = check(tampered)
+    assert any("prior-entries-sha256" in p for p in problems)
+
+
+def test_chain_ignores_header_and_table_edits():
+    # Editable commentary above '## Entries' is deliberately outside the chain: a verdict
+    # cell change (which happens via a numbered entry) must not break earlier hashes.
+    chained = _with_chain(GOOD)
+    edited = chained.replace("| H-S2 | s | E0 | unresolved |", "| H-S2 | s | E0 | HELD |")
+    assert check(edited) == []
 
 
 def test_repo_ledger_is_clean():
