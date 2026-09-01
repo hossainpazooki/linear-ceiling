@@ -19,14 +19,19 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e0 --config config/e0.toml   # refuses until entry 0003 sets the rule
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0_depth   # per-layer depth structure (entry 0006)
+.venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml are committed
+.venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # skeleton replay over traces/ (gitignored)
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
 ## Layout
 `src/linear_ceiling/` — `hashing` (canonical sha256) · `rng` · `config` · `pairs` · `seal` ·
 `run_experiment` (E1+ gate stub) · `screen` (CCA math) · `weights` (safetensors reader) ·
-`e0*` · `summarize_e0` · `summarize_e0_depth` · `lint_scope` · `ledger_check`. Tests mirror
-modules under `tests/`. Program state: screen line closed; the E7 measurement program is
-**registered, not built** — ledger entries 0006 + 0007 are the authority (thresholds, Lane A
-decides H-E7a, cost-model parameters, gates), and no parser/replay/cost-model code exists yet.
-Read both entries whole before writing any E7 code.
+`e0*` · `summarize_e0` · `summarize_e0_depth` · `e7_traces` (adapters; token counts are a
+chars/4 ESTIMATE, non-verdict-bearing until a tokenizer is registered) · `e7_cost` (two-bound
+timeline) · `e7_lanes` (Lane A measured / Lane B cascade) · `e7` (gate + skeleton driver) ·
+`lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. Program state: screen line
+closed; the E7 measurement program is registered (entries 0006 + 0007 are the authority —
+read both whole before touching E7 code) with the skeleton instrument built; no replay has
+run, and `e7.assert_ready` refuses until the registration is committed unmodified. Real
+trajectories go under `traces/` (gitignored), never into history.
