@@ -68,6 +68,7 @@ class E7Config:
     results_dir: Path
     pricing: dict
     thresholds: dict
+    tokenizer: dict
     lane_b_policy: str
     config_path: Path
 
@@ -80,6 +81,10 @@ _E7_THRESHOLD_KEYS = ("materiality_fraction", "negative_mass_fraction",
 def load_e7_config(path: Path, repo_root: Path) -> E7Config:
     path = Path(path)
     e7 = _read(path)["e7"]
+    if "tokenizer" not in e7 or "divisors" not in e7.get("tokenizer", {}):
+        raise ValueError("config/e7.toml [e7.tokenizer] with measured [e7.tokenizer.divisors] is "
+                         "required; the token counter must be registered (ledger entry 0009) "
+                         "before any cost number is computed")
     for section, keys in (("pricing", _E7_PRICING_KEYS), ("thresholds", _E7_THRESHOLD_KEYS)):
         missing = [k for k in keys if k not in e7.get(section, {})]
         if missing:
@@ -90,6 +95,7 @@ def load_e7_config(path: Path, repo_root: Path) -> E7Config:
         results_dir=Path(repo_root) / e7["results_dir"],
         pricing=dict(e7["pricing"]),
         thresholds=dict(e7["thresholds"]),
+        tokenizer=dict(e7["tokenizer"]),
         lane_b_policy=e7["lane_b"]["policy"],
         config_path=path,
     )

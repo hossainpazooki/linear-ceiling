@@ -22,6 +22,7 @@ from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E7Config, load_e7_config
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_lanes import lane_a, lane_b
+from linear_ceiling.e7_tokens import make_counter, strategy_for
 from linear_ceiling.e7_traces import coverage, load_tau_bench
 
 REQUIRED_ENTRIES = ("### 0006 ", "### 0007 ")
@@ -54,10 +55,14 @@ def run(cfg: E7Config, *, repo_root: Path) -> Path:
     if not files:
         raise RuntimeError(f"E7 REFUSED: no trajectory files under {cfg.traces_dir / 'tau-bench'}; "
                            "acquire traces first (they are gitignored, never committed)")
-    trajs = []
+    trajs, strategies = [], {}
+    counters: dict = {}
     for f in files:
         agent = f.stem.rsplit("-", 1)[0]  # gpt-4o-airline -> gpt-4o (agent identity, domain stripped)
-        trajs.extend(load_tau_bench(f, agent=agent))
+        if agent not in counters:
+            counters[agent] = make_counter(agent, cfg.tokenizer)
+            strategies[agent] = strategy_for(agent, cfg.tokenizer)
+        trajs.extend(load_tau_bench(f, agent=agent, counter=counters[agent]))
     per_traj = []
     for t in trajs:
         rows = timeline(t, cfg.pricing)
@@ -82,7 +87,8 @@ def run(cfg: E7Config, *, repo_root: Path) -> Path:
         "coverage_note": "below-floor output ships only as partial with coverage stated (entries 0005/0007)",
         "lane_a_measurable": sum(1 for p in per_traj if p["lane_a"]["measurable"]),
         "lane_a_unmeasurable": sum(1 for p in per_traj if not p["lane_a"]["measurable"]),
-        "tokenizer": "approx chars/4 -- NON-VERDICT-BEARING until registered in a successor entry",
+        "tokenizer": {"encoding": cfg.tokenizer.get("encoding"), "per_agent_strategy": strategies,
+                      "divisors": cfg.tokenizer.get("divisors")},
         "trajectories": per_traj,
     }
     cfg.results_dir.mkdir(parents=True, exist_ok=True)

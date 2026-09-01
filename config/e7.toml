@@ -19,6 +19,21 @@ min_trajectories_per_suite = 50
 min_agents_per_suite = 3        # distinct agents/scaffolds, not runs (entry 0007)
 min_suites = 2
 
+[e7.tokenizer]                  # registered in ledger entry 0009; divisors MEASURED, not guessed
+encoding = "o200k_base"         # pinned by name; gpt-4o's public encoder (tiktoken)
+default_strategy = "calibrated"
+
+[e7.tokenizer.agent_strategy]
+"gpt-4o" = "exact"              # public encoder exists -> no estimate at all
+"sonnet-35-new" = "calibrated"  # Anthropic publishes no tokenizer -> per-type divisors
+
+[e7.tokenizer.divisors]         # chars per token, measured on the exact half of this suite
+system = 4.817                  # (2026-09-01, 34.4M chars / 9.25M tokens over all 4 files)
+user = 4.322
+assistant = 4.005
+tool_output = 2.890
+tool_args = 3.467
+
 [e7.lane_b]
 policy = "two-tier-cascade"     # planning turns large tier, tool-execution turns small tier;
                                 # every tier boundary is a switch point (entry 0006, frozen)

@@ -3,7 +3,9 @@ import json
 
 import pytest
 
-from linear_ceiling.e7_traces import Trajectory, Msg, approx_tokens, coverage, load_tau_bench
+from linear_ceiling.e7_traces import (
+    Trajectory, Msg, approx_tokens, coverage, load_tau_bench, tool_arguments_text,
+)
 
 FIXTURE = [
     {
@@ -36,6 +38,39 @@ def test_load_tau_bench_normalizes(tmp_path):
     assert tool_msg.tokens == approx_tokens("lookup") + approx_tokens('{"q":1}')
     # the real files carry no per-step model or timestamps -- both must read as absent
     assert not t.has_step_model_metadata and not t.has_timestamps
+
+
+def test_tool_arguments_dict_is_serialized_not_key_counted():
+    # The 2026-09-01 defect: tau-bench stores arguments as a str for gpt-4o and a DICT for
+    # sonnet. len(dict) is its key count, so a character counter silently undercounted every
+    # sonnet tool call. Compact separators match the sibling agent's observed wire format.
+    d = {"user_id": "mia_li_3668"}
+    assert tool_arguments_text(d) == '{"user_id":"mia_li_3668"}'
+    assert len(tool_arguments_text(d)) == 25
+    assert approx_tokens(tool_arguments_text(d)) > approx_tokens(str(len(d)))
+    assert tool_arguments_text('{"a":1}') == '{"a":1}'   # str passes through unchanged
+    assert tool_arguments_text(None) == ""
+
+
+def test_tool_arguments_refuses_unknown_type():
+    with pytest.raises(ValueError, match="unexpected type"):
+        tool_arguments_text([1, 2, 3])
+
+
+def test_dict_and_str_arguments_count_identically(tmp_path):
+    """Same call, two storage shapes -> identical token counts (the bug made them differ)."""
+    def rec(args):
+        return [{"task_id": 0, "reward": 1.0, "trial": 0, "info": {},
+                 "traj": [{"role": "assistant", "content": None,
+                           "tool_calls": [{"id": "c", "type": "function",
+                                           "function": {"name": "book", "arguments": args}}]}]}]
+    a = tmp_path / "gpt-4o-x.json"
+    b = tmp_path / "sonnet-35-new-x.json"
+    a.write_text(json.dumps(rec('{"user_id":"mia_li_3668"}')), encoding="utf-8")
+    b.write_text(json.dumps(rec({"user_id": "mia_li_3668"})), encoding="utf-8")
+    ta = load_tau_bench(a, agent="gpt-4o")[0].messages[0].tokens
+    tb = load_tau_bench(b, agent="sonnet-35-new")[0].messages[0].tokens
+    assert ta == tb > 0
 
 
 def test_load_tau_bench_refuses_wrong_shape(tmp_path):

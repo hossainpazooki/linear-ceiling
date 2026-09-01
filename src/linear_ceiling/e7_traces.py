@@ -22,9 +22,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
-def approx_tokens(text: str) -> int:
-    """chars/4 estimate. NON-VERDICT-BEARING until a ledger entry registers the tokenizer."""
+def approx_tokens(text: str, content_type: str = "assistant") -> int:
+    """Bare chars/4 fallback, kept only for tests and for callers with no config.
+
+    NOT the registered counter: measured against o200k_base it is differentially biased by
+    content type (-27.8% on tool output, +20.4% on system prompts). Production paths build a
+    counter from config via `e7_tokens.make_counter`; see ledger entry 0009.
+    """
     return math.ceil(len(text) / 4) if text else 0
+
+
+_ROLE_TO_CONTENT_TYPE = {"system": "system", "user": "user", "assistant": "assistant",
+                         "tool": "tool_output"}
 
 
 @dataclass(frozen=True)
@@ -54,14 +63,40 @@ class Trajectory:
         return any(m.timestamp is not None for m in self.messages)
 
 
+def tool_arguments_text(arguments) -> str:
+    """Normalize a tool call's arguments to the text that was billed.
+
+    tau-bench stores this field inconsistently BY AGENT (verified 2026-09-01 over the four
+    shipped files): gpt-4o records a JSON *string* (4,438 calls), sonnet-35-new records a
+    parsed *dict* (9,847 calls). Passing a dict to a character-based counter silently counts
+    its KEYS -- a large undercount that this function exists to prevent.
+
+    Dicts are re-serialized compactly because the sibling agent's wire format in the same
+    suite is compact (`{"user_id":"mia_li_3668"}`, 25 chars == json.dumps(separators=(",",":"))).
+    The original bytes are unrecoverable from a parsed dict, so this is a reconstruction:
+    key order follows the trace's, and the compact-vs-spaced choice moves the count by ~1
+    char per key (a stated limitation, not a measured one).
+    """
+    if arguments is None:
+        return ""
+    if isinstance(arguments, str):
+        return arguments
+    if isinstance(arguments, dict):
+        return json.dumps(arguments, separators=(",", ":"), ensure_ascii=False)
+    raise ValueError(f"tool call arguments have unexpected type {type(arguments).__name__}; "
+                     "refusing to guess how it was billed")
+
+
 def _tau_msg(m: dict, counter) -> Msg:
+    ctype = _ROLE_TO_CONTENT_TYPE.get(m["role"], "assistant")
     content = m.get("content") or ""
-    tokens = counter(content)
+    tokens = counter(content, ctype)
     tool_names = ()
     if m.get("tool_calls"):
         tool_names = tuple(tc["function"]["name"] for tc in m["tool_calls"])
         for tc in m["tool_calls"]:
-            tokens += counter(tc["function"]["name"]) + counter(tc["function"].get("arguments") or "")
+            args = tool_arguments_text(tc["function"].get("arguments"))
+            tokens += counter(tc["function"]["name"], "tool_args") + counter(args, "tool_args")
     return Msg(role=m["role"], tokens=tokens, has_tool_calls=bool(m.get("tool_calls")),
                tool_names=tool_names)
 
