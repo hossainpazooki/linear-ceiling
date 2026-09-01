@@ -1,8 +1,9 @@
 # linear-ceiling
 
 Instruments for pre-registered, auditable experiments on cross-model KV-cache questions.
-Two program lines live here: a **sealed pre-fit screen** (ran; verdict returned under a rule
-frozen in advance; the line is **closed**, its hypotheses `SHELVED`), and a **trace-replay
+Two program lines live here: a **pre-fit screen line** (closed by operator decision; its one
+decided clause is scoped to a tied-embeddings vocabulary proxy and never generalized —
+`docs/background.md`; the other hypotheses are `SHELVED`), and a **trace-replay
 measurement program** over agentic KV-cache workloads — registered, built, and replayed across
 three public corpora. The premise hypotheses are decided: **H-E7a `NOT CONFIRMED`**
 (mid-trajectory switch headroom is immaterial on public traces, so the motivation reverts to
@@ -18,7 +19,7 @@ flowchart LR
     RULE --> E7
     RULE --> E8
     RULE --> E9
-    E0["E0 -- pre-fit screen: can the weight<br/>matrices alone forecast transfer<br/>fidelity, before anything is fitted?"] -->|verdict SAME under<br/>the frozen rule| VS[H-S2 first clause NOT CONFIRMED<br/>depth structure recorded,<br/>real vs proxy both readings open]
+    E0["E0 -- pre-fit screen: can the weight<br/>matrices alone forecast transfer<br/>fidelity, before anything is fitted?"] -->|frozen rule, on a<br/>tied-embeddings proxy| VS[H-S2 first clause NOT CONFIRMED<br/>depth structure recorded,<br/>real vs proxy both readings open]
     E0 -.->|operator decision,<br/>opportunity cost| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
     E7["E7 -- trace replay: do switches and<br/>compaction occur in public agent traces,<br/>and at what recoverable cost?"] --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
     E8["E8 -- content shift: does the fitted<br/>cross-model map keep its held-out<br/>fidelity on agent text? no refit"] --> V8[H-E8 NOT CONFIRMED]
@@ -48,7 +49,7 @@ Verdicts only — every figure lives in the named ledger entry, never here.
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** | Zero compaction events on every trajectory that can evidence one; final-transcript traces structurally cannot show it. | 0014, 0015 |
 | H-E8 — the fitted cross-model map survives agent-trace content shift | **NOT CONFIRMED** | The value pathway drops outside the registered band on agent text even with no switch and no position change; the key pathway lands in the dead zone. | 0009, 0016, 0020 |
 | H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling. | 0019 |
-| H-S1…H-S4 (pre-fit line) | `SHELVED` / `NOT CONFIRMED` (H-S2 first clause) | The weights-only test returned SAME under a rule frozen in advance; that line is closed. | 0003–0006 |
+| H-S1…H-S4 (pre-fit line) | `SHELVED` / `NOT CONFIRMED` (H-S2 first clause) | Line closed by operator decision; the one decided clause rests on a tied-embeddings vocabulary proxy and was never generalized (`docs/background.md`). | 0003–0006 |
 
 ## How a number becomes a claim
 
@@ -127,7 +128,10 @@ registered; the measured basis is in the ledger.
 
 1. **Seal before fit** — the seal writer refuses if a fitted mapper exists; CI's `seal verify`
    proves hash integrity and commit immutability only, never the pre-fit ordering itself
-   (that is proved by the writer's refusal, on a machine that sees the upstream).
+   (that is proved by the writer's refusal, on a machine that sees the upstream). Built for
+   the closed screen line and **never exercised on a real prediction** — E1 never ran, so
+   `seal verify` reports "no sealed predictions yet"; it stays in CI as infrastructure, not
+   as evidence, and E8/E9 make no pre-fit claims and do not use it (0009, 0019).
 2. **Pre-registration** — verdicts stated against the rule as written; amendments are new
    numbered entries; the entry chain makes silent edits to registered text fail CI. The
    header/table above `## Entries` are editable commentary outside the chain, and a history

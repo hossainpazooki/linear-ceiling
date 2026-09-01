@@ -15,6 +15,7 @@ H-S1/H-S3/H-S4 carry `SHELVED` (no experiment decided them; none is scheduled); 
 `NOT CONFIRMED` and H-E7b `UNESTIMABLE` (entry 0015); the live hypotheses are H-E8 and H-E9. From entry
 0007 on, each entry records a `prior-entries-sha256:` over the entries section above it,
 recomputed by `ledger_check` in CI.
+Dating erratum: entries 0016-0020 were authored 2026-09-01 despite their 2026-09-02 headings — see entry 0021.
 
 ## Hypotheses (pre-registered; verdict column is the only cell that ever changes, and only via a numbered entry)
 
@@ -1120,3 +1121,51 @@ hidden prefix the provider billed (0012). H-E8's verdict cell changes to `NOT CO
 entry.
 
 prior-entries-sha256: 65615f84d33ee898f5c585f470ff7faa7732e96de94a67e8b24ba00452b08d35
+
+### 0021 — 2026-09-01 — Erratum: heading dates of 0016–0020; Lane B reported descriptive `[BASELINE]`, its dollar counterfactual WITHDRAWN
+
+**(1) Dating erratum.** The headings of entries 0016, 0017, 0018, 0019 and 0020 carry the date
+2026-09-02. All five were authored on **2026-09-01** (commit author dates 2026-09-01, the
+latest 18:17 −0400; the same calendar day in UTC). The wrong dates were supplied by the
+session assistant on a timezone assumption and propagated; registered heading text is
+immutable under the entry chain, so the correction is recorded here rather than by edit. The
+same slip is in the filenames `docs/2026-09-02-*.md`, the 2026-09-02 handoff brief, and the
+`ts:` field of the learnings entry `2026-09-02-a-family-has-two-shapes-and-a-prefix-is-not-a-
+prefill.md` (stamped hours late; the three later learnings entries carry correct UTC capture
+stamps). Why this is on the record at all: this repo uses commit timestamps as ordering
+evidence (entry 0004), and COMMIT timestamps remain correct throughout — the erroneous dates
+are labels, not evidence — but a reader reconciling heading dates against `git log` deserves
+the discrepancy explained rather than discovered.
+
+**(2) Lane B, disposed of explicitly.** Entries 0005/0006 registered switch-point headroom
+with Lane B (the counterfactual two-tier cascade) as a reported lane; entry 0007 then ruled
+Lane B descriptive-only and verdict-bearing for nothing, because it inserts a switch at every
+boundary of a policy this program chose — it measures the policy, not the workload. No entry
+since has reported Lane B at all, leaving a registered output dangling. Resolved here, in two
+parts:
+
+- **Reported, descriptive `[BASELINE]`** — the labelled counterfactual under the registered
+  cascade policy (plain assistant turns on the large tier, tool-calling turns on the small
+  tier; every tier boundary a switch point), recomputed by `summarize_e7` from the raw traces:
+
+| suite | trajectories | assistant turns | tier boundaries (Lane B switch points) |
+|---|---|---|---|
+| swe-bench | 124 | 9,589 | 4,884 |
+| tau-bench | 1980 | 26,316 | 13,839 |
+| tau2-bench | 800 | 9,714 | 4,642 |
+| **ALL** | 2904 | 45,619 | 23,365 |
+
+  Read as registered: IF an operator ran this cascade over these workloads, context would
+  cross a model boundary this often. It is a property of the policy applied to these traces,
+  labelled counterfactual-under-stated-policy, and comparable to Lane A's 68 observed
+  switches only as an illustration of how far the counterfactual outruns observed practice.
+
+- **WITHDRAWN — Lane B's headroom-in-dollars output.** Pricing the counterfactual boundaries
+  would manufacture a large transfer-headroom figure whose magnitude is fixed by the policy
+  choice, not by any observed workload (0007's "material by construction"). It was never
+  computed, and this entry withdraws it as a registered output rather than leaving it
+  implicitly pending. Reinstating it would take a new numbered entry registering a policy with
+  independent evidentiary standing. No hypothesis cell changes: H-E7a was decided by Lane A
+  alone (0007, 0015, 0018) and Lane B never had a hypothesis.
+
+prior-entries-sha256: 50d9bd4ffde65814712ff8b3a532f0e4f611e3e6220edeb53b419872f7f68209
