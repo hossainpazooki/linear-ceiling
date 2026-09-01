@@ -28,6 +28,12 @@ Every peer-reviewed acceptance except Cache-to-Cache is same-model/intra-model w
 mechanism papers assert the switch-point premise in their motivation sections; none measures
 it. That unmeasured premise is claim 2.
 
+> **Superseded in part (2026-09-01, later):** the SWE-bench half of the probe below was a
+> repo-surface check. A full census — availability, formats, and what the formats record — is
+> in `docs/2026-09-01-swe-bench-trace-recon.md`, which confirms the run-level-model conclusion
+> and adds that **no sampled SWE-bench format records a per-step model or any timestamp
+> either**. Read the recon for anything about SWE-bench.
+
 ## Trace-metadata probe (2026-09-01) — basis for the two-lane design in entry 0006
 
 - SWE-bench experiments repo (github.com/SWE-bench/experiments): trajectories required of

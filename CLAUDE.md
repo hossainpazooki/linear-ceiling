@@ -33,8 +33,13 @@ per-agent str/dict `arguments` split) · `e7_tokens` (exact `o200k_base` where a
 exists, per-content-type calibrated divisors otherwise — ledger 0009) · `e7_cost` (two-bound
 timeline) · `e7_lanes` (Lane A measured / Lane B cascade) · `e7` (gate + skeleton driver) ·
 `summarize_e7` (fail-closed; recomputes from raw traces, refuses on tamper) ·
-`lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. Program state: screen line
-closed; the E7 measurement program is registered (entries 0006 + 0007 are the authority —
-read both whole before touching E7 code) with the skeleton instrument built; no replay has
-run, and `e7.assert_ready` refuses until the registration is committed unmodified. Real
-trajectories go under `traces/` (gitignored), never into history.
+`lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+
+Program state: screen line closed (H-S1/S3/S4 `SHELVED`); the E7 measurement program is
+registered **and built**, and has run over tau-bench only — no hypothesis is decided, and the
+per-agent coverage floor is unmet on one suite. **Entries 0006–0009 are the authority; read
+them whole before touching E7 code** (Lane A alone decides H-E7a; Lane B never resolves
+anything; H-E7b needs both cost bounds). `e7.assert_ready` refuses until those entries and
+`config/e7.toml` are committed unmodified. Trajectory availability, formats, and what they omit:
+`docs/2026-09-01-swe-bench-trace-recon.md`. Real trajectories live under `traces/` (gitignored),
+never in history.
