@@ -5,7 +5,8 @@ the relevant fail-closed summarizer IN-PROCESS first and pulls every figure from
 output — the script refuses to run out of order and runs `ledger_check` after appending. Run
 from the repo root with `.venv/Scripts/python.exe`.
 
-Current state: **no drafts pending.** Entries 0013–0022 are all appended and their scripts
-deleted. The next expected entry is **0023 — the H-E9 verdict**, written from a clean
-`summarize_e9` run after the A100 day (`docs/2026-09-02-e9-gpu-runbook.md`); its script gets
-staged here when the E9 results are synced back.
+Current state: **no drafts pending.** Entries 0013–0023 are all appended and their scripts
+deleted (0023's pulled every figure from `results/e9/calibration/tau.json`, written by
+`summarize_e9 --calibrate-tau`). The next expected entry is **0024 — the H-E9 verdict**, written
+from a clean `summarize_e9` run after the A100 day (`docs/2026-09-02-e9-gpu-runbook.md`); its
+script gets staged here when the E9 results are synced back.

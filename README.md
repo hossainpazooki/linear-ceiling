@@ -10,7 +10,8 @@ three public corpora. The premise hypotheses are decided: **H-E7a `NOT CONFIRMED
 fleet mixing), **H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows any), and
 **H-E8 `NOT CONFIRMED`** (the fitted cross-model map does not survive agent-trace content
 shift within its band). E9 — the achievable fraction at a real re-rendered handoff — is
-registered and gated, awaiting its GPU run. The ledger is the authority on state; every figure
+registered and gated, its rule amended before any prefill (entry 0023: a per-token oracle
+selective-recompute fraction replaces pooled R² as the verdict statistic), awaiting its GPU run. The ledger is the authority on state; every figure
 lives there or in `docs/`, never here.
 
 ```mermaid
@@ -48,7 +49,7 @@ Verdicts only — every figure lives in the named ledger entry, never here.
 | H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** | Mid-trajectory switching exists (one designed critic/selector family, always re-rendered, never byte-identical), but its recoverable prefill sits an order of magnitude under the registered cutoff; the motivating story reverts to fleet mixing. | 0006, 0010, 0013–0018 |
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** | Zero compaction events on every trajectory that can evidence one; final-transcript traces structurally cannot show it. | 0014, 0015 |
 | H-E8 — the fitted cross-model map survives agent-trace content shift | **NOT CONFIRMED** | The value pathway drops outside the registered band on agent text even with no switch and no position change; the key pathway lands in the dead zone. | 0009, 0016, 0020 |
-| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling. | 0019 |
+| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, rule amended per-token before any prefill, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling; decided by how many matched tokens an oracle must recompute to reach the mapper's own fidelity. | 0019, 0023 |
 | H-S1…H-S4 (pre-fit line) | `SHELVED` / `NOT CONFIRMED` (H-S2 first clause) | Line closed by operator decision; the one decided clause rests on a tied-embeddings vocabulary proxy and was never generalized (`docs/background.md`). | 0003–0006 |
 
 ## How a number becomes a claim

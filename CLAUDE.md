@@ -25,9 +25,10 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
-.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + config/e9.toml committed AND the upstream pin holds
-.venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: per handoff 3 stride-1 dumps + score_positions; checkpoints per handoff; keep-subset dumps retained
-.venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: re-derives alignments from raw traces, R^2 from moments, re-scores the keep subset
+.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + config/e9.toml committed AND the 0023 upstream re-pin holds
+.venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau   # 0023, before the GPU run: tau = 1 - archived k=1 held-out R^2 via upstream score_mapper --per-token; writes results/e9/calibration/tau.json (~1 min CPU)
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: alignments from raw traces, R^2 from moments, per-token sums to moments, keep subset re-scored, tau recomputed, controls checked -> f*(tau), seam/depth profiles, band
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
@@ -49,9 +50,12 @@ quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the s
 (gate + driver by subprocess; never imports kvt) · `summarize_e8` · `upstream_gate` (the ONE
 pin check: ancestor + invoked-paths-unchanged + clean — a later experiment's re-pin is not an
 older experiment's drift) · `e9_align` (0019 handoff slices + difflib matched blocks +
-exclusions) · `e9` (gate + per-handoff dump/score/delete driver, checkpointed) · `summarize_e9`
-(alignments re-derived from raw traces; R² from recorded moments; keep-subset re-scored from
-fingerprinted tensors) · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+exclusions) · `e9` (gate + pre-batch controls + per-handoff dump/score/delete driver, checkpointed) ·
+`e9_pertoken` (entry 0023 arithmetic: centered delta in R²'s units, oracle f*(tau), seam distance
+b(t) + fixed bins, null pairing, band) · `summarize_e9` (alignments re-derived from raw traces;
+R² from recorded moments; per-token squares summed against the moments; keep-subset re-scored
+from fingerprinted tensors; tau recomputed from the archived mapper; controls checked; then f*,
+profiles, band) · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
 `docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora
@@ -59,10 +63,14 @@ Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across thr
 Decided: **H-E7a `NOT CONFIRMED`** (an order of magnitude under the 10% cutoff after the 0017
 correction; corrected figures in 0018 — 0005's kill condition applies, the motivation reverts
 to fleet mixing), **H-E7b `UNESTIMABLE`** (0015), **H-E8 `NOT CONFIRMED`** (0020: K UNRESOLVED
-/ V DEGRADES at the verdict k, neither read-out alone). Live: **H-E9** (0019; registered,
-built, gated on the `7e41f792` upstream pin; awaiting the A100 run — see
-`docs/2026-09-02-e9-gpu-runbook.md`). **Entries 0006–0020 are the authority; read them whole
-before touching E7/E8/E9 code.** Every taxonomy class carries its own
+/ V DEGRADES at the verdict k, neither read-out alone). Live: **H-E9** (0019 registered; rule
+amended by **0023** before any prefill — verdict statistic is median oracle selective-recompute
+fraction f*(τ_K) over included handoffs, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50, τ_K = 1 − 0.6814 from
+the archive; pooled R² is a bridge and decides nothing; built, gated on the 0023 upstream re-pin
+(`--per-token`; 0019's `7e41f792` is its ancestor); awaiting the A100 run — see
+`docs/2026-09-02-e9-gpu-runbook.md`; verdict entry will be 0024). **Entries 0006–0023 are the
+authority; read them whole before touching E7/E8/E9 code.** Per-token deviation is in R²'s own
+units (a token's share of unexplained variance), never a per-token percent error (0023). Every taxonomy class carries its own
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
 Quantiles come only from `e7_stats` (lower nearest-rank; no interpolation) — a second
 convention would silently change a p90. The rules newcomers break first: Lane A

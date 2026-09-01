@@ -117,6 +117,14 @@ would do; it bounds what a transfer could recover at the one public instance of 
 model; alignment and scoring on CPU. Whole run < 1 h on the A100; budget 4 h for the dump
 files and the sync. A 1-day grant is enough; request 2 days only if E8 slips onto the box.
 
+**Status 2026-09-01 (later): rule AMENDED by entry 0023 before any prefill** — verdict statistic is now
+median oracle selective-recompute fraction f*(τ_K) over included handoffs on a per-token centered
+deviation (R²'s own units), HOLDS ≤ 0.15 (CacheBlend anchor) / DEGRADES ≥ 0.50 (operator's stated
+judgment); τ_K = 1 − 0.6814 calibrated from the archive by `summarize_e9 --calibrate-tau`; pooled R²
+stays as a bridge and decides nothing; identity + δ_null controls, seam and depth profiles registered;
+upstream `--per-token` re-pin pending the operator's commit. The paragraph above describes 0019's
+rule as registered and is superseded on that clause only.
+
 **Status 2026-09-02: BUILT and gated, not run.** `config/e9.toml` (upstream pinned `7e41f792`);
 `e9_align` (difflib matched blocks; over-cap and empty-receiver handoffs EXCLUDED and
 counted); upstream `scripts/score_positions.py` (no new dump code needed — `dump_kv.py
