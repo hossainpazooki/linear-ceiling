@@ -34,6 +34,21 @@ computation to record is a summarizer that **recomputes from the raw inputs and 
 disagreement** — proven by tamper tests, not asserted. Each entry then hash-chains the
 registered text above it, so editing a registered entry fails CI.
 
+Refusal is layered, and each layer fails closed rather than guessing:
+
+1. **Gates refuse to run** — an experiment reads no data until its registering entries and
+   config are committed unmodified (and, where an upstream is invoked, until the upstream HEAD
+   matches the pinned sha with a clean tree).
+2. **Adapters refuse to guess** — an unknown trace shape, a missing request boundary, or an
+   argument type that cannot be priced raises instead of approximating; what no adapter accepts
+   is recorded as unparsed, never dropped.
+3. **Summarizers refuse to summarize** — config drift, a changed/added/missing input file, a
+   NaN, a recorded value the recomputation does not reproduce, or a report section from an
+   older driver each name their reason and exit nonzero.
+4. **Measurability refuses the flattering zero** — every class of event carries its own NOT
+   MEASURABLE state; a trace that cannot evidence a thing never counts as evidence of its
+   absence.
+
 ```mermaid
 flowchart LR
     RAW[("traces/ + results/<br/>(gitignored)")] --> S1[summarize_e0]
@@ -102,6 +117,29 @@ flowchart LR
     I6[determinism] --> C6[single rng + suite grep]
     I7[scope sentence] --> C7[lint_scope]
 ```
+
+## When the instrument is wrong
+
+The discipline above assumes the code can be wrong and is built to survive it. A defect in an
+adapter or a measure is handled the same way every time — nothing is edited, nothing deleted:
+
+```mermaid
+flowchart TD
+    D[defect found -- usually by an INDEPENDENT<br/>measurement of the same objects] --> F[fix in code + a test that pins the defect]
+    D --> L[learnings entry with a read-only re-verify line<br/>wrong entries superseded via kills chains]
+    F --> C[correction entry: names the defects, marks the<br/>affected FIGURES SUPERSEDED, re-derives nothing]
+    C --> R[fresh replay through the fixed instrument<br/>after the correction is committed]
+    R --> N[new entry with the corrected figures,<br/>from the summarizer only]
+    C -.-> V[verdicts are re-examined, not assumed:<br/>they change only if the rule as written now says so]
+```
+
+Two properties make this trustworthy rather than cosmetic. **Figures and verdicts are
+superseded separately** — a wrong number does not silently drag a verdict with it, and a verdict
+that survives a correction is stated as surviving, with the corrected margin. And **a
+summarizer that shares the adapter with the driver proves the arithmetic, not the reading** —
+which is why load-bearing claims also get cross-checked against an independent view of the same
+object (provider-reported usage, an archived result file, a second tokenization) whenever one
+exists.
 
 ## Setup
 

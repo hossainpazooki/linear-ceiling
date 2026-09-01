@@ -51,9 +51,11 @@ Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across thr
 (tau-bench, tau2-bench, SWE-bench), floor **met**, all three registered outputs on the record:
 headroom (0013), taxonomy frequencies (0015), break-even `UNESTIMABLE` (0015). **H-E7a is
 `NOT CONFIRMED`** (1.41% vs the 10% cutoff, Lane A alone, measurable-subset denominator) —
-entry 0005's kill condition applies and the motivation reverts to fleet mixing. Live
-hypotheses: H-E8 (built, gated on 0016) and H-E9 (0017 drafted). **Entries 0006–0015 are the
-authority; read them whole before touching E7/E8 code.** Every taxonomy class carries its own
+entry 0005's kill condition applies and the motivation reverts to fleet mixing. Entry 0017
+supersedes the FIGURES of 0013 and 0015's ratio (composio adapter shape defect; `paid` is the
+receiver's request prefill, never the trajectory prefix); the corrected figures land as 0018,
+E9 registers as 0019. Live hypotheses: H-E8 (built, gated on 0016) and H-E9. **Entries
+0006–0017 (and successors) are the authority; read them whole before touching E7/E8 code.** Every taxonomy class carries its own
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
 Quantiles come only from `e7_stats` (lower nearest-rank; no interpolation) — a second
 convention would silently change a p90. The rules newcomers break first: Lane A
