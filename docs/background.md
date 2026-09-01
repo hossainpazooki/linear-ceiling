@@ -1,127 +1,66 @@
-# Background: the discipline, the program history, and why the record looks the way it does
+# Background: how this program got its shape
 
-This is the material a first-time reader does not need on page one but a careful reviewer will
-want before trusting anything: how a number becomes a claim here, what the invariants are and
-what enforces each, what happens when the instrument itself is wrong, and how the program got
-its current shape. The README stays minimal; this file carries the machinery.
+The README carries the current state, the discipline, and the visuals; this file carries the
+narrative a first-time reader may want and the README deliberately omits. Nothing here is
+authoritative — the ledger is; where this file and an entry disagree, the entry wins.
 
-## Program history in one diagram
+## The two program lines
 
-Two program lines have lived in this repo. The **sealed pre-fit screen** ran (E0) and its line
-was closed on opportunity-cost grounds; the **trace-replay measurement program** (E7–E9) is the
-live work. The ledger entries named below are the authority on every claim here.
+**The sealed pre-fit screen (closed).** The original question: can a cheap, weights-only
+screen predict what a fitted linear KV mapper will achieve, before fitting it? The discipline
+was built for that question — sealed predictions written before any fit, a decision rule
+committed before any weight was read. E0 ran on a vocabulary proxy across the Qwen3 ladder and
+returned SAME under the frozen rule (entry 0004); the per-layer depth structure was recorded
+with both readings left open (0006), and the line E1–E6 was closed on opportunity-cost grounds
+(0006): the mechanism lane of this niche is crowded with top-track work, the measurement lane
+was open. H-S1/H-S3/H-S4 carry `SHELVED` — no experiment decided them, and none is scheduled.
 
-```mermaid
-flowchart LR
-    RULE[rule committed first] --> E0[E0: weights-only screen test]
-    E0 -->|SAME under the frozen rule| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
-    E0 --> DEPTH[per-layer depth structure recorded<br/>real vs proxy: both readings open]
-    E7[E7 trace-replay: taxonomy, switch-point<br/>headroom, compaction: replayed] --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
-    V7 --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
-    E7 -.->|numbers-freeze gate| WS[workshop 4-pager]
-    E8[E8 transfer under agent-trace<br/>distribution shift: H-E8 NOT CONFIRMED] --> ANCHOR
-    E9[E9 achievable fraction at the<br/>re-rendered handoff: registered, gated] --> ANCHOR
-```
+**The trace-replay measurement program (live).** The motivating claim of the cross-model
+KV-transfer literature is that agentic serving crosses model boundaries mid-trajectory, so
+caches die at switches and transfer would recover the re-prefill. Rather than assume it, the
+program measured it: three public corpora (tau-bench, tau2-bench, SWE-bench), pre-registered
+thresholds (0006/0007), a six-class invalidation taxonomy with a measurability rule per class
+(0014), and pinned provider pricing. The verdicts are in the README's findings table; the
+short version is that the premise did not survive contact with its own evidence, and the
+paper's contribution became the measurement itself: switching exists only as a designed
+critic/selector stage and is immaterial in recoverable prefill; compaction is unwitnessable in
+final transcripts and absent where witnessable; and every trace-only cost figure anyone
+publishes is a lower bound, because provider-reported usage reveals a fixed hidden prefix the
+traces never record (0012).
 
-## How a number becomes a claim
+**The transfer legs (E8 ran, E9 gated).** With the workload premise decided, the remaining
+question is what transfer could deliver where the one observed handoff pattern exists. E8
+evaluated the upstream's fitted mapper on agent-trace text with no refit — content shift
+alone broke the registered retention band on the value pathway (0020). E9 is registered
+(0019) to prefill the real handoffs on both models and measure how much of a content-matched
+token's KV survives the re-render — the achievable ceiling under the observed handoff, against
+the recorded upper bound.
 
-Nothing enters the ledger by hand. `results/` and `traces/` are gitignored; the only path from
-computation to record is a summarizer that **recomputes from the raw inputs and refuses on any
-disagreement** — proven by tamper tests, not asserted. Each entry then hash-chains the
-registered text above it, so editing a registered entry fails CI.
+## The correction chapter, briefly
 
-Refusal is layered, and each layer fails closed rather than guessing:
-
-1. **Gates refuse to run** — an experiment reads no data until its registering entries and
-   config are committed unmodified (and, where an upstream is invoked, until the upstream pin
-   holds: the pinned commit is an ancestor of HEAD, the invoked paths are unchanged since the
-   pin, and the working tree is clean for them).
-2. **Adapters refuse to guess** — an unknown trace shape, a missing request boundary, or an
-   argument type that cannot be priced raises instead of approximating; what no adapter accepts
-   is recorded as unparsed, never dropped.
-3. **Summarizers refuse to summarize** — config drift, a changed/added/missing input file, a
-   NaN, a recorded value the recomputation does not reproduce, or a report section from an
-   older driver each name their reason and exit nonzero.
-4. **Measurability refuses the flattering zero** — every class of event carries its own NOT
-   MEASURABLE state; a trace that cannot evidence a thing never counts as evidence of its
-   absence.
-
-```mermaid
-flowchart LR
-    RAW[("traces/ + results/<br/>(gitignored)")] --> S1[summarize_e0]
-    RAW --> S2[summarize_e0_depth]
-    RAW --> S3[summarize_e7 / e8 / e9<br/>recompute from raw inputs]
-    S1 --> E[numbered ledger entry<br/>immutable once registered]
-    S2 --> E
-    S3 --> E
-    S3 -.->|hash / NaN / recompute mismatch| REF[REFUSE, exit 1]
-    E --> H[prior-entries-sha256] -->|recomputed in CI| LC[ledger_check]
-```
-
-## Hard invariants, and what enforces each
-
-1. **Seal before fit** — the seal writer refuses if a fitted mapper exists; CI's `seal verify`
-   proves hash integrity and commit immutability only, never the pre-fit ordering itself
-   (that is proved by the writer's refusal, on a machine that sees the upstream).
-2. **Pre-registration** — verdicts stated against the rule as written; amendments are new
-   numbered entries; the entry chain makes silent edits to registered text fail CI. The
-   header/table above `## Entries` are editable commentary outside the chain, and a history
-   rewrite that regenerates chain or seal is locally undetectable.
-3. **No unrecomputed numbers** — summarizers only, fail-closed, tamper-tested.
-4. **Experiments refuse until their rules are committed** — the E0/E7/E8/E9 runners read no
-   data until the registering entries and their config are committed and unmodified.
-5. **A narrow detector is a defect, never a null** — a probe that cannot see a thing must not
-   report its absence; Lane A records the key set it searched alongside its counts.
-6. **Determinism** — one seeded generator (`rng.make_rng`); the suite greps for any other.
-7. **Scope sentence verbatim, once, in the README** — `lint_scope`.
-
-```mermaid
-flowchart LR
-    I1[seal before fit] --> C1[seal verify + writer refusal]
-    I2[pre-registration] --> C2[ledger_check + entry chain]
-    I3[no unrecomputed numbers] --> C3[fail-closed summarizers]
-    I4[rules committed first] --> C4[assert_ready gates]
-    I5[detector breadth] --> C5[recorded key set + tests]
-    I6[determinism] --> C6[single rng + suite grep]
-    I7[scope sentence] --> C7[lint_scope]
-```
-
-## When the instrument is wrong
-
-The discipline above assumes the code can be wrong and is built to survive it. A defect in an
-adapter or a measure is handled the same way every time — nothing is edited, nothing deleted:
-
-```mermaid
-flowchart TD
-    D[defect found -- usually by an INDEPENDENT<br/>measurement of the same objects] --> F[fix in code + a test that pins the defect]
-    D --> L[learnings entry with a read-only re-verify line<br/>wrong entries superseded via kills chains]
-    F --> C[correction entry: names the defects, marks the<br/>affected FIGURES SUPERSEDED, re-derives nothing]
-    C --> R[fresh replay through the fixed instrument<br/>after the correction is committed]
-    R --> N[new entry with the corrected figures,<br/>from the summarizer only]
-    C -.-> V[verdicts are re-examined, not assumed:<br/>they change only if the rule as written now says so]
-```
-
-Two properties make this trustworthy rather than cosmetic. **Figures and verdicts are
-superseded separately** — a wrong number does not silently drag a verdict with it, and a verdict
-that survives a correction is stated as surviving, with the corrected margin. And **a
-summarizer that shares the adapter with the driver proves the arithmetic, not the reading** —
-which is why load-bearing claims also get cross-checked against an independent view of the same
-object (provider-reported usage, an archived result file, a second tokenization) whenever one
-exists. The ledger's entry 0017 is this loop executed for real: two adapter/measure defects
-found by an independent measurement, figures superseded, verdicts re-derived and unchanged.
-
-## Two properties of the corpora that shape every figure
-
-Serving-model identity is recorded per step by only a minority of trace formats, so most
-trajectories are **not measurable** for switch-point analysis and are never counted as zero.
-And public traces omit the system prompt and tool schemas the provider billed, so **every cost
-figure computed from visible messages is a lower bound** — the omitted block is byte-identical
-per request, i.e. the most cacheable content there is. Both are registered; the measured basis
-is in the ledger (entries 0012, 0014, 0015).
+Entries 0013 and 0015 carried figures produced by an instrument that misread half of one trace
+family (a nested prompt shape) and mis-defined "paid" as the trajectory prefix rather than the
+receiver's own request prefill. The defect was found by an independent measurement of the same
+objects (E9's token counts could not be reconciled with the recorded slices), fixed with
+pinning tests, registered as entry 0017 (figures `[SUPERSEDED]`, both verdicts re-derived and
+standing — by a wider margin), and replaced by recomputed figures in 0018. The loop is drawn
+in the README's "When the instrument is wrong" section; 0017 is that loop executed for real.
+The lesson now encoded in the tooling: a summarizer that shares the driver's adapter proves
+the arithmetic, not the reading — independence proves the reading.
 
 ## Vocabulary
 
 Status tags on entries: `[VALIDATED]` ran and survived refutation · `[BASELINE]` ran, numbers
 in the ledger · `[STRETCH]` designed, not run · `[FUTURE]` not designed · `[SUPERSEDED]`.
-Hypothesis verdicts: `unresolved` · `HELD` · `NOT CONFIRMED` · `WITHDRAWN` · `SUPERSEDED` ·
-`SHELVED` (no experiment ran) · `UNESTIMABLE` (ran; the estimand has no support in the corpus).
+
+Hypothesis verdicts: `unresolved` (live, undecided) · `HELD` · `NOT CONFIRMED` (the rule as
+written returned a negative) · `WITHDRAWN` (a claim retracted) · `SUPERSEDED` (replaced) ·
+`SHELVED` (no experiment ran; none scheduled) · `UNESTIMABLE` (the experiment ran and its
+estimand has no support in the corpus).
+
+Recurring phrases with exact meanings: **NOT MEASURABLE** — the trace cannot evidence the
+event class; excluded from both numerator and denominator, never a zero. **UPPER BOUND** — a
+ceiling that is not an achievable value (re-rendering changes tokens and positions).
+**LOWER BOUND** — visible-messages-only accounting; the provider billed more (the hidden
+prefix). **Lane A / Lane B** — measured switch points vs a counterfactual cascade policy; Lane
+B never resolves any hypothesis.
