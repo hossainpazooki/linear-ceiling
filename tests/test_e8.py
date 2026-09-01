@@ -130,8 +130,9 @@ def test_run_end_to_end_with_fake_upstream(env, tmp_path):
     assert scripts.count("scripts/dump_kv.py") == 2 and scripts.count("scripts/score_mapper.py") == 4
     assert rep["per_k"]["1"]["band_outcome"] == {"K": "UNRESOLVED", "V": "UNRESOLVED"}
     assert rep["per_k"]["4"]["band_outcome"]["K"] == "DEGRADES"
-    assert rep["verdict_bearing"] == {"k": 1, "readout": "K", "outcome": "UNRESOLVED",
-                                      "note": "band outcome only; the verdict on H-E8 enters by a numbered entry"}
+    assert rep["verdict_bearing"]["k"] == 1
+    assert rep["verdict_bearing"]["outcome"] == {"K": "UNRESOLVED", "V": "UNRESOLVED"}
+    assert "neither alone" in rep["verdict_bearing"]["note"]
     assert rep["per_k"]["1"]["drop"]["K"] == pytest.approx(0.6813557346883706 - 0.60)
     assert set(rep["dumps"]["agent"]["source"]) == {"meta.json", "K.bin"}
     assert rep["tokens"]["sha256"] and (tmp_path / "data" / "e8").glob("*.npy")

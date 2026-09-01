@@ -90,8 +90,8 @@ def summarize(cfg: E8Config, runner=subprocess.run) -> str:
             raise ValueError(f"k={k}: band outcome recomputed {row['band_outcome']} != recorded {rec['band_outcome']}")
         recomputed[k] = row
     vb = rep.get("verdict_bearing") or {}
-    if vb.get("k") != cfg.verdict_k or vb.get("outcome") != recomputed[cfg.verdict_k]["band_outcome"]["K"]:
-        raise ValueError("verdict-bearing block does not match the recomputed k=1 K outcome")
+    if vb.get("k") != cfg.verdict_k or vb.get("outcome") != recomputed[cfg.verdict_k]["band_outcome"]:
+        raise ValueError("verdict-bearing block does not match the recomputed verdict-k outcomes")
 
     lines = ["| k | arm (a) generic K / V | arm (b) agent K / V | drop K / V | band K / V |", "|---|---|---|---|---|"]
     for k in cfg.report_k:
@@ -104,8 +104,10 @@ def summarize(cfg: E8Config, runner=subprocess.run) -> str:
           f"pair {cfg.pair} | upstream {cfg.upstream_sha[:12]} | config {rep['config_sha256'][:12]} | "
           f"arm (a) cross-checked against the archived r2.json for every k\n\n" + "\n".join(lines)
           + f"\n\nband (entry 0009): HOLDS if drop <= {cfg.band['holds_max_drop']}, DEGRADES if drop >= "
-            f"{cfg.band['degrades_min_drop']}, else UNRESOLVED; verdict-bearing: k={cfg.verdict_k}, K read-out "
-            f"(entry 0016) -> **{recomputed[cfg.verdict_k]['band_outcome']['K']}**\n"
+            f"{cfg.band['degrades_min_drop']}, else UNRESOLVED; verdict-bearing k={cfg.verdict_k} (entry 0016), "
+            f"K and V separately, neither alone (entry 0009) -> "
+            f"K **{recomputed[cfg.verdict_k]['band_outcome']['K']}** / "
+            f"V **{recomputed[cfg.verdict_k]['band_outcome']['V']}**\n"
           + f"scope: {rep.get('scope')}\n\nThe verdict on H-E8 is NOT stated here; it enters by a numbered entry.\n")
     (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
     return md

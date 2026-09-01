@@ -152,9 +152,9 @@ def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks
         "dumps": {arm: {which: dump_fingerprint(p) for which, p in d.items()} for arm, d in dumps.items()},
         "archived_crosscheck": checks,
         "verdict_k": cfg.verdict_k, "band": cfg.band, "per_k": per_k,
-        "verdict_bearing": {"k": cfg.verdict_k, "readout": "K",
-                            "outcome": per_k[str(cfg.verdict_k)]["band_outcome"]["K"],
-                            "note": "band outcome only; the verdict on H-E8 enters by a numbered entry"},
+        "verdict_bearing": {"k": cfg.verdict_k, "outcome": per_k[str(cfg.verdict_k)]["band_outcome"],
+                            "note": "band outcomes for the verdict k, K and V separately (entry 0009 "
+                                    "reports neither alone); the verdict on H-E8 enters by a numbered entry"},
         "scope": "off-policy text for Qwen; single pair; not a real switch point; visible messages only (0012)",
     }
 

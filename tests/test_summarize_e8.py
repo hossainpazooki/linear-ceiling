@@ -26,7 +26,7 @@ def _write(p, obj):
 def test_clean_report_summarizes(ran):
     cfg, _, runner = ran
     md = summarize(cfg, runner=runner)
-    assert "verdict-bearing: k=1, K read-out" in md and "**UNRESOLVED**" in md
+    assert "verdict-bearing k=1" in md and "K **UNRESOLVED** / V **UNRESOLVED**" in md
     assert "verdict on H-E8 is NOT stated" in md
     assert (cfg.results_dir / "recheck" / "agent_k1.json").exists()
 
