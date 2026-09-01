@@ -1,0 +1,30 @@
+# E9 -- achievable fraction of the headroom upper bound at a re-rendered handoff (ledger entry 0019).
+# e9.assert_ready refuses until this file and ledger/ledger.md (with 0019) are committed unmodified
+# AND the upstream checkout is at `upstream_sha` (a commit adding scripts/score_positions.py), clean.
+
+[e9]
+pair = "qwen3-0.6b-to-1.7b"          # receiver = target (1.7B), source = 0.6B; mapper k from [e9.mapper]
+results_dir = "results/e9"
+scratch_dir = "results/e9/scratch"   # per-handoff dumps, deleted after scoring unless kept
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "TBD"                 # filled by entry 0017's re-pin; the gate refuses a non-hex value
+
+[e9.handoffs]
+suite = "swe-bench"
+agent = "composio_swekit"            # the only family with observed Lane A switches (entries 0010/0015)
+context_cap = 32768                  # Qwen3 native; a handoff with |S| or |R| above it is EXCLUDED and counted
+
+[e9.alignment]
+method = "difflib.SequenceMatcher(autojunk=False).get_matching_blocks over token ids"
+
+[e9.mapper]
+k = 1                                # the only non-collapsed held-out mapper (entry 0016)
+space = "content"
+
+[e9.keep]                            # handoffs whose full dumps are retained for CPU recomputation
+seed = 9
+n = 3
+
+[e9.band]                            # entry 0017, approved 2026-09-01: per-handoff E9-same K R2, median over included
+holds_min = 0.70
+degrades_max = 0.40

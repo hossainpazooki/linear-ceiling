@@ -94,9 +94,20 @@ re-verify: `.venv/Scripts/python.exe -m pytest tests/test_e8_text.py tests/test_
 re-verify: `.venv/Scripts/python.exe -m linear_ceiling.e8 --check` → exit 2, `upstream_sha is not a commit sha`
 re-verify (upstream, ~71 s): `cd ../kv-transfer-replication && .venv/Scripts/python.exe scripts/score_mapper.py --mapper mappers/qwen3-0.6b-to-1.7b/k1 --src data/kv/qwen3-0.6b-to-1.7b/source --tgt data/kv/qwen3-0.6b-to-1.7b/target --out /tmp/k1.json` → `heldout K=0.6814 V=0.5133`
 
-**DRAFTED, NOT APPENDED — entries 0016 (E8 amendment) and 0017 (E9 registration, band
-K ≥ 0.70 HOLDS / ≤ 0.40 DEGRADES, operator-approved)** as ordering-guarded scripts in
-`docs/drafts/`. **NOT STARTED** — E9 code (`e9_align`, upstream `dump_positions.py`, `e9`,
+**DEFECT FOUND 2026-09-02, FIXED IN CODE, CORRECTION ENTRY DRAFTED (0017), NOT APPENDED.**
+While building E9's alignment: (1) the `20241025` composio submission nests each sub-run's
+prompt as ONE LIST node and the adapter skipped it — 30 of 60 files were read as responses
+only; (2) `e7_headroom.measure` set `paid` to the trajectory prefix, ~6× the receiver's own
+request prefill that 0010 defines; (3) messages were joined without a separator. Fixes:
+`e7_swe._flatten_nodes`, `Msg.request`, request-level `paid` with a REFUSAL when no request
+boundary exists, newline join; tests pin all three. **0013's headroom figures and 0015's H-E7a
+ratio are wrong as stated and must be superseded; both verdicts survive** (recon after the fix:
+composio input 244.7M, receiver prefill median 7,492, overlap 0.988, upper bound 88.9%, ratio
+**0.20%** vs 10%). Learnings entry `2026-09-02-a-family-has-two-shapes-and-a-prefix-is-not-a-prefill`.
+Ordering becomes 0017 correction → 0018 corrected figures (from a fresh replay) → **0019 E9**
+(draft renumbered; request-level S/R; difflib matching blocks; keep-subset dumps).
+re-verify: `.venv/Scripts/python.exe -m pytest tests/test_e7_swe.py tests/test_e7_headroom.py -q` → 19 passed
+re-verify: the learnings entry's `re-verify:` line → `30 of 31 files nest the prompt as a list` **NOT STARTED** — E9 code (`e9_align`, upstream `dump_positions.py`, `e9`,
 `summarize_e9`); the compaction break-even distribution (H-E7b needs compaction EVENTS first);
 any paper draft.
 
