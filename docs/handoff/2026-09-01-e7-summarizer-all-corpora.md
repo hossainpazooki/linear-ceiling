@@ -32,13 +32,18 @@ six-class invalidation taxonomy (`model_switch`, `rerender_at_switch`, `compacti
 H-E7a denominator = Lane A measurable subset; chain `5a2eaea7…`. Both uncommitted.
 re-verify: `.venv/Scripts/python.exe -m linear_ceiling.ledger_check` → `ledger ok`
 
-**BUILT, NOT REPLAYED — the taxonomy** (`e7_taxonomy`, wired into driver + summarizer):
-per-trajectory class cells, per-agent/per-suite/pooled frequency rows (measurable, with-event,
-events, not-measurable), and the H-E7a ratio block per suite and pooled. The gate refuses
-replay until 0013/0014 are committed, so no real frequency exists yet — by design.
-re-verify: `.venv/Scripts/python.exe -m pytest tests/test_e7_taxonomy.py -q` → 11 passed
-re-verify: `.venv/Scripts/python.exe -m linear_ceiling.e7 --check` → exit 2 while the ledger is
-dirty; exit 0 once committed.
+**REPLAYED — the taxonomy; entry 0015 written from the summarizer only.** The operator committed
+0013/0014 (`4430a03`), ran `e7` + `summarize_e7` (exit 0), and `docs/drafts/append_0015.py`
+re-ran `summarize()` in-process before pulling every figure from the report. **H-E7a
+`NOT CONFIRMED`**: 2,339,562 / 165,959,914 over 60 measurable trajectories = 1.41% vs 10%.
+**H-E7b `UNESTIMABLE`** (new verdict token, `ledger_check` + test): compaction 0 events over
+the 800 trajectories that can evidence one, 2,104 NOT MEASURABLE. Also on record: 68/68
+switches are re-renders; idle expiry 0/800 (tau2's warm bound is the realized case); branch
+4 extra attempts on 2 of 4 nested instances. Chain `2899f4d3…`.
+re-verify: `.venv/Scripts/python.exe -m linear_ceiling.summarize_e7` → exit 0 and the line
+`pooled: ... = **1.41%** vs cutoff 10% -> BELOW the cutoff`
+re-verify: `.venv/Scripts/python.exe -m pytest tests/test_e7_taxonomy.py tests/test_ledger_check.py -q` → 22 passed
+re-verify: `grep -c "UNESTIMABLE" ledger/ledger.md` → ≥ 3 (table cell, header, entry)
 
 **RECON (not on the record; informed 0014's definitions, stated there as recon):** tau2's
 reported prompt tokens never decrease over 8,114 consecutive agent requests (compaction =
@@ -151,16 +156,13 @@ any paper draft.
 
 ## Open / next
 
-1. **Commit 0013/0014, rerun `e7`, rerun `summarize_e7`** — the first real taxonomy table and
-   the first summarizer-recomputed H-E7a ratio come out of that run.
-2. **Entry 0015**: the taxonomy frequencies `[BASELINE]` and the H-E7a verdict against the 10%
-   cutoff, from the summarizer's figures only. The recon says NEGATIVE by an order of magnitude
-   under every denominator; if the summarizer agrees, entry 0005's kill condition applies
-   ("motivation reverts to fleet-mixing framing") and the paper's framing changes accordingly.
-3. **H-E7b**: if the taxonomy shows compaction events only as measured zeros (tau2) and
-   NOT MEASURABLE elsewhere, H-E7b resolves *unestimable, stated* (entry 0005) — the
-   break-even distribution has nothing to be computed over. Decide in the same entry or its
-   successor.
+1. ~~Commit 0013/0014, rerun, entry 0015~~ — DONE 2026-09-01 (see above). The paper's framing
+   is now fixed by the record: switching exists but is immaterial (fleet-mixing motivation);
+   compaction is unestimable on public traces; the measurement paper's contribution is the
+   taxonomy with its measurability structure, the hidden-prefix lower bound, and the
+   re-rendered-handoff headroom with E9 measuring what is achievable.
+2. ~~Taxonomy event definitions~~ — DONE (0014). 3. ~~Compaction detection~~ — DONE (0014/0015:
+   measured zero where measurable).
 4. **E8 run sequence (after 0015):** commit `scripts/score_mapper.py` upstream → note its sha →
    `python docs/drafts/append_0016.py <sha> <date>` → put the sha in `config/e8.toml` and
    `UPSTREAM.md` → commit → `e8 --check` → `e8` (CPU, ~15 min: one dump pass + 6 scorings) →

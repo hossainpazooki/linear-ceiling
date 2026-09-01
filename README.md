@@ -3,18 +3,23 @@
 Instruments for pre-registered, auditable experiments on cross-model KV-cache questions.
 Two program lines live here: a **sealed pre-fit screen** (E0 ran; ladder verdict **SAME** on a
 vocabulary proxy; the line is **closed**, its hypotheses `SHELVED`), and a **trace-replay
-measurement program** over agentic KV-cache workloads — registered, built, and running across
-three public corpora, with no hypothesis decided yet. The ledger is the authority on state;
-every figure lives there or in `docs/`, never here.
+measurement program** over agentic KV-cache workloads — registered, built, and replayed across
+three public corpora. Its premise hypothesis is decided: **H-E7a `NOT CONFIRMED`** (mid-trajectory
+switch headroom is immaterial on public traces, so the motivation reverts to fleet mixing) and
+**H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows any). The transfer legs
+E8 and E9 are the live hypotheses. The ledger is the authority on state; every figure lives
+there or in `docs/`, never here.
 
 ```mermaid
 flowchart LR
     RULE[rule committed first] --> E0[E0: weights-only screen test]
     E0 -->|SAME under the frozen rule| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
     E0 --> DEPTH[per-layer depth structure recorded<br/>real vs proxy: both readings open]
-    E7[E7 trace-replay: taxonomy, switch-point<br/>headroom, compaction] --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
-    E7 -.->|only if its gates pass| WS[optional workshop 4-pager]
-    E8[E8 transfer under agent-trace<br/>distribution shift: registered, not run] --> ANCHOR
+    E7[E7 trace-replay: taxonomy, switch-point<br/>headroom, compaction: replayed] --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
+    V7 --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
+    E7 -.->|numbers-freeze gate| WS[workshop 4-pager]
+    E8[E8 transfer under agent-trace<br/>distribution shift: built, gated] --> ANCHOR
+    E9[E9 achievable fraction at the<br/>re-rendered handoff: registered next] --> ANCHOR
 ```
 
 The scope sentence, held verbatim:
@@ -56,11 +61,11 @@ flowchart TD
     P --> C[two-bound token/cost timeline]
     C --> A["Lane A: measured switch points<br/>unmeasurable is NOT zero"]
     C --> B["Lane B: counterfactual cascade<br/>descriptive only"]
-    A -->|alone decides| HA[H-E7a]
+    A -->|alone decided| HA[H-E7a: NOT CONFIRMED<br/>1.41% vs 10% cutoff]
     A --> HR[headroom at observed handoffs<br/>reported as an UPPER BOUND]
     B -.->|never resolves a hypothesis| DESC[labeled counterfactual]
-    C --> TAX[invalidation taxonomy]
-    C --> CB[compaction break-even<br/>warm+cold bounds decide H-E7b]
+    C --> TAX[invalidation taxonomy<br/>six classes, each with its own<br/>NOT MEASURABLE state]
+    TAX --> CB[compaction events: measured zero<br/>where measurable, so H-E7b UNESTIMABLE]
 ```
 
 Two properties of the corpora shape every figure. Serving-model identity is recorded per step
@@ -148,4 +153,5 @@ flowchart TD
 
 Status tags used in the ledger: `[VALIDATED]` ran and survived refutation · `[BASELINE]` ran,
 numbers in the ledger · `[STRETCH]` designed, not run · `[FUTURE]` not designed ·
-`[SUPERSEDED]`.
+`[SUPERSEDED]`. Verdicts: `unresolved` · `HELD` · `NOT CONFIRMED` · `WITHDRAWN` · `SUPERSEDED` ·
+`SHELVED` (no experiment ran) · `UNESTIMABLE` (ran; the estimand has no support in the corpus).

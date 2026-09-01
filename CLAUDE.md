@@ -47,12 +47,13 @@ quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the s
 `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. `docs/drafts/` holds the
 append scripts for entries not yet written (0016, 0017), ordering-guarded.
 
-Program state: screen line closed (H-S1/S3/S4 `SHELVED`); the E7 measurement program is
-registered **and built** across three corpora (tau-bench, tau2-bench, SWE-bench), coverage floor
-**met**, headroom on the record (entry 0013, via the summarizer), taxonomy definitions + the
-H-E7a denominator registered (entry 0014) and implemented but **not yet replayed** — the gate
-refuses until 0013/0014 are committed. **No hypothesis decided.** **Entries 0006–0014 are the
-authority; read them whole before touching E7 code.** Every taxonomy class carries its own
+Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora
+(tau-bench, tau2-bench, SWE-bench), floor **met**, all three registered outputs on the record:
+headroom (0013), taxonomy frequencies (0015), break-even `UNESTIMABLE` (0015). **H-E7a is
+`NOT CONFIRMED`** (1.41% vs the 10% cutoff, Lane A alone, measurable-subset denominator) —
+entry 0005's kill condition applies and the motivation reverts to fleet mixing. Live
+hypotheses: H-E8 (built, gated on 0016) and H-E9 (0017 drafted). **Entries 0006–0015 are the
+authority; read them whole before touching E7/E8 code.** Every taxonomy class carries its own
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
 Quantiles come only from `e7_stats` (lower nearest-rank; no interpolation) — a second
 convention would silently change a p90. The rules newcomers break first: Lane A

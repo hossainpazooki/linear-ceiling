@@ -127,7 +127,7 @@ reclaimed box loses one handoff, not the run); `summarize_e9` (fail-closed); tes
 
 | when | what | gate |
 |---|---|---|
-| 09-01/02 | commit 0013/0014; **taxonomy run + summarizer; entry 0015** (H-E7a verdict, H-E7b ruling) | reminder on file |
+| 09-01 | ~~commit 0013/0014; taxonomy run + summarizer; entry 0015~~ **DONE**: H-E7a `NOT CONFIRMED` (1.41%), H-E7b `UNESTIMABLE` | — |
 | 09-02 | submit the A100 request (1 day; 2 if E8 slips); draft + commit the E8 amendment entry; build E8; run E8 on CPU; `summarize_e8`; E8 verdict entry | nothing reads a dump before the entry is in HEAD |
 | 09-03/04 | draft + commit the E9 registration entry (H-E9, band, alignment method, cap); build E9 end-to-end on CPU at toy sizes; re-pin upstream with the two scripts | **go/no-go EOD 09-04**: E9 runs on the GPU only if its CPU toy run is green and the entry is committed; otherwise LCFM ships trace-only + E8 |
 | approval day (est. 09-04/05) | E9 batch on the A100 within the first 2 h; sync; log off | per-handoff checkpoints synced |
