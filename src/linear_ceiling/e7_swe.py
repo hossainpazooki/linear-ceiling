@@ -93,6 +93,27 @@ def load_jsonl(path: Path) -> list:
     return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def _flatten_nodes(sub) -> list[dict]:
+    """Every message/LLMResult node of one sub-run, in document order.
+
+    Two shapes exist in the composio family (entry 0017 correction, found 2026-09-02): the
+    20241016 submission lists message nodes directly in the sub-run; the 20241025 submission
+    nests the whole prompt as ONE LIST node before the LLMResult. The first adapter skipped
+    non-dict nodes, so for the nested shape it read 7 responses per file and no prompt at all.
+    Nesting is flattened at any depth; nothing that is a dict is dropped.
+    """
+    out: list[dict] = []
+    stack = list(sub) if isinstance(sub, list) else []
+    stack.reverse()
+    while stack:
+        node = stack.pop()
+        if isinstance(node, dict):
+            out.append(node)
+        elif isinstance(node, list):
+            stack.extend(reversed(node))
+    return out
+
+
 def _llmresult_texts(node: dict) -> list[str]:
     """Response texts from a LangChain LLMResult node ({llm_output, run, generations})."""
     if "generations" not in node:
@@ -125,12 +146,10 @@ def load_composio_detailed(path: Path, agent: str, counter) -> tuple[Trajectory,
         raise ValueError(f"{path}: expected a JSON list of sub-runs, got {type(doc).__name__}")
     messages: list[Msg] = []
     texts: list[str] = []
-    for sub in doc:
+    for si, sub in enumerate(doc):
         found = models_in(sub)
         model = found[0] if found else None
-        for node in (sub if isinstance(sub, list) else []):
-            if not isinstance(node, dict):
-                continue
+        for node in _flatten_nodes(sub):
             kw = node.get("kwargs")
             if isinstance(kw, dict):
                 text = _lc_text(kw)
@@ -143,7 +162,7 @@ def load_composio_detailed(path: Path, agent: str, counter) -> tuple[Trajectory,
                     if isinstance(tc, dict):
                         tokens += counter(json.dumps(tc.get("args", {}), separators=(",", ":")), "tool_args")
                 messages.append(Msg(role=role, tokens=tokens, has_tool_calls=bool(tool_calls),
-                                    tool_names=names, model=model))
+                                    tool_names=names, model=model, request=si))
                 texts.append(text)
                 continue
             # LangChain LLMResult: {llm_output, run, generations}. The model's RESPONSE lives
@@ -152,7 +171,7 @@ def load_composio_detailed(path: Path, agent: str, counter) -> tuple[Trajectory,
             for text in _llmresult_texts(node):
                 resp_model = (node.get("llm_output") or {}).get("model_name") or model
                 messages.append(Msg(role="assistant", tokens=counter(text, "assistant"),
-                                    model=resp_model))
+                                    model=resp_model, request=si))
                 texts.append(text)
     if not messages:
         raise ValueError(f"{path}: no LangChain message nodes found; wrong adapter for this shape")

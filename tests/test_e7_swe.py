@@ -92,3 +92,19 @@ def test_refuses_wrong_shape(tmp_path):
     p.write_text(json.dumps([[{"unrecognized": 1}]]), encoding="utf-8")
     with pytest.raises(ValueError, match="wrong adapter for this shape"):
         load_composio(p, agent="a", counter=counter)
+
+
+def test_nested_list_subrun_shape_is_read_in_full(tmp_path):
+    """Entry 0017 defect (1): the 20241025 submission nests a sub-run's whole prompt as ONE
+    LIST node before the LLMResult; the first adapter skipped it and read only responses."""
+    nested = [[[_human("solve this issue"), _ai("looking at the file", "bedrock.claude-x")],
+               _llmresult("Let me review the patch", "bedrock.claude-x")],
+              [[_human("summarize the run")], _llmresult("Summary of the agent run", "o1-mini-x")]]
+    p = tmp_path / "inst_traj.json"
+    p.write_text(json.dumps(nested), encoding="utf-8")
+    t = load_composio(p, agent="composio_swekit", counter=counter)
+    roles = [m.role for m in t.messages]
+    assert roles == ["user", "assistant", "assistant", "user", "assistant"]
+    assert [m.request for m in t.messages] == [0, 0, 0, 1, 1]
+    assert t.messages[3].tokens > 0                       # the prompt is counted, not dropped
+    assert lane_a(t).switches == (2,)                     # Claude -> o1-mini, once

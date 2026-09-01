@@ -84,10 +84,17 @@ def measure(traj: Trajectory, texts: list[str], read_mult: float) -> list[Headro
         (i_prev, prev), (i_cur, cur) = asst[k - 1], asst[k]
         if prev.model is None or cur.model is None or prev.model == cur.model:
             continue
-        sender_text = "".join(texts[:i_prev + 1])
-        # the receiving model's prompt is everything it was fed at this point
-        receiver_text = "".join(texts[i_prev + 1:i_cur + 1])
-        paid = sum(m.tokens for m in traj.messages[:i_cur])
+        if cur.request is None:
+            raise ValueError(f"{traj.traj_id}: switch at assistant turn {k} but the trace records no request "
+                             "boundary; the receiver's prefill is unknown and must not be approximated by the "
+                             "trajectory prefix (entry 0017)")
+        # Messages are joined by a newline so boundary words are not fused (0017).
+        sender_text = "\n".join(texts[:i_prev + 1])
+        # The receiving model's prompt is ITS request's prompt: the messages of the same request
+        # that precede its response -- not the trajectory's cumulative prefix (0017 correction).
+        prompt_idx = [j for j in range(i_cur) if traj.messages[j].request == cur.request]
+        receiver_text = "\n".join(texts[j] for j in prompt_idx)
+        paid = sum(traj.messages[j].tokens for j in prompt_idx)
         frac = overlap_fraction(sender_text, receiver_text)
         overlap_tokens = frac * paid
         out.append(Headroom(

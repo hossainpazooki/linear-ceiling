@@ -49,6 +49,10 @@ class Msg:
     # both the exact encoder and the calibrated divisors of entry 0009 -- so it is the only
     # thing that can validate the estimator rather than compare it to another estimator.
     reported_tokens: int | None = None
+    # The request (LLM call) this message belongs to, where the trace records request
+    # boundaries (the LangChain family's sub-runs). A receiving model's prefill is the prompt
+    # of ITS request, not the trajectory's cumulative prefix (entry 0017 correction).
+    request: int | None = None
 
 
 @dataclass(frozen=True)
