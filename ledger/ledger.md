@@ -8,7 +8,10 @@ immutable — an amendment is a new entry, never an edit; status tags are `[VALI
 (ran, and survived an independent attempt to refute it), `[BASELINE]` (ran; numbers here),
 `[STRETCH]` (designed, not run), `[FUTURE]` (not designed), `[SUPERSEDED]`.
 
-E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other verdict below is `unresolved`.
+E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other verdict below is
+`unresolved`. The screen-validation line is CLOSED and E7 is promoted to a standalone
+measurement program with pre-registered thresholds (entry 0006, 2026-09-01) — H-S1/H-S3/H-S4
+are shelved-not-decided, and only E7 has a live path to a verdict.
 
 ## Hypotheses (pre-registered; verdict column is the only cell that ever changes, and only via a numbered entry)
 
@@ -21,8 +24,9 @@ E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other ver
 | H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | unresolved |
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | unresolved |
 
-Gates: **G1** (W1) = H-S2 first clause via E0. **G2** (W6) = H-S1 in tolerance AND screen
-ordering retention on the first two E2 pairs. **G3** (W9) = results complete.
+Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
+**G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
+day-2 and numbers-freeze gates.
 
 ## Entries
 
@@ -226,3 +230,102 @@ entry 0003's assignment). H-S1, H-S3, H-S4, H-E7a, H-E7b are unchanged.
 Tag: `[VALIDATED]` -- determinism reproduced across two independent invocations, the independent
 recomputation agrees with the screen's own computation to ~1e-3 at the smallest lambda, and
 `summarize_e0` (fail-closed) ran clean against the committed artifacts.
+
+### 0006 — 2026-09-01 — Program re-scope: screen line closed, depth structure recorded, E7 promoted with thresholds
+
+**Operator decision (Hossain, 2026-09-01).** The screen-validation line (E1, E2, E3, E4, E5,
+E6 as validators of the screen) is CLOSED at end of W1, on opportunity-cost grounds: the
+niche's mechanism lane is crowded with top-track work while the measurement lane is open
+(evidence in docs/handoff and session records of 2026-08-31). The E0 verdict from entry 0004
+STANDS exactly as the frozen rule returned it; entry 0003 is untouched, per house style.
+H-S1, H-S3, and H-S4 remain `unresolved` -- shelved, not decided: no experiment that decides
+them has run, and none will run under this program. Their verdict cells are deliberately NOT
+changed by this entry, because the verdict vocabulary records what experiments decided, and
+no experiment decided these. D2, D3, D4 (handoff 2026-08-26, section 5) are moot with the
+screen line closed and remain unruled. Gates G2 and G3 are retired with the line they gated.
+
+**Depth structure of the E0 result `[BASELINE]`.** What entry 0004's median table does not
+carry: the per-layer Delta(l) distribution. Recomputed from results/e0/ by
+`python -m linear_ceiling.summarize_e0_depth` (fail-closed: inherits summarize_e0's hash,
+NaN, and recorded-vs-recomputed checks; p90 is numpy default linear-interpolation
+percentile), output verbatim:
+
+| pair | n layers | median | p90 | max | layers with delta >= 0.05 (= delta_separate) |
+|---|---|---|---|---|---|
+| qwen3-0.6b-to-1.7b | 28 | +0.0193 | +0.1077 | +0.1212 | 7 -- layers 0, 22-27 |
+| qwen3-0.6b-to-4b | 36 | +0.0109 | +0.0654 | +0.0776 | 5 -- layers 0, 31-34 |
+| qwen3-1.7b-to-0.6b | 28 | +0.0062 | +0.0624 | +0.0740 | 5 -- layers 0, 24-27 |
+| qwen3-1.7b-to-4b | 36 | +0.0043 | +0.0498 | +0.0682 | 4 -- layers 0, 32-34 |
+| qwen3-4b-to-0.6b | 28 | +0.0074 | +0.0706 | +0.0828 | 5 -- layers 0, 24-27 |
+| qwen3-4b-to-1.7b | 28 | +0.0108 | +0.0975 | +0.1244 | 6 -- layers 0, 23-27 |
+
+Exceedance layer sets are identical at every lambda in the sweep (checked by the summarizer,
+not asserted). verdict.json sha256
+59fd962f92788eb4323594226e053ce121fe4ba17a1e821af0f9a43409e0c3bf, matching entry 0004. In
+every pair the layers exceeding delta_separate are the first block and the last four to six
+blocks; the middle of the network drags the median under delta_same. Entry 0003
+pre-registered the reason this may not be real ("depth-dependent nulls are the proxy's"), so
+two readings remain live -- real end-of-network K/V separation, or the layer-0 proxy
+degrading with depth -- and E0 cannot distinguish them. With the screen line closed, no
+in-program experiment will decide it; this entry records the finding so it survives the
+untracked results/ tree, with both readings open.
+
+**E7 promoted to a standalone measurement program.** Registered outputs unchanged from entry
+0005: (i) invalidation taxonomy with event frequencies per trace suite; (ii) transfer
+headroom at model-switch points, in dollars per trajectory, under published cached/uncached
+pricing; (iii) compaction break-even distribution. Anchor venue: MLSys 2027 (submissions due
+2026-10-30). Optional feedback stop: LCFM workshop at NeurIPS 2026 (deadline 2026-09-10 AoE;
+non-archival; concurrent submission explicitly permitted), taken only if the day-2 gate below
+passes. Candidate trace suites, subject to the coverage floor: SWE-bench leaderboard
+trajectories (required of submissions since July 2024), tau-bench historical_trajectories,
+Terminal-Bench 2.0 runs.
+
+**Thresholds, set before any replay (per entry 0005's carried-forward instruction):**
+
+- **Trace-coverage floor:** at least 50 trajectories per suite and at least 2 suites before
+  any frequency claim ships as a finding; anything below ships labeled partial with its
+  coverage stated, per entry 0005's kill conditions.
+- **Materiality cutoff (decides H-E7a):** transfer headroom is material iff recoverable
+  prefill spend at switch points is >= 10% of the trajectory set's total input-token spend at
+  the pinned pricing below, in at least one lane (A or B, reported separately). Below 10% in
+  both lanes resolves H-E7a negative, and per entry 0005 the motivation reverts to
+  fleet-mixing framing.
+- **Substantial-negative-mass threshold (decides H-E7b):** satisfied iff >= 25% of compaction
+  events (measured, or policy-inserted under Lane B) are net-cost-negative at the pinned
+  pricing. Too-sparse compaction events resolve H-E7b unestimable, stated, per entry 0005.
+- **Pricing pins (provenance per entry 0005's rule; both retrieved 2026-09-01):** Anthropic
+  prompt-caching documentation (platform.claude.com/docs/en/build-with-claude/prompt-caching):
+  cache read 0.1x base input, cache write 1.25x (5-minute TTL) or 2.0x (1-hour TTL). OpenAI
+  prompt-caching guide (developers.openai.com/api/docs/guides/prompt-caching): GPT-5.6+ cache
+  read 0.1x, cache write 1.25x, retention ~30 minutes after last use. Independent
+  corroboration: arXiv 2607.19214 measures r=0.10, w=1.25 for Anthropic. Any replay under
+  different pricing re-pins with a new retrieval date in a successor entry.
+
+**Switch-point design choice, frozen before replay.** Two lanes, never merged:
+
+- **Lane A (measured):** a switch point is counted only where trajectory metadata records the
+  serving model per step and it changes mid-trajectory. Probe of 2026-09-01 (SWE-bench
+  experiments repo, tau-bench repo): public trajectories record the model per RUN, not per
+  step, so Lane A is expected sparse to absent -- and a zero count in Lane A IS the premise
+  finding (the cross-model transfer literature's motivating premise is unevidenced in public
+  agent workloads), reported as such, not padded.
+- **Lane B (counterfactual):** switch points inserted under a pre-registered two-tier cascade
+  policy -- planning/reasoning turns on the large tier, tool-execution turns on the small
+  tier; every tier boundary is a switch point. All Lane B headroom is labeled
+  counterfactual-under-stated-policy. No third lane or alternative policy may be added after
+  seeing data; a different policy requires a new numbered entry registered before its replay.
+
+**Gates for the LCFM sprint (the MLSys program does not depend on them):**
+
+- **Day-2 gate, EOD 2026-09-03:** (i) at least one suite's trajectories downloaded and
+  parsed; (ii) a replay skeleton computes per-trajectory token/cost timelines on at least 10
+  trajectories; (iii) both lanes implemented in the parser. Any miss: skip LCFM, continue to
+  MLSys unchanged.
+- **Numbers-freeze gate, EOD 2026-09-08:** the 4-page submission may contain only numbers
+  that recompute clean from results/ via a fail-closed summarizer, in the pattern of
+  summarize_e0. Scope cap: Lane A/B premise numbers and the taxonomy; the transfer-fidelity
+  leg and compaction break-even appear only if they clear the same gate.
+
+E7 replay must not begin until this entry is committed and unmodified; the replay harness
+must enforce this the way linear_ceiling.e0's assert_ready enforced entry 0003 (requirement
+registered here; enforcement lands with the harness).
