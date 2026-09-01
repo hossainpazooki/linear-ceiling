@@ -18,10 +18,13 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.ledger_check
 .venv/Scripts/python.exe -m linear_ceiling.e0 --config config/e0.toml   # refuses until entry 0003 sets the rule
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e0_depth   # per-layer depth structure (entry 0006)
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
 ## Layout
 `src/linear_ceiling/` — `hashing` (canonical sha256) · `rng` · `config` · `pairs` · `seal` ·
 `run_experiment` (E1+ gate stub) · `screen` (CCA math) · `weights` (safetensors reader) ·
-`e0*` · `summarize_e0` · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+`e0*` · `summarize_e0` · `summarize_e0_depth` · `lint_scope` · `ledger_check`. Tests mirror
+modules under `tests/`. Program state: screen line closed, E7 measurement program live —
+ledger entry 0006 is the authority (thresholds, two-lane switch-point design, gates).

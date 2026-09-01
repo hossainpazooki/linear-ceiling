@@ -7,17 +7,21 @@ fitting/injection/evaluation harness is the pinned, read-only upstream
 [kv-transfer-replication](https://github.com/hossainpazooki/kv-transfer-replication)
 (`UPSTREAM.md`), invoked rather than vendored.
 
-> **STATUS: ONLY E0 HAS RUN.** E0 — the first gate, weights-only, no forward pass — has run on
-> all six required ordered pairs, and its verdict is **SAME** (ladder). Its decision rule was
-> written into the ledger as entry 0003 and committed *before* any weight was read; the verdict
-> is recorded in **entry 0004**. Under entry 0003's rule, SAME kills the screen at G1 and
-> activates the Variant 3 degrade path. That verdict is on a vocabulary-based proxy for the
-> residual stream, a limit entry 0003 registered before the run — it is not a verdict on residual
-> streams, and does not by itself settle the screen in general. `H-S2`'s first clause is
-> therefore `NOT CONFIRMED`; **every other hypothesis in `ledger/ledger.md` is still
-> `unresolved`**, and nothing beyond E0 has run — no forward pass, no fitted mapper, no E1.
-> Apart from E0's own figures in entry 0004 and in `results/` (gitignored), the only numbers in
-> the tree are references to the upstream's ledger, each with a commit-pinned provenance line.
+> **STATUS: ONLY E0 HAS RUN, AND THE SCREEN LINE IS CLOSED.** E0 — the first gate, weights-only,
+> no forward pass — ran on all six required ordered pairs, and its verdict is **SAME** (ladder).
+> Its decision rule was written into the ledger as entry 0003 and committed *before* any weight
+> was read; the verdict is recorded in **entry 0004**, and the per-layer depth structure the
+> median hides (ends of the network exceeding the SEPARATE bar in every pair) is recorded in
+> **entry 0006**. That verdict is on a vocabulary-based proxy for the residual stream, a limit
+> entry 0003 registered before the run — it is not a verdict on residual streams. `H-S2`'s first
+> clause is `NOT CONFIRMED`; **every other hypothesis is still `unresolved`**, and nothing beyond
+> E0 has run — no forward pass, no fitted mapper, no E1. By operator decision (entry 0006,
+> 2026-09-01) the screen-validation line E1–E6 is **closed without running** — H-S1/H-S3/H-S4 are
+> shelved, not decided — and **E7 is promoted to a standalone measurement program** (trace-replay
+> economics of agentic KV-cache workloads) with pre-registered thresholds, a two-lane
+> switch-point design, and its gates in entry 0006. Apart from E0's figures in entries 0004/0006
+> and in `results/` (gitignored), the only numbers in the tree are references to the upstream's
+> ledger, each with a commit-pinned provenance line.
 
 The scope sentence, held verbatim:
 
@@ -36,7 +40,7 @@ The scope sentence, held verbatim:
 | `src/linear_ceiling/seal.py` | the seal: writer refuses if a fitted mapper exists; runners refuse without a matching sealed hash |
 | `src/linear_ceiling/e0.py` | E0, weights only, no forward pass; one verdict artifact |
 | `config/*.toml` | seeds and thresholds — never in code |
-| `results/` | gitignored; numbers reach the ledger only through `summarize_e0.py`, which fails closed |
+| `results/` | gitignored; numbers reach the ledger only through the fail-closed summarizers (`summarize_e0.py`, `summarize_e0_depth.py`) |
 
 ## Hard invariants (enforced in CI where possible)
 
@@ -72,5 +76,6 @@ not any result. The seal writer additionally needs the upstream checked out at
 
 `[VALIDATED]` ran and survived an independent attempt to refute it · `[BASELINE]` ran, numbers
 in the ledger · `[STRETCH]` designed, not run · `[FUTURE]` not designed · `[SUPERSEDED]`.
-Ledger entry 0004 (the E0 verdict) is the only `[VALIDATED]` item; everything else carries
-`[FUTURE]` or `[STRETCH]`.
+Ledger entry 0004 (the E0 verdict) is the only `[VALIDATED]` item; entry 0006's depth-structure
+section is `[BASELINE]` (ran, numbers in the ledger); everything else carries `[FUTURE]` or
+`[STRETCH]`.
