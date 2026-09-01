@@ -21,6 +21,7 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0_depth   # per-layer depth structure (entry 0006)
 .venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml are committed
 .venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # skeleton replay over traces/ (gitignored)
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e7          # fail-closed: recomputes E7 figures from RAW traces
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
@@ -31,6 +32,7 @@ On Linux/web the interpreter is `.venv/bin/python`.
 per-agent str/dict `arguments` split) · `e7_tokens` (exact `o200k_base` where a public encoder
 exists, per-content-type calibrated divisors otherwise — ledger 0009) · `e7_cost` (two-bound
 timeline) · `e7_lanes` (Lane A measured / Lane B cascade) · `e7` (gate + skeleton driver) ·
+`summarize_e7` (fail-closed; recomputes from raw traces, refuses on tamper) ·
 `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. Program state: screen line
 closed; the E7 measurement program is registered (entries 0006 + 0007 are the authority —
 read both whole before touching E7 code) with the skeleton instrument built; no replay has

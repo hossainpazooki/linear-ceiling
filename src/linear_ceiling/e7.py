@@ -23,6 +23,7 @@ from linear_ceiling.config import E7Config, load_e7_config
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_lanes import lane_a, lane_b
 from linear_ceiling.e7_tokens import make_counter, strategy_for
+from linear_ceiling.hashing import sha256_file_bytes
 from linear_ceiling.e7_traces import coverage, load_tau_bench
 
 REQUIRED_ENTRIES = ("### 0006 ", "### 0007 ")
@@ -82,6 +83,8 @@ def run(cfg: E7Config, *, repo_root: Path) -> Path:
                 and len(v["agents"]) >= floor["min_agents_per_suite"] for v in cov.values())
     )
     report = {
+        "config_sha256": sha256_file_bytes(cfg.config_path),
+        "trace_files": {f.name: sha256_file_bytes(f) for f in files},
         "coverage": cov,
         "coverage_meets_floor": cov_ok,
         "coverage_note": "below-floor output ships only as partial with coverage stated (entries 0005/0007)",
