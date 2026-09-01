@@ -1,0 +1,99 @@
+"""Headroom at an observed cross-model handoff — the measure frozen in ledger entry 0010.
+
+At a Lane A switch, the receiving model is fed context the sending model already processed. If
+the handoff were byte-identical, the overlapping prefix could in principle be transferred
+instead of re-prefilled. In the one public family that actually switches (composio_swekit), it
+is NOT byte-identical: the second stage re-renders the first stage's conversation into a new
+prompt. So the overlap bounds what any transfer could recover, and cannot be achieved:
+
+    paid                  = prefill tokens the receiving model was charged for
+    overlap               = the part of that prompt whose CONTENT the sender already processed
+    headroom_upper_bound  = overlap * (1 - read_mult)
+    residual              = paid - overlap        (genuinely new framing/instruction text)
+
+`headroom_upper_bound` is an UPPER BOUND, never an achievable saving (entry 0010): re-rendering
+changes the token sequence and every position, so transferred KV would not be directly reusable
+even where content matches. Every figure this module returns carries that word.
+
+Overlap is measured by CONTENT, not by bytes, because the handoff is a re-serialization. The
+registered method (named here so the number is reproducible): split both sides into whitespace
+tokens, take the multiset intersection via counts, and express it as a fraction of the
+receiving prompt's tokens. Multiset intersection -- not set intersection -- so a phrase repeated
+twice on the receiving side is only credited twice if the sender also produced it twice.
+
+Per entry 0012, every figure here is a LOWER BOUND on real spend: public traces omit the system
+prompt and tool schemas the provider billed.
+"""
+import re
+from collections import Counter
+from dataclasses import dataclass
+
+from linear_ceiling.e7_traces import Trajectory
+
+_WORD = re.compile(r"\S+")
+
+
+def word_multiset(text: str) -> Counter:
+    return Counter(_WORD.findall(text or ""))
+
+
+def overlap_fraction(sender_text: str, receiver_text: str) -> float:
+    """Fraction of the receiver's words that the sender had already produced (multiset)."""
+    recv = word_multiset(receiver_text)
+    total = sum(recv.values())
+    if total == 0:
+        return 0.0
+    send = word_multiset(sender_text)
+    shared = sum(min(n, send[w]) for w, n in recv.items())
+    return shared / total
+
+
+@dataclass(frozen=True)
+class Headroom:
+    switch_index: int          # assistant-turn ordinal of the switch
+    sender_model: str
+    receiver_model: str
+    paid_tokens: int           # receiving model's prefill, from the visible trace (a floor)
+    overlap_fraction: float
+    overlap_tokens: float
+    residual_tokens: float
+    headroom_upper_bound: float   # in base-input-price units; UPPER BOUND (entry 0010)
+    byte_identical: bool          # was the handoff a verbatim prefix reuse?
+
+    @property
+    def recoverable_fraction(self) -> float:
+        return self.headroom_upper_bound / self.paid_tokens if self.paid_tokens else 0.0
+
+
+def measure(traj: Trajectory, texts: list[str], read_mult: float) -> list[Headroom]:
+    """Headroom at each Lane A switch in `traj`.
+
+    `texts` is the per-message text, index-aligned with `traj.messages`, because Msg carries
+    token counts rather than content. Sender context is every message before the switch;
+    receiver prompt is the message at the switch.
+    """
+    if len(texts) != len(traj.messages):
+        raise ValueError(f"texts ({len(texts)}) must align with messages ({len(traj.messages)})")
+    out = []
+    asst = [(i, m) for i, m in enumerate(traj.messages) if m.role == "assistant"]
+    for k in range(1, len(asst)):
+        (i_prev, prev), (i_cur, cur) = asst[k - 1], asst[k]
+        if prev.model is None or cur.model is None or prev.model == cur.model:
+            continue
+        sender_text = "".join(texts[:i_prev + 1])
+        # the receiving model's prompt is everything it was fed at this point
+        receiver_text = "".join(texts[i_prev + 1:i_cur + 1])
+        paid = sum(m.tokens for m in traj.messages[:i_cur])
+        frac = overlap_fraction(sender_text, receiver_text)
+        overlap_tokens = frac * paid
+        out.append(Headroom(
+            switch_index=k,
+            sender_model=prev.model, receiver_model=cur.model,
+            paid_tokens=paid,
+            overlap_fraction=frac,
+            overlap_tokens=overlap_tokens,
+            residual_tokens=paid - overlap_tokens,
+            headroom_upper_bound=overlap_tokens * (1.0 - read_mult),
+            byte_identical=bool(sender_text) and sender_text in receiver_text,
+        ))
+    return out

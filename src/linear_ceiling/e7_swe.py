@@ -106,7 +106,15 @@ def _llmresult_texts(node: dict) -> list[str]:
 
 
 def load_composio(path: Path, agent: str, counter) -> Trajectory:
-    """One composio_swekit trajectory file -> a normalized Trajectory.
+    """One composio_swekit trajectory file -> a normalized Trajectory."""
+    return load_composio_detailed(path, agent, counter)[0]
+
+
+def load_composio_detailed(path: Path, agent: str, counter) -> tuple[Trajectory, list[str]]:
+    """As `load_composio`, plus the per-message text aligned with `Trajectory.messages`.
+
+    The headroom measure (entry 0010) needs content, not just token counts, and re-parsing to
+    get it would risk the two views drifting apart.
 
     Sub-runs are concatenated in file order; each message carries the serving model that was
     in force for its sub-run, which is what makes Lane A measurable here.
@@ -116,6 +124,7 @@ def load_composio(path: Path, agent: str, counter) -> Trajectory:
     if not isinstance(doc, list):
         raise ValueError(f"{path}: expected a JSON list of sub-runs, got {type(doc).__name__}")
     messages: list[Msg] = []
+    texts: list[str] = []
     for sub in doc:
         found = models_in(sub)
         model = found[0] if found else None
@@ -135,6 +144,7 @@ def load_composio(path: Path, agent: str, counter) -> Trajectory:
                         tokens += counter(json.dumps(tc.get("args", {}), separators=(",", ":")), "tool_args")
                 messages.append(Msg(role=role, tokens=tokens, has_tool_calls=bool(tool_calls),
                                     tool_names=names, model=model))
+                texts.append(text)
                 continue
             # LangChain LLMResult: {llm_output, run, generations}. The model's RESPONSE lives
             # here, not as an AI message node -- the second-stage model in this family is
@@ -143,7 +153,9 @@ def load_composio(path: Path, agent: str, counter) -> Trajectory:
                 resp_model = (node.get("llm_output") or {}).get("model_name") or model
                 messages.append(Msg(role="assistant", tokens=counter(text, "assistant"),
                                     model=resp_model))
+                texts.append(text)
     if not messages:
         raise ValueError(f"{path}: no LangChain message nodes found; wrong adapter for this shape")
-    return Trajectory(suite="swe-bench", agent=agent, traj_id=f"{agent}/{path.stem}",
+    traj = Trajectory(suite="swe-bench", agent=agent, traj_id=f"{agent}/{path.stem}",
                       reward=None, messages=tuple(messages))
+    return traj, texts
