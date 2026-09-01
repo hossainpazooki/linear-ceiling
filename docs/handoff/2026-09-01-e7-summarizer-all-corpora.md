@@ -75,9 +75,23 @@ re-verify: `.venv/Scripts/python.exe -m pytest tests/test_e7_corpus.py tests/tes
 `sorted[floor(p·n)]` (lower nearest-rank, no interpolation). It is the convention the recon
 used, so the brief's numbers reproduce to the digit; any other convention changes a p90.
 
-**REGISTERED, NOT RUN — E8** (entry 0009). **NOT STARTED** — the compaction break-even
-distribution itself (H-E7b needs compaction EVENTS first; the taxonomy will say how many
-exist); any paper draft.
+**BUILT, GATED, NOT RUN — E8** (`config/e8.toml`, `e8_text`, `e8`, `summarize_e8`; +21 tests).
+The gate refuses until entry 0016 is committed, `config/e8.toml` carries the upstream sha
+(currently the placeholder `TBD`, which the gate rejects by design) and the upstream HEAD
+matches it with a clean tree. Two things verified for real, not on synthetic data: the
+upstream's new `scripts/score_mapper.py` re-scores the archived k=1 mapper on the archived
+dumps to **exactly** the archived `r2.json` (K 0.6813557347 / V 0.5132943501, diff 0.0e+00,
+71 s CPU) — so 0016 §6's cross-check is a real refusal condition; and the Qwen3 tokenizer +
+shared-vocab check run offline from the cached snapshots.
+re-verify: `.venv/Scripts/python.exe -m pytest tests/test_e8_text.py tests/test_e8.py tests/test_summarize_e8.py -q` → 23 passed
+re-verify: `.venv/Scripts/python.exe -m linear_ceiling.e8 --check` → exit 2, `upstream_sha is not a commit sha`
+re-verify (upstream, ~71 s): `cd ../kv-transfer-replication && .venv/Scripts/python.exe scripts/score_mapper.py --mapper mappers/qwen3-0.6b-to-1.7b/k1 --src data/kv/qwen3-0.6b-to-1.7b/source --tgt data/kv/qwen3-0.6b-to-1.7b/target --out /tmp/k1.json` → `heldout K=0.6814 V=0.5133`
+
+**DRAFTED, NOT APPENDED — entries 0016 (E8 amendment) and 0017 (E9 registration, band
+K ≥ 0.70 HOLDS / ≤ 0.40 DEGRADES, operator-approved)** as ordering-guarded scripts in
+`docs/drafts/`. **NOT STARTED** — E9 code (`e9_align`, upstream `dump_positions.py`, `e9`,
+`summarize_e9`); the compaction break-even distribution (H-E7b needs compaction EVENTS first);
+any paper draft.
 
 ## Locked decisions
 
@@ -147,7 +161,17 @@ exist); any paper draft.
    NOT MEASURABLE elsewhere, H-E7b resolves *unestimable, stated* (entry 0005) — the
    break-even distribution has nothing to be computed over. Decide in the same entry or its
    successor.
-4. **Decide LCFM** (deadline 2026-09-10 AoE; numbers-freeze gate EOD 09-08 is now satisfiable).
+4. **E8 run sequence (after 0015):** commit `scripts/score_mapper.py` upstream → note its sha →
+   `python docs/drafts/append_0016.py <sha> <date>` → put the sha in `config/e8.toml` and
+   `UPSTREAM.md` → commit → `e8 --check` → `e8` (CPU, ~15 min: one dump pass + 6 scorings) →
+   `summarize_e8` (~25 min) → E8 verdict entry from its output only.
+5. **LCFM now includes GPU runs** (operator, 2026-09-01): plan in
+   `docs/2026-09-01-lcfm-gpu-plan.md`. Tier 1 = E8 on CPU this week (needs one amendment
+   entry: E8 admitted to LCFM behind the summarizer gate; 0009's "dumps are gone" corrected —
+   they exist locally, gitignored; verdict-bearing k = 1; text-sampling rule; upstream
+   `score_mapper.py` + re-pin). Tier 2 = E9 on the A100 (achievable fraction of 0013's upper
+   bound at the 68 real handoffs), registered with H-E9 + band before any prefill; go/no-go
+   EOD 09-04. Deadline 09-10 AoE; freeze EOD 09-08.
 
 **Open questions for the operator:**
 

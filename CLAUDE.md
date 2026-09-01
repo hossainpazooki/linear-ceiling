@@ -22,6 +22,9 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml are committed
 .venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # replay over ALL corpora under traces/ (gitignored)
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e7          # fail-closed: recomputes EVERY E7 figure from RAW traces (all 3 suites, headroom, reported usage)
+.venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
+.venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
@@ -39,7 +42,10 @@ layout-aware `discover_trajectories`) · `e7_rolecontent` (4 variants) · `e7_ta
 usage/timestamps) · `e7_headroom` (entry 0010 measure + rows/summary) · `e7_usage`
 (reported-vs-estimated, per role) · `e7_taxonomy` (entry 0014's six event classes, each with a
 measurability rule; H-E7a ratio over the Lane A measurable subset) · `e7_stats` (the ONE pinned
-quantile convention) · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the snapshot) · `e8`
+(gate incl. upstream pin + driver by subprocess; never imports kvt) · `summarize_e8` ·
+`lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. `docs/drafts/` holds the
+append scripts for entries not yet written (0016, 0017), ordering-guarded.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); the E7 measurement program is
 registered **and built** across three corpora (tau-bench, tau2-bench, SWE-bench), coverage floor

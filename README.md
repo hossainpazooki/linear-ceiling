@@ -131,6 +131,7 @@ flowchart LR
 | `docs/2026-08-26-seed-w1.md` · `docs/gap-map.md` | W1 seed and E7 gap map, verbatim |
 | `docs/2026-09-01-measurement-lane-evidence.md` | why the program re-scoped: paper deltas, pricing pins, venue facts |
 | `docs/2026-09-01-swe-bench-trace-recon.md` | trajectory availability, formats, and what they do and do not record |
+| `docs/2026-09-01-lcfm-gpu-plan.md` | the LCFM sprint plan with GPU runs: what runs on CPU (E8), what needs the A100 (E9), and what must be registered before each |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
 | `CLAUDE.md` | repo brief for agent sessions: commands, layout, binding rules |
 
