@@ -5,7 +5,7 @@
   `scripts/score_positions.py` and `scripts/score_mapper.py` plus `kvt/pertoken.py` (re-pin by
   ledger entry 0023; the operator records the sha here and in `config/e9.toml` after committing
   upstream -- `e9.assert_ready` refuses the placeholder by name). Its parent is the prior pin
-  `7e41f792df0a03caa745a52de0ad2bd930e52a47` ("feat: score_positions.py -- KV agreement at
+  `7e41f792` ("feat: score_positions.py -- KV agreement at
   matched positions, and a mapper's transfer to them", authored 2026-09-01; re-pinned by entry
   0019 -- adds exactly one file on top of the prior pin's history). Earlier pins, short form
   (one full sha lives in this file by rule, enforced by `tests/test_imports.py`): `71df4504`
