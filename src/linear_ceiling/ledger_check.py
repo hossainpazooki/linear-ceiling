@@ -16,7 +16,7 @@ import sys
 
 from linear_ceiling import REPO_ROOT
 
-REQUIRED_IDS = ("H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b", "H-E8")
+REQUIRED_IDS = ("H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b", "H-E8", "H-E9")
 VERDICTS = ("unresolved", "HELD", "NOT CONFIRMED", "WITHDRAWN", "SUPERSEDED", "SHELVED",
             "UNESTIMABLE")   # 0015: the experiment ran and its estimand has no support in the corpus
 _ENTRY = re.compile(r"^### (\d{4}) — \d{4}-\d{2}-\d{2} — .+$", re.M)
