@@ -11,17 +11,21 @@ fitting/injection/evaluation harness is the pinned, read-only upstream
 > no forward pass — ran on all six required ordered pairs, and its verdict is **SAME** (ladder).
 > Its decision rule was written into the ledger as entry 0003 and committed *before* any weight
 > was read; the verdict is recorded in **entry 0004**, and the per-layer depth structure the
-> median hides (ends of the network exceeding the SEPARATE bar in every pair) is recorded in
-> **entry 0006**. That verdict is on a vocabulary-based proxy for the residual stream, a limit
+> median hides (per-layer deltas at or above `delta_separate = 0.05` at layer 0 and the last
+> blocks of every pair — a per-layer statement; the pair-level SEPARATE verdict is a different,
+> median-based rule that no pair met) is recorded in **entry 0006**. That verdict is on a vocabulary-based proxy for the residual stream, a limit
 > entry 0003 registered before the run — it is not a verdict on residual streams. `H-S2`'s first
 > clause is `NOT CONFIRMED`; **every other hypothesis is still `unresolved`**, and nothing beyond
 > E0 has run — no forward pass, no fitted mapper, no E1. By operator decision (entry 0006,
 > 2026-09-01) the screen-validation line E1–E6 is **closed without running** — H-S1/H-S3/H-S4 are
 > shelved, not decided — and **E7 is promoted to a standalone measurement program** (trace-replay
 > economics of agentic KV-cache workloads) with pre-registered thresholds, a two-lane
-> switch-point design, and its gates in entry 0006. Apart from E0's figures in entries 0004/0006
-> and in `results/` (gitignored), the only numbers in the tree are references to the upstream's
-> ledger, each with a commit-pinned provenance line.
+> switch-point design, and its gates in entry 0006 (amended by 0007: Lane A alone decides
+> H-E7a, per-agent coverage floor, cost-model parameters registered). Apart from E0's figures
+> in entries 0004/0006 and in `results/` (gitignored), every number in the tree is a reference
+> to the upstream's ledger (commit-pinned) or to an external paper, pricing page, or venue page
+> (`docs/2026-09-01-measurement-lane-evidence.md`), each carrying its provenance — a commit pin
+> or a retrieval date.
 
 The scope sentence, held verbatim:
 
@@ -50,7 +54,13 @@ The scope sentence, held verbatim:
    of sealed records — it does not and cannot re-verify the ordering guarantee itself, since CI
    never checks out the upstream artifact roots the seal predictions are compared against.
 2. **Pre-registration.** Verdicts are stated against the rule as written; amendments are new
-   numbered entries. `python -m linear_ceiling.ledger_check` runs in CI.
+   numbered entries. `python -m linear_ceiling.ledger_check` runs in CI. From entry 0007 on,
+   each entry records a `prior-entries-sha256` over the entries section above it, which
+   `ledger_check` recomputes — a silent edit to registered entry text fails CI. The header and
+   hypotheses table above `## Entries` are editable commentary outside the chain (verdict cells
+   change only via a numbered entry, by convention and review), and a history rewrite that
+   regenerates the chain is locally undetectable — the same limitation stated for the seal in
+   invariant 1.
 3. **No fabricated numbers.** Zero results at scaffold; synthetic figures appear only in the
    spec, labeled synthetic.
 4. **Determinism.** One seeded generator (`rng.make_rng`), seeds in config; the test suite

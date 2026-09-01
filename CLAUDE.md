@@ -26,5 +26,7 @@ On Linux/web the interpreter is `.venv/bin/python`.
 `src/linear_ceiling/` — `hashing` (canonical sha256) · `rng` · `config` · `pairs` · `seal` ·
 `run_experiment` (E1+ gate stub) · `screen` (CCA math) · `weights` (safetensors reader) ·
 `e0*` · `summarize_e0` · `summarize_e0_depth` · `lint_scope` · `ledger_check`. Tests mirror
-modules under `tests/`. Program state: screen line closed, E7 measurement program live —
-ledger entry 0006 is the authority (thresholds, two-lane switch-point design, gates).
+modules under `tests/`. Program state: screen line closed; the E7 measurement program is
+**registered, not built** — ledger entries 0006 + 0007 are the authority (thresholds, Lane A
+decides H-E7a, cost-model parameters, gates), and no parser/replay/cost-model code exists yet.
+Read both entries whole before writing any E7 code.
