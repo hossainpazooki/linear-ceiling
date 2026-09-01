@@ -16,7 +16,7 @@ import sys
 
 from linear_ceiling import REPO_ROOT
 
-REQUIRED_IDS = ("H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b")
+REQUIRED_IDS = ("H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b", "H-E8")
 VERDICTS = ("unresolved", "HELD", "NOT CONFIRMED", "WITHDRAWN", "SUPERSEDED", "SHELVED")
 _ENTRY = re.compile(r"^### (\d{4}) — \d{4}-\d{2}-\d{2} — .+$", re.M)
 _ROW = re.compile(r"^\| (H-[A-Za-z0-9]+) \|.*\| ([^|]+) \|\s*$", re.M)

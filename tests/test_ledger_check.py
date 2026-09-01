@@ -12,6 +12,7 @@ GOOD = """# Ledger
 | H-S4 | s | E4 | unresolved |
 | H-E7a | s | E7 | unresolved |
 | H-E7b | s | E7 | unresolved |
+| H-E8 | s | E8 | unresolved |
 ## Entries
 ### 0001 — 2026-08-26 — first
 ### 0002 — 2026-08-26 — second
@@ -28,6 +29,7 @@ def test_parse_finds_entries_and_verdicts():
         "H-S4": "unresolved",
         "H-E7a": "unresolved",
         "H-E7b": "unresolved",
+        "H-E8": "unresolved",
     }
 
 
@@ -51,7 +53,7 @@ def test_check_requires_all_registered_ids():
 
 def test_required_ids_covers_all_six_registered_hypotheses():
     # Guards against a future narrowing (like the one this ticket corrects) going unnoticed.
-    assert set(REQUIRED_IDS) == {"H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b"}
+    assert set(REQUIRED_IDS) == {"H-S1", "H-S2", "H-S3", "H-S4", "H-E7a", "H-E7b", "H-E8"}
 
 
 def test_shelved_is_a_valid_verdict():
