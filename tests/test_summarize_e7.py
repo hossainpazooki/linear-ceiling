@@ -285,3 +285,66 @@ def test_refuses_cost_basis_label_edit(env):
     _write(rp, rep)
     with pytest.raises(ValueError, match="cost_basis"):
         summarize(cfg)
+
+
+def test_refuses_taxonomy_count_edit(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["taxonomy"]["pooled"]["model_switch"]["events"] += 1
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"taxonomy\.pooled\.model_switch\.events"):
+        summarize(cfg)
+
+
+def test_refuses_unmeasurable_class_recorded_as_zero(env):
+    """Entry 0014: NOT MEASURABLE enters neither side; a recorded 0 there is the forbidden zero."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    tid = next(k for k, v in rep["taxonomy"]["per_trajectory"].items() if not v["compaction"]["measurable"])
+    rep["taxonomy"]["per_trajectory"][tid]["compaction"] = {"measurable": True, "events": 0}
+    row = rep["taxonomy"]["pooled"]["compaction"]
+    row["measurable_trajs"] += 1
+    row["not_measurable"] -= 1
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="taxonomy"):
+        summarize(cfg)
+
+
+def test_refuses_h_e7a_ratio_edit(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    assert rep["h_e7a"]["pooled"]["ratio"] is not None
+    rep["h_e7a"]["pooled"]["ratio"] = 0.5
+    rep["h_e7a"]["pooled"]["below_cutoff"] = False
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"h_e7a\.pooled\.ratio"):
+        summarize(cfg)
+
+
+def test_refuses_h_e7a_denominator_widened(env):
+    """Folding unmeasurable trajectories into the denominator counts them as zero-switch."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["h_e7a"]["pooled"]["input_spend"] *= 10
+    rep["h_e7a"]["pooled"]["measurable_trajs"] += 5
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"h_e7a\.pooled"):
+        summarize(cfg)
+
+
+def test_summary_states_the_ratio_without_a_verdict(env):
+    cfg, _, _ = env
+    md = summarize(cfg)
+    assert "H-E7a ratio" in md and "the cutoff" in md
+    assert "NOT MEASURABLE" in md and "n/m" in md
+    assert "verdict is NOT stated" in md
+
+
+def test_refuses_report_from_an_older_driver(env):
+    """A report lacking a section this summarizer compares must be regenerated, not summarized."""
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    del rep["taxonomy"]
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="report has no `taxonomy` section"):
+        summarize(cfg)

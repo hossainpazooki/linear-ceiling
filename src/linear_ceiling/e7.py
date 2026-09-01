@@ -28,6 +28,7 @@ from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
 from linear_ceiling.e7_lanes import lane_a, lane_b
 from linear_ceiling.e7_swe import MODEL_KEYS
+from linear_ceiling.e7_taxonomy import classify, frequencies, h_e7a
 from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
 from linear_ceiling.e7_usage import validation
 from linear_ceiling.hashing import sha256_file_bytes
@@ -80,6 +81,7 @@ def build_report(cfg: E7Config) -> dict:
             d = lane_a_only.setdefault(t.agent, {"suite": t.suite, "trajectories": 0})
             d["trajectories"] += 1
     hr = headroom_rows(corpus.trajectories, corpus.texts, cfg.pricing["read_mult"])
+    tax = taxonomy_block(corpus, hr, cfg)
     return {
         "config_sha256": sha256_file_bytes(cfg.config_path),
         "trace_files": {corpus.relkey(cfg.traces_dir, f): sha256_file_bytes(f) for f in corpus.files},
@@ -99,8 +101,26 @@ def build_report(cfg: E7Config) -> dict:
                       "divisors": cfg.tokenizer.get("divisors")},
         "headroom": {"read_mult": cfg.pricing["read_mult"], "rows": hr, "summary": rows_summary(hr)},
         "reported_usage": validation(corpus.trajectories),
+        "taxonomy": tax["taxonomy"],
+        "h_e7a": tax["h_e7a"],
         "trajectories": per_traj,
     }
+
+
+def taxonomy_block(corpus, hr: list[dict], cfg: E7Config) -> dict:
+    """Entry-0014 classes per trajectory -> frequency tables, and the H-E7a ratio block.
+    Shared with the summarizer so both compute from the same registered definitions; the
+    summarizer still compares its own result against the recorded one."""
+    rows_by_traj: dict[str, list[dict]] = {}
+    for r in hr:
+        rows_by_traj.setdefault(r["traj_id"], []).append(r)
+    per_traj = {t.traj_id: classify(t, rows_by_traj.get(t.traj_id, []) if t.traj_id in corpus.texts else None,
+                                    cfg.pricing["ttl_seconds"])
+                for t in corpus.trajectories}
+    inputs = {t.traj_id: totals(timeline(t, cfg.pricing))["input_tokens"] for t in corpus.trajectories}
+    return {"taxonomy": {"definitions": "ledger entry 0014", "ttl_seconds": cfg.pricing["ttl_seconds"],
+                         "per_trajectory": per_traj, **frequencies(per_traj, corpus.trajectories)},
+            "h_e7a": h_e7a(corpus.trajectories, inputs, hr, cfg.thresholds["materiality_fraction"])}
 
 
 def run(cfg: E7Config, *, repo_root: Path) -> Path:

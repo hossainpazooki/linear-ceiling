@@ -61,6 +61,9 @@ class Trajectory:
     # The task instance this run was on. Entry 0011: repeated trials are distinct trajectories
     # but NOT independent samples, so coverage reports DISTINCT TASKS beside trajectories.
     task: str | None = None
+    # Number of attempts the layout records for this instance (nested `attempt_N` dirs);
+    # None when the layout cannot evidence attempts (entry 0014: `branch` is then NOT MEASURABLE).
+    attempts: int | None = None
 
     @property
     def has_step_model_metadata(self) -> bool:

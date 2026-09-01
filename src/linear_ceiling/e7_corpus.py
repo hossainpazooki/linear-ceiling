@@ -101,7 +101,8 @@ def load_corpus(cfg: E7Config) -> Corpus:
                     c.unparsed.append({"suite": "swe-bench", "agent": agent,
                                        "traj_id": f"{sub.name}/{tid}", "reason": reason})
                     continue
-                traj = replace(traj, agent=agent)     # traj_id keeps the dated submission: unique
+                # traj_id keeps the dated submission (unique); attempts only where the layout records them
+                traj = replace(traj, agent=agent, attempts=_attempts_in(files))
                 c.trajectories.append(traj)
                 if texts is not None:
                     c.texts[traj.traj_id] = texts
@@ -109,6 +110,17 @@ def load_corpus(cfg: E7Config) -> Corpus:
         raise ValueError(f"no trajectories under {cfg.traces_dir}; acquire traces first "
                          "(they are gitignored, never committed)")
     return c
+
+
+_ATTEMPT = re.compile(r"^attempt_\d+$")
+
+
+def _attempts_in(files: list[Path]) -> int | None:
+    """Distinct `attempt_N` directories among a trajectory's files; None for a flat layout."""
+    if len(files) == 1 and files[0].parent.name and not _ATTEMPT.match(files[0].parent.name):
+        return None
+    names = {part for f in files for part in f.parts if _ATTEMPT.match(part)}
+    return len(names) if names else None
 
 
 def _load_swe_trajectory(submission: str, tid: str, files: list[Path], counter):

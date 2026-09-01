@@ -5,7 +5,8 @@ except recomputed from `results/` by a summarizer that fails closed. Re-reading 
 own report would only restate its arithmetic, so this walks the raw trajectory files again
 across all three corpora, rebuilds counters from config, and recomputes per-trajectory
 totals, both lanes, coverage and its floor verdicts, the unparsed set, every headroom row
-and its aggregate (entry 0010), and the reported-usage validation (entry 0012) -- then
+and its aggregate (entry 0010), the reported-usage validation (entry 0012), the taxonomy
+class cells and frequency rows and the H-E7a ratio (entry 0014) -- then
 compares ALL of it against what the driver recorded, key by key, so no recorded value can
 escape comparison by being new.
 
@@ -23,7 +24,7 @@ from pathlib import Path
 
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E7Config, load_e7_config
-from linear_ceiling.e7 import COST_BASIS
+from linear_ceiling.e7 import COST_BASIS, taxonomy_block
 from linear_ceiling.e7_corpus import LANE_A_ONLY_AGENTS, discover_files, load_corpus
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
@@ -77,6 +78,14 @@ def _compare(path: str, recomputed, recorded) -> None:
         raise ValueError(f"{path}: recomputed {recomputed!r} != recorded {recorded!r}")
 
 
+def _rec(rep: dict, key: str):
+    """A recorded section, or a refusal naming it: an older report lacking a section the
+    current summarizer compares is a report that must be regenerated, never summarized."""
+    if key not in rep:
+        raise ValueError(f"report has no `{key}` section; it predates this summarizer -- rerun the driver")
+    return rep[key]
+
+
 def _verify_provenance(cfg: E7Config, rep: dict) -> None:
     recorded = rep.get("trace_files") or {}
     if not recorded:
@@ -105,10 +114,10 @@ def summarize(cfg: E7Config) -> str:
     _verify_provenance(cfg, rep)
 
     corpus = load_corpus(cfg)
-    _compare("unparsed", sorted(corpus.unparsed, key=lambda u: u["traj_id"]), rep.get("unparsed"))
+    _compare("unparsed", sorted(corpus.unparsed, key=lambda u: u["traj_id"]), _rec(rep, "unparsed"))
 
-    by_id = {t["traj_id"]: t for t in rep["trajectories"]}
-    if len(by_id) != len(rep["trajectories"]):
+    by_id = {t["traj_id"]: t for t in _rec(rep, "trajectories")}
+    if len(by_id) != len(_rec(rep, "trajectories")):
         raise ValueError("report contains duplicate traj_id entries")
     if len(corpus.trajectories) != len(by_id):
         raise ValueError(f"recomputed {len(corpus.trajectories)} trajectories, report has {len(by_id)}")
@@ -142,34 +151,41 @@ def summarize(cfg: E7Config) -> str:
         d["lane_b_switches"] += len(b.switches)
 
     cov = coverage(corpus.trajectories, exclude_agents=LANE_A_ONLY_AGENTS)
-    _compare("coverage", cov, rep["coverage"])
+    _compare("coverage", cov, _rec(rep, "coverage"))
     th = cfg.thresholds
     floors = suite_floor(cov, th)
-    _compare("suite_floor", floors, rep["suite_floor"])
+    _compare("suite_floor", floors, _rec(rep, "suite_floor"))
     cov_ok = meets_floor(cov, th)
-    _compare("coverage_meets_floor", cov_ok, rep["coverage_meets_floor"])
+    _compare("coverage_meets_floor", cov_ok, _rec(rep, "coverage_meets_floor"))
     lane_a_only: dict[str, dict] = {}
     for t in corpus.trajectories:
         if t.agent in LANE_A_ONLY_AGENTS:
             e = lane_a_only.setdefault(t.agent, {"suite": t.suite, "trajectories": 0})
             e["trajectories"] += 1
-    _compare("lane_a_only", lane_a_only, rep["lane_a_only"])
-    _compare("lane_a_detector_keys", list(MODEL_KEYS), rep["lane_a_detector_keys"])
+    _compare("lane_a_only", lane_a_only, _rec(rep, "lane_a_only"))
+    _compare("lane_a_detector_keys", list(MODEL_KEYS), _rec(rep, "lane_a_detector_keys"))
     measurable = sum(d["measurable"] for d in agg.values())
-    _compare("lane_a_measurable", measurable, rep["lane_a_measurable"])
-    _compare("lane_a_unmeasurable", len(corpus.trajectories) - measurable, rep["lane_a_unmeasurable"])
+    _compare("lane_a_measurable", measurable, _rec(rep, "lane_a_measurable"))
+    _compare("lane_a_unmeasurable", len(corpus.trajectories) - measurable, _rec(rep, "lane_a_unmeasurable"))
 
     _compare("tokenizer", {"encoding": cfg.tokenizer.get("encoding"), "per_agent_strategy": corpus.strategies,
-                           "divisors": cfg.tokenizer.get("divisors")}, rep["tokenizer"])
-    _compare("cost_basis", COST_BASIS, rep["cost_basis"])
+                           "divisors": cfg.tokenizer.get("divisors")}, _rec(rep, "tokenizer"))
+    _compare("cost_basis", COST_BASIS, _rec(rep, "cost_basis"))
 
     hr = headroom_rows(corpus.trajectories, corpus.texts, cfg.pricing["read_mult"])
     _compare("headroom", {"read_mult": cfg.pricing["read_mult"], "rows": hr, "summary": rows_summary(hr)},
-             rep["headroom"])
+             _rec(rep, "headroom"))
     usage = validation(corpus.trajectories)
-    _compare("reported_usage", usage, rep["reported_usage"])
+    _compare("reported_usage", usage, _rec(rep, "reported_usage"))
+    tax = taxonomy_block(corpus, hr, cfg)
+    for cls in tax["taxonomy"]["per_trajectory"].values():
+        for c, cell in cls.items():
+            if not cell["measurable"] and cell["events"] is not None:
+                raise ValueError(f"taxonomy: class {c} is NOT MEASURABLE but carries a count; unmeasurable is never a zero")
+    _compare("taxonomy", tax["taxonomy"], _rec(rep, "taxonomy"))
+    _compare("h_e7a", tax["h_e7a"], _rec(rep, "h_e7a"))
 
-    return _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage)
+    return _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax)
 
 
 def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
@@ -178,7 +194,39 @@ def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
     return f"{s['median']:,.{digits}f} (p10 {s['p10']:,.{digits}f}, p90 {s['p90']:,.{digits}f})"
 
 
-def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage) -> str:
+def _taxonomy_md(tax: dict, cutoff: float) -> str:
+    t = tax["taxonomy"]
+    cls = t["classes"]
+    head = "| scope | " + " | ".join(cls) + " |\n|---|" + "---|" * len(cls)
+    def cell(r):
+        if r["measurable_trajs"] == 0:
+            return f"NOT MEASURABLE ({r['not_measurable']})"
+        return (f"{r['events']} ev / {r['trajs_with_event']} of {r['measurable_trajs']} trajs"
+                + (f" (+{r['not_measurable']} n/m)" if r["not_measurable"] else ""))
+    lines = [head]
+    for k, row in t["per_agent"].items():
+        lines.append(f"| {k} | " + " | ".join(cell(row[c]) for c in cls) + " |")
+    for k, row in t["per_suite"].items():
+        lines.append(f"| **{k} (pooled)** | " + " | ".join(cell(row[c]) for c in cls) + " |")
+    lines.append("| **ALL** | " + " | ".join(cell(t["pooled"][c]) for c in cls) + " |")
+    h = tax["h_e7a"]
+    def hb(name, b):
+        if b["ratio"] is None:
+            return f"- {name}: no Lane A measurable trajectory -- ratio NOT COMPUTABLE (not a zero)"
+        return (f"- {name}: recoverable upper bound {b['recoverable_upper_bound']:,.0f} / input spend "
+                f"{b['input_spend']:,} over {b['measurable_trajs']} measurable trajectories = "
+                f"**{100*b['ratio']:.2f}%** vs cutoff {100*cutoff:.0f}% -> "
+                f"{'BELOW' if b['below_cutoff'] else 'AT OR ABOVE'} the cutoff")
+    hl = [hb(s, b) for s, b in h["per_suite"].items()] + [hb("pooled", h["pooled"])]
+    return ("Invalidation taxonomy (entry 0014 definitions; 'n/m' = NOT MEASURABLE, never counted as zero; "
+            f"idle_expiry TTL {t['ttl_seconds']} s):\n\n" + "\n".join(lines)
+            + "\n\nH-E7a ratio (denominator: " + h["denominator"] + "; numerator: " + h["numerator"]
+            + "; base-input-price token units, price-independent):\n\n" + "\n".join(hl)
+            + "\n\nThe verdict is NOT stated by this summary; it enters only by a numbered entry against "
+              "the rule as written (entries 0006/0007/0014).")
+
+
+def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax) -> str:
     th = cfg.thresholds
     lines = ["| suite | agent | strategy | trajs | requests | input tokens (LOWER BOUND) | warm/cold | "
              "Lane A measurable | Lane A switches | Lane B switches |",
@@ -209,7 +257,7 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
     if not cov_ok:
         floor_note += " -- output ships only as partial with coverage stated"
     excl = "; ".join(f"{a}: {v['trajectories']} {v['suite']} trajectories" for a, v in sorted(lane_a_only.items()))
-    unparsed = rep["unparsed"]
+    unparsed = _rec(rep, "unparsed")
 
     hs = rows_summary(hr)
     if hs is None:
@@ -252,9 +300,9 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
           + "\n"
           + f"\nLane A (detector keys {list(MODEL_KEYS)}): {measurable} of {tn} trajectories measurable; "
             f"{tn - measurable} carry no per-step model metadata (recorded NOT MEASURABLE, never as zero).\n"
-          + f"\n{head}\n\n{use}\n"
-          + "\nNo hypothesis is decided by this summary: H-E7a needs Lane A over a floor-clearing "
-            "corpus, H-E7b needs compaction events (not yet implemented).\n")
+          + f"\n{head}\n\n{use}\n\n{_taxonomy_md(tax, th['materiality_fraction'])}\n"
+          + "\nNo hypothesis is decided by this summary. H-E7b needs the compaction break-even "
+            "distribution, which needs compaction events: see the taxonomy row.\n")
     (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
     return md
 
