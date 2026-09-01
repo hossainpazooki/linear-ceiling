@@ -101,3 +101,8 @@ def test_repo_ledger_is_clean():
     d = parse_ledger(text)
     assert {1, 2, 3, 4, 5} <= set(d["entries"])
     assert all(v in VERDICTS for v in d["hypotheses"].values())
+
+
+def test_unestimable_is_a_valid_verdict():
+    """Entry 0015: the experiment ran and its estimand has no support in the corpus."""
+    assert check(GOOD.replace("| H-S1 | s | E1 | unresolved |", "| H-S1 | s | E1 | UNESTIMABLE |")) == []

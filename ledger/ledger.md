@@ -11,8 +11,8 @@ immutable — an amendment is a new entry, never an edit; status tags are `[VALI
 E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other verdict below is
 `unresolved` or `SHELVED`. The screen-validation line is CLOSED and E7 is promoted to a
 standalone measurement program with pre-registered thresholds (entry 0006, amended by 0007) —
-H-S1/H-S3/H-S4 carry `SHELVED` (no experiment decided them; none is scheduled), and only
-H-E7a/H-E7b have a live path to a verdict, decided by Lane A alone per entry 0007. From entry
+H-S1/H-S3/H-S4 carry `SHELVED` (no experiment decided them; none is scheduled); H-E7a is
+`NOT CONFIRMED` and H-E7b `UNESTIMABLE` (entry 0015); the live hypotheses are H-E8 and H-E9. From entry
 0007 on, each entry records a `prior-entries-sha256:` over the entries section above it,
 recomputed by `ledger_check` in CI.
 
@@ -24,8 +24,8 @@ recomputed by `ledger_check` in CI.
 | H-S2 | (screen discriminates) rowspace(W_K) and rowspace(W_V) occupy measurably different canonical coordinates, and the predicted R² ordering reproduces the measured K>V gap (Run 1 held-out: 0.76 vs 0.55; paper: ~0.2 at 14B→32B). Failure → G1 degrade. | E0 (first clause; rule in entry 0003), E1 (second clause) | NOT CONFIRMED |
 | H-S3 | (chain reaches retention) Screen-predicted R² rank-correlates with floor-normalized retention **across pairs and k** — because held-out R² does (Run 2, within-pair: rank correlation +1 across k; in-sample rank-correlates −1), and the screen predicts held-out R². The source paper's r = −0.20 is quarantined explicitly as an in-sample artifact. Falsification mode: screen predicts fidelity but not retention → the contribution becomes the decomposition (symmetric predictable factor + receiver residual), stated in the abstract, not conceded to a reviewer. | E2 | SHELVED |
 | H-S4 | (economics load-bearing, not decorative) Composition (H-C1/C2/C3 as already registered in the ledger) and the calibration curve (H-L1–L4) convert the screen from a correlation into a build policy: which pairs, which direction, how many calibration tokens, n−1 vs n(n−1) mappers. | E4, E5 | SHELVED |
-| H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | unresolved |
-| H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | unresolved |
+| H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | NOT CONFIRMED |
+| H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | UNESTIMABLE |
 | H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | unresolved |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
@@ -802,3 +802,74 @@ and the H-E7a ratio from the raw traces and refuses on any disagreement; replay 
 until this entry is committed unmodified (`e7.assert_ready`, entry 0006).
 
 prior-entries-sha256: 5a2eaea7cc174b727cac9c8dcc0446091f650abc6f7df2bc8849a9f7408905b1
+
+### 0015 — 2026-09-01 — Invalidation taxonomy frequencies `[BASELINE]`; H-E7a NOT CONFIRMED; H-E7b UNESTIMABLE
+
+**Provenance.** First replay under entry 0014's definitions, after 0013/0014 were committed
+(`e7.assert_ready` passed); every figure below recomputed by `summarize_e7` from the raw traces
+(config sha256 6915666d452d; 188 trace files hashed; 2904 trajectories;
+Lane A detector keys ['model', 'model_id', 'model_name']) and compared against the driver's report before this
+entry was written. Coverage floor: MET (entry 0011 units).
+
+**Taxonomy frequencies** (`ev` = events; `a of b` = trajectories with >= 1 event, of the measurable
+trajectories; `n/m` = NOT MEASURABLE for that class -- in neither numerator nor denominator, never a
+zero). Rows NOT MEASURABLE for every class are listed once below the table rather than repeated.
+
+| scope | model_switch | rerender_at_switch | compaction | idle_expiry | branch | edit |
+|---|---|---|---|---|---|---|
+| swe-bench/autocoderover-v2.1-claude-3-5-sonnet-20241022 | n/m (4) | n/m (4) | n/m (4) | n/m (4) | 4 ev / 2 of 4 | n/m (4) |
+| swe-bench/composio_swekit | 68 ev / 60 of 60 | 68 ev / 60 of 60 | n/m (60) | n/m (60) | n/m (60) | n/m (60) |
+| tau2-bench/claude-3-7-sonnet-20250219 | n/m (200) | n/m (200) | 0 ev / 0 of 200 | 0 ev / 0 of 200 | n/m (200) | n/m (200) |
+| tau2-bench/gpt-4.1-2025-04-14 | n/m (200) | n/m (200) | 0 ev / 0 of 200 | 0 ev / 0 of 200 | n/m (200) | n/m (200) |
+| tau2-bench/gpt-4.1-mini-2025-04-14 | n/m (200) | n/m (200) | 0 ev / 0 of 200 | 0 ev / 0 of 200 | n/m (200) | n/m (200) |
+| tau2-bench/o4-mini-2025-04-16 | n/m (200) | n/m (200) | 0 ev / 0 of 200 | 0 ev / 0 of 200 | n/m (200) | n/m (200) |
+| **swe-bench (pooled)** | 68 ev / 60 of 60 (+64 n/m) | 68 ev / 60 of 60 (+64 n/m) | n/m (124) | n/m (124) | 4 ev / 2 of 4 (+120 n/m) | n/m (124) |
+| **tau-bench (pooled)** | n/m (1980) | n/m (1980) | n/m (1980) | n/m (1980) | n/m (1980) | n/m (1980) |
+| **tau2-bench (pooled)** | n/m (800) | n/m (800) | 0 ev / 0 of 800 | 0 ev / 0 of 800 | n/m (800) | n/m (800) |
+| **ALL** | 68 ev / 60 of 60 (+2844 n/m) | 68 ev / 60 of 60 (+2844 n/m) | 0 ev / 0 of 800 (+2104 n/m) | 0 ev / 0 of 800 (+2104 n/m) | 4 ev / 2 of 4 (+2900 n/m) | n/m (2904) |
+
+NOT MEASURABLE for every class (final-transcript traces: no per-step model, no reported usage, no
+timestamps, flat layout): swe-bench/Skywork-SWE-32B (15), swe-bench/honeycomb (15), swe-bench/marscode-agent-dev (15), swe-bench/openhands (15), tau-bench/gpt-4o (660), tau-bench/sonnet-35-new (1320).
+
+**What the table says.**
+
+- Every observed model switch is a re-render (68 of 68): the receiving model
+  never received a byte-identical prefix. Entry 0013's upper bound is the ceiling of a transfer that
+  does not exist as prefix reuse in any public trace.
+- Compaction: 0 events over 800 measurable trajectories (tau2-bench, the only suite
+  that records per-request prompt sizes); 2104 trajectories NOT MEASURABLE. On the one
+  corpus that can show it, context only grows.
+- Idle expiry under the 5-minute TTL: 0 events over 800 measurable trajectories --
+  for tau2-bench, entry 0007's warm bound is not a bound but the realized case; 2104
+  NOT MEASURABLE.
+- Branch: 4 extra attempts over 2 of 4 measurable instances (nested layout
+  only); 2900 NOT MEASURABLE. Edit: NOT MEASURABLE everywhere, as registered.
+
+**H-E7a -- NOT CONFIRMED.** Rule: entry 0006's materiality cutoff (10% of the trajectory set's
+input spend), Lane A alone (0007), denominator = the Lane A measurable subset (0014). Recomputed:
+recoverable upper bound 2,339,562 / input spend 165,959,914 over 60
+measurable trajectories = **1.41%** (swe-bench: 1.41% over 60 measurable trajectories). Below the cutoff by roughly an order of
+magnitude, and the numerator is itself an upper bound (0010/0013), so the true ratio is lower still.
+Entry 0014's recon showed the same direction under every candidate denominator; the choice was not
+outcome-selecting. Per entry 0005's registered kill condition, **the motivation reverts to the
+fleet-mixing framing**: on public agent traces, mid-trajectory model switching is rare (one designed
+critic/selector family) and its recoverable prefill is immaterial against what those trajectories
+spend on prefill; any case for cross-model KV transfer must rest on different models serving
+different requests, not on handoffs within a trajectory. H-E7a's verdict cell changes to
+`NOT CONFIRMED` with this entry.
+
+**H-E7b -- UNESTIMABLE.** The compaction break-even distribution has no support: zero compaction events
+on every trajectory that can evidence one, NOT MEASURABLE on the rest. Entry 0005 registered this
+outcome in advance ("compaction events too sparse -> H-E7b dropped as unestimable, stated, not
+silently omitted"); this entry states it. `UNESTIMABLE` enters the verdict vocabulary (`ledger_check`,
+in this commit set) for exactly this case -- the experiment ran and its estimand has no support in
+the corpus -- distinct from `SHELVED` (no experiment ran) and `NOT CONFIRMED` (the rule returned a
+negative). It is not a claim that compaction does not occur in practice: final-transcript traces
+cannot show it. A corpus that records per-request prompt sizes AND compacts would reopen H-E7b by a
+numbered entry; nothing is scheduled.
+
+**What this entry does not decide.** H-E8 (entry 0009, to be amended by 0016) and H-E9 (0017) are
+untouched. Entry 0005's three E7 outputs are now all on the record: (i) the taxonomy above,
+(ii) headroom (0013), (iii) the break-even distribution, as UNESTIMABLE.
+
+prior-entries-sha256: 2899f4d32d7be320548bc2c7bb78b4cd8dd73ba6efe24f795b218f3900784505
