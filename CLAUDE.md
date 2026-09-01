@@ -32,14 +32,19 @@ On Linux/web the interpreter is `.venv/bin/python`.
 per-agent str/dict `arguments` split) · `e7_tokens` (exact `o200k_base` where a public encoder
 exists, per-content-type calibrated divisors otherwise — ledger 0009) · `e7_cost` (two-bound
 timeline) · `e7_lanes` (Lane A measured / Lane B cascade) · `e7` (gate + skeleton driver) ·
-`summarize_e7` (fail-closed; recomputes from raw traces, refuses on tamper) ·
+`summarize_e7` (fail-closed; recomputes from raw traces, refuses on tamper) · `e7_swe`
+(LangChain family + layout-aware `discover_trajectories`) · `e7_rolecontent` (4 variants) ·
+`e7_tau2` (ground-truth usage/timestamps) · `e7_headroom` (entry 0010 measure) ·
 `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); the E7 measurement program is
-registered **and built**, and has run over tau-bench only — no hypothesis is decided, and the
-per-agent coverage floor is unmet on one suite. **Entries 0006–0009 are the authority; read
-them whole before touching E7 code** (Lane A alone decides H-E7a; Lane B never resolves
-anything; H-E7b needs both cost bounds). `e7.assert_ready` refuses until those entries and
-`config/e7.toml` are committed unmodified. Trajectory availability, formats, and what they omit:
-`docs/2026-09-01-swe-bench-trace-recon.md`. Real trajectories live under `traces/` (gitignored),
-never in history.
+registered **and built** across three corpora (tau-bench, tau2-bench, SWE-bench), coverage floor
+**met**, first headroom numbers computed — **no hypothesis decided**. **Entries 0006–0012 are the
+authority; read them whole before touching E7 code.** The rules newcomers break first: Lane A
+ALONE decides H-E7a and Lane B never resolves anything (0007/0010); unmeasurable is never a zero
+(0006); a narrow detector is a defect, not a null — search `model|model_id|model_name` minimum
+(0010); a trajectory is one agent run on one task instance, not one file (0011); every
+trace-only cost figure is a LOWER BOUND and headroom is an UPPER BOUND, both labelled (0010/0012).
+`e7.assert_ready` refuses until the registering entries and `config/e7.toml` are committed
+unmodified. Corpus formats and what they omit: `docs/2026-09-01-swe-bench-trace-recon.md`. Real
+trajectories live under `traces/` (gitignored), never in history.

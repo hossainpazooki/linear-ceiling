@@ -3,16 +3,16 @@
 Instruments for pre-registered, auditable experiments on cross-model KV-cache questions.
 Two program lines live here: a **sealed pre-fit screen** (E0 ran; ladder verdict **SAME** on a
 vocabulary proxy; the line is **closed**, its hypotheses `SHELVED`), and a **trace-replay
-measurement program** over agentic KV-cache workloads — registered *and* built, with no
-hypothesis decided yet. The ledger is the authority on state; every figure lives there or in
-`docs/`, never here.
+measurement program** over agentic KV-cache workloads — registered, built, and running across
+three public corpora, with no hypothesis decided yet. The ledger is the authority on state;
+every figure lives there or in `docs/`, never here.
 
 ```mermaid
 flowchart LR
     RULE[rule committed first] --> E0[E0: weights-only screen test]
     E0 -->|SAME under the frozen rule| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
     E0 --> DEPTH[per-layer depth structure recorded<br/>real vs proxy: both readings open]
-    E7[E7 trace-replay: taxonomy,<br/>switch-point headroom, compaction] --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
+    E7[E7 trace-replay: taxonomy, switch-point<br/>headroom, compaction] --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
     E7 -.->|only if its gates pass| WS[optional workshop 4-pager]
     E8[E8 transfer under agent-trace<br/>distribution shift: registered, not run] --> ANCHOR
 ```
@@ -27,7 +27,7 @@ The scope sentence, held verbatim:
 Nothing enters the ledger by hand. `results/` and `traces/` are gitignored; the only path from
 computation to record is a summarizer that **recomputes from the raw inputs and refuses on any
 disagreement** — proven by tamper tests, not asserted. Each entry then hash-chains the
-registered text above it.
+registered text above it, so editing a registered entry fails CI.
 
 ```mermaid
 flowchart LR
@@ -43,27 +43,32 @@ flowchart LR
 
 ## The E7 measurement program
 
-Three outputs on public agent traces at pinned provider pricing: an invalidation taxonomy with
-event frequencies, transfer headroom at model-switch points in dollars, and the compaction
-break-even distribution. The instrument is built — adapters, a two-bound cost model, both
-lanes, a commit gate, and a fail-closed summarizer. Its thresholds, lanes, cost-model
-parameters and gates are registered; **no hypothesis is decided yet**, and the per-agent
-coverage floor is not met on one suite alone.
+Three registered outputs on public agent traces at pinned provider pricing: an invalidation
+taxonomy with event frequencies, transfer headroom at model-switch points, and the compaction
+break-even distribution. Adapters cover three corpora with incompatible formats; the coverage
+floor (trajectories *and* distinct agents per suite, over two suites) is met.
 
 ```mermaid
 flowchart TD
-    T[public agent trajectories<br/>per-agent coverage floor] --> P[parser + two-bound<br/>token/cost timeline]
-    P --> A["Lane A: measured switch points<br/>unmeasurable ≠ zero"]
-    P --> B["Lane B: counterfactual cascade<br/>descriptive only"]
+    T1[tau-bench] --> P[adapters -> one normalized shape]
+    T2[tau2-bench<br/>ground-truth usage + timestamps] --> P
+    T3[SWE-bench<br/>role/content + LangChain families] --> P
+    P --> C[two-bound token/cost timeline]
+    C --> A["Lane A: measured switch points<br/>unmeasurable is NOT zero"]
+    C --> B["Lane B: counterfactual cascade<br/>descriptive only"]
     A -->|alone decides| HA[H-E7a]
-    B -.->|never resolves a hypothesis| DESC[headroom, labeled<br/>counterfactual]
-    P --> TAX[invalidation taxonomy]
-    P --> CB[compaction break-even<br/>warm+cold bounds decide H-E7b]
+    A --> HR[headroom at observed handoffs<br/>reported as an UPPER BOUND]
+    B -.->|never resolves a hypothesis| DESC[labeled counterfactual]
+    C --> TAX[invalidation taxonomy]
+    C --> CB[compaction break-even<br/>warm+cold bounds decide H-E7b]
 ```
 
-Token counts are exact where a public encoder exists and calibrated per content type
-otherwise, because the crude estimator is differentially biased across prose and JSON — the
-measured basis is in the ledger.
+Two properties of the corpora shape every figure. Serving-model identity is recorded per step
+by only a minority of formats, so most trajectories are **not measurable** for Lane A and are
+never counted as zero. And public traces omit the system prompt and tool schemas the provider
+billed, so **every cost figure computed from visible messages is a lower bound** — the omitted
+block is byte-identical per request, i.e. the most cacheable content there is. Both are
+registered; the measured basis is in the ledger.
 
 ## Hard invariants, and what enforces each
 
@@ -77,8 +82,10 @@ measured basis is in the ledger.
 3. **No unrecomputed numbers** — summarizers only, fail-closed, tamper-tested.
 4. **Experiments refuse until their rules are committed** — the E0 and E7 runners read no data
    until the registering entries and their config are committed and unmodified.
-5. **Determinism** — one seeded generator (`rng.make_rng`); the suite greps for any other.
-6. **Scope sentence verbatim, once, in this README** — `lint_scope`.
+5. **A narrow detector is a defect, never a null** — a probe that cannot see a thing must not
+   report its absence; Lane A records the key set it searched alongside its counts.
+6. **Determinism** — one seeded generator (`rng.make_rng`); the suite greps for any other.
+7. **Scope sentence verbatim, once, in this README** — `lint_scope`.
 
 ```mermaid
 flowchart LR
@@ -86,8 +93,9 @@ flowchart LR
     I2[pre-registration] --> C2[ledger_check + entry chain]
     I3[no unrecomputed numbers] --> C3[fail-closed summarizers]
     I4[rules committed first] --> C4[assert_ready gates]
-    I5[determinism] --> C5[single rng + suite grep]
-    I6[scope sentence] --> C6[lint_scope]
+    I5[detector breadth] --> C5[recorded key set + tests]
+    I6[determinism] --> C6[single rng + suite grep]
+    I7[scope sentence] --> C7[lint_scope]
 ```
 
 ## Setup
@@ -103,8 +111,7 @@ python -m linear_ceiling.seal verify && python -m linear_ceiling.lint_scope && p
 The suite runs offline in seconds on synthetic fixtures; a green suite proves the tooling, not
 any result. The seal writer additionally needs the upstream checked out at
 `../kv-transfer-replication` (read-only, pinned — `UPSTREAM.md`; it fails closed if missing).
-E7 additionally needs trajectories under `traces/`, which are acquired locally and never
-committed.
+E7 additionally needs trajectories under `traces/`, acquired locally and never committed.
 
 ```mermaid
 flowchart LR
@@ -119,23 +126,23 @@ flowchart LR
 |---|---|
 | `ledger/ledger.md` | the registered record: hypotheses, verdicts, numbered immutable entries — **start here for program state** |
 | `docs/handoff/HANDOFF.md` | handoff index; the newest brief is the pick-up target |
+| `docs/learnings/LEARNINGS.md` | non-obvious findings, one per entry, each with a read-only `re-verify:` line |
 | `docs/2026-08-26-kv-handoff-screen-design.md` | design spec, verbatim (authority on the original scope; superseded where entries say so) |
 | `docs/2026-08-26-seed-w1.md` · `docs/gap-map.md` | W1 seed and E7 gap map, verbatim |
 | `docs/2026-09-01-measurement-lane-evidence.md` | why the program re-scoped: paper deltas, pricing pins, venue facts |
 | `docs/2026-09-01-swe-bench-trace-recon.md` | trajectory availability, formats, and what they do and do not record |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
-| `ledger/predictions/` | sealed per-pair predictions (empty until something is sealed pre-fit) |
 | `CLAUDE.md` | repo brief for agent sessions: commands, layout, binding rules |
 
 ```mermaid
 flowchart TD
     README[README: essentials] --> LED[ledger/ledger.md<br/>registered record]
-    README --> HOF[docs/handoff/HANDOFF.md<br/>newest brief = pick-up target]
-    LED --> EV[measurement-lane evidence<br/>deltas, pricing, venues]
-    LED --> RECON[swe-bench trace recon<br/>formats + what traces omit]
+    README --> HOF[docs/handoff/<br/>newest brief = pick-up target]
+    README --> LRN[docs/learnings/<br/>re-verifiable findings]
+    LED --> EV[measurement-lane evidence]
+    LED --> RECON[swe-bench trace recon]
     LED --> SPEC[design spec + seed + gap map<br/>verbatim, immutable]
     LED --> UP[UPSTREAM.md<br/>pin + borrow provenance]
-    HOF --> BRIEFS[dated briefs]
 ```
 
 Status tags used in the ledger: `[VALIDATED]` ran and survived refutation · `[BASELINE]` ran,
