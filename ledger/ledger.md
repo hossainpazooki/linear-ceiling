@@ -26,7 +26,7 @@ recomputed by `ledger_check` in CI.
 | H-S4 | (economics load-bearing, not decorative) Composition (H-C1/C2/C3 as already registered in the ledger) and the calibration curve (H-L1–L4) convert the screen from a correlation into a build policy: which pairs, which direction, how many calibration tokens, n−1 vs n(n−1) mappers. | E4, E5 | SHELVED |
 | H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | NOT CONFIRMED |
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | UNESTIMABLE |
-| H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | unresolved |
+| H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | NOT CONFIRMED |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -975,3 +975,147 @@ the sender processed up to its last response, `R` = the receiver's request promp
 ledger carries the shape finding with a read-only re-verify line.
 
 prior-entries-sha256: 41982f56a4f9fbfc6dc7bb6e6c306c68b7bbe358668ca35d298f119dcc1e63f3
+
+### 0018 — 2026-09-02 — Corrected figures of 0013 and 0015's ratio `[BASELINE]`, through the fixed instrument
+
+The figures below replace those superseded by entry 0017, recomputed by `summarize_e7` from the
+raw traces with the corrected adapter and measure (config sha256 6915666d452d;
+188 trace files hashed; refusal on any disagreement). Registered rules unchanged;
+the verdicts of 0015 stand as stated there.
+
+**Corpus (composio family, both submissions, prompts now read in full):** 60 trajectories,
+6377 requests, 244,739,122 input tokens (visible-only LOWER BOUND, 0012).
+
+**Headroom at the 68 observed Lane A switches** (replacing 0013's table; read_mult
+0.1; `paid` is now the receiver's own request prefill per 0017):
+
+| figure | value |
+|---|---|
+| byte-identical handoffs | **0/68** |
+| overlap of the receiver's ACTUAL prompt with sender-processed content | 0.988 (p10 0.972, p90 0.994) |
+| receiver prefill at the switch, tokens (visible-only LOWER BOUND) | 7,492 (p10 3,434, p90 15,442) |
+| headroom UPPER BOUND as a fraction of paid | **88.9% (p10 87.5%, p90 89.5%)** |
+
+The corrected overlap is HIGHER than 0013's superseded figure and nearly total: the o1-mini
+prompt is the re-rendered transcript, almost entirely words the sender produced. The corrected
+prefill is much smaller: the receiving stage pays for its own prompt, not the trajectory's
+history. Both move the same direction for the program's thesis -- the one observed handoff
+pattern re-pays a nearly fully redundant prompt, and that prompt is small.
+
+**H-E7a ratio, restated** (rule unchanged: 0006 cutoff, Lane A alone per 0007, measurable-subset
+denominator per 0014): recoverable upper bound 496,798 / input spend
+244,739,122 over 60 measurable trajectories = **0.20%** vs
+10%. The correction moved the ratio DOWN from the superseded 1.41%: H-E7a's
+`NOT CONFIRMED` verdict (0015) stands, now by a wider margin. No other verdict is touched.
+
+This entry decides nothing new; it puts the corrected numbers where the superseded ones stood.
+
+prior-entries-sha256: 5942c0b61b7f5bd3a92c2e5d0d8eeb7ed8de47b45aa34a5108decf4687fcbcf0
+
+### 0019 — 2026-09-02 — E9 registered: the achievable fraction of the headroom upper bound at a re-rendered handoff (H-E9, band frozen)
+
+Entry 0013 (figures corrected by 0017/0018) records headroom as an UPPER BOUND and states that
+the achievable fraction is not measured. E9 measures it, on the observed handoffs, on the A100
+the plan names (`docs/2026-09-01-lcfm-gpu-plan.md`). Band numbers approved by the operator
+2026-09-01; this entry was drafted as 0017 and renumbered by the 0017 correction.
+
+**Unit.** One observed Lane A switch (entry 0010; 68 at the time of writing), defined at the
+REQUEST level per 0017: sender context `S` = everything the sender processed up to and
+including its last response before the switch; receiver prompt `R` = the receiver's own
+request prompt (the messages of its request preceding its response), never the trajectory
+prefix. Both as text from the registered adapter (`e7_swe.load_composio_detailed`, which
+records `Msg.request`), the same slices `e7_headroom.measure` prices.
+
+**Alignment, registered method.** Tokenize `S` and `R` with the pair's shared Qwen3 tokenizer
+(no special tokens); match tokens by the longest-matching-blocks algorithm of Python's
+`difflib.SequenceMatcher` over token ids with `autojunk=False` (Ratcliff/Obershelp: the longest
+common contiguous block, then recursively left and right; deterministic; yields a common
+subsequence, in general shorter than the true LCS, so `|M|` is a floor). The matched set `M`
+carries a position pair `(p_S, p_R)` per token. `|M| / |R|` is reported beside entry 0010's
+word-multiset overlap. Exact LCS was not chosen because it is quadratic in 32k-token
+sequences; the method is named so the number reproduces.
+
+**Two measurements, both pooled R² (definition A5, provenance per UPSTREAM.md), K and V
+separately, over `M` only:**
+
+- **E9-same** (the ceiling under re-rendering, independent of any mapper): the receiver model
+  Qwen3-1.7B prefills `S` and `R` natively; its K/V at `p_S` are re-roped to `p_R` in content
+  space and compared against its own K/V at `p_R`. This is how much of a content-matched
+  token's KV survives a different preceding context -- the achievable ceiling for ANY transfer
+  across this handoff.
+- **E9-cross** (the transfer): Qwen3-0.6B prefills `S`; the existing k = 1 content-space mapper
+  (0016) is applied with receiver positions `p_R` (`kvt.mapper.apply_mapper`, upstream) and
+  compared against the receiver's K/V at `p_R`. Reported as an absolute R² and as a fraction of
+  E9-same, so mapper error and re-render loss are never conflated.
+
+**H-E9** (registered in the table): *at a re-rendered handoff, same-model KV agreement on
+content-matched tokens retains the transfer-relevant fidelity.* **Band, frozen here before any
+prefill:** per-handoff E9-same K R², median over included handoffs: **HOLDS if >= 0.70;
+DEGRADES if <= 0.40; UNRESOLVED between.** V is reported alongside and is verdict-bearing for
+nothing. Reason for 0.70: it is the k = 1 mapper's own same-text held-out K R² (0.681), so
+HOLDS means "the re-render costs no more than the mapper itself does".
+
+**Scope limits, registered up front.** Context cap 32,768 tokens (Qwen3 native): a handoff
+with `|S|` or `|R|` above the cap is EXCLUDED and counted; coverage (included / observed) is
+stated with every figure and nothing is truncated. Text is off-policy for Qwen. One pair.
+Composio is one system (0011). E9 bounds what a transfer could recover at the one public
+instance of the use case; it says nothing about routing frequency (H-E7a's domain) and must
+never be written as a real mid-trajectory transfer.
+
+**Dumps and what is kept.** Every position of `S` and `R` is dumped with the upstream's
+existing `dump_kv.py` (`--stride 1`, one sequence per file; no new dump code). A handoff's three
+dumps (receiver on `S`, receiver on `R`, source on `S`) are up to ~11 GB, so they are scored
+and deleted per handoff; what is kept per handoff is the alignment, the per-layer, per-head
+sums of squares (SSE and SST, for E9-same and E9-cross, K and V) and the R² derived from them.
+A seeded keep-subset of handoffs (seed and size in `config/e9.toml`, drawn before any prefill)
+retains its full dumps, fingerprinted, so a CPU summarizer can recompute those R² from tensors.
+
+**Enforcement.** `e9.assert_ready` refuses until this entry and `config/e9.toml` are committed
+unmodified and the upstream is at a pinned commit that adds `scripts/score_positions.py` (the
+scorer; a re-pin recorded in `config/e9.toml` and `UPSTREAM.md`) with a clean tree for every
+path E9 invokes. Per-handoff checkpoints are synced off the GPU box after each handoff.
+`summarize_e9` recomputes the alignment of every handoff from the raw traces, recomputes every
+R² from the recorded moments, recomputes the keep-subset's moments from its fingerprinted
+tensors by re-running the scorer, recomputes the medians and the band outcome, and refuses on
+any disagreement. What it cannot do on CPU is regenerate the deleted dumps: for those handoffs
+the moments are a GPU-run record, verified by the keep-subset, and the entry that states the
+verdict must say so. The seal is not involved: no mapper is fitted.
+
+prior-entries-sha256: 88bb14f51ffcbdd696a5c8886077a6ef0ce598505d8057359840403f0348cd81
+
+### 0020 — 2026-09-02 — E8 ran `[BASELINE]`; H-E8 NOT CONFIRMED
+
+**Provenance.** Design and band per 0009, amendments per 0016; gate passed with the committed
+ledger and the upstream pinned at `71df45043a79` (clean tree for every invoked
+path). Every figure recomputed by `summarize_e8` re-running the upstream scorer on the
+fingerprinted dumps and cross-checking arm (a) against the archived `r2.json` for every k
+(config sha256 32307787248a; agent token file sha256 9aa8ffc04c06, manifest
+hashed). Two independent end-to-end executions produced a byte-identical arm (b) token matrix
+and identical R² -- an unplanned determinism check, recorded here.
+
+**Held-out pooled R² (definition A5), generic calibration text vs agent-trace text, the
+EXISTING mappers, no refit:**
+
+| k | arm (a) generic K / V | arm (b) agent K / V | drop K / V | band K / V |
+|---|---|---|---|---|
+| 1 (verdict-bearing) | 0.6814 / 0.5133 | 0.5629 / 0.3418 | +0.1185 / +0.1715 | UNRESOLVED / DEGRADES |
+| 4 (reported only) | 0.5907 / 0.3361 | 0.3523 / -0.0796 | +0.2384 / +0.4158 | DEGRADES / DEGRADES |
+| 8 (reported only; k=8 from a collapsed baseline, 0016) | 0.0984 / -0.6412 | -0.6280 / -2.1380 | +0.7263 / +1.4968 | DEGRADES / DEGRADES |
+
+**H-E8 -- NOT CONFIRMED.** The registered claim is that the mapper "retains its held-out pooled R²
+when the KV states come from agent-trace text, within the tolerance band, K and V separately"
+(0009), verdict-bearing at k = 1 (0016), neither read-out alone (0009). At k = 1 the V drop
+(+0.1715) is DEGRADES and the K drop (+0.1185)
+is UNRESOLVED (inside the registered dead band): retention FAILS for V and is NOT ESTABLISHED
+for K, so the claim as registered is NOT CONFIRMED. The direction is consistent at every k, and V
+degrades more than K everywhere -- content shift hits the value pathway harder than the key
+pathway on this pair.
+
+**Scope, carried from 0009/0016 and binding on any use of these numbers:** the text is
+off-policy for Qwen (content distribution shift only, never on-policy agent behaviour); one
+pair, one calibration size (n = 50, where k = 4 is already partly and k = 8 fully collapsed);
+NOT a transfer at a real switch point; arm (b) text is visible-messages-only and omits every
+hidden prefix the provider billed (0012). H-E8's verdict cell changes to `NOT CONFIRMED` with this
+entry.
+
+prior-entries-sha256: 65615f84d33ee898f5c585f470ff7faa7732e96de94a67e8b24ba00452b08d35
