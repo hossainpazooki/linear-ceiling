@@ -1,0 +1,24 @@
+# E7 measurement program -- parameters registered in ledger entries 0006 + 0007.
+# assert_ready refuses replay until this file and ledger/ledger.md are committed unmodified.
+
+[e7]
+traces_dir = "traces"          # gitignored; real trajectories live here, never in history
+results_dir = "results/e7"
+
+[e7.pricing]                    # pins retrieved 2026-09-01 (entry 0006; provenance in docs/2026-09-01-measurement-lane-evidence.md)
+provider = "anthropic"
+read_mult = 0.1                 # cache read, x base input price
+write_mult = 1.25               # 5-minute ephemeral cache write -- the base case (entry 0007)
+write_mult_1h = 2.0             # 1-hour tier: sensitivity only, verdict-bearing for nothing
+ttl_seconds = 300
+
+[e7.thresholds]                 # entry 0006, amended by 0007
+materiality_fraction = 0.10     # H-E7a: recoverable prefill spend / total input spend, Lane A ALONE
+negative_mass_fraction = 0.25   # H-E7b: fraction of compaction events net-negative, must hold under BOTH bounds
+min_trajectories_per_suite = 50
+min_agents_per_suite = 3        # distinct agents/scaffolds, not runs (entry 0007)
+min_suites = 2
+
+[e7.lane_b]
+policy = "two-tier-cascade"     # planning turns large tier, tool-execution turns small tier;
+                                # every tier boundary is a switch point (entry 0006, frozen)

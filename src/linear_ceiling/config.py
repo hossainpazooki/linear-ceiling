@@ -62,6 +62,39 @@ def load_seal_config(path: Path, repo_root: Path) -> SealConfig:
                       upstream_path=upstream, artifact_roots=tuple(roots))
 
 
+@dataclass(frozen=True)
+class E7Config:
+    traces_dir: Path
+    results_dir: Path
+    pricing: dict
+    thresholds: dict
+    lane_b_policy: str
+    config_path: Path
+
+
+_E7_PRICING_KEYS = ("provider", "read_mult", "write_mult", "write_mult_1h", "ttl_seconds")
+_E7_THRESHOLD_KEYS = ("materiality_fraction", "negative_mass_fraction",
+                      "min_trajectories_per_suite", "min_agents_per_suite", "min_suites")
+
+
+def load_e7_config(path: Path, repo_root: Path) -> E7Config:
+    path = Path(path)
+    e7 = _read(path)["e7"]
+    for section, keys in (("pricing", _E7_PRICING_KEYS), ("thresholds", _E7_THRESHOLD_KEYS)):
+        missing = [k for k in keys if k not in e7.get(section, {})]
+        if missing:
+            raise ValueError(f"config/e7.toml [e7.{section}] is missing {missing}; the registered "
+                             "parameters (ledger entries 0006/0007) must be complete before E7 runs")
+    return E7Config(
+        traces_dir=Path(repo_root) / e7["traces_dir"],
+        results_dir=Path(repo_root) / e7["results_dir"],
+        pricing=dict(e7["pricing"]),
+        thresholds=dict(e7["thresholds"]),
+        lane_b_policy=e7["lane_b"]["policy"],
+        config_path=path,
+    )
+
+
 def load_e0_config(path: Path, repo_root: Path) -> E0Config:
     path = Path(path)
     d = _read(path)

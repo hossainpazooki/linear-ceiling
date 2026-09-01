@@ -23,3 +23,6 @@ results/mapper/*
 mappers/*
 !mappers/.gitkeep
 data/
+
+# E7 trajectories: acquired locally, never committed (numbers reach the record via summarizers)
+traces/
