@@ -544,3 +544,68 @@ premise numbers and the taxonomy. E8 appears in no LCFM submission. Entry 0006's
 numbers-freeze scope cap is otherwise unchanged.
 
 prior-entries-sha256: 19612bc72156fa045457c234efef450ea1c8dcf8c68594b8d72374c3c78390b3
+
+### 0010 — 2026-09-01 — A real cross-model switch exists in public traces; Lane A detector breadth and the re-rendered-handoff headroom measure
+
+**What changed and what did not.** Entry 0006 registered Lane A's RULE ("a switch point is
+counted only where trajectory metadata records the serving model per step and it changes
+mid-trajectory") together with an EXPECTATION ("public trajectories record the model per RUN,
+not per step, so Lane A is expected sparse to absent"). The rule is unchanged and needs no
+amendment -- it handles what follows exactly as written. **The expectation was wrong**, and
+this entry corrects it. An expectation is not a rule; correcting one is not relitigating the
+other.
+
+**Finding `[BASELINE]` -- mid-trajectory model switching IS present in public benchmark
+traces.** Re-probed with a detector matching `model|model_id|model_name` (the original probe
+matched only the literal key `model`, and the LangChain-style family records under the other
+two, so it was never probed -- the detector was strictly narrower than the set the conclusion
+quantified over):
+
+| submission | trajectories probed | with >1 serving model | models |
+|---|---|---|---|
+| 20241016_composio_swekit | 25 | 25 | anthropic.claude-3-5-sonnet-20240620-v1:0 + o1-mini-2024-09-12 |
+| 20241025_composio_swekit | 25 | 25 | anthropic.claude-3-5-sonnet-20241022-v2:0 + o1-mini-2024-09-12 |
+
+Claude runs the solve threads; o1-mini runs per-run summarization and patch selection. Five
+other submissions carrying per-step model identity (zai x2, livesweagent x2, moatless) show one
+model each across 125 probed trajectories, 3 vendors. Numbers recomputed independently of the
+adversarial report that produced them; that report's separate claim that the handoff is
+"verbatim" is REFUTED here (see below) and must not be repeated.
+
+**Consequence for the premise.** The claim this program may make is now narrower and better
+supported: mid-trajectory model switching occurs as a **designed critic/selector pipeline
+stage**, while **production-style cost/quality routing or mid-conversation switching remains
+unevidenced** in public traces. Neither "switching never happens" nor "the premise holds" is
+supportable. Submissions that are multi-model by design but record no serving identity
+(navie-2, SWE-Fixer, wandb crosscheck, Skywork Bo8, Co-PatcheR) remain NOT MEASURABLE and are
+never counted as zero.
+
+**Registered requirement -- detector breadth.** Lane A's implementation MUST search at minimum
+the keys `model`, `model_id`, `model_name`, and any adapter for a new family must state which
+keys carry serving identity in that family. A detector narrower than the corpus produces false
+NOT MEASURABLE and false zeros, both of which corrupt the premise finding in the flattering
+direction. **A narrow detector is a defect, never a null result.** Any Lane A output must
+record the detector's key set alongside its counts so the two can never be read apart.
+
+**Registered measure -- headroom at a re-rendered handoff, defined before it is computed.**
+The observed switch is NOT a byte-identical context handoff. The o1-mini stage re-renders the
+Claude conversation into LangChain labels (`HumanMessage` 5, `AIMessage` 11, `ToolMessage` 7 in
+the inspected instance), sharing 118 of 119 long tokens with the Claude stage, while a
+verbatim-prefix check returns 0/3. The second model therefore re-consumes the first model's
+context as a re-serialized prompt and pays full prefill on it. Measure, frozen here:
+
+- **paid**: the second stage's prefill tokens, priced at the pinned rates (entry 0006/0007).
+- **overlap**: the portion of the second stage's prompt whose content the first model had
+  already processed, measured by token-level overlap and reported with the method named.
+- **headroom_upper_bound = overlap x (1 - read_mult)**, and it is registered as an **UPPER
+  BOUND, never an achievable saving**: because the re-rendering changes the token sequence and
+  the positions, transferred KV would not be directly reusable even where the content matches.
+  Any output stating this figure must carry the words "upper bound" and the reason.
+- The residual (paid - overlap) is genuinely new framing/instruction text and is reported
+  separately, never folded into headroom.
+
+This measure decides nothing on its own: H-E7a's verdict still comes from Lane A against entry
+0006's 10% materiality cutoff, through the registered adapter and a fail-closed summarizer, and
+never from an ad-hoc probe. The probes reported in this entry are RECON that sized the finding.
+
+prior-entries-sha256: f1e6fc06604d9ffd689a926d9ee272b00de765c92b31a1004fe15c3e5750b9fd
