@@ -116,12 +116,17 @@ would do; it bounds what a transfer could recover at the one public instance of 
 model; alignment and scoring on CPU. Whole run < 1 h on the A100; budget 4 h for the dump
 files and the sync. A 1-day grant is enough; request 2 days only if E8 slips onto the box.
 
-**Build (~2 sessions, all testable on CPU at 64-token sizes):** `config/e9.toml`;
-`e9_align.py` (tokenize + LCS + exclusions, pure CPU, tested); an upstream
-`scripts/dump_positions.py` (one variable-length sequence → KV at every position, no stride;
-the existing `dump_kv.py` assumes `[n_seqs, seq_len]` with stride — another upstream change
-in the same re-pin); `e9.py` (gate + subprocess driver + per-handoff checkpointing so a
-reclaimed box loses one handoff, not the run); `summarize_e9` (fail-closed); tests.
+**Status 2026-09-02: BUILT and gated, not run.** `config/e9.toml` (sha TBD until the re-pin);
+`e9_align` (difflib matched blocks; over-cap and empty-receiver handoffs EXCLUDED and
+counted); upstream `scripts/score_positions.py` (no new dump code needed — `dump_kv.py
+--stride 1` on a `[1, L]` file already dumps every position); `e9` (gate + per-handoff
+dump/score/delete driver, checkpointed after every handoff; seeded keep-subset retains
+fingerprinted dumps); `summarize_e9` (re-derives every alignment from raw traces, recomputes
+every R² from recorded per-layer/per-head SSE/SST, re-scores the keep subset from tensors,
+states medians + band outcome). 22 tests on a fake upstream; live sanity on the REAL models at
+48 tokens: dump→score→moments end-to-end, E9-same K 0.84 / cross K 0.34 (toy recon, not a
+result). Alignment recon on the real 68 handoffs: ~15 s CPU, exclusions per the cap as
+registered.
 
 ## Schedule (today = 09-01)
 

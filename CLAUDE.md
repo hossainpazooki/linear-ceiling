@@ -25,6 +25,9 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
+.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + config/e9.toml committed AND the upstream pin holds
+.venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: per handoff 3 stride-1 dumps + score_positions; checkpoints per handoff; keep-subset dumps retained
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: re-derives alignments from raw traces, R^2 from moments, re-scores the keep subset
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
@@ -43,9 +46,13 @@ usage/timestamps) · `e7_headroom` (entry 0010 measure + rows/summary) · `e7_us
 (reported-vs-estimated, per role) · `e7_taxonomy` (entry 0014's six event classes, each with a
 measurability rule; H-E7a ratio over the Lane A measurable subset) · `e7_stats` (the ONE pinned
 quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the snapshot) · `e8`
-(gate incl. upstream pin + driver by subprocess; never imports kvt) · `summarize_e8` ·
-`lint_scope` · `ledger_check`. Tests mirror modules under `tests/`. `docs/drafts/` holds the
-append scripts for entries not yet written (0016, 0017), ordering-guarded.
+(gate + driver by subprocess; never imports kvt) · `summarize_e8` · `upstream_gate` (the ONE
+pin check: ancestor + invoked-paths-unchanged + clean — a later experiment's re-pin is not an
+older experiment's drift) · `e9_align` (0019 handoff slices + difflib matched blocks +
+exclusions) · `e9` (gate + per-handoff dump/score/delete driver, checkpointed) · `summarize_e9`
+(alignments re-derived from raw traces; R² from recorded moments; keep-subset re-scored from
+fingerprinted tensors) · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+`docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora
 (tau-bench, tau2-bench, SWE-bench), floor **met**, all three registered outputs on the record:
