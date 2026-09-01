@@ -36,7 +36,10 @@ class Handoff:
 
 
 def handoffs_from(traj: Trajectory, texts: list[str]) -> list[Handoff]:
-    """The same event set as `e7_headroom.measure`, with the texts instead of the token counts."""
+    """The same event set and the same S/R slices as `e7_headroom.measure` after entry 0017:
+    S = everything the sender processed up to its last response; R = the receiver's own request
+    prompt (its request's messages preceding its response), NEVER the trajectory prefix.
+    Messages joined by a newline (0017)."""
     if len(texts) != len(traj.messages):
         raise ValueError(f"texts ({len(texts)}) must align with messages ({len(traj.messages)})")
     out = []
@@ -45,10 +48,13 @@ def handoffs_from(traj: Trajectory, texts: list[str]) -> list[Handoff]:
         (i_prev, prev), (i_cur, cur) = asst[k - 1], asst[k]
         if prev.model is None or cur.model is None or prev.model == cur.model:
             continue
+        if cur.request is None:
+            raise ValueError(f"{traj.traj_id}: switch at assistant turn {k} without a request boundary (0017)")
+        prompt_idx = [j for j in range(i_cur) if traj.messages[j].request == cur.request]
         out.append(Handoff(handoff_id=f"{traj.traj_id}#{k}", traj_id=traj.traj_id, switch_index=k,
                            sender_model=prev.model, receiver_model=cur.model,
-                           sender_text="".join(texts[:i_prev + 1]),
-                           receiver_text="".join(texts[i_prev + 1:i_cur + 1])))
+                           sender_text="\n".join(texts[:i_prev + 1]),
+                           receiver_text="\n".join(texts[j] for j in prompt_idx)))
     return out
 
 
@@ -86,6 +92,11 @@ def align(h: Handoff, encode, context_cap: int) -> tuple[Alignment, np.ndarray |
     """(alignment record, sender ids, receiver ids, pairs) -- ids/pairs are None when excluded."""
     s_ids, r_ids = encode(h.sender_text), encode(h.receiver_text)
     digest = hashlib.sha256((h.sender_text + "\x00" + h.receiver_text).encode("utf-8")).hexdigest()
+    if not r_ids:
+        # a switch whose request prompt is not visible in the trace (paid 0 in e7_headroom):
+        # nothing to prefill, nothing to measure -- EXCLUDED and counted, never a zero R².
+        rec = Alignment(h.handoff_id, len(s_ids), 0, 0, True, "receiver prompt is empty in the trace", digest)
+        return rec, None, None, None
     too_long = [name for name, ids in (("S", s_ids), ("R", r_ids)) if len(ids) > context_cap]
     if too_long:
         rec = Alignment(h.handoff_id, len(s_ids), len(r_ids), 0, True,

@@ -23,6 +23,7 @@ from linear_ceiling.config import E7Config, E8Config, load_e7_config, load_e8_co
 from linear_ceiling.e8_text import iter_trace_texts, qwen_encoder, sample_windows, write_tokens
 from linear_ceiling.hashing import sha256_file_bytes
 from linear_ceiling.pairs import pair_models
+from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import WeightReader, assert_shared_vocab, snapshot
 
 REQUIRED_ENTRIES = ("### 0009 ", "### 0016 ")
@@ -42,7 +43,7 @@ def assert_ready(cfg: E8Config, repo_root: Path) -> None:
     if not re.fullmatch(r"[0-9a-f]{40}", cfg.upstream_sha):
         raise RuntimeError("E8 REFUSED: config/e8.toml upstream_sha is not a commit sha; entry 0016's re-pin "
                            "must be recorded before any dump is generated")
-    for rel in ("ledger/ledger.md", cfg.config_path.resolve().relative_to(Path(repo_root).resolve()).as_posix()):
+    for rel in ("ledger/ledger.md", cfg.config_path.resolve().relative_to(Path(repo_root).resolve()).as_posix()):  # noqa: E501
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
@@ -55,13 +56,9 @@ def assert_ready(cfg: E8Config, repo_root: Path) -> None:
     for marker in REQUIRED_ENTRIES:
         if marker not in committed.stdout:
             raise RuntimeError(f"E8 REFUSED: committed ledger has no entry {marker.strip('# ').strip()}")
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cfg.upstream_path, capture_output=True, text=True)
-    if head.returncode != 0 or head.stdout.strip() != cfg.upstream_sha:
-        raise RuntimeError(f"E8 REFUSED: upstream HEAD {head.stdout.strip()[:12]!r} != pinned {cfg.upstream_sha[:12]}")
-    dirty = subprocess.run(["git", "status", "--porcelain", "--", *UPSTREAM_PATHS], cwd=cfg.upstream_path,
-                           capture_output=True, text=True)
-    if dirty.stdout.strip():
-        raise RuntimeError(f"E8 REFUSED: upstream tree is dirty under {UPSTREAM_PATHS}:\n{dirty.stdout}")
+    # Ancestor + paths-unchanged, not HEAD equality: a later experiment's re-pin must not make
+    # E8 refuse while E8's own invoked tools are still the pinned bytes.
+    check_upstream(cfg.upstream_path, cfg.upstream_sha, UPSTREAM_PATHS, who="E8")
 
 
 def band_outcome(drop: float, band: dict) -> str:

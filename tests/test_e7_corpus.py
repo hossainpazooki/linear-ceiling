@@ -37,7 +37,8 @@ def _lc_ai(text, model_id):
 
 
 COMPOSIO = [[_lc_human("solve this"), _lc_ai("I will look at the file and fix it", "claude-a")],
-            [{"llm_output": {"model_name": "o1-b"}, "run": None,
+            [_lc_human("summarize the run: look at the file and fix it"),
+             {"llm_output": {"model_name": "o1-b"}, "run": None,
               "generations": [[{"text": "Summary: look at the file and fix it", "type": "Generation"}]]}]]
 
 

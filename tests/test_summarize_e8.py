@@ -14,8 +14,8 @@ from tests.test_e8 import AGENT, env, fake_runner_factory  # noqa: F401  (pytest
 def ran(env, tmp_path, monkeypatch):
     cfg, e7, calls, runner = env
     driver.run(cfg, e7, repo_root=tmp_path, runner=runner)
-    # the summarizer checks the upstream HEAD; the fake upstream has no git
-    monkeypatch.setattr(s8.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout=cfg.upstream_sha + "\n", returncode=0))
+    # the summarizer checks the upstream pin via check_upstream; the fake upstream has no git
+    monkeypatch.setattr(s8, "check_upstream", lambda *a, **k: None)
     return cfg, tmp_path / "results" / "e8" / "report.json", runner
 
 
@@ -82,8 +82,12 @@ def test_refuses_config_drift(ran):
         summarize(cfg, runner=runner)
 
 
-def test_refuses_moved_upstream_head(ran, monkeypatch):
+def test_refuses_a_broken_upstream_pin(ran, monkeypatch):
+    """check_upstream's refusal (not an ancestor / changed paths / dirty) surfaces as a refusal."""
     cfg, _, runner = ran
-    monkeypatch.setattr(s8.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout="b" * 40 + "\n", returncode=0))
-    with pytest.raises(ValueError, match="upstream HEAD"):
+
+    def broken(*a, **k):
+        raise RuntimeError("E8 summary REFUSED: pinned upstream commit deadbeef is not an ancestor of HEAD")
+    monkeypatch.setattr(s8, "check_upstream", broken)
+    with pytest.raises(ValueError, match="not an ancestor"):
         summarize(cfg, runner=runner)

@@ -18,7 +18,8 @@ from pathlib import Path
 
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E8Config, load_e8_config
-from linear_ceiling.e8 import archived_r2, band_outcome, crosscheck, dump_fingerprint, score
+from linear_ceiling.e8 import UPSTREAM_PATHS, archived_r2, band_outcome, crosscheck, dump_fingerprint, score
+from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.hashing import sha256_file_bytes
 
 _TOL = 1e-6
@@ -49,9 +50,11 @@ def summarize(cfg: E8Config, runner=subprocess.run) -> str:
         raise ValueError("config/e8.toml changed since the run (config_sha256 mismatch)")
     if rep.get("upstream_sha") != cfg.upstream_sha:
         raise ValueError("report's upstream_sha differs from config; the pin moved")
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cfg.upstream_path, capture_output=True, text=True)
-    if head.stdout.strip() != cfg.upstream_sha:
-        raise ValueError(f"upstream HEAD {head.stdout.strip()[:12]} != pinned {cfg.upstream_sha[:12]}")
+    try:
+        # ancestor + E8's invoked paths unchanged since the pin (a later re-pin is not drift)
+        check_upstream(cfg.upstream_path, cfg.upstream_sha, UPSTREAM_PATHS, who="E8 summary")
+    except RuntimeError as e:
+        raise ValueError(str(e)) from e
     tok = rep.get("tokens") or {}
     tp = (Path(REPO_ROOT) / tok.get("path", "")) if not Path(tok.get("path", "")).is_absolute() else Path(tok["path"])
     if not tp.exists() or sha256_file_bytes(tp) != tok.get("sha256"):

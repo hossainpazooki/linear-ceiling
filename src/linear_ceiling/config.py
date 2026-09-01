@@ -164,3 +164,44 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
         holdout_frac=float(e8["arms"]["holdout_frac"]), stride=int(e8["arms"]["stride"]),
         text=dict(e8["text"]), band=dict(e8["band"]), config_path=path,
     )
+
+
+@dataclass(frozen=True)
+class E9Config:
+    pair: str
+    results_dir: Path
+    scratch_dir: Path
+    upstream_path: Path
+    upstream_sha: str
+    suite: str
+    agent: str
+    context_cap: int
+    alignment_method: str
+    mapper_k: int
+    mapper_space: str
+    keep_seed: int
+    keep_n: int
+    band: dict
+    config_path: Path
+
+
+def load_e9_config(path: Path, repo_root: Path) -> E9Config:
+    path = Path(path)
+    e9 = _read(path)["e9"]
+    for section, keys in (("handoffs", ("suite", "agent", "context_cap")),
+                          ("alignment", ("method",)), ("mapper", ("k", "space")),
+                          ("keep", ("seed", "n")), ("band", ("holds_min", "degrades_max"))):
+        missing = [k for k in keys if k not in e9.get(section, {})]
+        if missing:
+            raise ValueError(f"config/e9.toml [e9.{section}] is missing {missing}; the registered "
+                             "parameters (ledger entry 0019) must be complete before E9 runs")
+    root = Path(repo_root)
+    return E9Config(
+        pair=e9["pair"], results_dir=root / e9["results_dir"], scratch_dir=root / e9["scratch_dir"],
+        upstream_path=(root / e9["upstream_path"]).resolve(), upstream_sha=str(e9["upstream_sha"]),
+        suite=e9["handoffs"]["suite"], agent=e9["handoffs"]["agent"],
+        context_cap=int(e9["handoffs"]["context_cap"]), alignment_method=e9["alignment"]["method"],
+        mapper_k=int(e9["mapper"]["k"]), mapper_space=e9["mapper"]["space"],
+        keep_seed=int(e9["keep"]["seed"]), keep_n=int(e9["keep"]["n"]),
+        band=dict(e9["band"]), config_path=path,
+    )
