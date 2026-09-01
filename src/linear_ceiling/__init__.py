@@ -13,4 +13,4 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # Single source of truth for the upstream pin; UPSTREAM.md repeats it for humans and
 # tests/test_imports.py asserts the two agree.
 UPSTREAM_REPO = "https://github.com/hossainpazooki/kv-transfer-replication"
-UPSTREAM_SHA = "7e41f792df0a03caa745a52de0ad2bd930e52a47"   # re-pinned by ledger entry 0019 (prior: 71df4504 entry 0016, f3594458 entry 0001)
+UPSTREAM_SHA = "36d73b3f29d9b1f3a7c5148525de92b0b1b8ff5b"   # re-pinned by ledger entry 0019 (prior: 71df4504 entry 0016, f3594458 entry 0001)

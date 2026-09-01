@@ -1,5 +1,8 @@
 """E9 driver on a fake upstream and a synthetic composio corpus (offline, no models)."""
+import hashlib
 import json
+import types
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -10,27 +13,41 @@ from linear_ceiling.e9 import _stem, keep_subset
 from tests.test_e7_corpus import COMPOSIO
 
 PAIR = "qwen3-0.6b-to-1.7b"
+L, H = 2, 2
 
 # two layers x two heads of canned moments; r2 per head = 1 - sse/sst
 _LAYER = {"sse": [1.0, 1.0], "sst": [4.0, 2.0], "r2_head_mean": (0.75 + 0.5) / 2}
 _MEAN = _LAYER["r2_head_mean"]
+RULE = {"statistic": "median f*(tau_K)", "holds_max": 0.15, "degrades_min": 0.50, "tau_K": 0.25, "tau_V": 0.40}
+CONTROLS = {"null_seed": 23, "seam_bins": [0, 1, 2, 4, 8, 16]}
 
 
-def canned_scores(shift=0.0):
+def canned_scores(shift=0.0, cross=True):
     def block():
         return {"K": [dict(_LAYER), dict(_LAYER)], "V": [dict(_LAYER), dict(_LAYER)]}
-    return {"same": block(), "cross": block(),
-            "same_K_r2_layer_mean": _MEAN + shift, "same_V_r2_layer_mean": _MEAN + shift,
-            "cross_K_r2_layer_mean": _MEAN + shift, "cross_V_r2_layer_mean": _MEAN + shift}
+    rec = {"same": block(), "same_K_r2_layer_mean": _MEAN + shift, "same_V_r2_layer_mean": _MEAN + shift}
+    if cross:
+        rec.update({"cross": block(), "cross_K_r2_layer_mean": _MEAN + shift, "cross_V_r2_layer_mean": _MEAN + shift})
+    return rec
 
 
-def fake_runner_factory(calls=None, recheck_shift=0.0):
+def per_token_arrays(n, cross=True, zero=False):
+    """Squares whose float64 token-sums equal the canned SSE (1.0 per layer-head), with a
+    deterministic per-token spread so f* and the seam profile have content."""
+    w = 1.0 + (np.arange(n) % 3)
+    base = (w / w.sum())[:, None, None] * np.ones((n, L, H))
+    arrays = {"ref_K": np.ones((n, L, H), np.float32), "ref_V": np.ones((n, L, H), np.float32)}
+    for arm in (["same_K", "same_V"] + (["cross_K", "cross_V"] if cross else [])):
+        arrays[arm] = (np.zeros((n, L, H)) if zero else base).astype(np.float32)
+    return arrays
+
+
+def fake_runner_factory(calls=None, recheck_shift=0.0, identity_nonzero=False):
     def runner(cmd, cwd, capture_output):
         if calls is not None:
             calls.append(cmd)
         args = cmd[1:]
         opt = {args[i]: args[i + 1] for i in range(1, len(args) - 1, 2)}
-        from pathlib import Path
         if args[0].endswith("dump_kv.py"):
             out = Path(opt["--out"])
             out.mkdir(parents=True, exist_ok=True)
@@ -39,14 +56,28 @@ def fake_runner_factory(calls=None, recheck_shift=0.0):
             (out / "kv.bin").write_bytes(toks.tobytes() + opt["--which"].encode())
         elif args[0].endswith("score_positions.py"):
             pairs = np.load(opt["--pairs"])["pairs"]
-            rec = canned_scores(recheck_shift if "recheck" in opt["--out"].replace("\\", "/") else 0.0)
-            rec["n_pairs"] = int(pairs.shape[0])
+            n = int(pairs.shape[0])
+            cross = "--cross-src" in opt
+            identity = opt["--same-tgt"] == opt["--same-src"]
+            shift = recheck_shift if "recheck" in opt["--out"].replace("\\", "/") else 0.0
+            rec = canned_scores(shift, cross=cross)
+            arrays = per_token_arrays(n, cross=cross, zero=identity and not identity_nonzero)
+            if identity and not identity_nonzero:
+                for part in rec["same"].values():
+                    for layer in part:
+                        layer["sse"] = [0.0, 0.0]
+                        layer["r2_head_mean"] = 1.0
+                rec["same_K_r2_layer_mean"] = rec["same_V_r2_layer_mean"] = 1.0
+            rec["n_pairs"] = n
             rec["seconds"] = 0.1
+            pt = Path(opt["--per-token"])
+            pt.parent.mkdir(parents=True, exist_ok=True)
+            np.savez_compressed(pt, **arrays)
+            rec["per_token"] = {"path": pt.name, "sha256": hashlib.sha256(pt.read_bytes()).hexdigest()}
             Path(opt["--out"]).parent.mkdir(parents=True, exist_ok=True)
             Path(opt["--out"]).write_text(json.dumps(rec), encoding="utf-8")
         else:
             raise AssertionError(f"unexpected upstream call {cmd}")
-        import types
         return types.SimpleNamespace(returncode=0, stderr=b"")
     return runner
 
@@ -80,8 +111,7 @@ def env(tmp_path, monkeypatch):
                    scratch_dir=tmp_path / "results" / "e9" / "scratch", upstream_path=up,
                    upstream_sha="a" * 40, suite="swe-bench", agent="composio", context_cap=100,
                    alignment_method="difflib blocks", mapper_k=1, mapper_space="content",
-                   keep_seed=9, keep_n=1, band={"holds_min": 0.70, "degrades_max": 0.40},
-                   config_path=cp)
+                   keep_seed=9, keep_n=1, rule=dict(RULE), controls=dict(CONTROLS), config_path=cp)
     e7 = E7Config(traces_dir=tmp_path / "traces", results_dir=tmp_path / "r7", pricing={},
                   thresholds={}, tokenizer={}, lane_b_policy="x", config_path=tmp_path / "c7")
     monkeypatch.setattr(driver, "assert_ready", lambda *a, **k: None)
@@ -101,7 +131,7 @@ def test_stem_is_filesystem_safe():
     assert _stem("20241016_x/a_traj#3") == "20241016_x__a_traj_sw3"
 
 
-def test_run_scores_included_and_counts_excluded(env, tmp_path):
+def test_run_scores_included_counts_excluded_and_runs_controls(env, tmp_path):
     cfg, e7, calls, runner = env
     out = driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
     rep = json.loads(out.read_text(encoding="utf-8"))
@@ -113,11 +143,29 @@ def test_run_scores_included_and_counts_excluded(env, tmp_path):
     assert rec["n_pairs"] > 0 and rec["same_K_r2_layer_mean"] == pytest.approx(_MEAN)
     assert rep["keep_subset"] == [hid] and "kept_dumps" in rec
     assert set(rec["kept_dumps"]) == {"same_src", "same_tgt", "cross_src"}
-    # three dumps + one scoring per included handoff
+    # the per-token record travels with the score and is hashed in the report
+    tok = cfg.results_dir / "tokens" / rec["tokens_file"]
+    assert tok.exists() and hashlib.sha256(tok.read_bytes()).hexdigest() == rec["tokens_sha256"]
+    # controls ran on the (only) included handoff, before its scoring
+    ctl = rep["controls"]
+    assert ctl["handoff_id"] == hid and ctl["identity"]["max_abs_square"] == 0.0
+    assert ctl["null"]["seed"] == 23 and (cfg.results_dir / "controls" / ctl["null"]["pairs_file"]).exists()
     scripts = [c[1] for c in calls]
-    assert scripts.count("scripts/dump_kv.py") == 3 and scripts.count("scripts/score_positions.py") == 1
+    # three dumps; three scorings: identity, null, the handoff itself -- in that order
+    assert scripts.count("scripts/dump_kv.py") == 3 and scripts.count("scripts/score_positions.py") == 3
+    outs = [c[c.index("--out") + 1].replace("\\", "/") for c in calls if c[1] == "scripts/score_positions.py"]
+    assert outs[0].endswith("controls/identity.json") and outs[1].endswith("controls/null.json")
+    assert "--per-token" in calls[-1] and "--cross-src" in calls[-1] and "--cross-src" not in calls[3]
     dump = next(c for c in calls if c[1] == "scripts/dump_kv.py")
     assert dump[dump.index("--stride") + 1] == "1"
+
+
+def test_identity_control_halts_the_run(env, tmp_path):
+    cfg, e7, _, _ = env
+    bad = fake_runner_factory(identity_nonzero=True)
+    with pytest.raises(RuntimeError, match="HALTED: pipeline identity control is nonzero"):
+        driver.run(cfg, e7, repo_root=tmp_path, runner=bad, encoder=words)
+    assert not (cfg.results_dir / "scores").exists()          # nothing scored after the halt
 
 
 def test_run_deletes_unkept_dumps(env, tmp_path):
@@ -129,3 +177,11 @@ def test_run_deletes_unkept_dumps(env, tmp_path):
     assert "kept_dumps" not in rec
     assert not (cfg.scratch_dir / _stem(hid)).exists()
     assert (cfg.results_dir / "scores" / rec["score_file"]).exists()   # scores always survive
+
+
+def test_assert_ready_refuses_the_pending_pin_placeholder(env, tmp_path, monkeypatch):
+    cfg, _, _, _ = env
+    monkeypatch.undo()
+    cfg = cfg.__class__(**{**cfg.__dict__, "upstream_sha": "UPSTREAM_SHA_PENDING_0023"})
+    with pytest.raises(RuntimeError, match="pending upstream pin placeholder"):
+        driver.assert_ready(cfg, tmp_path)

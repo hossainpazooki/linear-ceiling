@@ -1,13 +1,15 @@
-# E9 -- achievable fraction of the headroom upper bound at a re-rendered handoff (ledger entry 0019).
-# e9.assert_ready refuses until this file and ledger/ledger.md (with 0019) are committed unmodified
-# AND the upstream checkout is at `upstream_sha` (a commit adding scripts/score_positions.py), clean.
+# E9 -- achievable fraction of the headroom upper bound at a re-rendered handoff (ledger entries
+# 0019, rule amended by 0023 before any prefill).
+# e9.assert_ready refuses until this file and ledger/ledger.md (with 0019 and 0023) are committed
+# unmodified AND the upstream checkout is at `upstream_sha` (a commit whose scripts/score_positions.py
+# and scripts/score_mapper.py carry `--per-token`), clean for every invoked path.
 
 [e9]
 pair = "qwen3-0.6b-to-1.7b"          # receiver = target (1.7B), source = 0.6B; mapper k from [e9.mapper]
 results_dir = "results/e9"
 scratch_dir = "results/e9/scratch"   # per-handoff dumps, deleted after scoring unless kept
 upstream_path = "../kv-transfer-replication"
-upstream_sha = "7e41f792df0a03caa745a52de0ad2bd930e52a47"   # entry 0019 re-pin: adds scripts/score_positions.py
+upstream_sha = "36d73b3f29d9b1f3a7c5148525de92b0b1b8ff5b"   # entry 0023 re-pin: adds --per-token to score_positions.py / score_mapper.py
 
 [e9.handoffs]
 suite = "swe-bench"
@@ -25,6 +27,17 @@ space = "content"
 seed = 9
 n = 3
 
-[e9.band]                            # entry 0017, approved 2026-09-01: per-handoff E9-same K R2, median over included
-holds_min = 0.70
-degrades_max = 0.40
+[e9.rule]                            # entry 0023 (supersedes 0019's band clause): median over included
+                                     # handoffs of f*(tau_K) on the K read-out, centered per-head delta
+statistic = "median f*(tau_K) over included handoffs, E9-same, K"
+holds_max = 0.15                     # anchored to CacheBlend's 10-15% recompute of high-deviation tokens
+degrades_min = 0.50                  # the operator's stated judgment (0023), not a citation
+# tau per read-out = 1 - the archived k=1 held-out R^2 (per-head A5, head- and layer-averaged), written
+# by `summarize_e9 --calibrate-tau` into results/e9/calibration/tau.json and copied here; the
+# summarizer recomputes both and refuses on disagreement. V's tau serves only the alongside f*.
+tau_K = 0.3186442653116294
+tau_V = 0.4867056499055992
+
+[e9.controls]                        # registered, decide nothing (0023)
+null_seed = 23                       # delta_null: seeded derangement of sender positions on the first handoff
+seam_bins = [0, 1, 2, 4, 8, 16]      # b(t) bins 0 / 1 / 2-3 / 4-7 / 8-15 / 16+, fixed before data

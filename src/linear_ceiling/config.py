@@ -181,7 +181,8 @@ class E9Config:
     mapper_space: str
     keep_seed: int
     keep_n: int
-    band: dict
+    rule: dict          # entry 0023: statistic, holds_max, degrades_min, tau_K, tau_V
+    controls: dict      # entry 0023: null_seed, seam_bins
     config_path: Path
 
 
@@ -190,11 +191,13 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
     e9 = _read(path)["e9"]
     for section, keys in (("handoffs", ("suite", "agent", "context_cap")),
                           ("alignment", ("method",)), ("mapper", ("k", "space")),
-                          ("keep", ("seed", "n")), ("band", ("holds_min", "degrades_max"))):
+                          ("keep", ("seed", "n")),
+                          ("rule", ("statistic", "holds_max", "degrades_min", "tau_K", "tau_V")),
+                          ("controls", ("null_seed", "seam_bins"))):
         missing = [k for k in keys if k not in e9.get(section, {})]
         if missing:
             raise ValueError(f"config/e9.toml [e9.{section}] is missing {missing}; the registered "
-                             "parameters (ledger entry 0019) must be complete before E9 runs")
+                             "parameters (ledger entries 0019/0023) must be complete before E9 runs")
     root = Path(repo_root)
     return E9Config(
         pair=e9["pair"], results_dir=root / e9["results_dir"], scratch_dir=root / e9["scratch_dir"],
@@ -203,5 +206,5 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         context_cap=int(e9["handoffs"]["context_cap"]), alignment_method=e9["alignment"]["method"],
         mapper_k=int(e9["mapper"]["k"]), mapper_space=e9["mapper"]["space"],
         keep_seed=int(e9["keep"]["seed"]), keep_n=int(e9["keep"]["n"]),
-        band=dict(e9["band"]), config_path=path,
+        rule=dict(e9["rule"]), controls=dict(e9["controls"]), config_path=path,
     )
