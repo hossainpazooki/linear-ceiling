@@ -609,3 +609,88 @@ This measure decides nothing on its own: H-E7a's verdict still comes from Lane A
 never from an ad-hoc probe. The probes reported in this entry are RECON that sized the finding.
 
 prior-entries-sha256: f1e6fc06604d9ffd689a926d9ee272b00de765c92b31a1004fe15c3e5750b9fd
+
+### 0011 — 2026-09-01 — The trajectory unit, defined; coverage floor met on two suites
+
+Entry 0007 set a coverage floor in TRAJECTORIES without defining one. The unit is
+load-bearing: a layout difference was observed to change the count by 2x on real data, so the
+floor meant nothing until this was fixed. Definition, registered before any coverage claim
+ships:
+
+**A trajectory is one agent run on one task instance.** Not one file, and not one task.
+
+- **Flat layout** (`trajs/<instance>.json`, most submissions): one file is one trajectory.
+- **Nested layout** (`trajs/<instance>/attempt_N/<stage>.json`, e.g. autocoderover): one
+  INSTANCE DIRECTORY is one trajectory; its stage files are concatenated in sorted order.
+  Counting stage files instead would have reported 8 trajectories where there were 4.
+- **Non-trajectory siblings** (`patch_0.diff`, `selected_patch.json`,
+  `regression_test_result_0.json`) are skipped, never counted and never treated as parse
+  failures. A file that is not a message document is not evidence of absence.
+- **Repeated trials are distinct trajectories** (tau2-bench runs 4 trials per task), because
+  each is a separate agent run. **But trials are not independent samples**, so any coverage
+  statement must report DISTINCT TASKS alongside trajectories -- 800 tau2 trajectories are 50
+  distinct airline tasks x 4 trials x 4 agents, and reporting only the larger number would
+  overstate diversity.
+
+**Coverage floor status against entry 0007** (>= 50 trajectories AND >= 3 distinct
+agents/scaffolds per suite, over >= 2 suites), under this definition:
+
+| suite | trajectories | distinct agents | meets per-suite floor |
+|---|---|---|---|
+| swe-bench | 64 | 5 (honeycomb, marscode, Skywork, autocoderover, openhands) | yes |
+| tau2-bench | 800 (50 tasks x 4 trials x 4 agents) | 4 (claude-3-7-sonnet, gpt-4.1, gpt-4.1-mini, o4-mini) | yes |
+
+Two suites clear it, so **the floor of entry 0007 is met** and output need no longer ship as
+partial-with-coverage-stated on coverage grounds alone. Recorded for the avoidance of doubt:
+tau-bench v1 (2 agents) does NOT clear the per-agent floor and is excluded from floor
+arithmetic; it may still be reported, labelled below-floor. SWE-bench `multimodal` was checked
+and rejected as a candidate suite -- 0 of its 22 submissions publish trajectories
+(`trajs: null`).
+
+Composio (the switching family, entry 0010) is 2 submissions of one system and is NOT counted
+toward the swe-bench agent floor above; it is the Lane A subject, not a coverage contributor.
+
+prior-entries-sha256: f6e512727a8842b416557077aa273e2c4157aa1f48d3bc4176374fb977b92ca5
+
+### 0012 — 2026-09-01 — Public traces omit the cacheable prefix `[BASELINE]`; every trace-only cost figure is a lower bound
+
+**Finding.** tau2-bench records provider-reported `usage.prompt_tokens` per message, so the
+token estimator of entry 0009 can be validated against GROUND TRUTH rather than compared to
+another estimator. Over 4 airline result files (800 simulations, 4 agent models), comparing each
+message's reported prompt tokens against the cumulative estimated prefix preceding it, split by
+which model made the request:
+
+| requesting model | n | offset median (reported - estimated) | p10 | p90 | ratio median |
+|---|---|---|---|---|---|
+| user simulator (prefix fully visible) | 5,158 | **-134** | -2,489 | +462 | 0.87 |
+| agent (prefix partly hidden) | 8,914 | **+3,423** | +3,239 | +5,962 | 4.14 |
+
+By assistant-turn position the agent offset is nearly FLAT: +3,238 (turn 1), +3,264 (turns
+2-3), +3,382 (4-8), +3,609 (9+).
+
+**Interpretation, and what it licenses.** The estimator is sound: where the whole prefix is
+visible (user-simulator calls) it agrees with the provider to within ~134 tokens. A large
+additive gap that does not grow with conversation length is not estimator drift but a **fixed
+hidden prefix** -- the domain policy system prompt plus tool schemas -- which the provider
+billed and the trace does not record. Roughly 3,240 tokens per agent request, ~42k per
+trajectory at the median turn count. Two consequences, both registered here:
+
+1. **Every cost figure this program computes from trace messages alone is a LOWER BOUND**, and
+   must be labelled so. The hidden block is byte-identical on every request, i.e. exactly the
+   most cacheable content in the conversation, so omitting it understates BOTH total prefill
+   spend AND the benefit of caching. The bias is one-directional and cannot be corrected by any
+   care taken with the visible messages.
+2. **Where a trace carries provider-reported usage, the reported-vs-estimated offset is
+   reported alongside the figure** -- per requesting model, never pooled. Pooling the agent and
+   user-simulator series produced an uninterpretable ratio of 3.3 on the first pass; the two
+   models bill against different prefixes and are different accounting series.
+
+**Scope.** Measured on tau2-bench airline only. It is NOT asserted that the ~3,240-token figure
+transfers to another suite or domain; what transfers is the method (validate against reported
+usage where it exists) and the direction of the bias (visible-only is a floor). SWE-bench
+corpora carry no reported usage, so their cost figures have no such check and must be labelled
+lower bounds without a measured gap.
+
+This entry decides no hypothesis. It constrains how every later figure must be stated.
+
+prior-entries-sha256: 51971a4ad1f56f75853d3f7e8e8c130abe4b495f60267cdb7f519d582e64f8a7
