@@ -397,3 +397,60 @@ and retrieval dates, the trace-metadata probe result behind the two-lane design,
 venue facts. A handoff brief for this re-scope is indexed in `docs/handoff/HANDOFF.md`.
 
 prior-entries-sha256: 0b180f2473877c0e7d7826e4c1eefacd7fc15a94d3f7ce82de1d7b93f598d92e
+
+### 0008 — 2026-09-01 — Day-2 gate PASSED; tokenizer question raised, NOT yet registered
+
+**Day-2 gate outcome (entry 0006), recorded as fact.** All three items met on 2026-09-01,
+two days before the EOD 2026-09-03 deadline, so the LCFM sprint remains live:
+
+- (i) one suite acquired and parsed -- tau-bench `historical_trajectories`, 4 files,
+  **1980 trajectories** (200 / 460 / 400 / 920), count verified by an independent pass over
+  the raw files, not taken from the driver's own report;
+- (ii) the replay skeleton computed per-trajectory token/cost timelines on all 1980
+  (26,316 assistant requests), far above the >= 10 required;
+- (iii) both lanes implemented and exercised over the whole set.
+
+The `assert_ready` gate registered in 0006 is now **demonstrated in both directions**: it
+refused with exit 2 while `config/e7.toml` was uncommitted, and returned ready only after
+the registration landed in history. No trajectory was read before that.
+
+**Lane A over tau-bench: 0 of 1980 measurable.** Every tau-bench trajectory records the
+serving model at run level (in the filename) and never per step, so Lane A reports
+`measurable=false, switches=null` for all 1980 -- recorded as NOT MEASURABLE, never as zero
+switches, per entry 0006's rule. This is the first empirical support for the premise finding
+the program was scoped around, on one suite; it is not yet the finding, which requires the
+coverage floor.
+
+**Coverage floor NOT met, as expected.** tau-bench supplies 1980 trajectories (>= 50) but
+only **2 distinct agents** (gpt-4o, sonnet-35-new) against entry 0007's >= 3, and 1 suite
+against >= 2. The driver reports `coverage_meets_floor: false`. Nothing from this run may
+ship except as partial-with-coverage-stated; SWE-bench (many scaffolds per split) is the
+suite that must clear the floor.
+
+**No number in this entry is verdict-bearing.** Token counts come from the chars/4 estimate
+that `e7_traces.approx_tokens` marks non-verdict-bearing; the cost figures the skeleton
+produced (including a warm-bound total near 19% of the cold bound) are therefore descriptive
+scaffolding only, are deliberately NOT tabulated here, and decide nothing. One trajectory's
+warm/cold arithmetic was recomputed by an independent path touching neither `e7_cost` nor
+`e7_traces` and agreed to floating-point equality -- that verifies the implementation, not
+the estimator.
+
+**The tokenizer is an open decision, NOT registered by this entry.** It must be registered
+before any cost number ships (entry 0006's numbers-freeze gate, EOD 2026-09-08). The
+difficulty is stated here so the decision is made in the open rather than defaulted into:
+
+- No tokenizer library is installed in this environment, and there is no offline tokenizer
+  cache; adding one is a network dependency.
+- The traces are gpt-4o and Claude 3.5 Sonnet runs. GPT-4o's encoder is public
+  (`o200k_base`, via tiktoken). **Anthropic's tokenizer is not public**, so Claude
+  trajectories cannot be tokenized exactly offline; the options are an approximation applied
+  to both (comparable, biased, bias direction unmeasured), a per-agent tokenizer (accurate
+  where possible, cross-agent comparisons then unsound), or a provider API call (network,
+  credentials, and a per-run dependency this repo has so far avoided).
+- Whichever is chosen must be registered with its known bias BEFORE the numbers it produces
+  are computed, or the choice becomes post-hoc.
+
+Until that entry exists, the E7 instrument may be run and its output inspected, but no
+figure it produces may enter a ledger entry, a paper, or a claim.
+
+prior-entries-sha256: 95977ca0bf9e413c493608cbb7579856b0da15a1a491f6ec505dc82a781654ab
