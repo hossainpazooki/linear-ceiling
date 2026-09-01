@@ -63,6 +63,36 @@ def _lc_role(kw: dict, node: dict) -> str:
     return "assistant"
 
 
+def discover_trajectories(submission_dir: Path) -> list[tuple[str, list[Path]]]:
+    """Group a submission's files into trajectories, handling both observed S3 layouts.
+
+    A TRAJECTORY is one agent run on one task instance -- not one file. Two layouts exist
+    under `verified/<submission>/trajs/`:
+
+    - flat:   `<instance>.json`                      -> one file is one trajectory
+    - nested: `<instance>/attempt_N/<stage>.json`    -> MANY files are one trajectory
+
+    Counting files as trajectories in the nested layout inflates the count (observed: 4
+    instances presenting as 8+ files) and the count feeds entry 0007's coverage floor, so the
+    unit matters. Stage files are returned sorted so concatenation is deterministic.
+    """
+    submission_dir = Path(submission_dir)
+    out: list[tuple[str, list[Path]]] = []
+    for child in sorted(submission_dir.iterdir()):
+        if child.is_dir():
+            files = sorted(p for p in child.rglob("*") if p.is_file())
+            if files:
+                out.append((child.name, files))
+        elif child.is_file():
+            out.append((child.stem, [child]))
+    return out
+
+
+def load_jsonl(path: Path) -> list:
+    """Parse a .jsonl trajectory (one JSON value per line)."""
+    return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
 def _llmresult_texts(node: dict) -> list[str]:
     """Response texts from a LangChain LLMResult node ({llm_output, run, generations})."""
     if "generations" not in node:
