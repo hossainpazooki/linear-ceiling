@@ -82,8 +82,10 @@ used, so the brief's numbers reproduce to the digit; any other convention change
 
 **BUILT, GATED, NOT RUN — E8** (`config/e8.toml`, `e8_text`, `e8`, `summarize_e8`; +21 tests).
 The gate refuses until entry 0016 is committed, `config/e8.toml` carries the upstream sha
-(currently the placeholder `TBD`, which the gate rejects by design) and the upstream HEAD
-matches it with a clean tree. Two things verified for real, not on synthetic data: the
+and the upstream HEAD matches it with a clean tree. **2026-09-02: entry 0016 appended by the
+operator (chain `c2646932…`), upstream re-pinned to `71df4504…` (`UPSTREAM.md`,
+`linear_ceiling.UPSTREAM_SHA`, `config/e8.toml`); E0's record keeps its own pin.** Once that
+set is committed, `e8 --check` passes and the CPU run can go. Two things verified for real, not on synthetic data: the
 upstream's new `scripts/score_mapper.py` re-scores the archived k=1 mapper on the archived
 dumps to **exactly** the archived `r2.json` (K 0.6813557347 / V 0.5132943501, diff 0.0e+00,
 71 s CPU) — so 0016 §6's cross-check is a real refusal condition; and the Qwen3 tokenizer +

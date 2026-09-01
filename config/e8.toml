@@ -7,7 +7,7 @@ pair = "qwen3-0.6b-to-1.7b"          # the only pair with fitted mappers upstrea
 results_dir = "results/e8"
 tokens_dir = "data/e8"               # gitignored; the agent-text token file lives here
 upstream_path = "../kv-transfer-replication"
-upstream_sha = "TBD"                 # filled by entry 0016's re-pin; the gate refuses a non-hex value
+upstream_sha = "71df45043a799560e7631faa2b42a9cf3f2be3ad"   # entry 0016 re-pin: adds scripts/score_mapper.py
 
 [e8.mappers]                         # upstream artifacts, read-only: mappers/<pair>/k<k>
 verdict_k = 1                        # the only non-collapsed held-out mapper at n=50 (0016)
