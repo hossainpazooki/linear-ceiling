@@ -7,7 +7,7 @@ pair = "qwen3-0.6b-to-1.7b"          # receiver = target (1.7B), source = 0.6B; 
 results_dir = "results/e9"
 scratch_dir = "results/e9/scratch"   # per-handoff dumps, deleted after scoring unless kept
 upstream_path = "../kv-transfer-replication"
-upstream_sha = "TBD"                 # filled by entry 0017's re-pin; the gate refuses a non-hex value
+upstream_sha = "7e41f792df0a03caa745a52de0ad2bd930e52a47"   # entry 0019 re-pin: adds scripts/score_positions.py
 
 [e9.handoffs]
 suite = "swe-bench"

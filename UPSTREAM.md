@@ -1,12 +1,15 @@
 # Upstream instrument (read-only)
 
 - Repo: https://github.com/hossainpazooki/kv-transfer-replication
-- Pinned commit: `71df45043a799560e7631faa2b42a9cf3f2be3ad` ("feat: score_mapper.py -- evaluate
-  an existing mapper on new dumps without refitting", 2026-09-02; re-pinned by ledger entry
-  0016 -- the commit adds exactly one file, `scripts/score_mapper.py`, on top of the prior pin's
-  history). Prior pin: `f3594458` ("docs: Runs 5-7, six learnings entries, handoff brief",
-  2026-08-25; full sha in ledger entry 0001); every provenance row below that names no sha
-  refers to the prior pin, whose files are unchanged at the new one. At re-pin time the upstream
+- Pinned commit: `7e41f792df0a03caa745a52de0ad2bd930e52a47` ("feat: score_positions.py -- KV
+  agreement at matched positions, and a mapper's transfer to them", 2026-09-02; re-pinned by
+  ledger entry 0019 -- adds exactly one file on top of the prior pin's history). Prior pins,
+  short form (one full sha lives in this file by rule, enforced by `tests/test_imports.py`):
+  `71df4504` (entry 0016; added `scripts/score_mapper.py`) and `f3594458` (entry 0001, the
+  original pin; full sha there). Every provenance row below that names no sha refers to the
+  original pin, whose files are unchanged at the new one. Experiment gates check their OWN
+  recorded pin by ancestry + invoked-paths-unchanged (`linear_ceiling.upstream_gate`), so an
+  older experiment's pin survives a newer one's re-pin. At re-pin time the upstream
   working tree was clean for every path E8 invokes (`scripts/dump_kv.py`, `scripts/score_mapper.py`,
   `kvt/`) and `e8.assert_ready` re-checks that before each run; other paths there carried
   unrelated local edits (the operator's acknowledged one-time drift), which E8 never reads.
@@ -30,5 +33,6 @@
 | Run 2 in-sample vs held-out rank behaviour cited by H-S3 | `docs/ledger.md` § Run 2, Run 4 | `ledger/ledger.md` entry 0002 |
 | ledger house style (pre-registered hypotheses, verdict against the rule as written, status tags, immutable entries) | `docs/ledger.md` | `ledger/ledger.md` |
 | fail-closed summarizer shape (refuse on missing/empty/mismatched inputs, never emit NaN) | `scripts/summarize_hellaswag.py::load_and_validate_records` | `src/linear_ceiling/summarize_e0.py` |
-| existing-mapper scoring by subprocess (`--mapper --src --tgt --holdout-frac --out` -> `r2.json` with `fit_mapper.py`'s keys); held-out = last ceil(frac * n_seqs) sequences | `scripts/score_mapper.py` @ `71df45043a799560e7631faa2b42a9cf3f2be3ad` | `src/linear_ceiling/e8.py::score`, `summarize_e8` |
+| existing-mapper scoring by subprocess (`--mapper --src --tgt --holdout-frac --out` -> `r2.json` with `fit_mapper.py`'s keys); held-out = last ceil(frac * n_seqs) sequences | `scripts/score_mapper.py` @ `71df4504` (entry 0016) | `src/linear_ceiling/e8.py::score`, `summarize_e8` |
+| matched-position KV scoring (`--same-src --same-tgt --cross-src --mapper --pairs --out`; per-layer/per-head SSE+SST alongside R² so moments reproduce every figure) | `scripts/score_positions.py` @ the pin above (entry 0019) | `src/linear_ceiling/e9.py::score_handoff`, `summarize_e9` |
 | dump layout consumed by `--tokens` (`[n_seqs, seq_len]` int64) and `--out` (writes `meta.json` with `n_seqs`, `stride`) | `scripts/dump_kv.py`, `kvt/data.py::dump_kv` | `src/linear_ceiling/e8_text.py::write_tokens`, `e8.py::dump_agent` |
