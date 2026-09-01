@@ -1,72 +1,83 @@
 # linear-ceiling
 
-Public repository for **"The Linear Ceiling: Predicting Cross-Model KV Cache Transfer
-Before Fitting the Mapper."** It holds the pre-fit screen, the seal protocol that makes
-"pre-fit" auditable, the pre-registration ledger, and the experiment orchestration. The
-fitting/injection/evaluation harness is the pinned, read-only upstream
-[kv-transfer-replication](https://github.com/hossainpazooki/kv-transfer-replication)
-(`UPSTREAM.md`), invoked rather than vendored.
+Instruments for pre-registered, auditable experiments on cross-model KV-cache questions.
+Two program lines live here: a **sealed pre-fit screen** (E0 ran; ladder verdict **SAME** on a
+vocabulary proxy; the line is **closed** — entries 0004/0006), and a **trace-replay
+measurement program** over agentic KV-cache workloads (**registered, not built** — entries
+0006/0007 hold its thresholds, lanes, and gates). Every claim's evidence lives in the ledger
+and `docs/`, not here.
 
-> **STATUS: ONLY E0 HAS RUN, AND THE SCREEN LINE IS CLOSED.** E0 — the first gate, weights-only,
-> no forward pass — ran on all six required ordered pairs, and its verdict is **SAME** (ladder).
-> Its decision rule was written into the ledger as entry 0003 and committed *before* any weight
-> was read; the verdict is recorded in **entry 0004**, and the per-layer depth structure the
-> median hides (per-layer deltas at or above `delta_separate = 0.05` at layer 0 and the last
-> blocks of every pair — a per-layer statement; the pair-level SEPARATE verdict is a different,
-> median-based rule that no pair met) is recorded in **entry 0006**. That verdict is on a vocabulary-based proxy for the residual stream, a limit
-> entry 0003 registered before the run — it is not a verdict on residual streams. `H-S2`'s first
-> clause is `NOT CONFIRMED`; **every other hypothesis is still `unresolved`**, and nothing beyond
-> E0 has run — no forward pass, no fitted mapper, no E1. By operator decision (entry 0006,
-> 2026-09-01) the screen-validation line E1–E6 is **closed without running** — H-S1/H-S3/H-S4 are
-> shelved, not decided — and **E7 is promoted to a standalone measurement program** (trace-replay
-> economics of agentic KV-cache workloads) with pre-registered thresholds, a two-lane
-> switch-point design, and its gates in entry 0006 (amended by 0007: Lane A alone decides
-> H-E7a, per-agent coverage floor, cost-model parameters registered). Apart from E0's figures
-> in entries 0004/0006 and in `results/` (gitignored), every number in the tree is a reference
-> to the upstream's ledger (commit-pinned) or to an external paper, pricing page, or venue page
-> (`docs/2026-09-01-measurement-lane-evidence.md`), each carrying its provenance — a commit pin
-> or a retrieval date.
+```mermaid
+flowchart LR
+    RULE[rule committed first<br/>entry 0003] --> E0[E0: weights-only screen test]
+    E0 -->|SAME under the frozen rule| CLOSED[screen line E1..E6<br/>CLOSED, hypotheses SHELVED]
+    E0 --> DEPTH[per-layer depth structure<br/>recorded, both readings open]
+    E7REG[E7 registered:<br/>thresholds + lanes + gates] --> D2{day-2 gate}
+    D2 -->|pass| WS[workshop 4-pager]
+    D2 -->|miss| SKIP[skip workshop]
+    E7REG --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
+```
 
 The scope sentence, held verbatim:
 
 > The screen predicts what a linear mapper can achieve; retention asymmetry beyond that
 > prediction is measured and attributed receiver-side, not explained.
 
-## What is here
+## How a number becomes a claim
 
-| path | what |
-|---|---|
-| `docs/2026-08-26-kv-handoff-screen-design.md` | the approved design spec, verbatim (authority on scope, hypotheses, gates) |
-| `docs/2026-08-26-seed-w1.md`, `docs/gap-map.md` | the W1 seed and the E7 gap map, verbatim |
-| `ledger/ledger.md` | pre-registered hypotheses and numbered, immutable entries |
-| `ledger/predictions/` | sealed per-pair screen predictions (`<pair>.json` + `<pair>.sha256`), written before any fit |
-| `src/linear_ceiling/screen.py` | regularized CCA + read-out-conditioned predicted R² (identity exact on synthetic data) |
-| `src/linear_ceiling/seal.py` | the seal: writer refuses if a fitted mapper exists; runners refuse without a matching sealed hash |
-| `src/linear_ceiling/e0.py` | E0, weights only, no forward pass; one verdict artifact |
-| `config/*.toml` | seeds and thresholds — never in code |
-| `results/` | gitignored; numbers reach the ledger only through the fail-closed summarizers (`summarize_e0.py`, `summarize_e0_depth.py`) |
+Nothing enters the ledger by hand. `results/` is gitignored; the only path from computation
+to record is a fail-closed summarizer, and from entry 0007 on every entry hash-chains the
+registered text above it.
 
-## Hard invariants (enforced in CI where possible)
+```mermaid
+flowchart LR
+    R[("results/ (gitignored)")] --> S1[summarize_e0]
+    R --> S2[summarize_e0_depth]
+    S1 -->|recomputes every figure,<br/>refuses on any mismatch| E[numbered ledger entry<br/>immutable once registered]
+    S2 -->|same fail-closed checks| E
+    E --> H[prior-entries-sha256<br/>chains prior entry text]
+    H -->|recomputed in CI| LC[ledger_check]
+```
 
-1. **Seal before fit.** `python -m linear_ceiling.seal verify` runs in CI: every sealed file's
-   canonical hash matches its sidecar, it is committed, and it was never modified after the
-   commit that sealed it. A green CI seal check proves hash integrity and commit immutability
-   of sealed records — it does not and cannot re-verify the ordering guarantee itself, since CI
-   never checks out the upstream artifact roots the seal predictions are compared against.
-2. **Pre-registration.** Verdicts are stated against the rule as written; amendments are new
-   numbered entries. `python -m linear_ceiling.ledger_check` runs in CI. From entry 0007 on,
-   each entry records a `prior-entries-sha256` over the entries section above it, which
-   `ledger_check` recomputes — a silent edit to registered entry text fails CI. The header and
-   hypotheses table above `## Entries` are editable commentary outside the chain (verdict cells
-   change only via a numbered entry, by convention and review), and a history rewrite that
-   regenerates the chain is locally undetectable — the same limitation stated for the seal in
-   invariant 1.
-3. **No fabricated numbers.** Zero results at scaffold; synthetic figures appear only in the
-   spec, labeled synthetic.
-4. **Determinism.** One seeded generator (`rng.make_rng`), seeds in config; the test suite
-   greps the tree for any other generator.
-5. **Scope sentence verbatim,** once, in this README. `python -m linear_ceiling.lint_scope`
-   runs in CI.
+## The E7 measurement program (registered, not built)
+
+Three outputs on public agent traces at pinned provider pricing: an invalidation taxonomy
+with event frequencies, transfer headroom at model-switch points in dollars, and the
+compaction break-even distribution. Two lanes, never merged; no parser, replay, or cost-model
+code exists yet. Entries 0006 + 0007 are the authority — read both before writing any E7 code.
+
+```mermaid
+flowchart TD
+    T[public agent trajectories<br/>per-agent coverage floor] --> P[parser + per-trajectory<br/>token/cost timeline]
+    P --> A["Lane A: measured switch points<br/>(zero count IS the premise finding)"]
+    P --> B["Lane B: counterfactual two-tier cascade<br/>(descriptive only, policy-chosen)"]
+    A -->|alone decides| HA[H-E7a verdict]
+    B -.->|never resolves any hypothesis| DESC[descriptive headroom<br/>labeled counterfactual]
+    P --> TAX[invalidation taxonomy<br/>+ event frequencies]
+    P --> CB[compaction break-even<br/>two-bound rule decides H-E7b]
+```
+
+## Hard invariants, and what enforces each
+
+1. **Seal before fit** — the seal writer refuses if a fitted mapper exists; CI's `seal verify`
+   proves hash integrity and commit immutability only, never the pre-fit ordering itself
+   (that is proved by the writer's refusal, on a machine that sees the upstream).
+2. **Pre-registration** — verdicts stated against the rule as written; amendments are new
+   numbered entries; the entry chain makes silent edits to registered text fail CI. The
+   header/table above `## Entries` are editable commentary outside the chain, and a history
+   rewrite that regenerates chain or seal is locally undetectable.
+3. **No unrecomputed numbers** — summarizers only, fail-closed.
+4. **Determinism** — one seeded generator (`rng.make_rng`); the suite greps for any other.
+5. **Scope sentence verbatim, once, in this README** — `lint_scope`.
+
+```mermaid
+flowchart LR
+    I1[seal before fit] --> C1[seal verify + writer refusal]
+    I2[pre-registration] --> C2[ledger_check + entry chain]
+    I3[no unrecomputed numbers] --> C3[fail-closed summarizers]
+    I4[determinism] --> C4[single rng + suite grep]
+    I5[scope sentence] --> C5[lint_scope]
+```
 
 ## Setup
 
@@ -78,14 +89,39 @@ pytest
 python -m linear_ceiling.seal verify && python -m linear_ceiling.lint_scope && python -m linear_ceiling.ledger_check
 ```
 
-The suite runs offline in seconds on synthetic matrices. A green suite proves the tooling,
+The suite runs offline in seconds on synthetic matrices; a green suite proves the tooling,
 not any result. The seal writer additionally needs the upstream checked out at
-`../kv-transfer-replication` (it fails closed if that tree is missing).
+`../kv-transfer-replication` (read-only, pinned — `UPSTREAM.md`; it fails closed if missing).
 
-## Status tags
+```mermaid
+flowchart LR
+    V[uv venv] --> D[install -e .dev] --> P[pytest: synthetic, offline] --> G[seal + scope + ledger gates]
+    U[("../kv-transfer-replication<br/>pinned, read-only")] -.->|seal writer only| G
+```
 
-`[VALIDATED]` ran and survived an independent attempt to refute it · `[BASELINE]` ran, numbers
-in the ledger · `[STRETCH]` designed, not run · `[FUTURE]` not designed · `[SUPERSEDED]`.
-Ledger entry 0004 (the E0 verdict) is the only `[VALIDATED]` item; entry 0006's depth-structure
-section is `[BASELINE]` (ran, numbers in the ledger); everything else carries `[FUTURE]` or
-`[STRETCH]`.
+## Docs map
+
+| path | role |
+|---|---|
+| `ledger/ledger.md` | the registered record: hypotheses, verdicts, numbered immutable entries — start here for program state |
+| `docs/2026-08-26-kv-handoff-screen-design.md` | design spec, verbatim (authority on the original scope; superseded where entries say so) |
+| `docs/2026-08-26-seed-w1.md` · `docs/gap-map.md` | W1 seed and E7 gap map, verbatim |
+| `docs/2026-09-01-measurement-lane-evidence.md` | evidence behind the re-scope: paper deltas, trace probe, pricing pins, venue facts — all dated figures live here |
+| `docs/handoff/HANDOFF.md` | handoff index; newest brief is the pick-up target |
+| `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
+| `ledger/predictions/` | sealed per-pair predictions (empty until something is sealed pre-fit) |
+| `CLAUDE.md` | repo brief for agent sessions: commands, layout, binding rules |
+
+```mermaid
+flowchart TD
+    README[README: essentials] --> LED[ledger/ledger.md<br/>registered record]
+    README --> HOF[docs/handoff/HANDOFF.md<br/>newest brief = pick-up target]
+    LED --> EV[docs/...measurement-lane-evidence.md<br/>dated figures + deltas]
+    LED --> SPEC[design spec + seed + gap map<br/>verbatim, immutable]
+    LED --> UP[UPSTREAM.md<br/>pin + borrow provenance]
+    HOF --> BRIEFS[dated briefs]
+```
+
+Status tags used in the ledger: `[VALIDATED]` ran and survived refutation · `[BASELINE]` ran,
+numbers in the ledger · `[STRETCH]` designed, not run · `[FUTURE]` not designed ·
+`[SUPERSEDED]`.
