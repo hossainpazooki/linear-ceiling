@@ -1,0 +1,31 @@
+# E8 -- transfer under the agent-trace distribution shift (ledger entry 0009; amended by 0016).
+# e8.assert_ready refuses until this file and ledger/ledger.md (with 0016) are committed unmodified
+# AND the upstream checkout is at `upstream_sha` with a clean tree for the scripts E8 invokes.
+
+[e8]
+pair = "qwen3-0.6b-to-1.7b"          # the only pair with fitted mappers upstream (0009)
+results_dir = "results/e8"
+tokens_dir = "data/e8"               # gitignored; the agent-text token file lives here
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "TBD"                 # filled by entry 0016's re-pin; the gate refuses a non-hex value
+
+[e8.mappers]                         # upstream artifacts, read-only: mappers/<pair>/k<k>
+verdict_k = 1                        # the only non-collapsed held-out mapper at n=50 (0016)
+report_k = [1, 4, 8]
+
+[e8.arms]
+generic_dumps = "data/kv/qwen3-0.6b-to-1.7b"   # relative to upstream; the archived n=50 dumps (0016 corrects 0009)
+agent_dumps = "results/e8/kv/agent"            # relative to this repo; written by the driver
+holdout_frac = 0.2                             # arm (a)'s protocol, matched exactly
+stride = 4
+
+[e8.text]                            # sampling rule registered in 0016
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["tau2-bench", "swe-bench"] # stratified equally; one window per trajectory
+window = "first"                     # the first seq_len tokens of the role-tagged concatenation
+
+[e8.band]                            # entry 0009, frozen: absolute drop in held-out pooled R2
+holds_max_drop = 0.05
+degrades_min_drop = 0.15

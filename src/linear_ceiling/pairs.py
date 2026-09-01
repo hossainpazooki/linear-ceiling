@@ -31,3 +31,11 @@ def pair_name(src_id: str, tgt_id: str) -> str:
 
 def ordered_pairs(models) -> list[tuple[str, str]]:
     return [(a, b) for a, b in itertools.permutations(models, 2)]
+
+
+def pair_models(name: str) -> tuple[str, str]:
+    """`qwen3-0.6b-to-1.7b` -> ("Qwen/Qwen3-0.6B", "Qwen/Qwen3-1.7B"), resolved against LADDER."""
+    for a, b in ordered_pairs(LADDER):
+        if pair_name(a, b) == name:
+            return a, b
+    raise ValueError(f"unknown pair {name!r}; not an ordered pair of {LADDER}")

@@ -9,6 +9,7 @@ dependencies = [
     "safetensors>=0.4",
     "huggingface_hub>=0.23",
     "tiktoken>=0.9",          # E7 exact token counts for agents with a public encoder (ledger 0009)
+    "tokenizers>=0.19",       # E8 arm (b): Qwen3 tokenizer from the snapshot's tokenizer.json (ledger 0016)
 ]
 
 [project.optional-dependencies]

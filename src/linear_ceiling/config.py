@@ -122,3 +122,45 @@ def load_e0_config(path: Path, repo_root: Path) -> E0Config:
         heldout_frac=float(e0["heldout_frac"]),
         config_path=path,
     )
+
+
+@dataclass(frozen=True)
+class E8Config:
+    pair: str
+    results_dir: Path
+    tokens_dir: Path
+    upstream_path: Path
+    upstream_sha: str
+    verdict_k: int
+    report_k: tuple[int, ...]
+    generic_dumps: str          # relative to upstream_path
+    agent_dumps: Path           # under this repo
+    holdout_frac: float
+    stride: int
+    text: dict
+    band: dict
+    config_path: Path
+
+
+def load_e8_config(path: Path, repo_root: Path) -> E8Config:
+    path = Path(path)
+    e8 = _read(path)["e8"]
+    for section, keys in (("mappers", ("verdict_k", "report_k")),
+                          ("arms", ("generic_dumps", "agent_dumps", "holdout_frac", "stride")),
+                          ("text", ("seed", "n_seqs", "seq_len", "suites", "window")),
+                          ("band", ("holds_max_drop", "degrades_min_drop"))):
+        missing = [k for k in keys if k not in e8.get(section, {})]
+        if missing:
+            raise ValueError(f"config/e8.toml [e8.{section}] is missing {missing}; the registered "
+                             "parameters (ledger entries 0009/0016) must be complete before E8 runs")
+    if e8["mappers"]["verdict_k"] not in e8["mappers"]["report_k"]:
+        raise ValueError("config/e8.toml: verdict_k must be one of report_k")
+    root = Path(repo_root)
+    return E8Config(
+        pair=e8["pair"], results_dir=root / e8["results_dir"], tokens_dir=root / e8["tokens_dir"],
+        upstream_path=(root / e8["upstream_path"]).resolve(), upstream_sha=str(e8["upstream_sha"]),
+        verdict_k=int(e8["mappers"]["verdict_k"]), report_k=tuple(int(k) for k in e8["mappers"]["report_k"]),
+        generic_dumps=e8["arms"]["generic_dumps"], agent_dumps=root / e8["arms"]["agent_dumps"],
+        holdout_frac=float(e8["arms"]["holdout_frac"]), stride=int(e8["arms"]["stride"]),
+        text=dict(e8["text"]), band=dict(e8["band"]), config_path=path,
+    )
