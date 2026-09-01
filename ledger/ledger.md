@@ -16,6 +16,10 @@ H-S1/H-S3/H-S4 carry `SHELVED` (no experiment decided them; none is scheduled); 
 0007 on, each entry records a `prior-entries-sha256:` over the entries section above it,
 recomputed by `ledger_check` in CI.
 Dating erratum: entries 0016-0020 were authored 2026-09-01 despite their 2026-09-02 headings — see entry 0021.
+Rule amendment: the H-E9 row below embeds entry 0019's rule clause (pooled K R², 0.70/0.40) in its
+statement cell; that clause is superseded by entry 0023 (median oracle selective-recompute fraction
+f*(τ_K), 0.15/0.50) and the cell text is left as registered under the house rule that only the verdict
+cell changes.
 
 ## Hypotheses (pre-registered; verdict column is the only cell that ever changes, and only via a numbered entry)
 
@@ -1218,3 +1222,150 @@ after which one replay supersedes the figures once, not piecemeal. Until then, n
 SWE-bench token figure ships without citing this entry's sensitivity.
 
 prior-entries-sha256: e275cb5a4b45dc3a2bb3dcd69b1a9802347c39248a46ab0368799d36e2ea2d63
+
+### 0023 — 2026-09-01 — E9 rule amended before any prefill: per-token deviation and oracle selective-recompute fraction replace pooled R² as the verdict statistic; controls and seam profile registered
+
+**Precondition, on the record.** `results/e9/` holds no report and no score file; `linear_ceiling.e9`
+has been invoked only with `--check` (the interactive shell histories carry no `e9` invocation
+at all -- the gate checks ran from the session assistant -- so the evidence is the absence of
+`results/e9/report.json` and `results/e9/scores/`, and the LCFM plan's "BUILT and gated, not
+run" line). This amendment is legitimate only while that holds; the append script that wrote
+this entry refuses otherwise. 0019's unit, alignment, S/R slices, cap, exclusions, keep-subset
+and H-E9 statement stand; 0019's **rule clause only** is superseded here. The H-E9 row of the
+hypotheses table embeds 0019's rule text in its statement cell; under the house rule (only the
+verdict cell changes) that text is left as registered and is read as superseded by this entry
+(a note above the table says so).
+
+**Why amend before the box.** Pooled R² (A5) was borrowed so E8 could be compared against the
+archived mapper record; it did that job. For E9 it is the wrong instrument: it is dominated by
+the highest-variance tokens and dimensions, so a handoff where 90% of matched tokens survive
+exactly and 10% are destroyed can post the same figure as one where every token is moderately
+wrong; and it has no tail, whereas the non-prefix-reuse literature asks *which* tokens deviate
+and *how many* must be recomputed. R² stays as a bridge (below) and decides nothing.
+
+**Per-token deviation, registered.** For matched token `t` in `M` with positions `(p_S, p_R)`,
+layer `l`, KV head `h`, read-out `X` in {K, V}: `x_R(t,l,h)` is the receiver's own KV at `p_R`
+and `x̂(t,l,h)` the candidate -- **E9-same**: the receiver's own KV at `p_S`; **E9-cross**: the
+k = 1 content-space mapper (0016) applied to the source's KV at `p_S` -- both compared in
+content space (K_stripped; V unrotated), exactly as the pinned scorer does. The centered
+deviation
+
+    δ(t,l,h) = ‖x̂(t,l,h) − x_R(t,l,h)‖²₂ / (SST(l,h) / |M|),   SST(l,h) = Σ_t ‖x_R(t,l,h) − x̄_R(l,h)‖²₂
+
+is the token's share of the layer-head's unexplained variance, **in R²'s own units**: its mean
+over `t` is exactly 1 − R²(l,h), and its mean over `t`, `h`, `l` is exactly 1 − the recorded
+head-averaged, layer-averaged R². **It is not "this token's KV is x% wrong"** (rider 2): a seam-bin
+value of 0.6 means those tokens carry unexplained variance at 0.6 of the per-token average
+scale, not that they are 60% wrong. The seam and depth profiles below inherit this unit. The
+seed's original own-norm deviation `‖d‖² / ‖x_R‖²` is kept as a labelled diagnostic only: it is
+dominated by the per-head mean vector (on the archived held-out set its K mean is
+0.084 while 1 − R² is 0.319) and blows up on small-norm tokens
+(0.66% of held-out V tokens exceed 1, max 5.8; the
+smallest per-layer V reference norm is 0.35% of the layer median). The
+count of own-norm tokens over 1 is reported alongside every E9 figure as a diagnostic, nothing more.
+Per-token δ(t) = mean over `h` then `l`; per-layer δ(t,l) = mean over `h`.
+
+**Oracle selective-recompute fraction f*(τ).** Sort matched tokens by δ_K(t) descending; f*(τ)
+is the smallest fraction of `M` that, removed (recomputed exactly), leaves the MEAN δ_K over the
+remaining tokens at or below τ (judged to 1e-9 relative, so the float32 record cannot cost a
+token). It is an **oracle LOWER BOUND** on real selective recompute for two stated reasons: it
+assumes a recomputed token is restored exactly, and it ignores that real partial prefill
+(CacheBlend-style) recomputes the selected tokens *against the reused KV of the others*, so
+errors propagate. Every output stating f* carries the words "oracle lower bound" and both reasons.
+
+**τ, calibrated from the archive before any prefill, per read-out (rider 3).** τ_X = 1 − the
+archived k = 1 mapper's held-out R²_X on its own generic held-out sequences (the last 10 of the 50
+archived `data/kv/qwen3-0.6b-to-1.7b` dumps, stride 4, 2560 tokens) -- i.e. the mapper's
+own MEAN centered deviation, so the mapper's own f*(τ) is 0 by construction and HOLDS keeps
+0019's meaning, "the re-render costs no more to repair than the mapper itself". The instrument,
+described as it is: R² is **A5 per head, averaged over heads, then over layers**
+(`kvt.mapper.mapper_r2`; `score_positions.py` does the same per layer), NOT "pooled over rows and
+columns" as 0019 and UPSTREAM.md phrase it; true pooling over a layer's heads gives K
+0.6917 / V 0.5267 against the head-averaged
+0.6814 / 0.5133, recorded here so the discrepancy is on the record
+rather than discovered later. Hence, from `summarize_e9 --calibrate-tau` (archived `r2.json`
+sha256 `18d2276f28e9`, cross-checked to 1e-6 against E8's arm (a) record and the
+archived dumps against E8's fingerprints; the per-token record reproduces 1 − R² per head to
+2.9e-15):
+
+- **τ_K = 0.3186** (= 1 − 0.6814), verdict-bearing;
+- **τ_V = 0.4867** (= 1 − 0.5133), for the alongside f* only; never mixed with K.
+
+Why the mean and not the median (the seed's first draft): with τ at the median of the mapper's
+own per-token deviation the mapper fails its own calibration -- its f* is
+6.2% (K) / 5.1% (V) under the own-norm
+deviation and 7.3% / 6.2% under the centered one -- so a
+re-render exactly as good as the mapper would spend that much of the HOLDS budget on an artifact
+of the statistic. Both values are in `tau.json`; the calibration script refuses to write a τ at
+which the mapper's own f* is not zero. τ enters `config/e9.toml` from the script's output and the
+summarizer recomputes it under the pin and refuses on disagreement (1e-9).
+
+**Seam distance b(t).** From the alignment alone, no GPU: a seam is a receiver position not in
+`M`, or the boundary between two receiver-adjacent matched tokens whose sender positions are not
+consecutive (a reordering); b(t) = the number of receiver positions strictly between `p_R(t)` and
+the nearest seam (0 = adjacent). A receiver prompt matched end to end with no reordering has no
+seam and every token reports b = |R|.
+
+**Rule and band (supersedes 0019's rule clause only).** H-E9 is decided by **median f*(τ_K) over
+included handoffs, E9-same, K read-out**:
+
+- **HOLDS** if median f*(τ_K) ≤ 0.15 -- anchored to CacheBlend (Yao et al., EuroSys 2025): the
+  10–15% of high-KV-deviation tokens it recomputes to recover full-prefill quality under
+  non-prefix reuse. The re-render costs no more to repair than a same-model reuse the literature
+  already accepts.
+- **DEGRADES** if median f*(τ_K) ≥ 0.50 -- **the operator's stated judgment, not a citation**
+  (rider 1): recomputing half or more of the matched tokens leaves no case for reuse across this
+  handoff. The seed claimed a literature anchor for both edges; only one exists, and no second
+  citation is manufactured here.
+- **UNRESOLVED** between.
+
+V's f*(τ_V) is reported alongside on every figure and is verdict-bearing for nothing (0019
+unchanged). E9-cross is reported as its own f*(τ_K) / f*(τ_V) and as the ratio of its median δ
+to E9-same's, per handoff, never merged. The head-averaged R² (K and V, same and cross) is
+reported alongside as the bridge to 0016/0020 and decides nothing. Nothing in this section may be
+revisited after the first score file exists.
+
+**Controls and descriptive outputs (registered; decide nothing).** (1) *Pipeline identity*: on
+the first included handoff, before any handoff is scored, the receiver's dump of `S` scored
+against itself at pairs (p, p) must give every per-token square exactly 0; a nonzero HALTS the
+run. (2) *δ_null*, the uninformative scale: the same handoff scored with each receiver position
+paired to the sender position of a different matched token (seeded derangement, `null_seed` =
+23 in `config/e9.toml`); its median δ per layer and per token is the top of the scale so a δ of
+0.3 is read against unrelated content, not in the abstract. (3) *Seam profile*: median δ_K (and
+δ_V alongside) by b(t) in the fixed bins 0 / 1 / 2–3 / 4–7 / 8–15 / 16+, pooled over included
+handoffs and per handoff; no bin is added or merged after data. It is the descriptive finding
+that speaks to the reuse literature's central claim -- deviation concentrating at chunk
+boundaries -- measured on real re-renders instead of synthetic chunk insertion. (4) *Depth
+profile*: median δ_K and δ_V per layer, pooled, on one axis, reported beside 0020's K/V
+asymmetry without asserting the two are one effect.
+
+**Instrument and record.** The upstream scorer `scripts/score_positions.py` gains `--per-token`
+(and `scripts/score_mapper.py` the same, for the calibration): per-token, per-layer, per-head
+squared deviations for K, V, same, cross plus the receiver's own norms, float32 `[|M|, L, H]`,
+with the recorded per-head SSE now the float64 sum of exactly those squares (test upstream:
+sums reproduce the moments; identity gives exact zeros; centered mean equals 1 − R² per head).
+Roughly 43 MB per handoff, synced off the box with the checkpoints. Re-pin recorded in
+`config/e9.toml` and `UPSTREAM.md` (the commit that adds `--per-token`; 0019's pin `7e41f792`
+remains its ancestor).
+
+**Enforcement.** `e9.assert_ready` refuses until this entry and `config/e9.toml` are committed
+unmodified and the re-pin holds (a placeholder pin refuses by name). `summarize_e9` additionally:
+checks every per-token record sums to its recorded moments; re-runs the keep-subset scorer with
+`--per-token` and compares the squares; re-runs the τ calibration under the pin and compares
+with the recorded `results/e9/calibration/tau.json` (gitignored like every `results/` artifact; its figures live in this entry and in config) and with config; verifies the identity
+record is exactly zero and the null pairing re-derives from the seed; and only then states f*,
+the seam and depth profiles, δ_null, the bridge R² medians and the band outcome -- refusing on
+any disagreement. Deleted dumps stay a GPU-run record verified by the keep subset (0019).
+
+**`[STRETCH]`, registered, own entry before anything runs:** real CacheBlend-style partial
+prefill -- recompute the top-f tokens against the reused KV, measure attention-output deviation
+and a downstream task delta. Needs injection code upstream and a task; it is the experiment that
+would make f* an achieved number rather than an oracle floor. Named so its absence is a stated
+gap, not an omission.
+
+**Scope limits.** All of 0019's (32,768 cap with exclusions counted and coverage stated;
+off-policy text; one pair; one system; never a real mid-trajectory transfer), plus: f* is an
+oracle lower bound (two reasons above) and the seam profile is descriptive; neither is a claim
+about what a deployed reuse scheme would achieve. No hypothesis cell changes with this entry.
+
+prior-entries-sha256: 50ee4f2b68fbbb6bb103443f3330f6156f982404f04df71c916d7eacbca2b800
