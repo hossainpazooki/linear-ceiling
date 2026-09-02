@@ -2,9 +2,11 @@
 
 `assert_ready` is the enforcement registered in ledger entry 0006 ("replay must not begin
 until this entry is committed and unmodified"), mirroring linear_ceiling.e0's gate: it
-refuses to read any trajectory until ledger/ledger.md and config/e7.toml are committed and
-byte-identical to HEAD, and until the COMMITTED ledger contains entries 0006 and 0007 (the
-registration and its amendments). The refusal happens before any trace file is opened.
+refuses to read any trajectory until ledger/ledger.md, config/e7.toml and the corpus manifest
+config/e7-manifest.json (entry 0024) are committed and byte-identical to HEAD, and until the
+COMMITTED ledger contains entries 0006 and 0007 (the registration and its amendments). The
+refusal happens before any trace file is opened. `build_report` then refuses if the trace
+tree on disk disagrees with the manifest in any direction (e7_manifest.verify_disk).
 
 The driver replays every corpus under traces_dir (tau-bench, tau2-bench, swe-bench -- see
 e7_corpus), computes per-trajectory token/cost timelines (two bounds) and both lanes, checks
@@ -27,6 +29,7 @@ from linear_ceiling.e7_corpus import LANE_A_ONLY_AGENTS, load_corpus
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
 from linear_ceiling.e7_lanes import lane_a, lane_b
+from linear_ceiling.e7_manifest import load as load_manifest, manifest_path, manifest_sha256, verify_disk
 from linear_ceiling.e7_swe import MODEL_KEYS
 from linear_ceiling.e7_taxonomy import classify, frequencies, h_e7a
 from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
@@ -39,13 +42,17 @@ COST_BASIS = ("visible messages only -- every cost and token figure is a LOWER B
 
 
 def assert_ready(cfg: E7Config, repo_root: Path) -> None:
-    for rel in ("ledger/ledger.md", cfg.config_path.resolve().relative_to(Path(repo_root).resolve()).as_posix()):
+    root = Path(repo_root).resolve()
+    rels = ("ledger/ledger.md", cfg.config_path.resolve().relative_to(root).as_posix(),
+            manifest_path(cfg).resolve().relative_to(root).as_posix())
+    for rel in rels:
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
             raise RuntimeError(
-                f"E7 REFUSED: {rel} is not committed as-is; entries 0006/0007 and config/e7.toml "
-                "must be committed before any trajectory is read"
+                f"E7 REFUSED: {rel} is not committed as-is; entries 0006/0007, config/e7.toml and the "
+                "corpus manifest config/e7-manifest.json (entry 0024) must be committed before any "
+                "trajectory is read"
             )
     committed = subprocess.run(["git", "show", "HEAD:ledger/ledger.md"], cwd=repo_root,
                                capture_output=True, text=True, encoding="utf-8")
@@ -61,7 +68,9 @@ def assert_ready(cfg: E7Config, repo_root: Path) -> None:
 
 def build_report(cfg: E7Config) -> dict:
     """Everything the driver computes, as one JSON-able dict (shared with the summarizer's
-    fixture builder; the gate is the caller's job)."""
+    fixture builder; the gate is the caller's job). Refuses (ValueError) before any trajectory
+    is parsed if the trace tree disagrees with the committed corpus manifest."""
+    verify_disk(cfg, load_manifest(cfg))
     corpus = load_corpus(cfg)
     per_traj = []
     for t in corpus.trajectories:
@@ -84,6 +93,7 @@ def build_report(cfg: E7Config) -> dict:
     tax = taxonomy_block(corpus, hr, cfg)
     return {
         "config_sha256": sha256_file_bytes(cfg.config_path),
+        "manifest_sha256": manifest_sha256(manifest_path(cfg)),    # canonical-JSON hash (entry 0024)
         "trace_files": {corpus.relkey(cfg.traces_dir, f): sha256_file_bytes(f) for f in corpus.files},
         "cost_basis": COST_BASIS,
         "coverage": cov,

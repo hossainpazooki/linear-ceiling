@@ -64,12 +64,16 @@ Refusal is layered, and each layer fails closed rather than guessing:
 1. **Gates refuse to run** — an experiment reads no data until its registering entries and
    config are committed unmodified (and, where an upstream is invoked, until its pin holds:
    pinned commit an ancestor of HEAD, invoked paths unchanged since, working tree clean there).
+   E7 additionally refuses unless the trace tree on disk matches the committed corpus manifest
+   (`config/e7-manifest.json`: every file's sha256, its S3 key and ETag for SWE-bench objects,
+   and the recovered per-submission selection rule) in both directions and in bytes.
 2. **Adapters refuse to guess** — an unknown trace shape, a missing request boundary, or an
    argument type that cannot be priced raises instead of approximating; what no adapter accepts
    is recorded as unparsed, never dropped.
-3. **Summarizers refuse to summarize** — config drift, a changed/added/missing input file, a
-   NaN, a recorded value the recomputation does not reproduce, or a report from an older driver
-   each name their reason and exit nonzero.
+3. **Summarizers refuse to summarize** — config drift, a changed/added/missing input file, any
+   disagreement between disk, report and the committed manifest, a NaN, a recorded value the
+   recomputation does not reproduce, or a report from an older driver each name their reason
+   and exit nonzero.
 4. **Measurability refuses the flattering zero** — every class of event carries its own NOT
    MEASURABLE state; a trace that cannot evidence a thing never counts as evidence of its
    absence.

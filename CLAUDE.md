@@ -19,9 +19,11 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e0 --config config/e0.toml   # refuses until entry 0003 sets the rule
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0_depth   # per-layer depth structure (entry 0006)
-.venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml are committed
-.venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # replay over ALL corpora under traces/ (gitignored)
-.venv/Scripts/python.exe -m linear_ceiling.summarize_e7          # fail-closed: recomputes EVERY E7 figure from RAW traces (all 3 suites, headroom, reported usage)
+.venv/Scripts/python.exe -m linear_ceiling.e7_manifest write     # NETWORK, once: hash traces/ + S3 keys/ETags + selection rule -> config/e7-manifest.json (commit it)
+.venv/Scripts/python.exe -m linear_ceiling.e7_manifest check     # disk vs the committed manifest, both directions + bytes
+.venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml + config/e7-manifest.json are committed
+.venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # replay over ALL corpora under traces/ (gitignored); refuses if disk != manifest
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e7          # fail-closed: recomputes EVERY E7 figure from RAW traces (all 3 suites, headroom, reported usage); refuses if disk, report or manifest disagree
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
@@ -39,9 +41,13 @@ On Linux/web the interpreter is `.venv/bin/python`.
 per-agent str/dict `arguments` split) · `e7_tokens` (exact `o200k_base` where a public encoder
 exists, per-content-type calibrated divisors otherwise — ledger 0009) · `e7_cost` (two-bound
 timeline) · `e7_lanes` (Lane A measured / Lane B cascade) · `e7_corpus` (loads all three
-suites into one shape; `LANE_A_ONLY_AGENTS`; unparsed recorded, never dropped) · `e7` (gate +
-driver, `build_report`) · `summarize_e7` (fail-closed; recomputes every recorded value from raw
-traces via a recursive comparator, refuses on tamper) · `e7_swe` (LangChain family +
+suites into one shape; `LANE_A_ONLY_AGENTS`; unparsed recorded, never dropped) · `e7_manifest`
+(the committed corpus manifest `config/e7-manifest.json`: per-file sha256, S3 key/ETag,
+recovered selection rule; `verify_disk` both directions; canonical-JSON sha cited by every E7
+entry from 0024 — `ledger_check` enforces the citation) · `e7` (gate + driver, `build_report`;
+refuses if disk != manifest) · `summarize_e7` (fail-closed; recomputes every recorded value
+from raw traces via a recursive comparator, refuses on tamper or on disk/report/manifest
+disagreement) · `e7_swe` (LangChain family +
 layout-aware `discover_trajectories`) · `e7_rolecontent` (4 variants) · `e7_tau2` (ground-truth
 usage/timestamps) · `e7_headroom` (entry 0010 measure + rows/summary) · `e7_usage`
 (reported-vs-estimated, per role) · `e7_taxonomy` (entry 0014's six event classes, each with a

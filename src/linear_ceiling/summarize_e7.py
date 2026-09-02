@@ -29,6 +29,9 @@ from linear_ceiling.e7_corpus import LANE_A_ONLY_AGENTS, discover_files, load_co
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
 from linear_ceiling.e7_lanes import lane_a, lane_b
+from linear_ceiling.e7_manifest import (
+    load as load_manifest, manifest_path, manifest_sha256, selection_lines, verify_disk,
+)
 from linear_ceiling.e7_swe import MODEL_KEYS
 from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
 from linear_ceiling.e7_usage import validation
@@ -101,6 +104,14 @@ def _verify_provenance(cfg: E7Config, rep: dict) -> None:
     for key, want in sorted(recorded.items()):
         if sha256_file_bytes(current[key]) != want:
             raise ValueError(f"trace file {key} does not match the hash recorded at run time")
+    # Third party to the comparison (entry 0024): the COMMITTED manifest. Disk must agree with
+    # it in both directions and in bytes, and the report must have been produced against this
+    # exact manifest -- a report that predates it, or a manifest regenerated since, is refused.
+    verify_disk(cfg, load_manifest(cfg))
+    current_sha = manifest_sha256(manifest_path(cfg))
+    if _rec(rep, "manifest_sha256") != current_sha:
+        raise ValueError("config/e7-manifest.json changed since the run (manifest_sha256 mismatch); "
+                         "rerun the driver against the committed manifest, or restore it")
 
 
 def summarize(cfg: E7Config) -> str:
@@ -290,8 +301,10 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
         use = "\n".join(ul)
 
     md = ("E7 summary -- every figure recomputed from the raw traces, not restated\n\n"
-          f"config sha256 {rep['config_sha256'][:12]} | trace files verified: {len(rep['trace_files'])} | "
+          f"config sha256 {rep['config_sha256'][:12]} | manifest sha256 {rep['manifest_sha256'][:12]} "
+          f"(config/e7-manifest.json, entry 0024) | trace files verified: {len(rep['trace_files'])} | "
           f"cost basis: {rep['cost_basis']}\n\n"
+          + "\n".join(selection_lines(load_manifest(cfg))) + "\n\n"
           + "\n".join(lines)
           + "\n\n" + "\n".join(cov_lines) + f"\n\n{floor_note}\n"
           + (f"Lane A only, excluded from floor arithmetic (entry 0011): {excl}\n" if excl else "")
