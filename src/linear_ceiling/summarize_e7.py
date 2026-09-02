@@ -18,6 +18,8 @@ Floats are compared with a relative tolerance (`_TOL`) because they are sums who
 order this module need not reproduce; ints, bools and strings must match EXACTLY.
 """
 import argparse
+import dataclasses
+import fnmatch
 import json
 import math
 from pathlib import Path
@@ -116,8 +118,10 @@ def _verify_provenance(cfg: E7Config, rep: dict) -> None:
                          "rerun the driver against the committed manifest, or restore it")
 
 
-def summarize(cfg: E7Config, *, overlap_null: bool = False, cache_aware: bool = False) -> str:
-    """The standard summary; with a recon flag, the entry-0024 sections are appended and the
+def summarize(cfg: E7Config, *, overlap_null: bool = False, cache_aware: bool = False,
+              strategy_override: str | None = None) -> str:
+    """The standard summary; with a recon flag, the entry-0024 sections (and the entry-0022
+    tokenizer-strategy sensitivity, `strategy_override`) are appended and the
     figures are also written to `results/e7/recon.json` stamped with the verified config and
     manifest shas (the append script for an entry pulls them from there, never from a REPL).
     Recon runs only after every recorded figure has been verified against the raw traces."""
@@ -203,7 +207,7 @@ def summarize(cfg: E7Config, *, overlap_null: bool = False, cache_aware: bool = 
     _compare("h_e7a", tax["h_e7a"], _rec(rep, "h_e7a"))
 
     md = _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax)
-    if overlap_null or cache_aware:
+    if overlap_null or cache_aware or strategy_override:
         recon = {"config_sha256": rep["config_sha256"], "manifest_sha256": rep["manifest_sha256"],
                  "trace_files": len(rep["trace_files"]), "entry": "0024 recon flags; decides nothing"}
         if overlap_null:
@@ -214,10 +218,107 @@ def summarize(cfg: E7Config, *, overlap_null: bool = False, cache_aware: bool = 
             cb = cache_aware_block(corpus.trajectories, corpus.texts, hr, cfg.pricing, th["materiality_fraction"])
             recon["cache_aware"] = cb
             md += "\n\n" + render_cache(cb) + "\n"
+        if strategy_override:
+            sb = sensitivity_block(cfg, corpus, strategy_override, tax)
+            recon["sensitivity"] = sb
+            md += "\n\n" + render_sensitivity(sb) + "\n"
         _walk_nan(recon, "recon")
         (cfg.results_dir / "recon.json").write_text(json.dumps(recon, indent=1), encoding="utf-8")
         (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
     return md
+
+
+def parse_override(spec: str, agents: list[str]) -> dict[str, str]:
+    """`AGENT=exact[,AGENT=exact...]`; AGENT may be an fnmatch pattern (`gpt-4.1*`). Every clause
+    must name a registered strategy and match at least one agent of the corpus -- a clause that
+    matches nothing would make the sensitivity a silent no-op, so it refuses instead."""
+    out: dict[str, str] = {}
+    for clause in [c.strip() for c in spec.split(",") if c.strip()]:
+        if "=" not in clause:
+            raise ValueError(f"--strategy-override clause {clause!r} is not AGENT=strategy")
+        pat, strat = (x.strip() for x in clause.split("=", 1))
+        if strat not in ("exact", "calibrated"):
+            raise ValueError(f"--strategy-override: unknown strategy {strat!r} for {pat!r}")
+        hits = [a for a in agents if fnmatch.fnmatchcase(a, pat)]
+        if not hits:
+            raise ValueError(f"--strategy-override: {pat!r} matches no agent of this corpus "
+                             f"({', '.join(sorted(agents))}); refusing a silent no-op")
+        for a in hits:
+            out[a] = strat
+    if not out:
+        raise ValueError("--strategy-override given but empty")
+    return out
+
+
+def sensitivity_block(cfg: E7Config, corpus, spec: str, tax_registered: dict) -> dict:
+    """Entry-0022 sensitivity as a recon flag: reload the corpus with the named agents' tokenizer
+    strategy replaced (the registered `config/e7.toml` is untouched; its sha is what the report
+    and recon.json cite), then recompute the registered H-E7a reading AND the four cache-aware
+    readings on the reloaded corpus. Runs only after every recorded figure verified. Decides
+    nothing; the figures ship in the 0009 successor per 0022."""
+    overrides = parse_override(spec, sorted(corpus.strategies))
+    tok = dict(cfg.tokenizer)
+    tok["agent_strategy"] = {**dict(tok.get("agent_strategy", {})), **overrides}
+    cfg2 = dataclasses.replace(cfg, tokenizer=tok)
+    corpus2 = load_corpus(cfg2)
+    if {t.traj_id for t in corpus2.trajectories} != {t.traj_id for t in corpus.trajectories}:
+        raise ValueError("sensitivity: the reloaded corpus differs in trajectory set; refusing")
+    hr2 = headroom_rows(corpus2.trajectories, corpus2.texts, cfg.pricing["read_mult"])
+    tax2 = taxonomy_block(corpus2, hr2, cfg)
+    cb2 = cache_aware_block(corpus2.trajectories, corpus2.texts, hr2, cfg.pricing,
+                            cfg.thresholds["materiality_fraction"])
+    changed = {a: {"registered": corpus.strategies[a], "override": s} for a, s in overrides.items()
+               if corpus.strategies.get(a) != s}
+    unchanged = sorted(a for a, s in overrides.items() if corpus.strategies.get(a) == s)
+    inputs = {}
+    for label, c in (("registered", corpus), ("override", corpus2)):
+        per_agent: dict[str, int] = {}
+        for t in c.trajectories:
+            per_agent[t.agent] = per_agent.get(t.agent, 0) + totals(timeline(t, cfg.pricing))["input_tokens"]
+        inputs[label] = per_agent
+    moved = {a: {"registered": inputs["registered"].get(a), "override": inputs["override"].get(a)}
+             for a in sorted(set(inputs["registered"]) | set(inputs["override"]))
+             if inputs["registered"].get(a) != inputs["override"].get(a)}
+    # messages whose token count moved, per agent -- totals can tie by coincidence, counts do not
+    by_id = {t.traj_id: t for t in corpus.trajectories}
+    recounted: dict[str, int] = {}
+    for t2 in corpus2.trajectories:
+        t1 = by_id[t2.traj_id]
+        n = sum(1 for a, b in zip(t1.messages, t2.messages) if a.tokens != b.tokens)
+        if n:
+            recounted[t2.agent] = recounted.get(t2.agent, 0) + n
+    return {"label": "sensitivity", "decides": "nothing; figures ship in the 0009 successor (entry 0022)",
+            "spec": spec, "effective_strategy": corpus2.strategies,
+            "changed_agents": changed, "already_at_override": unchanged,
+            "registered_config_sha256_untouched": True,
+            "registered_reading": {"registered": tax_registered["h_e7a"]["pooled"],
+                                   "override": tax2["h_e7a"]["pooled"],
+                                   "per_suite_override": tax2["h_e7a"]["per_suite"]},
+            "cache_aware_override": cb2,
+            "input_tokens_per_agent": moved, "messages_recounted_per_agent": recounted}
+
+
+def render_sensitivity(sb: dict) -> str:
+    r, o = sb["registered_reading"]["registered"], sb["registered_reading"]["override"]
+
+    def pct(b):
+        return "NOT COMPUTABLE" if b["ratio"] is None else f"{100 * b['ratio']:.4f}%"
+    ch = "; ".join(f"{a}: {v['registered']} -> {v['override']}"
+                   for a, v in sorted(sb["changed_agents"].items())) or "none"
+    already = (f"; already at override: {', '.join(sb['already_at_override'])}"
+               if sb["already_at_override"] else "")
+    lines = [f"Tokenizer-strategy sensitivity (`--strategy-override {sb['spec']}`; entry 0022's recount as a "
+             "flag; registered config sha untouched; decides nothing -- ships in the 0009 successor):",
+             "", f"- strategies replaced: {ch}{already}",
+             f"- registered reading (0014 denominator, cold): numerator {r['recoverable_upper_bound']:,.0f} -> "
+             f"{o['recoverable_upper_bound']:,.0f}; denominator {r['input_spend']:,} -> {o['input_spend']:,}; "
+             f"ratio {pct(r)} -> **{pct(o)}**",
+             "", "H-E7a under every reading, strategies replaced:", "", render_cache(sb["cache_aware_override"])]
+    if sb["input_tokens_per_agent"]:
+        lines += ["", "input tokens per agent, registered -> override (only agents that moved): "
+                  + "; ".join(f"{a}: {v['registered']:,} -> {v['override']:,}"
+                              for a, v in sb["input_tokens_per_agent"].items())]
+    return "\n".join(lines)
 
 
 def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
@@ -356,10 +457,15 @@ def main(argv=None) -> int:
                     help="entry 0024: same-family and cross-family null controls for the overlap measure")
     ap.add_argument("--cache-aware-ratio", action="store_true",
                     help="entry 0024: H-E7a ratio under every reading of the denominator (cold/warm x registered/request)")
+    ap.add_argument("--strategy-override", default=None, metavar="AGENT=exact[,...]",
+                    help="entry 0022's sensitivity as a flag: recompute the registered reading and all four "
+                         "cache-aware readings with the named agents' tokenizer strategy replaced (fnmatch "
+                         "patterns allowed); labelled `sensitivity` in recon.json; config sha untouched")
     a = ap.parse_args(argv)
     try:
         print(summarize(load_e7_config(Path(a.config), REPO_ROOT),
-                        overlap_null=a.overlap_null, cache_aware=a.cache_aware_ratio))
+                        overlap_null=a.overlap_null, cache_aware=a.cache_aware_ratio,
+                        strategy_override=a.strategy_override))
     except ValueError as e:
         print(f"E7 SUMMARY REFUSED: {e}")
         return 1
