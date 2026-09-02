@@ -25,14 +25,19 @@ from pathlib import Path
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E7Config, load_e7_config
 from linear_ceiling.e7 import COST_BASIS, taxonomy_block
+from linear_ceiling.e7_cache import cache_aware_block, render as render_cache
 from linear_ceiling.e7_corpus import LANE_A_ONLY_AGENTS, discover_files, load_corpus
+from linear_ceiling.e7_null import overlap_null as overlap_null_block, render as render_null
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
 from linear_ceiling.e7_lanes import lane_a, lane_b
+from linear_ceiling.e7_manifest import (
+    load as load_manifest, manifest_path, manifest_sha256, selection_lines, verify_disk,
+)
 from linear_ceiling.e7_swe import MODEL_KEYS
 from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
 from linear_ceiling.e7_usage import validation
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 
 _TOL = 1e-6   # relative, floats only
 
@@ -101,15 +106,27 @@ def _verify_provenance(cfg: E7Config, rep: dict) -> None:
     for key, want in sorted(recorded.items()):
         if sha256_file_bytes(current[key]) != want:
             raise ValueError(f"trace file {key} does not match the hash recorded at run time")
+    # Third party to the comparison (entry 0024): the COMMITTED manifest. Disk must agree with
+    # it in both directions and in bytes, and the report must have been produced against this
+    # exact manifest -- a report that predates it, or a manifest regenerated since, is refused.
+    verify_disk(cfg, load_manifest(cfg))
+    current_sha = manifest_sha256(manifest_path(cfg))
+    if _rec(rep, "manifest_sha256") != current_sha:
+        raise ValueError("config/e7-manifest.json changed since the run (manifest_sha256 mismatch); "
+                         "rerun the driver against the committed manifest, or restore it")
 
 
-def summarize(cfg: E7Config) -> str:
+def summarize(cfg: E7Config, *, overlap_null: bool = False, cache_aware: bool = False) -> str:
+    """The standard summary; with a recon flag, the entry-0024 sections are appended and the
+    figures are also written to `results/e7/recon.json` stamped with the verified config and
+    manifest shas (the append script for an entry pulls them from there, never from a REPL).
+    Recon runs only after every recorded figure has been verified against the raw traces."""
     rp = cfg.results_dir / "skeleton_report.json"
     if not rp.exists():
         raise ValueError(f"{rp} does not exist; E7 has not run (nothing to summarize)")
     rep = json.loads(rp.read_text(encoding="utf-8"))
     _walk_nan(rep, "report")
-    if rep.get("config_sha256") != sha256_file_bytes(cfg.config_path):
+    if rep.get("config_sha256") != sha256_text_file(cfg.config_path):
         raise ValueError("config/e7.toml changed since the run (config_sha256 mismatch); rerun or restore the config")
     _verify_provenance(cfg, rep)
 
@@ -185,7 +202,22 @@ def summarize(cfg: E7Config) -> str:
     _compare("taxonomy", tax["taxonomy"], _rec(rep, "taxonomy"))
     _compare("h_e7a", tax["h_e7a"], _rec(rep, "h_e7a"))
 
-    return _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax)
+    md = _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax)
+    if overlap_null or cache_aware:
+        recon = {"config_sha256": rep["config_sha256"], "manifest_sha256": rep["manifest_sha256"],
+                 "trace_files": len(rep["trace_files"]), "entry": "0024 recon flags; decides nothing"}
+        if overlap_null:
+            nb = overlap_null_block(corpus, cfg)
+            recon["overlap_null"] = nb
+            md += "\n\n" + render_null(nb) + "\n"
+        if cache_aware:
+            cb = cache_aware_block(corpus.trajectories, corpus.texts, hr, cfg.pricing, th["materiality_fraction"])
+            recon["cache_aware"] = cb
+            md += "\n\n" + render_cache(cb) + "\n"
+        _walk_nan(recon, "recon")
+        (cfg.results_dir / "recon.json").write_text(json.dumps(recon, indent=1), encoding="utf-8")
+        (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
+    return md
 
 
 def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
@@ -194,7 +226,14 @@ def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
     return f"{s['median']:,.{digits}f} (p10 {s['p10']:,.{digits}f}, p90 {s['p90']:,.{digits}f})"
 
 
-def _taxonomy_md(tax: dict, cutoff: float) -> str:
+def selected_subset_suites(manifest: dict) -> set[str]:
+    """Suites whose local trajectory set is a strict subset of the public listing (entry 0024:
+    their pooled rows are labelled SELECTED SUBSET, coverage stated beside them)."""
+    sel = manifest.get("swe_bench_selection") or {}
+    return {"swe-bench"} if any(v["n_local"] < v["s3_instances"] for v in sel.values()) else set()
+
+
+def _taxonomy_md(tax: dict, cutoff: float, subset: set[str] = frozenset()) -> str:
     t = tax["taxonomy"]
     cls = t["classes"]
     head = "| scope | " + " | ".join(cls) + " |\n|---|" + "---|" * len(cls)
@@ -207,7 +246,8 @@ def _taxonomy_md(tax: dict, cutoff: float) -> str:
     for k, row in t["per_agent"].items():
         lines.append(f"| {k} | " + " | ".join(cell(row[c]) for c in cls) + " |")
     for k, row in t["per_suite"].items():
-        lines.append(f"| **{k} (pooled)** | " + " | ".join(cell(row[c]) for c in cls) + " |")
+        tag = " (pooled; SELECTED SUBSET -- first-N per submission, see the manifest)" if k in subset else " (pooled)"
+        lines.append(f"| **{k}{tag}** | " + " | ".join(cell(row[c]) for c in cls) + " |")
     lines.append("| **ALL** | " + " | ".join(cell(t["pooled"][c]) for c in cls) + " |")
     h = tax["h_e7a"]
     def hb(name, b):
@@ -290,8 +330,10 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
         use = "\n".join(ul)
 
     md = ("E7 summary -- every figure recomputed from the raw traces, not restated\n\n"
-          f"config sha256 {rep['config_sha256'][:12]} | trace files verified: {len(rep['trace_files'])} | "
+          f"config sha256 {rep['config_sha256'][:12]} | manifest sha256 {rep['manifest_sha256'][:12]} "
+          f"(config/e7-manifest.json, entry 0024) | trace files verified: {len(rep['trace_files'])} | "
           f"cost basis: {rep['cost_basis']}\n\n"
+          + "\n".join(selection_lines(load_manifest(cfg))) + "\n\n"
           + "\n".join(lines)
           + "\n\n" + "\n".join(cov_lines) + f"\n\n{floor_note}\n"
           + (f"Lane A only, excluded from floor arithmetic (entry 0011): {excl}\n" if excl else "")
@@ -300,7 +342,7 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
           + "\n"
           + f"\nLane A (detector keys {list(MODEL_KEYS)}): {measurable} of {tn} trajectories measurable; "
             f"{tn - measurable} carry no per-step model metadata (recorded NOT MEASURABLE, never as zero).\n"
-          + f"\n{head}\n\n{use}\n\n{_taxonomy_md(tax, th['materiality_fraction'])}\n"
+          + f"\n{head}\n\n{use}\n\n{_taxonomy_md(tax, th['materiality_fraction'], selected_subset_suites(load_manifest(cfg)))}\n"
           + "\nNo hypothesis is decided by this summary. H-E7b needs the compaction break-even "
             "distribution, which needs compaction events: see the taxonomy row.\n")
     (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
@@ -310,9 +352,14 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m linear_ceiling.summarize_e7")
     ap.add_argument("--config", default=str(REPO_ROOT / "config" / "e7.toml"))
+    ap.add_argument("--overlap-null", action="store_true",
+                    help="entry 0024: same-family and cross-family null controls for the overlap measure")
+    ap.add_argument("--cache-aware-ratio", action="store_true",
+                    help="entry 0024: H-E7a ratio under every reading of the denominator (cold/warm x registered/request)")
     a = ap.parse_args(argv)
     try:
-        print(summarize(load_e7_config(Path(a.config), REPO_ROOT)))
+        print(summarize(load_e7_config(Path(a.config), REPO_ROOT),
+                        overlap_null=a.overlap_null, cache_aware=a.cache_aware_ratio))
     except ValueError as e:
         print(f"E7 SUMMARY REFUSED: {e}")
         return 1

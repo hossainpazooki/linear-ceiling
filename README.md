@@ -6,8 +6,10 @@ decided clause is scoped to a tied-embeddings vocabulary proxy and never general
 `docs/background.md`; the other hypotheses are `SHELVED`), and a **trace-replay
 measurement program** over agentic KV-cache workloads — registered, built, and replayed across
 three public corpora. The premise hypotheses are decided: **H-E7a `NOT CONFIRMED`**
-(mid-trajectory switch headroom is immaterial on public traces, so the motivation reverts to
-fleet mixing), **H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows any), and
+(mid-trajectory switch headroom is **unevidenced in public benchmark traces** — a claim about
+the evidence base, not about production workloads, which leave no public trace; per 0015 any
+case for cross-model KV transfer must then rest on different models serving different
+requests), **H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows any), and
 **H-E8 `NOT CONFIRMED`** (the fitted cross-model map does not survive agent-trace content
 shift within its band). E9 — the achievable fraction at a real re-rendered handoff — is
 registered and gated, its rule amended before any prefill (entry 0023: a per-token oracle
@@ -46,7 +48,7 @@ Verdicts only — every figure lives in the named ledger entry, never here.
 
 | hypothesis | verdict | what it says | entries |
 |---|---|---|---|
-| H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** | Mid-trajectory switching exists (one designed critic/selector family, always re-rendered, never byte-identical), but its recoverable prefill sits an order of magnitude under the registered cutoff; the motivating story reverts to fleet mixing. | 0006, 0010, 0013–0018 |
+| H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** | Lane A is measurable on 60 of 2,904 trajectories, all from one system with a designed critic stage (always re-rendered, never byte-identical); under the registered denominator its recoverable prefill sits an order of magnitude under the cutoff. Scope: public *benchmark* trajectories are single-model leaderboard runs by construction, so this decides what the public record evidences, not what production routers, fallbacks and cost tiers do — those leave no public trace. 0015's registered consequence: any case for cross-model KV transfer must rest on different models serving different requests. | 0006, 0010, 0013–0018, 0022 |
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** | Zero compaction events on every trajectory that can evidence one; final-transcript traces structurally cannot show it. | 0014, 0015 |
 | H-E8 — the fitted cross-model map survives agent-trace content shift | **NOT CONFIRMED** | The value pathway drops outside the registered band on agent text even with no switch and no position change; the key pathway lands in the dead zone. | 0009, 0016, 0020 |
 | H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, rule amended per-token before any prefill, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling; decided by how many matched tokens an oracle must recompute to reach the mapper's own fidelity. | 0019, 0023 |
@@ -64,12 +66,16 @@ Refusal is layered, and each layer fails closed rather than guessing:
 1. **Gates refuse to run** — an experiment reads no data until its registering entries and
    config are committed unmodified (and, where an upstream is invoked, until its pin holds:
    pinned commit an ancestor of HEAD, invoked paths unchanged since, working tree clean there).
+   E7 additionally refuses unless the trace tree on disk matches the committed corpus manifest
+   (`config/e7-manifest.json`: every file's sha256, its S3 key and ETag for SWE-bench objects,
+   and the recovered per-submission selection rule) in both directions and in bytes.
 2. **Adapters refuse to guess** — an unknown trace shape, a missing request boundary, or an
    argument type that cannot be priced raises instead of approximating; what no adapter accepts
    is recorded as unparsed, never dropped.
-3. **Summarizers refuse to summarize** — config drift, a changed/added/missing input file, a
-   NaN, a recorded value the recomputation does not reproduce, or a report from an older driver
-   each name their reason and exit nonzero.
+3. **Summarizers refuse to summarize** — config drift, a changed/added/missing input file, any
+   disagreement between disk, report and the committed manifest, a NaN, a recorded value the
+   recomputation does not reproduce, or a report from an older driver each name their reason
+   and exit nonzero.
 4. **Measurability refuses the flattering zero** — every class of event carries its own NOT
    MEASURABLE state; a trace that cannot evidence a thing never counts as evidence of its
    absence.
@@ -140,9 +146,14 @@ registered; the measured basis is in the ledger.
    `seal verify` reports "no sealed predictions yet"; it stays in CI as infrastructure, not
    as evidence, and E8/E9 make no pre-fit claims and do not use it (0009, 0019).
 2. **Pre-registration** — verdicts stated against the rule as written; amendments are new
-   numbered entries; the entry chain makes silent edits to registered text fail CI. The
-   header/table above `## Entries` are editable commentary outside the chain, and a history
-   rewrite that regenerates chain or seal is locally undetectable.
+   numbered entries. What CI enforces (`ledger_check`): every entry block committed at the
+   base of a push or pull request is byte-identical afterwards (so the trailing entry is as
+   immutable as the chained ones), each entry's chain hash covers everything above it, and
+   every verdict cell equals the value set by the numbered entry that claims it (a frozen
+   provenance map through 0022, `verdict: H-XX = <VERDICT>` lines from 0024 on). Residual: a
+   squash-merge shows only a PR's net change, and a history rewrite regenerates all three
+   checks together — only the public remote's history catches that. The header/table above
+   `## Entries` stay editable commentary; their cells are protected by provenance, not by hash.
 3. **No unrecomputed numbers** — summarizers only, fail-closed, tamper-tested.
 4. **Experiments refuse until their rules are committed** — the E0/E7/E8/E9 runners read no
    data until the registering entries and their config are committed and unmodified.

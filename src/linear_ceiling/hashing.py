@@ -28,5 +28,15 @@ def hash_json_file(path) -> str:
 
 
 def sha256_file_bytes(path) -> str:
-    """Raw-bytes digest, for non-JSON artifacts (e.g. TOML configs recorded in verdicts)."""
+    """Raw-bytes digest, for binary or downloaded artifacts (trace files, dumps, token files)."""
     return sha256_hex(Path(path).read_bytes())
+
+
+def sha256_text_file(path) -> str:
+    """Newline-normalized UTF-8 digest for TEXT artifacts recorded in the ledger (TOML configs).
+
+    A CRLF checkout (git autocrlf on Windows) must produce the same `config_sha256` as the LF
+    file the ledger entries cite (0013-0022 cite 6915666d452d for config/e7.toml); for an LF
+    file this equals `sha256_file_bytes`, so recorded values stay valid."""
+    text = Path(path).read_text(encoding="utf-8")          # universal newlines -> "\n"
+    return sha256_hex(text.encode("utf-8"))

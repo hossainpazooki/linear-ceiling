@@ -69,13 +69,11 @@ class Headroom:
         return self.headroom_upper_bound / self.paid_tokens if self.paid_tokens else 0.0
 
 
-def measure(traj: Trajectory, texts: list[str], read_mult: float) -> list[Headroom]:
-    """Headroom at each Lane A switch in `traj`.
-
-    `texts` is the per-message text, index-aligned with `traj.messages`, because Msg carries
-    token counts rather than content. Sender context is every message before the switch;
-    receiver prompt is the message at the switch.
-    """
+def switch_slices(traj: Trajectory, texts: list[str]) -> list[dict]:
+    """The two texts the measure compares at each Lane A switch, exactly as `measure` slices
+    them (shared with the null controls of entry 0024 so the nulls cannot drift from the
+    observed measure): sender context = every message before the switch; receiver prompt = the
+    messages of the receiver's own request before its response (0017), newline-joined."""
     if len(texts) != len(traj.messages):
         raise ValueError(f"texts ({len(texts)}) must align with messages ({len(traj.messages)})")
     out = []
@@ -94,18 +92,33 @@ def measure(traj: Trajectory, texts: list[str], read_mult: float) -> list[Headro
         # that precede its response -- not the trajectory's cumulative prefix (0017 correction).
         prompt_idx = [j for j in range(i_cur) if traj.messages[j].request == cur.request]
         receiver_text = "\n".join(texts[j] for j in prompt_idx)
-        paid = sum(traj.messages[j].tokens for j in prompt_idx)
-        frac = overlap_fraction(sender_text, receiver_text)
+        out.append({"switch_index": k, "sender_model": prev.model, "receiver_model": cur.model,
+                    "sender_text": sender_text, "receiver_text": receiver_text,
+                    "paid_tokens": sum(traj.messages[j].tokens for j in prompt_idx),
+                    "overlap_fraction": overlap_fraction(sender_text, receiver_text)})
+    return out
+
+
+def measure(traj: Trajectory, texts: list[str], read_mult: float) -> list[Headroom]:
+    """Headroom at each Lane A switch in `traj`.
+
+    `texts` is the per-message text, index-aligned with `traj.messages`, because Msg carries
+    token counts rather than content. Sender context is every message before the switch;
+    receiver prompt is the message at the switch.
+    """
+    out = []
+    for s in switch_slices(traj, texts):
+        paid, frac = s["paid_tokens"], s["overlap_fraction"]
         overlap_tokens = frac * paid
         out.append(Headroom(
-            switch_index=k,
-            sender_model=prev.model, receiver_model=cur.model,
+            switch_index=s["switch_index"],
+            sender_model=s["sender_model"], receiver_model=s["receiver_model"],
             paid_tokens=paid,
             overlap_fraction=frac,
             overlap_tokens=overlap_tokens,
             residual_tokens=paid - overlap_tokens,
             headroom_upper_bound=overlap_tokens * (1.0 - read_mult),
-            byte_identical=bool(sender_text) and sender_text in receiver_text,
+            byte_identical=bool(s["sender_text"]) and s["sender_text"] in s["receiver_text"],
         ))
     return out
 

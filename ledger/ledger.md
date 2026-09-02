@@ -8,13 +8,18 @@ immutable — an amendment is a new entry, never an edit; status tags are `[VALI
 (ran, and survived an independent attempt to refute it), `[BASELINE]` (ran; numbers here),
 `[STRETCH]` (designed, not run), `[FUTURE]` (not designed), `[SUPERSEDED]`.
 
-E0 has run (entry 0004); H-S2's first clause is `NOT CONFIRMED`. Every other verdict below is
-`unresolved` or `SHELVED`. The screen-validation line is CLOSED and E7 is promoted to a
-standalone measurement program with pre-registered thresholds (entry 0006, amended by 0007) —
-H-S1/H-S3/H-S4 carry `SHELVED` (no experiment decided them; none is scheduled); H-E7a is
-`NOT CONFIRMED` and H-E7b `UNESTIMABLE` (entry 0015); the live hypotheses are H-E8 and H-E9. From entry
-0007 on, each entry records a `prior-entries-sha256:` over the entries section above it,
-recomputed by `ledger_check` in CI.
+State of the table (regenerated from the cells; each cell names the entry that set it): H-S2's
+first clause is `NOT CONFIRMED` (entry 0004, E0); H-S1/H-S3/H-S4 carry `SHELVED` (entry 0007 —
+no experiment decided them; none is scheduled; the screen-validation line is CLOSED, entry
+0006); H-E7a is `NOT CONFIRMED` (entry 0015; corrected figures 0018; tokenizer sensitivity
+0022) and H-E7b `UNESTIMABLE` (entry 0015); H-E8 is `NOT CONFIRMED` (entry 0020); H-E9 is
+`unresolved` (registered 0019, rule amended 0023 — gated, awaiting its run). From entry 0007 on, each entry
+records a `prior-entries-sha256:` over the entries section above it; from entry 0024 on, an
+entry that changes a verdict cell carries a machine-readable line `verdict: H-XX = <VERDICT>`
+(the cells above are otherwise frozen in `ledger_check.VERDICT_PROVENANCE`), and an entry that
+cites `summarize_e7` figures carries `e7-manifest-sha256: <sha>` naming the committed corpus
+manifest — all recomputed by `ledger_check` in CI, which also refuses any edit to an entry
+block already committed at the base revision (the trailing entry included).
 Dating erratum: entries 0016-0020 were authored 2026-09-01 despite their 2026-09-02 headings — see entry 0021.
 Rule amendment: the H-E9 row below embeds entry 0019's rule clause (pooled K R², 0.70/0.40) in its
 statement cell; that clause is superseded by entry 0023 (median oracle selective-recompute fraction

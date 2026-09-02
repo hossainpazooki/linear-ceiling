@@ -37,6 +37,8 @@ def env(tmp_path):
     cfg = E7Config(traces_dir=tmp_path / "traces", results_dir=tmp_path / "results",
                    pricing=PRICING, thresholds=THRESHOLDS, tokenizer=TOKENIZER,
                    lane_b_policy="two-tier-cascade", config_path=cfgp)
+    from linear_ceiling.e7_manifest import write as write_manifest
+    write_manifest(cfg, list_fn=None)          # the committed corpus manifest (entry 0024), no S3 here
     from linear_ceiling import e7 as driver
     # build the report exactly as the driver does, without its git gate
     monkey = driver.assert_ready
@@ -61,6 +63,136 @@ def test_clean_report_summarizes(env):
     assert "switches measured: 1" in md and "byte-identical handoffs: 0/1" in md
     assert "unparsed trajectories (recorded, never counted): 1" in md
     assert "Lane A only, excluded from floor arithmetic (entry 0011): composio_swekit: 1" in md
+    assert "manifest sha256" in md and "SWE-bench selection" in md
+
+
+# --- the committed corpus manifest is a third party to provenance (entry 0024) ---------------
+
+def _manifest(cfg):
+    from linear_ceiling.e7_manifest import manifest_path
+    p = manifest_path(cfg)
+    return p, json.loads(p.read_text(encoding="utf-8"))
+
+
+def test_refuses_without_a_manifest(env):
+    cfg, _, _ = env
+    p, _ = _manifest(cfg)
+    p.unlink()
+    with pytest.raises(ValueError, match="no corpus manifest"):
+        summarize(cfg)
+
+
+def test_refuses_manifest_hash_edited_naming_the_path(env):
+    """A byte flipped in the manifest's record of one file: refused by path, before any
+    number is compared."""
+    cfg, _, _ = env
+    p, m = _manifest(cfg)
+    m["files"][0]["sha256"] = "0" * 64
+    _write(p, m)
+    with pytest.raises(ValueError, match=f"does not match the manifest hash: {m['files'][0]['path']}"):
+        summarize(cfg)
+
+
+def test_refuses_manifest_missing_a_file_that_is_on_disk(env):
+    cfg, _, _ = env
+    p, m = _manifest(cfg)
+    gone = m["files"].pop()["path"]
+    _write(p, m)
+    with pytest.raises(ValueError, match=f"not in the manifest: {gone}"):
+        summarize(cfg)
+
+
+def test_refuses_manifest_listing_a_file_absent_from_disk(env):
+    cfg, _, _ = env
+    p, m = _manifest(cfg)
+    m["files"].append(dict(m["files"][0], path="tau-bench/phantom-airline.json"))
+    _write(p, m)
+    with pytest.raises(ValueError, match="missing on disk: tau-bench/phantom-airline.json"):
+        summarize(cfg)
+
+
+def test_refuses_report_produced_against_a_different_manifest(env):
+    """Disk and manifest agree, but the report was not produced against THIS manifest
+    (regenerated since the run): refused, rerun the driver."""
+    cfg, _, _ = env
+    p, m = _manifest(cfg)
+    m["selection_note"] = "regenerated after the run"
+    _write(p, m)
+    with pytest.raises(ValueError, match="manifest_sha256 mismatch"):
+        summarize(cfg)
+
+
+def test_recon_flags_append_sections_and_write_recon_json(env):
+    """Entry 0024's flags run only after the full verification and stamp their output with the
+    verified config and manifest shas; the synthetic corpus has one composio trajectory, so the
+    same-family null is NOT COMPUTABLE while the cross-family null and the ratios compute."""
+    import dataclasses
+    cfg, rp, _ = env
+    cfg2 = dataclasses.replace(cfg, overlap_null={"seed": 5})
+    md = summarize(cfg2, overlap_null=True, cache_aware=True)
+    assert "Overlap null controls (entry 0024" in md and "NOT COMPUTABLE" in md
+    assert "cross-family null (role/content) | 1 |" in md
+    assert "H-E7a under every reading" in md and "registered requests, COLD (= 0018)" in md
+    recon = json.loads((cfg.results_dir / "recon.json").read_text(encoding="utf-8"))
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    assert recon["config_sha256"] == rep["config_sha256"] and recon["manifest_sha256"] == rep["manifest_sha256"]
+    assert recon["overlap_null"]["seed"] == 5 and recon["overlap_null"]["same_family"] is None
+    assert recon["cache_aware"]["pooled"]["denominators"]["registered_cold"] == rep["h_e7a"]["pooled"]["input_spend"]
+    assert recon["cache_aware"]["pooled"]["ratios"]["registered_cold"] == pytest.approx(rep["h_e7a"]["pooled"]["ratio"])
+    assert (cfg.results_dir / "summary.md").read_text(encoding="utf-8").endswith(md)
+
+
+def test_selected_subset_label_follows_the_manifest(env):
+    """Entry 0024: a suite whose local set is a strict subset of the public listing carries the
+    SELECTED SUBSET label on its pooled taxonomy row; a full or unlisted corpus does not."""
+    from linear_ceiling.summarize_e7 import selected_subset_suites
+    assert selected_subset_suites({"swe_bench_selection": {}}) == set()
+    assert selected_subset_suites({"swe_bench_selection": {"s": {"n_local": 15, "s3_instances": 500}}}) == {"swe-bench"}
+    assert selected_subset_suites({"swe_bench_selection": {"s": {"n_local": 500, "s3_instances": 500}}}) == set()
+    cfg, _, _ = env
+    assert "SELECTED SUBSET" not in summarize(cfg)             # the synthetic manifest has no S3 listing
+    p, m = _manifest(cfg)
+    m["swe_bench_selection"] = {"20240820_honeycomb": {"n_local": 2, "s3_instances": 500, "s3_objects": 500,
+                                                       "rule": "first-N in listing order",
+                                                       "listing_positions": [0, 1], "not_in_listing": []}}
+    m["s3"]["listed_at_utc"] = "2026-09-01T00:00:00+00:00"
+    _write(p, m)
+    # the manifest changed, so the report must be regenerated against it before summarizing
+    from linear_ceiling import e7 as driver
+    monkey = driver.assert_ready
+    driver.assert_ready = lambda *a, **k: None
+    try:
+        driver.run(cfg, repo_root=cfg.results_dir.parent)
+    finally:
+        driver.assert_ready = monkey
+    md = summarize(cfg)
+    assert "| **swe-bench (pooled; SELECTED SUBSET -- first-N per submission, see the manifest)** |" in md
+    assert "20240820_honeycomb: 2 of 500 listed instances" in md
+
+
+def test_recon_flags_do_not_run_on_a_refused_report(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["h_e7a"]["pooled"]["ratio"] = 0.5
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"h_e7a\.pooled\.ratio"):
+        summarize(cfg, overlap_null=True, cache_aware=True)
+    assert not (cfg.results_dir / "recon.json").exists()
+
+
+def test_overlap_null_refuses_without_a_registered_seed(env):
+    cfg, _, _ = env
+    with pytest.raises(ValueError, match=r"\[e7.overlap_null\]"):
+        summarize(cfg, overlap_null=True)
+
+
+def test_refuses_report_that_predates_the_manifest(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    del rep["manifest_sha256"]
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="report has no `manifest_sha256` section"):
+        summarize(cfg)
 
 
 def test_refuses_when_a_trace_file_changed(env):

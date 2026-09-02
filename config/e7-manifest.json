@@ -1,0 +1,3138 @@
+{
+  "files": [
+    {
+      "agent": "gpt-4o",
+      "bytes": 4114038,
+      "path": "tau-bench/gpt-4o-airline.json",
+      "sha256": "e9e6c0297660c537f83d4fd9c476ce7a9a86ecd2784874b7bfc13be598e37bfa",
+      "suite": "tau-bench"
+    },
+    {
+      "agent": "gpt-4o",
+      "bytes": 10813408,
+      "path": "tau-bench/gpt-4o-retail.json",
+      "sha256": "df01707894836168ff0ec9616b0bf08f66c7e5afcf313e5fe4f7a2f5c2ec938b",
+      "suite": "tau-bench"
+    },
+    {
+      "agent": "sonnet-35-new",
+      "bytes": 10888682,
+      "path": "tau-bench/sonnet-35-new-airline.json",
+      "sha256": "fe62fcd514b855b36f156dd4c3c7748597b392b006aff739b53337a9f3ba94d1",
+      "suite": "tau-bench"
+    },
+    {
+      "agent": "sonnet-35-new",
+      "bytes": 26544890,
+      "path": "tau-bench/sonnet-35-new-retail.json",
+      "sha256": "0df526398e9d2720c32d340815cffb04fe8c4f8a61b1f4f84bf3bb558f760131",
+      "suite": "tau-bench"
+    },
+    {
+      "agent": "claude-3-7-sonnet-20250219",
+      "bytes": 10551448,
+      "path": "tau2-bench/claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json",
+      "sha256": "40a2c6a246eab27db5cdefda895fbe7f44be78a23d300817248534aa606d66de",
+      "suite": "tau2-bench"
+    },
+    {
+      "agent": "gpt-4.1-2025-04-14",
+      "bytes": 8790399,
+      "path": "tau2-bench/gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json",
+      "sha256": "31d19e79b8ddc5934a60701f913ff5fefb41dee5e68f7b813c26254ab2e2d5c8",
+      "suite": "tau2-bench"
+    },
+    {
+      "agent": "gpt-4.1-mini-2025-04-14",
+      "bytes": 9781836,
+      "path": "tau2-bench/gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json",
+      "sha256": "41788956547a100fb8e34baf159f36dd1f07f0765798a5fdaf917576c5dba9d0",
+      "suite": "tau2-bench"
+    },
+    {
+      "agent": "o4-mini-2025-04-16",
+      "bytes": 7599444,
+      "path": "tau2-bench/o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json",
+      "sha256": "6a3a354c9bce42b52905af096e9cea6f555548acbb17b567fd403c356df7b4ec",
+      "suite": "tau2-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 14376093,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-12907.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b3c0645b7cad729e0208b520826fd7b7-2",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-12907.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 14376093
+      },
+      "sha256": "4c37b3c6b97c290ec01059f5786ea5134e6bffce2239fa432198bb6c616806b4",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 337074,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-13033.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "7cd0b896febd1babb42512bc9cdbe713",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-13033.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 337074
+      },
+      "sha256": "18c5e729711dc9c7cb3048bb6915c81a0f2e4e874e79ba97ee5332b88961d122",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 703919,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-13236.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "651e8cfec009a367a5626d2ad3177e21",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-13236.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 703919
+      },
+      "sha256": "5571f7f483435f5fb6f2f27581e6482fe937ffeae4243888f8d2e8486f5df16e",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 821478,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-13398.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "01068317d975a221888a14ad9f118897",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-13398.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 821478
+      },
+      "sha256": "7ed70df73e13393d8fcede6569dbd68fa40a0dccf991101ced7d3a3bdeaada1a",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 723800,
+      "instance": "astropy__astropy-13453",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-13453.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f14060ec47e07dc90821155e562f18c0",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-13453.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 723800
+      },
+      "sha256": "b6724249fbee897f61bf642c698ee83ed2fa3836ff9238c364f9ab633a80e9e6",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 362863,
+      "instance": "astropy__astropy-13579",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-13579.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "685f28e842dcb34bb4849ba73ea23fd3",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-13579.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 362863
+      },
+      "sha256": "633d9f63b98bc5794c9e2ae34a2feb1e8b030607e42649a447bfd49667393c77",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 417709,
+      "instance": "astropy__astropy-13977",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-13977.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "89a8b718641e8844d8e860cf9e7c37ac",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-13977.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 417709
+      },
+      "sha256": "46c8e15bc6e3237622c821d937e7a781e1ffe0f4663abdd9d9e00e22391df284",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 206854,
+      "instance": "astropy__astropy-14096",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14096.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "99da00d3612b26eef9cd47937a352a2e",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14096.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 206854
+      },
+      "sha256": "49c3e6dea8f5a619eb91f9a1d4428c63af317740dd20268032c9e12e3289d602",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 982559,
+      "instance": "astropy__astropy-14182",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14182.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "1ea48beacde7e2cac6056cf73b8130ee",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14182.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 982559
+      },
+      "sha256": "5baba79777a2220abf2d457bd212a542c061dfa9a7bf628571e3b7d703f27594",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 3594531,
+      "instance": "astropy__astropy-14309",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14309.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ecc965b497fa549d873341ac7a636f73",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14309.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 3594531
+      },
+      "sha256": "92c94d92fd17f8754c6fec68eb8a5a68df7fc2c05dc5ee7f0fa493d2d09518b5",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 779641,
+      "instance": "astropy__astropy-14365",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14365.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "11fcfdf0c6353fa34ab7424f07664e5e",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14365.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 779641
+      },
+      "sha256": "2545f04b896f352ad46d5ba593c84b7149653f952174a33f7f10c4eaf21ef769",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 681396,
+      "instance": "astropy__astropy-14369",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14369.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "93ad85c1a157633f1fa0a3dff72fcfc8",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14369.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 681396
+      },
+      "sha256": "683eeea7fbe7d13288f2ed7b89cdeb3395a58a30389806c67444752677f458a9",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 1708620,
+      "instance": "astropy__astropy-14508",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14508.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "97adcc872bd461e988ce228e7e25e37c",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14508.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 1708620
+      },
+      "sha256": "23bfceed6b03c49462b197f65ad7620ecc5a275d47315679130eff7a41dd2088",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 322852,
+      "instance": "astropy__astropy-14539",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14539.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "e095873b968ac2852135237c26a0f713",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14539.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 322852
+      },
+      "sha256": "9250a12de38d66c2d96668668c3847d5f073d53597eb57d66d8a7a6708e16abb",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "honeycomb",
+      "bytes": 623605,
+      "instance": "astropy__astropy-14598",
+      "path": "swe-bench/20240820_honeycomb/astropy__astropy-14598.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "5fb5bf25749fbb851bba27e1ae748465",
+        "key": "verified/20240820_honeycomb/trajs/astropy__astropy-14598.json",
+        "last_modified": "2026-01-06T06:20:55.000Z",
+        "size": 623605
+      },
+      "sha256": "0ffe6f02f7aa1803714852001ac5840c92439046536fa8c0f908e2a76c1ac0ba",
+      "submission": "20240820_honeycomb",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 424381,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-12907_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "435db59d0ed41728599360888c4dbdd1",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-12907_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 424381
+      },
+      "sha256": "d9ddb8aef6ca175265edb75c38442d0964a62558dd838c5cfd217d41a352e94f",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 348360,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-13033_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "48ee8df37ca9aaf1e8b784afc2411cf4",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-13033_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 348360
+      },
+      "sha256": "fc8450b4654566548fc6286e1bda87a570e1d84ca73537b75bf6575d84e7b6f0",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 637854,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-13236_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0f4a85c9ebc2fff7486bf903cd9f155c",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-13236_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 637854
+      },
+      "sha256": "894d71358b803ba3d168a07eca6955e4c180ea6d3d518b61dee0e8c330a824e9",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 2326134,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-13398_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "57e03a8952a4d956e91ce21af985188d",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-13398_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 2326134
+      },
+      "sha256": "c77fdf08418d454fe886e3c4b3b026ab31b1bebbc6e1bd88113d2bcd124925ed",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 609375,
+      "instance": "astropy__astropy-13453",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-13453_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0e4c3bbdaa94421e8be0ae770b66a36c",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-13453_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 609375
+      },
+      "sha256": "7fffd069235593f8380bef631b2e16aba440bc6baf1fa909afb3f51ebb3ff33c",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 572118,
+      "instance": "astropy__astropy-13579",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-13579_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "185e422cdd7d3d9fbca7c4fbdb670b83",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-13579_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 572118
+      },
+      "sha256": "4295a363d91803fbf31ad8727c2502aba00dfd147d3ea5d1941c7228f0741dee",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 703716,
+      "instance": "astropy__astropy-13977",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-13977_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0c6476cd7d81230d659473e3f132ca22",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-13977_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 703716
+      },
+      "sha256": "800519a3239f6e6fff1b8ef53e0cade9efce60bb6c4756ca40a358fdadf6e543",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 317872,
+      "instance": "astropy__astropy-14096",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14096_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "50fb470f9fd950a2dc01ece90e9dda74",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14096_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 317872
+      },
+      "sha256": "1c73a6421a65a14e0d0ccdf3fa1afedbd4fa01f9be361c62f52dfab872055778",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 235360,
+      "instance": "astropy__astropy-14182",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14182_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "3a4dafd5275276b6b10ee78fb3bc484e",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14182_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 235360
+      },
+      "sha256": "960c3529a86bd3fa4ce8f26c0ca60964ebfe253fe26733c020ae92a8953b6842",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 224298,
+      "instance": "astropy__astropy-14309",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14309_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "876c48074efbb68e1d56d3f30f20e8d4",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14309_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 224298
+      },
+      "sha256": "6a6d550bee13adf54a830c40a1a7b642a666647e8bd225f5cd4582a6f6c2668d",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 1131840,
+      "instance": "astropy__astropy-14365",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14365_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0ac00b64136c4243eb9c8023aa8155ae",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14365_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 1131840
+      },
+      "sha256": "db90b1e5d7a3c433c7b0e3fe0b7663984a26eb0ab24b777c52ccc0d85f010b68",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 529785,
+      "instance": "astropy__astropy-14369",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14369_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2ebd0742a8098f4134bf8e49588b0091",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14369_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 529785
+      },
+      "sha256": "9a5e7d3e0bbd30f6f560e3c6a649c626fe4fa69c29e3814a57c2e2965d2b0c89",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 296084,
+      "instance": "astropy__astropy-14508",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14508_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2856f0b51414703fde3b2685a14b2904",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14508_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 296084
+      },
+      "sha256": "1766d33b8cb9defe0727505fe96992782cee384d5723105c283286a6e94afc42",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 504200,
+      "instance": "astropy__astropy-14539",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14539_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "5a09fd0f8426e7066f9072e49a77c9dd",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14539_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 504200
+      },
+      "sha256": "daf021878e90087e1270451f841cd33e2ede7c189ddb5f47f9404a12a00e59fb",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 443754,
+      "instance": "astropy__astropy-14598",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14598_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d90748a1ccb5b15b729887928b92f0ef",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14598_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 443754
+      },
+      "sha256": "6973d0370422fbf1991f8d18b6cd2015bff8406c40aa7ba42782bc118ee0f056",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 285773,
+      "instance": "astropy__astropy-14995",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-14995_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "3350315e416b398175b215de03a2a2ad",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-14995_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 285773
+      },
+      "sha256": "580bc7dd8348b20344d7768f5972f252a734e3a38d82581201cdaa033a6d6514",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 324923,
+      "instance": "astropy__astropy-7166",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-7166_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "51886d94b41bd31ea09a4bc2b10385a2",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-7166_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 324923
+      },
+      "sha256": "5ac473036f6022202461ec69440702346c77da3b9e7bd876f384806c993837f6",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 421649,
+      "instance": "astropy__astropy-7336",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-7336_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "a9add3518d7fed698d018f5f24d8cb66",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-7336_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 421649
+      },
+      "sha256": "87d7bf19d46ea27e0f2c92044d667670db6b3a660f8966f0a7582b9265a6cde9",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 315215,
+      "instance": "astropy__astropy-7606",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-7606_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f1a6d4eeb5ee1794636371a346d9f35c",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-7606_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 315215
+      },
+      "sha256": "292969fd56e149eee93f1ffd6c15f37d751c7aeb6c397e9557b631de6909e550",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 380224,
+      "instance": "astropy__astropy-7671",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-7671_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "812b48014917376b996f0fda3aecc165",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-7671_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 380224
+      },
+      "sha256": "f7d27f86f5e8cb12eda7436f7ff517d5527daf340abc97237ed4be2fc2abe8dd",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 523180,
+      "instance": "astropy__astropy-8707",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-8707_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "4e02720929e5fe89935ab6c27e09353a",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-8707_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 523180
+      },
+      "sha256": "b7c574da7ffe0dd1c7517a41293141fef6eb71185f977cd6909b18e6c5385f6f",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 685728,
+      "instance": "astropy__astropy-8872",
+      "path": "swe-bench/20241016_composio_swekit/astropy__astropy-8872_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "81f5bb569b9b232f9345e9e81f53a40f",
+        "key": "verified/20241016_composio_swekit/trajs/astropy__astropy-8872_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 685728
+      },
+      "sha256": "2948e47e325c63d6267374fbf05c1e61faa55ffa03d00452aa704773b637f976",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 460551,
+      "instance": "django__django-10097",
+      "path": "swe-bench/20241016_composio_swekit/django__django-10097_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d12e6498cb1ed8f2eeace1fb07e4498d",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-10097_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 460551
+      },
+      "sha256": "51fa9f20a9f03ff6cac79e058e651382febc6ccc47f9876aedf2c9bf8162e87a",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 293901,
+      "instance": "django__django-10554",
+      "path": "swe-bench/20241016_composio_swekit/django__django-10554_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "58fd6f1e26a13d2cbcb0fc2b2241fe94",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-10554_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 293901
+      },
+      "sha256": "626effc326cd0bc5e0cde5a365718ddafb099b59b36e781b650afa1b718f874f",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 283649,
+      "instance": "django__django-10880",
+      "path": "swe-bench/20241016_composio_swekit/django__django-10880_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "4222f3bc1fa1f032b467d04253fe7596",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-10880_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 283649
+      },
+      "sha256": "f6f1f2379afb5894dc68e63416fffe50d484925be9130d9db8cb456340d62b8c",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 523157,
+      "instance": "django__django-10914",
+      "path": "swe-bench/20241016_composio_swekit/django__django-10914_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ee6b21662eca7f0b2833667f922aaf94",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-10914_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 523157
+      },
+      "sha256": "a7079f20aa4bc84f1b92ce858f6d908d7c7af17243c88dfe2137e312bf02cbac",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 581056,
+      "instance": "django__django-10973",
+      "path": "swe-bench/20241016_composio_swekit/django__django-10973_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0259ddeb46c9814bcd15b383237c70b6",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-10973_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 581056
+      },
+      "sha256": "b52483ff04e2b5d5a5c5572c3dd059e0b40052643446967b3a987e72061acff4",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 190796,
+      "instance": "django__django-10999",
+      "path": "swe-bench/20241016_composio_swekit/django__django-10999_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "1f57c0f874dab1d4928d90842d442082",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-10999_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 190796
+      },
+      "sha256": "4ce27913c27a495263bc725dd5a1a4a236a677c9c549b5f9c3d0170573e32e79",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 219058,
+      "instance": "django__django-11066",
+      "path": "swe-bench/20241016_composio_swekit/django__django-11066_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2476c1b9d97eda3886f68b16495f73b5",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-11066_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 219058
+      },
+      "sha256": "d72c938db4f02d88419d28923359e34ea73d27e8cf5e49afaab427fbeaecf2dc",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 919523,
+      "instance": "django__django-11087",
+      "path": "swe-bench/20241016_composio_swekit/django__django-11087_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "cde7a9a5b15aa74a5428db9dfd10e31f",
+        "key": "verified/20241016_composio_swekit/trajs/django__django-11087_traj.json",
+        "last_modified": "2026-01-06T06:22:00.000Z",
+        "size": 919523
+      },
+      "sha256": "315a60c1de09ada610eeeecb5c08f096ef544ca3457419636c7f2e24a1edae23",
+      "submission": "20241016_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 462407,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-12907_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "681a1edbff6d9fb555e48b5af15ec88a",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-12907_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 462407
+      },
+      "sha256": "e4ea2618ff245d5ab159c086a72d3ef7d2dc095064e74d86b196711af20ccb36",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 328239,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-13033_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0f970b7ec88ba575d9fbb6f4e30903f3",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-13033_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 328239
+      },
+      "sha256": "70b294f51c3b7f64821020988c1d0f1b61d6882fefea5acf7982d246e3dd6fe0",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 601993,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-13236_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "862842156f9206550e55ac8221c86463",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-13236_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 601993
+      },
+      "sha256": "2acf9ed54b99a7b486b7fcb898371bee58b3fc5b46c49ddb099cce4891526e9f",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 723605,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-13398_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "a7589bf56dbde3fa16b43554e85359c2",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-13398_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 723605
+      },
+      "sha256": "82bd12d973779630d879aa87e4aed8c42e50f1c8c471806cabe96a1e9f772d49",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 1151400,
+      "instance": "astropy__astropy-13453",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-13453_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ebf1a67c04e6518b200e4b6bef3cb308",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-13453_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 1151400
+      },
+      "sha256": "e9490edfae9a347224471709ffa521c03c301a63b540274efdc399973cba15dc",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 481042,
+      "instance": "astropy__astropy-13579",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-13579_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "49ae7bf47b66b4a3c57d909e3e687c45",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-13579_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 481042
+      },
+      "sha256": "f5412b64b825934522773bef02ad478d9b9621fc646ba6ce70a3e14a9d2f7ae5",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 565214,
+      "instance": "astropy__astropy-13977",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-13977_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "5463c3bb65b3b7cf4dbbcf082350ec7a",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-13977_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 565214
+      },
+      "sha256": "4409ef334c52f1c2a606a1e63a350e9989e49b6100d1ff5cfdd92fc8aa97485b",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 362628,
+      "instance": "astropy__astropy-14096",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14096_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "c640bfbd9cc87aee9e94b57a7bcdd62b",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14096_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 362628
+      },
+      "sha256": "f569c6fa8b142397ff28598964b115a6392508bafafe83fde2c24b0a2c675f26",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 260353,
+      "instance": "astropy__astropy-14182",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14182_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "8d60ab7ce5f9484ab17a0a52355e3035",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14182_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 260353
+      },
+      "sha256": "3b3909065dbadcfcba992fff4bd9daf3c1051a83bd49e2ded46f9c75b6a1e506",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 240497,
+      "instance": "astropy__astropy-14309",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14309_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "16ca43f6710dba32844411f9a354d423",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14309_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 240497
+      },
+      "sha256": "b9e0ef70c8e0f7f135bdf1accf2bc39787fd6ab3c70f1dbe4c9c4c7427f50595",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 340387,
+      "instance": "astropy__astropy-14365",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14365_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d8d05f965965aaf4201aa48b969ef463",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14365_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 340387
+      },
+      "sha256": "62c3c3c8988b7a7da7acf1a20acf1917b92d23d9a5dbfb98c3aa9567363751a6",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 595965,
+      "instance": "astropy__astropy-14369",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14369_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b918300c5c03af7b08a795f2a926af22",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14369_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 595965
+      },
+      "sha256": "830e99698cedd06d682f864ccdd6b0f86f541502a4742b20b181df8eaa0246ab",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 356516,
+      "instance": "astropy__astropy-14508",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14508_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b279afaa3461b1e5ca16214cf14648d9",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14508_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 356516
+      },
+      "sha256": "9af87ee33fe5d40f24bb8c43cf307ff3d2c53879899b142d038d478ed0260249",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 376146,
+      "instance": "astropy__astropy-14539",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14539_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "038bcbd135d4d1fcc4bc4e041da63976",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14539_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 376146
+      },
+      "sha256": "8a20bb2fb68c66e2f01c8eb77fb9944a6617bbd46456218cdd000a066fdb0c5e",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 384379,
+      "instance": "astropy__astropy-14598",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14598_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "5438a6358951e57e1d5409dc7879cb87",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14598_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 384379
+      },
+      "sha256": "6d889de9d7a2666f7249be2ab4f1ca60be44c5136c231e3b048e454ff4949e79",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 349098,
+      "instance": "astropy__astropy-14995",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-14995_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "5b0bf2af840f3c5a2178656a96c05404",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-14995_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 349098
+      },
+      "sha256": "f40df6162efcd850ee0ade58b120b1dbd256386c208dda30edd2d17c1be7c47f",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 222140,
+      "instance": "astropy__astropy-7166",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-7166_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "8826784617266df53ffd7ed141b752d3",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-7166_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 222140
+      },
+      "sha256": "159030b31495c4edb819484d1ade07952c73171e454a11ab9a2b6e39c17ccf90",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 110018,
+      "instance": "astropy__astropy-7336",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-7336_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "dda15620b51062e47708d12ea8032b64",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-7336_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 110018
+      },
+      "sha256": "5da02e0b72bf6f117966ddafbfc47c08d3e451853d0c86e93344f1f693357229",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 339127,
+      "instance": "astropy__astropy-7671",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-7671_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "820880b642a65527839df495cee6e468",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-7671_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 339127
+      },
+      "sha256": "fae73cce9ebb773d811f06a1eb285878f56e19e68e32fd5bfb84086ef8cb9dc1",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 664343,
+      "instance": "astropy__astropy-8707",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-8707_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "fc5a6d07b7753ca63ee6d753b7b4dba3",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-8707_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 664343
+      },
+      "sha256": "c81ae680dec008dac809e1299bd467fbc6f0f796f517ff11f0be79e3d0087b4f",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 411689,
+      "instance": "astropy__astropy-8872",
+      "path": "swe-bench/20241025_composio_swekit/astropy__astropy-8872_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad816e6bf73450fec655da455285fb0e",
+        "key": "verified/20241025_composio_swekit/trajs/astropy__astropy-8872_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 411689
+      },
+      "sha256": "6ad1dcf7a9358f9482cb032848b5dc47902b0d960d82356afcb69576d5bf6f42",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 543778,
+      "instance": "django__django-10097",
+      "path": "swe-bench/20241025_composio_swekit/django__django-10097_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "aa17c5a9101f31c146ed8c12fe679a28",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-10097_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 543778
+      },
+      "sha256": "b62d8aa1a14dfd3e3c3acd50119f227235b56b3f9b4103ca0e2d54812c743561",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 662417,
+      "instance": "django__django-10554",
+      "path": "swe-bench/20241025_composio_swekit/django__django-10554_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f734f8936bd6ce67d56cb0c60ed32f1e",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-10554_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 662417
+      },
+      "sha256": "e0f4347359b518967cc904a2bc63babd531bed77a72dfa7bf1307e0e1983b2c5",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 496645,
+      "instance": "django__django-10880",
+      "path": "swe-bench/20241025_composio_swekit/django__django-10880_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d5e0ce7789bcb7c8db0645e2508be4e2",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-10880_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 496645
+      },
+      "sha256": "5c894627c40f300211bfee18e0e9e92d1512b22fdffb74965c9bd6c7b1a77315",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 394705,
+      "instance": "django__django-10914",
+      "path": "swe-bench/20241025_composio_swekit/django__django-10914_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "67e6fd51759342a17d1e58128dc2ac76",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-10914_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 394705
+      },
+      "sha256": "1eac89d172ca89d747e2a4f664a60772dc9badc57b9e5976ab10310b708cb129",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 396288,
+      "instance": "django__django-10973",
+      "path": "swe-bench/20241025_composio_swekit/django__django-10973_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2c59b96f442260f5b08f33124187d236",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-10973_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 396288
+      },
+      "sha256": "318a3e91848723ac60f049d98f8d7921af522fd534b5773a625fb6d3ca59afb8",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 186073,
+      "instance": "django__django-10999",
+      "path": "swe-bench/20241025_composio_swekit/django__django-10999_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "278ea149c8ec9dff70d2b2777fe95db5",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-10999_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 186073
+      },
+      "sha256": "a1e8281d4b3b88c0e1cda1dbaabdd4f7523cc1dbe76d49bb796666d7d4f380ec",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 180615,
+      "instance": "django__django-11066",
+      "path": "swe-bench/20241025_composio_swekit/django__django-11066_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "4a25198ee08b6503b59fb0131484aa11",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-11066_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 180615
+      },
+      "sha256": "7dfd27a274e5b1c1023157335070e5a161b14368b55e3420cdd1ea871cbcee45",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 598904,
+      "instance": "django__django-11087",
+      "path": "swe-bench/20241025_composio_swekit/django__django-11087_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "34af26fd30a0be65799d409068d3947d",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-11087_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 598904
+      },
+      "sha256": "2ff23065e72a5180c7731e23aa050c359362e89467cfebeac4da63ec28d2a09f",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "composio_swekit",
+      "bytes": 435549,
+      "instance": "django__django-11095",
+      "path": "swe-bench/20241025_composio_swekit/django__django-11095_traj.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "57affa8d73d0120deafba35d200da22e",
+        "key": "verified/20241025_composio_swekit/trajs/django__django-11095_traj.json",
+        "last_modified": "2026-01-06T06:22:33.000Z",
+        "size": 435549
+      },
+      "sha256": "6ff27540e6bcd6ea797ec69b881c6adf896337c706603e3521cc069e46bbf5f2",
+      "submission": "20241025_composio_swekit",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 113415,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-12907.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "9d38926a24e20a8ac8bc66d0df9dd96a",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-12907.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 113415
+      },
+      "sha256": "fdbd529494083b9e7a5de4a387645ea0f554554974822818bf89531c051fe30a",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 49893,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-13033.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "a610c2021e246ab27ee41906ee4a570b",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-13033.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 49893
+      },
+      "sha256": "ff9a510596ec74b97b3649111cbc18190d3409d8bbf1b3c3513cbdeafe12a45d",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 29261,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-13236.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "7a4e23a7e27ff23ca32b89362322e6c8",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-13236.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 29261
+      },
+      "sha256": "bc2487b8011aa58142954c185e0b10e8d837ec03363100b30c92db160420badd",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 249657,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-13398.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "36747c1010b0db28468991a7b2a16a9f",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-13398.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 249657
+      },
+      "sha256": "a97ea119d0d712cd38859248aa3953637a31d8782d91075d8f0f104d92aba1a9",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 98096,
+      "instance": "astropy__astropy-13453",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-13453.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "eeca9c1d192a997614d622f6038bf05f",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-13453.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 98096
+      },
+      "sha256": "7c91ba66525189df458e76272759daa0424c0f1fae1f1848ca4fbb9c16e8fc47",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 71338,
+      "instance": "astropy__astropy-13579",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-13579.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "7768120b77786d5ff2d02b8dd27f7560",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-13579.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 71338
+      },
+      "sha256": "29217844b1159817b456284bd36f1cece9dabe505682ef8f009ec06735078892",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 66681,
+      "instance": "astropy__astropy-13977",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-13977.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2bde9f93defd6bf87d38c4a3cdc77e04",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-13977.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 66681
+      },
+      "sha256": "5101f598faf349efe140e6e00cd36a36c2a01ad9478bef3c65ef0d21b09a19e8",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 28139,
+      "instance": "astropy__astropy-14096",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14096.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "509ba6bb4f8c3af0c8b3e3cfb040d76b",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14096.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 28139
+      },
+      "sha256": "7890aff8dc702d4f9bdc3a66796b511e56cd76287c68f90f72267de7333740c6",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 77270,
+      "instance": "astropy__astropy-14182",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14182.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "7251ae1424b35310822ee3b715758d53",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14182.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 77270
+      },
+      "sha256": "9ad6106532beea4aab5792c8ad64fd4b8edf4eca8c85de84dd07d327ed7e343d",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 13775,
+      "instance": "astropy__astropy-14309",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14309.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f1585e43c5db47120b91ead311d76d9d",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14309.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 13775
+      },
+      "sha256": "97892fd4d4991bc3853b8666f393b5827a78d5e803a85e67a0e90ff52565cdab",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 36387,
+      "instance": "astropy__astropy-14365",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14365.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6ba6d3bee82e017ef7cf26cd4e3a2b43",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14365.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 36387
+      },
+      "sha256": "5cfa462f5a54b13694ba6d04cc4364b75d13b6b2a110e381c865945a4f34262c",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 92086,
+      "instance": "astropy__astropy-14369",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14369.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d9ae88d85f004217a238d07a58688fb4",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14369.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 92086
+      },
+      "sha256": "ad6fde50f7aeea53851e19ac323df1165a04f75cb283d6be36f2c971da1a1c04",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 32881,
+      "instance": "astropy__astropy-14508",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14508.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "919ec40c590f9b2c6c77fd284308e4d4",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14508.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 32881
+      },
+      "sha256": "f8d96cce087189f1be9fa7ba3dd45850a1271e6891acf7e7ef41a718f7c690b3",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 75931,
+      "instance": "astropy__astropy-14539",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14539.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6f4dd636942d011be646c4e14387232d",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14539.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 75931
+      },
+      "sha256": "a78be8e500471370b21e72fdea0d361aeaa394690119c833247fa2b3bcf03b59",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "marscode-agent-dev",
+      "bytes": 77525,
+      "instance": "astropy__astropy-14598",
+      "path": "swe-bench/20241125_marscode-agent-dev/astropy__astropy-14598.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "c4734f38a774342ccb6ef1fc6f944ede",
+        "key": "verified/20241125_marscode-agent-dev/trajs/astropy__astropy-14598.json",
+        "last_modified": "2026-01-06T06:24:42.000Z",
+        "size": 77525
+      },
+      "sha256": "33647a467235230150a6d08feaaf428a72c52f1d989f82d5f8f4b0790d184267",
+      "submission": "20241125_marscode-agent-dev",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 28596,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/attempt_0/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "48edb75d8a3d295a2334c4950ac3f01d",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/attempt_0/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 28596
+      },
+      "sha256": "d27c8b5bc0fc48932a6920f028eec1d1653a30fa514c10d3e77d76598cd77d6c",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 506,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/attempt_0/patch_0.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "42f3a4f9bbc3b24d61147eeb6d0fce9a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/attempt_0/patch_0.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 506
+      },
+      "sha256": "d024df6c8d482695a1be15dc75343b38db476fcfd8b8c2c3a004b9dcf77ccfba",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 8040,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/attempt_0/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6f2d256594092591b2dc6173b97ff917",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/attempt_0/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 8040
+      },
+      "sha256": "fb738ff44ba2bc94aea39df12831de6997b3d5066bcbf8f1882becf857ecfc19",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 37,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/attempt_0/regression_test_result_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad2c2ee2d58139d24b07ca94372e2e15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/attempt_0/regression_test_result_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 37
+      },
+      "sha256": "3d75ac201a6d8c01e151a20b30ff524e6920d011da4cd7ed33e4a697934aba72",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 10954,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/attempt_0/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "10472c7b1038bb2a71f0c3a597c854c2",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/attempt_0/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 10954
+      },
+      "sha256": "966f69986cfa6f004b47b7f012f4be6dcd8cab3fa645b5f41c7d34e5f494ab7b",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 8104,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/attempt_0/review-patch_0-reproducer_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d1f911ad852d0264c67076dd0f3f6e37",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/attempt_0/review-patch_0-reproducer_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 8104
+      },
+      "sha256": "9ca4140a8ad761eb793c730539ed933d9f532923b64ebe09972045d7aaafedcc",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 94,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-12907/selected_patch.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "a990d6663b5368fa8825f0e82c839a71",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-12907/selected_patch.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 94
+      },
+      "sha256": "ac97a550dbb8083704ee60920a64bd8e7401074dddb22abc38e3540aa26ea43c",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 31727,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2fef40ef5a45612f237432a17a271043",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 31727
+      },
+      "sha256": "0affd73c0dfff52e7519c43773f16dcd4c634c4374ad0fb95c35da2a4856cd0d",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 1802,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/patch_0.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b5f4a4c01cdfe51f77daa7a56a2417f8",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/patch_0.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 1802
+      },
+      "sha256": "e1e5f1086610ebdc687a584a2f2e10ede2789df8fc5da6d1c099822524c7f761",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 12935,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6e522c6c13343a76dc9c955496e7c4a9",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 12935
+      },
+      "sha256": "8c9a562119dd4c1842274c7d22a18948d9b2444a7133cefe4f1a5e245eb85d6d",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 38,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/regression_test_result_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "67781cffded556cecb5ae1d0c237fa2a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/regression_test_result_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 38
+      },
+      "sha256": "67574107c03fc47a8d93ef3f32006c14d0475ec83198fce910d669d12d790dbf",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 21569,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "621bdcdc1ddb11329970cd33c1318693",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 21569
+      },
+      "sha256": "e72f8e3e342281f6b584c4300ddc8c3b9689ef66a11ffffab35ccf0ad0f119a2",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 15555,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/review-patch_0-reproducer_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "1accff9a6dd1f93a1970b8f38e4c05e2",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/review-patch_0-reproducer_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 15555
+      },
+      "sha256": "5a010bda34a6cc08a42708d5e04775d6b406c97dbbf4d22864fae511291f8ffb",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 15352,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_0/review-patch_0-reproducer_2.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f5a740aabeb8cfadc25194203fe18fad",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_0/review-patch_0-reproducer_2.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 15352
+      },
+      "sha256": "3936b7708137b3fcfb52564f1f2f20f7af5b195b33c48cc5d847df39635ddf32",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 21501,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "8fb1191069fc97873c9ba056b4d6f374",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 21501
+      },
+      "sha256": "e4e0ce0c34b28ddb67bb6f39a6e37e8971fc56a6e723d0a8e7ac33824fd366cb",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 1210,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/patch_0.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "4afdff8ae9d5ba36f1e35599a92b3b27",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/patch_0.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 1210
+      },
+      "sha256": "c758992152af1020235cf59c1369198abb074372080e3570ac52e127dee562a1",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 10627,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "881bb4037d1237fef0340910db88db47",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 10627
+      },
+      "sha256": "342938948388f74cb5a1b9fd1fe420f18c004ebe2ab77aa634df206f16cbaf7d",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 38,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/regression_test_result_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "67781cffded556cecb5ae1d0c237fa2a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/regression_test_result_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 38
+      },
+      "sha256": "67574107c03fc47a8d93ef3f32006c14d0475ec83198fce910d669d12d790dbf",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 22711,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "546bfa0fb4cac321fba53c889135152e",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 22711
+      },
+      "sha256": "a552228a20a7ce033a76aa8bf73806b54bdf1a294059125336ec23cbf3d725e0",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 15289,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b722e1060466b12d3c5dafcd672c9ad5",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 15289
+      },
+      "sha256": "9fb6f86e853c22c1d458e2349d6807a9cff609b41472cedc93f84059bb43cf64",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 18979,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_2.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "8a73a2da03a4e8383c04151641be076a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_2.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 18979
+      },
+      "sha256": "86a496215eb27e07a65aff79f86dfb95129b14d1b056bdce6306208010ec21e0",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 18807,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_3.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "8453b4a3c45ba7bc381ba0d01130e2fd",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_3.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 18807
+      },
+      "sha256": "221dd6e136dc4a5a192e7a4a9a4921ed3e41be82e0d4d556c7ec4753a9554bce",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 17196,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_4.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b16201333ea635d8e347cacfa98330a8",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_1/review-patch_0-reproducer_4.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 17196
+      },
+      "sha256": "13d505f2943b8c8c4ecf23f49ceba35e4eb54fd1996e57607771e2dbf304e9f3",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 26874,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_2/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "4fd25933dc164f2075779952ddef8dd1",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_2/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 26874
+      },
+      "sha256": "a0eaf9501b59a253bfedf6b0c9db8d1dae8cd8aa19758f9558685840f72000b8",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 1880,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_2/patch_0.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b01d6d07896124bfbcee354019f55498",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_2/patch_0.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 1880
+      },
+      "sha256": "2d2f302205ba030d44786a786f4a613e1e4689b7f7c467eb8abf1997ff78983a",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 13203,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_2/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f3eb37106ffd60f7d6c5e332a012fc75",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_2/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 13203
+      },
+      "sha256": "1ab1ffe0ae47e264011a94e8b852349d6ced57f4d27398ea51e6fea4fce76e95",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 38,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_2/regression_test_result_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "67781cffded556cecb5ae1d0c237fa2a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_2/regression_test_result_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 38
+      },
+      "sha256": "67574107c03fc47a8d93ef3f32006c14d0475ec83198fce910d669d12d790dbf",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 32798,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_2/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6fa5d8612953fb09980a93370e0daacc",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_2/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 32798
+      },
+      "sha256": "aeebcdc84f37f2ebd81bc7ee2f5e1c234718281f17ddfda2f6b43cf14c8a97bc",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 18133,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/attempt_2/review-patch_0-reproducer_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "45fff95f149c1843e66eb8dac9bc99cf",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/attempt_2/review-patch_0-reproducer_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 18133
+      },
+      "sha256": "e73cbea97d95432d9390ab3cfcc5802779d96bfb25a6720d5b128d56e1575787",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 722,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/selected_patch.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "fa75d06c2c4bf2f95ccffec92aa9009b",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/selected_patch.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 722
+      },
+      "sha256": "3d03820548e0e3c6b5059c2812345f3ab6b35147824172bdc55d69acf410bbed",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 15438,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13033/selection_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "40d1f8b9996763dba6e64fc86417b962",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13033/selection_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 15438
+      },
+      "sha256": "a8f326aab0c1fc780f08ad61c09ddb8f458d96935ba2967fd834abbdccb048f9",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 5021,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "b02c0f4f7b4f5c92503dbe3387b121ed",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 5021
+      },
+      "sha256": "ccd90c280defe952c3f642d0d01420eb603f4ae7229ee2f3833f15e43c1fc3f0",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 746,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/patch_0.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "37921c6b93a3040c9769acbd2702751d",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/patch_0.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 746
+      },
+      "sha256": "de0bed3ed383e6847eec7d2cb27e38ae4d26abfdb52b4f7ec2730a3707f2db80",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 1469,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/patch_1.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "19a25d66bc06f51a57b04c0d7eeaa578",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/patch_1.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 1469
+      },
+      "sha256": "6d1ba09aa16169b759575b963e17f235bf98785c578f9bf69b869bebb4f008db",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 881,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/patch_2.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ca0abdd58643253187f3b9ec1fa17283",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/patch_2.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 881
+      },
+      "sha256": "37dc9e0dcaf12074bca0a3bb89d1a4d66cb8857154294c99082fc1e3beac6068",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 15915,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "1c542ea78d702d37ad9bea5fceb99fd2",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 15915
+      },
+      "sha256": "7be2e3077bdd4d2f44c4a4847ab6dc3538e9467a78ec85874ecac216f180291c",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 37,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/regression_test_result_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad2c2ee2d58139d24b07ca94372e2e15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/regression_test_result_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 37
+      },
+      "sha256": "3d75ac201a6d8c01e151a20b30ff524e6920d011da4cd7ed33e4a697934aba72",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 37,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/regression_test_result_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad2c2ee2d58139d24b07ca94372e2e15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/regression_test_result_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 37
+      },
+      "sha256": "3d75ac201a6d8c01e151a20b30ff524e6920d011da4cd7ed33e4a697934aba72",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 37,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/regression_test_result_2.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad2c2ee2d58139d24b07ca94372e2e15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/regression_test_result_2.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 37
+      },
+      "sha256": "3d75ac201a6d8c01e151a20b30ff524e6920d011da4cd7ed33e4a697934aba72",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 446365,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "cf953cf9e65e4c7283e5235c73a5345b",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 446365
+      },
+      "sha256": "f26e634910a7559c53a144e7f75bb8204958d8acf23269f18add8f3ecdded5ad",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 9779,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/review-patch_0-reproducer_2.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "055ac4d5f06dfa34e513f368ba8e27a2",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/review-patch_0-reproducer_2.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 9779
+      },
+      "sha256": "0263aefe2d09d68839657896a9bb65f6893a15a8ea0a27c0b57b11cd948338b9",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 10504,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/review-patch_1-reproducer_2.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "904112f2bf64cf3e17b9eae2f21abdb8",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/review-patch_1-reproducer_2.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 10504
+      },
+      "sha256": "f8ca157084f606df5feaf68bdd8157653fba8b174b5843be783014e3195b2830",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 8784,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/attempt_0/review-patch_2-reproducer_2.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "3b2d52e46968a1194b50b201e1cbfaf1",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/attempt_0/review-patch_2-reproducer_2.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 8784
+      },
+      "sha256": "19143da82bf46b78eb58e81a92d530737a5650eac32aa74421d36cca237fefbd",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 94,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13236/selected_patch.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "559a02336f0767d8fe98ccff2f004b96",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13236/selected_patch.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 94
+      },
+      "sha256": "cb232680d46481584d13c38547d6cd4fb361683fe1f7db10bc40f6f5d77dda77",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 100508,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_0/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "15c7ece7f3fa60c9d2e88c075ee8836b",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_0/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 100508
+      },
+      "sha256": "6f449d61cedbf668a2e61e5b033fff7e6ff0e87b65836d3997ee65735a7663b6",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 2916,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_0/patch_0.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "4aeb0cd318310cd9174f16b28002d1ac",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_0/patch_0.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 2916
+      },
+      "sha256": "6387b15c8283b0c9d9beab7f36e99a587e9311afa6827288140948ce813b8d30",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 36991,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_0/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "359a61aa7ff5f25055c5c79855f93b15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_0/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 36991
+      },
+      "sha256": "6f59f2d80568affcfbd9c95ff26e4a9bae829e394e00d4ac8ff8b40f3a1ed99d",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 37,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_0/regression_test_result_0.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad2c2ee2d58139d24b07ca94372e2e15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_0/regression_test_result_0.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 37
+      },
+      "sha256": "3d75ac201a6d8c01e151a20b30ff524e6920d011da4cd7ed33e4a697934aba72",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 179390,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_0/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ec946d1fe429b6ab6a6153e202780f56",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_0/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 179390
+      },
+      "sha256": "eed6f8679d61f03760d1995f0fc26d01500a53636d2e5ceedd32109a75451d2f",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 22555,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_0/review-patch_0-reproducer_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "8459bf081ab52d0785da8b161ef5be07",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_0/review-patch_0-reproducer_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 22555
+      },
+      "sha256": "27b3e7c39e7479b7d898671ccd731583645c3147bb4140ea8acc0d172ba97707",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 51747,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d9af38c4538bcb4a824e496eb3e2a3d4",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 51747
+      },
+      "sha256": "bb6da740bf4c1f8f8679d1ddabc182721f35b0c86ca7cac040b290a6c09574ea",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 2703,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/patch_3.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "e6f00add69c02ae874cafa70145e5a64",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/patch_3.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 2703
+      },
+      "sha256": "979de60d1078c59323f6f865c2a4f23789af8628daafd8dce2e93eef5fb9959e",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 1283,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/patch_6.diff",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "cd125734aa9ce8c69558c18991288c34",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/patch_6.diff",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 1283
+      },
+      "sha256": "26dc92d60ad80c7d6f3906372b4dffd44cf49b3dbdbfed1672284be1d792aa1c",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 34296,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/patching_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2bb4149685e60538aef677c16c74c82f",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/patching_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 34296
+      },
+      "sha256": "a3cd5784233485e143df773c1370e67f4742373fd1e886283cb88978804e10db",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 37,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/regression_test_result_3.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "ad2c2ee2d58139d24b07ca94372e2e15",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/regression_test_result_3.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 37
+      },
+      "sha256": "3d75ac201a6d8c01e151a20b30ff524e6920d011da4cd7ed33e4a697934aba72",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 38,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/regression_test_result_6.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "67781cffded556cecb5ae1d0c237fa2a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/regression_test_result_6.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 38
+      },
+      "sha256": "67574107c03fc47a8d93ef3f32006c14d0475ec83198fce910d669d12d790dbf",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 235731,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/reproducer_agent.jsonl",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "65d36351f87b561362c1d257d663c477",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/reproducer_agent.jsonl",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 235731
+      },
+      "sha256": "7e6022e2d867456b9e3c934d8cef09166a2a9e21ebaa8a00fba37e170b5688ef",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 24945,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/review-patch_3-reproducer_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d5861ece045e8d05919717ccea534abe",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/review-patch_3-reproducer_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 24945
+      },
+      "sha256": "abd719ffc89a4b8230c709b9c5e24b2cf103486e0e5611112cf8f50e2e974b1b",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 22172,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_1/review-patch_6-reproducer_1.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2cdeb56bf6e9e1aad45d6b21d273e77a",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_1/review-patch_6-reproducer_1.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 22172
+      },
+      "sha256": "975a2b47c4a85e66c3d3b7b06a68d6f92a7e5605227f565b13413d027065931a",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "bytes": 64810,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/astropy__astropy-13398/attempt_2/context_retrieval_agent.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0f3f9f850f2bb77dfb3b49a231e884ce",
+        "key": "verified/20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022/trajs/astropy__astropy-13398/attempt_2/context_retrieval_agent.json",
+        "last_modified": "2026-01-06T06:26:26.000Z",
+        "size": 64810
+      },
+      "sha256": "ed2c86ce7457686fda706aa534394ec1bec402a1f220745a9ac297504e32e658",
+      "submission": "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 206299,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-12907.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "74615e9736c0455381062871288e089c",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-12907.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 206299
+      },
+      "sha256": "c2e70076e71ec96ee4baa403090b703652c8efe43dc1bc07888fd7a68779964f",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 124751,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-13033.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f54419328d04d51508ea83378d8954b4",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-13033.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 124751
+      },
+      "sha256": "871c189c84c9f60922077e58f56f1ebb9aee6f8e04fd49dc1da84b038d9f35c3",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 130496,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-13236.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "33d9cbd27bcc06b6156569d9803378b6",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-13236.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 130496
+      },
+      "sha256": "9c139a2939f58206c355d45736b3b3aa0a57d06b58a6e8db9b102c7653e89df2",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 151120,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-13398.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0f592eb017836c8fb819c1021305b918",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-13398.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 151120
+      },
+      "sha256": "f1b3df143d19703b6c5a0b7f418b69ea04c8f883d3b08a6b2d43c317ccc7ed17",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 238255,
+      "instance": "astropy__astropy-13453",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-13453.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "347e28cf445c68fcd38f08a78c99a982",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-13453.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 238255
+      },
+      "sha256": "e853195cc212cd221b59719cd9603daf40f7455129de00f3baa03557e4ad6fdb",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 219412,
+      "instance": "astropy__astropy-13579",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-13579.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "9e9e369399cb927dad0014fc52c6dc6f",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-13579.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 219412
+      },
+      "sha256": "99c7d6d70e816c607f01294f99993d25e86bc0f9a8f24f73e81a6e99cdbea035",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 110894,
+      "instance": "astropy__astropy-13977",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-13977.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "bf7b05215dcf8e4a8b590b8b84f10920",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-13977.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 110894
+      },
+      "sha256": "112765a9441a5293c9fb61d801385f463d643f0704425184c3f67fe139959211",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 137319,
+      "instance": "astropy__astropy-14096",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14096.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "7f6a83157d2cf8e4e5b87c1caeeaaa38",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14096.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 137319
+      },
+      "sha256": "0bac59aa4bc5a22eda00c4eb8c1078cb9b494e22a6be7c02a67979ce4a6b96cc",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 143000,
+      "instance": "astropy__astropy-14182",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14182.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2078d1ac60f25d6bf37298db94a998ce",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14182.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 143000
+      },
+      "sha256": "f8a27995f48fef0eb4e3326ca48f942d87c6721a14ccf22b43f30a0f3d4c999e",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 116237,
+      "instance": "astropy__astropy-14309",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14309.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "bd1d9208b115b7899fbbe8825c8b6e6e",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14309.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 116237
+      },
+      "sha256": "4395d7170d337cfd94bb3174f5c25015ba769c5591e5a72cc812b19004476123",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 112086,
+      "instance": "astropy__astropy-14365",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14365.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "7913cb857173f5a6cce9684bd14dbeec",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14365.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 112086
+      },
+      "sha256": "27bd5c6195e889005f67061422dc8de271832bbba6861d3b8999538a8f610d42",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 157864,
+      "instance": "astropy__astropy-14369",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14369.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "00f9bb8988d2e27796c51032bbe27885",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14369.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 157864
+      },
+      "sha256": "7af5f098b509b4acedec2847d110492f960173099fce932cf09d6eefac790ac4",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 142106,
+      "instance": "astropy__astropy-14508",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14508.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "2cee53c56403bcc92ff39f76d87a93bf",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14508.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 142106
+      },
+      "sha256": "e424a5bba7d776bc9aca3be8a1b65da566df8c9774fc060207d9979ed187de45",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 125269,
+      "instance": "astropy__astropy-14539",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14539.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "d66e81986f0eb7a689529b315ae2b4dd",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14539.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 125269
+      },
+      "sha256": "480cfa1377bae05b0a61763f8f2132fd3f740665289ce5b846833da150643bb7",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "openhands",
+      "bytes": 226446,
+      "instance": "astropy__astropy-14598",
+      "path": "swe-bench/20250415_openhands/astropy__astropy-14598.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0fa8e7d63c42b2ff67644fbb32e910d8",
+        "key": "verified/20250415_openhands/trajs/astropy__astropy-14598.json",
+        "last_modified": "2026-01-06T06:28:39.000Z",
+        "size": 226446
+      },
+      "sha256": "639f433786db041ca2e6edbe8dda3e474d8c8cf100e107fb35398fb36294bd80",
+      "submission": "20250415_openhands",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 64077,
+      "instance": "astropy__astropy-12907",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-12907.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6789df38e45b137bc04d133c1d1c5aa6",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-12907.json",
+        "last_modified": "2026-01-06T06:33:50.000Z",
+        "size": 64077
+      },
+      "sha256": "b77e038b4977a92d284456bab56fc41918c6cd3f676fcf486436340b1be91052",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 108025,
+      "instance": "astropy__astropy-13033",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-13033.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "1c6ca1be6d5d7b3dc4487d045470021f",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-13033.json",
+        "last_modified": "2026-01-06T06:33:50.000Z",
+        "size": 108025
+      },
+      "sha256": "a4a97eab405f726a8806083aa2f6866b38da5a44de30b97526067258d79b610b",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 38717,
+      "instance": "astropy__astropy-13236",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-13236.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "6b369e4daa8c3017b716b05fe1ffce08",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-13236.json",
+        "last_modified": "2026-01-06T06:33:50.000Z",
+        "size": 38717
+      },
+      "sha256": "a7ffd6f309ffd3fcc38dcc13d25877285ffec60210094fc3e4e8041565a001b0",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 78050,
+      "instance": "astropy__astropy-13398",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-13398.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "e4cf55bdfaed4473ed973c2d074e6dd4",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-13398.json",
+        "last_modified": "2026-01-06T06:33:50.000Z",
+        "size": 78050
+      },
+      "sha256": "6594e5cf7e849e2c5ce82ccffcb4bf56a74a4d7d1d7228a81d08bcc72be6e329",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 99186,
+      "instance": "astropy__astropy-13453",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-13453.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "c5f0eb5d42e483d7ceb6f35954774068",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-13453.json",
+        "last_modified": "2026-01-06T06:33:50.000Z",
+        "size": 99186
+      },
+      "sha256": "25fd4e785fa3db78463ee182ecdf9ac04b1c6cbc0895f5a491e14bf3c81de0b4",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 97983,
+      "instance": "astropy__astropy-13579",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-13579.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "089e7742f98ec9ef8ebf5b39eacc39e6",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-13579.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 97983
+      },
+      "sha256": "18c6f689dcebdf2fa7406b9c1f3cb09d450154aecac54f5c981d0d73f4cf7bbd",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 89481,
+      "instance": "astropy__astropy-13977",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-13977.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "47193dd304f813b39f42eb3896bd8433",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-13977.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 89481
+      },
+      "sha256": "a679905be78e212eeda7a837681f7943307c7125a7afbb27ade1ffc44f4a9d6b",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 81583,
+      "instance": "astropy__astropy-14096",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14096.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "c77e75a98d5bfafcd3000c11d53507fe",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14096.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 81583
+      },
+      "sha256": "4f0eb078f85813113eadcc54aac1803b99934d83a57a5b78b69260c615065a3e",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 74054,
+      "instance": "astropy__astropy-14182",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14182.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "e0f2c769e08278d90963c0322cf817c2",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14182.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 74054
+      },
+      "sha256": "8787ba15d61364442827cd7e57de8b3d12f89ed5f812e6a9c84ca3bea7b453a8",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 53885,
+      "instance": "astropy__astropy-14309",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14309.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0ee5d5e844899c9c4fa0d50fdc055ce0",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14309.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 53885
+      },
+      "sha256": "e0e13cc72344c9237cb88cf46ba2a3aaea6b6d1b4fe00386327ad0afd8c33c3f",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 58899,
+      "instance": "astropy__astropy-14365",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14365.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f5725a3655f2d06af7ae87d5a5e51b11",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14365.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 58899
+      },
+      "sha256": "0d5f464b249a597f393aaa1db62d0a6e428dfa94a32c563c48c22f6ec5f7618d",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 73495,
+      "instance": "astropy__astropy-14369",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14369.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "dd2fff1b66716fb7dab665cf3e2849d2",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14369.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 73495
+      },
+      "sha256": "ef38b3d60b9c56d8f79caa692912f364fffb2b6f5c8732617e691b70f50a4d51",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 72522,
+      "instance": "astropy__astropy-14508",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14508.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "f5113397b6cf635df417fde97f070d3a",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14508.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 72522
+      },
+      "sha256": "f25015e115b9cf7494269a0c3689202a882413f423e0f682aff6740190fbf180",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 93644,
+      "instance": "astropy__astropy-14539",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14539.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "0b8db410453cc0b759a0b836111124b2",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14539.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 93644
+      },
+      "sha256": "e38033046ac7584d1a0c9b27d4a2624f88024161ab09f4822d21c5bddd758f02",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    },
+    {
+      "agent": "Skywork-SWE-32B",
+      "bytes": 96591,
+      "instance": "astropy__astropy-14598",
+      "path": "swe-bench/20250616_Skywork-SWE-32B/astropy__astropy-14598.json",
+      "s3": {
+        "bucket": "swe-bench-submissions",
+        "etag": "276e41c3098374569ed6f29ff9f0edaf",
+        "key": "verified/20250616_Skywork-SWE-32B/trajs/astropy__astropy-14598.json",
+        "last_modified": "2026-01-06T06:33:51.000Z",
+        "size": 96591
+      },
+      "sha256": "9d4ff019b75d83bdc93ea5b143b98b02cb13641d3b3a43f09839d948858db817",
+      "submission": "20250616_Skywork-SWE-32B",
+      "suite": "swe-bench"
+    }
+  ],
+  "n_files": 188,
+  "s3": {
+    "bucket": "swe-bench-submissions",
+    "listed_at_utc": "2026-09-01T23:41:46+00:00",
+    "listing": "anonymous ListObjectsV2, key order"
+  },
+  "schema": 1,
+  "selection_note": "rule RECOVERED from local set vs full listing; null = hand-selected, rule not recoverable. Listing order is UTF-8 key order, so first-N in listing order is the alphabetically-first N instances.",
+  "swe_bench_selection": {
+    "20240820_honeycomb": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "n_local": 15,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 500,
+      "s3_objects": 500
+    },
+    "20241016_composio_swekit": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "n_local": 30,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 498,
+      "s3_objects": 498
+    },
+    "20241025_composio_swekit": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "n_local": 30,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 499,
+      "s3_objects": 499
+    },
+    "20241125_marscode-agent-dev": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "n_local": 15,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 500,
+      "s3_objects": 500
+    },
+    "20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "n_local": 4,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 500,
+      "s3_objects": 8763
+    },
+    "20250415_openhands": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "n_local": 15,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 500,
+      "s3_objects": 500
+    },
+    "20250616_Skywork-SWE-32B": {
+      "listing_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "n_local": 15,
+      "not_in_listing": [],
+      "rule": "first-N in listing order",
+      "s3_instances": 500,
+      "s3_objects": 500
+    }
+  },
+  "traces_dir": "traces"
+}

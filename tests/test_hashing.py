@@ -1,6 +1,18 @@
 import json
 
-from linear_ceiling.hashing import canonical_bytes, hash_json_file, hash_json_obj
+from linear_ceiling.hashing import (
+    canonical_bytes, hash_json_file, hash_json_obj, sha256_file_bytes, sha256_text_file,
+)
+
+
+def test_text_file_sha_is_newline_normalized_and_equals_raw_for_lf(tmp_path):
+    lf, crlf = tmp_path / "lf.toml", tmp_path / "crlf.toml"
+    lf.write_bytes(b"[e7]\nread_mult = 0.1\n")
+    crlf.write_bytes(b"[e7]\r\nread_mult = 0.1\r\n")
+    assert sha256_text_file(lf) == sha256_text_file(crlf) == sha256_file_bytes(lf)
+    assert sha256_file_bytes(crlf) != sha256_file_bytes(lf)          # the raw digest is what differed
+    lf.write_bytes(b"[e7]\nread_mult = 0.2\n")
+    assert sha256_text_file(lf) != sha256_text_file(crlf)
 
 
 def test_canonical_bytes_sorts_keys_and_ends_with_lf():
