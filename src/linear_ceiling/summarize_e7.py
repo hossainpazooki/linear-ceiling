@@ -35,7 +35,7 @@ from linear_ceiling.e7_manifest import (
 from linear_ceiling.e7_swe import MODEL_KEYS
 from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
 from linear_ceiling.e7_usage import validation
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 
 _TOL = 1e-6   # relative, floats only
 
@@ -120,7 +120,7 @@ def summarize(cfg: E7Config) -> str:
         raise ValueError(f"{rp} does not exist; E7 has not run (nothing to summarize)")
     rep = json.loads(rp.read_text(encoding="utf-8"))
     _walk_nan(rep, "report")
-    if rep.get("config_sha256") != sha256_file_bytes(cfg.config_path):
+    if rep.get("config_sha256") != sha256_text_file(cfg.config_path):
         raise ValueError("config/e7.toml changed since the run (config_sha256 mismatch); rerun or restore the config")
     _verify_provenance(cfg, rep)
 

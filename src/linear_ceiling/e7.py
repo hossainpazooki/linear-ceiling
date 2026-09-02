@@ -34,7 +34,7 @@ from linear_ceiling.e7_swe import MODEL_KEYS
 from linear_ceiling.e7_taxonomy import classify, frequencies, h_e7a
 from linear_ceiling.e7_traces import coverage, meets_floor, suite_floor
 from linear_ceiling.e7_usage import validation
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 
 REQUIRED_ENTRIES = ("### 0006 ", "### 0007 ")
 COST_BASIS = ("visible messages only -- every cost and token figure is a LOWER BOUND on what the "
@@ -92,7 +92,7 @@ def build_report(cfg: E7Config) -> dict:
     hr = headroom_rows(corpus.trajectories, corpus.texts, cfg.pricing["read_mult"])
     tax = taxonomy_block(corpus, hr, cfg)
     return {
-        "config_sha256": sha256_file_bytes(cfg.config_path),
+        "config_sha256": sha256_text_file(cfg.config_path),        # newline-normalized: CRLF checkouts agree
         "manifest_sha256": manifest_sha256(manifest_path(cfg)),    # canonical-JSON hash (entry 0024)
         "trace_files": {corpus.relkey(cfg.traces_dir, f): sha256_file_bytes(f) for f in corpus.files},
         "cost_basis": COST_BASIS,
