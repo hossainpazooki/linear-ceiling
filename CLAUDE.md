@@ -24,6 +24,8 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml + config/e7-manifest.json are committed
 .venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # replay over ALL corpora under traces/ (gitignored); refuses if disk != manifest
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e7          # fail-closed: recomputes EVERY E7 figure from RAW traces (all 3 suites, headroom, reported usage); refuses if disk, report or manifest disagree
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e7 --strategy-override composio_swekit=exact   # entry 0022's sensitivity as a flag (after full verification; `sensitivity` in recon.json; ships only in the 0009 successor)
+LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity.py   # the 0022 pin (565,025 / 255,690,850 = 0.2210%) against the real corpus; skipped without traces/
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e7 --overlap-null --cache-aware-ratio   # entry 0024 recon (after full verification): null controls + H-E7a under four denominator readings -> results/e7/recon.json
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
@@ -85,7 +87,7 @@ amended by **0023** before any prefill — verdict statistic is median oracle se
 fraction f*(τ_K) over included handoffs, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50, τ_K = 1 − 0.6814 from
 the archive; pooled R² is a bridge and decides nothing; built, gated on the 0023 upstream re-pin
 (`--per-token`; 0019's `7e41f792` is its ancestor); awaiting the A100 run — see
-`docs/2026-09-02-e9-gpu-runbook.md`; verdict entry: **0025** per `docs/drafts/README.md`, the ONE place that allocates entry numbers — 0024 landed as Track B's corpus manifest). **Entries 0006–0023 are the
+`docs/2026-09-02-e9-gpu-runbook.md`; verdict entry: unnumbered until its script is staged — `docs/drafts/README.md` is the ONE allocator and numbers are provisional). **Entries 0006–0023 are the
 authority; read them whole before touching E7/E8/E9 code.** Per-token deviation is in R²'s own
 units (a token's share of unexplained variance), never a per-token percent error (0023). Every taxonomy class carries its own
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
