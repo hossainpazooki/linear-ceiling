@@ -210,3 +210,44 @@ def test_cli_write_and_check(tmp_path, monkeypatch, capsys):
     (cfg.traces_dir / "tau-bench" / "gpt-4o-retail.json").write_text("[]", encoding="utf-8")
     assert e7_manifest.main(["check", "--config", str(cfg.config_path)]) == 1
     assert "E7 MANIFEST REFUSED" in capsys.readouterr().out
+
+
+def test_fetch_restores_by_sha_and_refuses_a_mismatch(tmp_path):
+    """`e7_manifest fetch`: a manifest file with an S3 record is re-downloaded and left on disk
+    only if its bytes match the recorded sha256 and size; a tampered download writes nothing."""
+    import hashlib, io, json
+    from linear_ceiling.e7_manifest import fetch
+    from linear_ceiling.config import E7Config
+    traces = tmp_path / "traces"
+    good = b'{"a": 1}'
+    rec = {"path": "swe-bench/20240820_x/inst-1.json", "bytes": len(good), "suite": "swe-bench", "agent": "x",
+           "sha256": hashlib.sha256(good).hexdigest(),
+           "s3": {"bucket": "swe-bench-submissions", "key": "verified/20240820_x/trajs/inst-1.json", "etag": "e", "size": len(good)}}
+    tau = {"path": "tau-bench/gpt-4o-airline.json", "bytes": 3, "suite": "tau-bench", "agent": "gpt-4o",
+           "sha256": hashlib.sha256(b"abc").hexdigest()}
+    man = {"files": [rec, tau]}
+    cfg = E7Config(traces_dir=traces, results_dir=tmp_path / "r", pricing={}, thresholds={}, tokenizer={},
+                   lane_b_policy="x", config_path=tmp_path / "c")
+
+    class _Resp(io.BytesIO):
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+    calls = []
+    def opener(url):
+        calls.append(url)
+        return _Resp(good)
+    out = fetch(cfg, man, opener=opener, log=lambda *a: None)
+    assert out == {"restored": [rec["path"]], "already_present": [], "no_source": [tau["path"]]}
+    assert (traces / rec["path"]).read_bytes() == good
+    assert calls == ["https://swe-bench-submissions.s3.amazonaws.com/verified/20240820_x/trajs/inst-1.json"]
+    # second run: present and matching -> skipped, no request
+    out = fetch(cfg, man, opener=opener, log=lambda *a: None)
+    assert out["already_present"] == [rec["path"]] and len(calls) == 1
+    # tampered download: refused, nothing written, the good file untouched
+    (traces / rec["path"]).unlink()
+    def bad(url):
+        return _Resp(b'{"a": 2}')
+    import pytest
+    with pytest.raises(ValueError, match="do not match the manifest"):
+        fetch(cfg, man, opener=bad, log=lambda *a: None)
+    assert not (traces / rec["path"]).exists() and not list(traces.rglob("*.part"))

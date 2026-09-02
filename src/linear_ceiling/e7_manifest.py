@@ -32,6 +32,7 @@ import argparse
 import json
 import re
 import sys
+import hashlib
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -246,9 +247,44 @@ def selection_lines(manifest: dict) -> list[str]:
     return out
 
 
+
+def fetch(cfg: E7Config, manifest: dict, opener=urllib.request.urlopen, log=print) -> dict:
+    """Restore every manifest file that carries an S3 record by anonymous HTTPS GET, verifying
+    sha256 AND byte count against the manifest before the file is left on disk (a mismatch is
+    written nowhere and refuses). Files already on disk with the recorded sha are skipped.
+    Files without an S3 record (tau-bench, tau2-bench) are listed with their recorded sha so
+    they can be restored from their source and checked by `check`. Never overwrites a file
+    whose bytes already match; never leaves a partial file."""
+    done, skipped, no_source = [], [], []
+    for r in manifest["files"]:
+        dst = cfg.traces_dir / r["path"]
+        if dst.exists() and sha256_file_bytes(dst) == r["sha256"]:
+            skipped.append(r["path"])
+            continue
+        if "s3" not in r:
+            no_source.append(r)
+            continue
+        url = S3_BASE + urllib.parse.quote(r["s3"]["key"])
+        with opener(url) as resp:
+            data = resp.read()
+        if len(data) != r["bytes"] or hashlib.sha256(data).hexdigest() != r["sha256"]:
+            raise ValueError(f"{r['path']}: downloaded bytes do not match the manifest "
+                             f"({len(data)} bytes vs {r['bytes']}); nothing written")
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dst.with_suffix(dst.suffix + ".part")
+        tmp.write_bytes(data)
+        tmp.replace(dst)
+        done.append(r["path"])
+        log(f"restored {r['path']} ({r['bytes']:,} bytes, sha256 {r['sha256'][:12]})")
+    for r in no_source:
+        log(f"NO S3 SOURCE: {r['path']} -- restore from its suite's repository and match sha256 {r['sha256']}")
+    return {"restored": done, "already_present": skipped,
+            "no_source": [r["path"] for r in no_source]}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m linear_ceiling.e7_manifest")
-    ap.add_argument("cmd", choices=("write", "check"))
+    ap.add_argument("cmd", choices=("write", "check", "fetch"))
     ap.add_argument("--config", default=str(REPO_ROOT / "config" / "e7.toml"))
     ap.add_argument("--no-s3", action="store_true", help="write without the S3 listing (no selection record)")
     a = ap.parse_args(argv)
@@ -260,6 +296,10 @@ def main(argv=None) -> int:
             print(f"wrote {p}: {m['n_files']} files; sha256 {manifest_sha256(p)}")
             for line in selection_lines(m):
                 print(line)
+        elif a.cmd == "fetch":
+            out = fetch(cfg, load(cfg))
+            print(f"fetch: restored {len(out['restored'])}, already present {len(out['already_present'])}, "
+                  f"without an S3 source {len(out['no_source'])}")
         else:
             m = load(cfg)
             verify_disk(cfg, m)

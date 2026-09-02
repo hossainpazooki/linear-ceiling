@@ -20,6 +20,7 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e0_depth   # per-layer depth structure (entry 0006)
 .venv/Scripts/python.exe -m linear_ceiling.e7_manifest write     # NETWORK, once: hash traces/ + S3 keys/ETags + selection rule -> config/e7-manifest.json (commit it)
+.venv/Scripts/python.exe -m linear_ceiling.e7_manifest fetch     # NETWORK: rebuild traces/ from the committed manifest (S3 for SWE-bench, sha256+size refused on mismatch; tau files listed by sha for manual restore, LF-normalize a Windows clone)
 .venv/Scripts/python.exe -m linear_ceiling.e7_manifest check     # disk vs the committed manifest, both directions + bytes
 .venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml + config/e7-manifest.json are committed
 .venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # replay over ALL corpora under traces/ (gitignored); refuses if disk != manifest
