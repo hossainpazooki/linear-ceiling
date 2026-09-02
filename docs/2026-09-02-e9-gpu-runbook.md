@@ -98,7 +98,8 @@ cd ~/dev/linear-ceiling
 Exit 0 prints, in R²'s own units (0023): median f*(τ_K) over included handoffs with the band
 outcome (HOLDS ≤ 0.15 / DEGRADES ≥ 0.50), V and E9-cross alongside, δ_null, the seam profile,
 the own-norm diagnostic, and the bridge R² medians; `results/e9/summary.json` carries the depth
-profile and per-handoff rows. The H-E9 verdict entry (**0024**) is written ONLY from that
+profile and per-handoff rows. The H-E9 verdict entry (**0025** — number allocation lives in `docs/drafts/README.md`; 0024 went to
+Track B's corpus manifest) is written ONLY from that
 output, in the pattern of 0015/0020. A refusal is a finding, not an obstacle — paste it verbatim.
 
 ## If the queue is full / no GPU
