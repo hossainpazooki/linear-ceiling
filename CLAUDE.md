@@ -56,12 +56,21 @@ quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the s
 (gate + driver by subprocess; never imports kvt) · `summarize_e8` · `upstream_gate` (the ONE
 pin check: ancestor + invoked-paths-unchanged + clean — a later experiment's re-pin is not an
 older experiment's drift) · `e9_align` (0019 handoff slices + difflib matched blocks +
+<<<<<<< HEAD
 exclusions) · `e9` (gate + pre-batch controls + per-handoff dump/score/delete driver, checkpointed) ·
 `e9_pertoken` (entry 0023 arithmetic: centered delta in R²'s units, oracle f*(tau), seam distance
 b(t) + fixed bins, null pairing, band) · `summarize_e9` (alignments re-derived from raw traces;
 R² from recorded moments; per-token squares summed against the moments; keep-subset re-scored
 from fingerprinted tensors; tau recomputed from the archived mapper; controls checked; then f*,
 profiles, band) · `lint_scope` · `ledger_check`. Tests mirror modules under `tests/`.
+=======
+exclusions) · `e9` (gate + per-handoff dump/score/delete driver, checkpointed) · `summarize_e9`
+(alignments re-derived from raw traces; R² from recorded moments; keep-subset re-scored from
+fingerprinted tensors) · `lint_scope` · `ledger_check` (structure, entry chain, block diff
+`--against <rev>` so the TRAILING entry is immutable too, verdict-cell provenance — frozen map
+through 0022 + `verdict: H-XX = <VERDICT>` lines from 0024 on — and the manifest citation).
+Tests mirror modules under `tests/`.
+>>>>>>> b0e35d9 (feat(ledger_check): block diff vs base revision and verdict-cell provenance, in CI)
 `docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora

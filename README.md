@@ -144,9 +144,14 @@ registered; the measured basis is in the ledger.
    `seal verify` reports "no sealed predictions yet"; it stays in CI as infrastructure, not
    as evidence, and E8/E9 make no pre-fit claims and do not use it (0009, 0019).
 2. **Pre-registration** — verdicts stated against the rule as written; amendments are new
-   numbered entries; the entry chain makes silent edits to registered text fail CI. The
-   header/table above `## Entries` are editable commentary outside the chain, and a history
-   rewrite that regenerates chain or seal is locally undetectable.
+   numbered entries. What CI enforces (`ledger_check`): every entry block committed at the
+   base of a push or pull request is byte-identical afterwards (so the trailing entry is as
+   immutable as the chained ones), each entry's chain hash covers everything above it, and
+   every verdict cell equals the value set by the numbered entry that claims it (a frozen
+   provenance map through 0022, `verdict: H-XX = <VERDICT>` lines from 0024 on). Residual: a
+   squash-merge shows only a PR's net change, and a history rewrite regenerates all three
+   checks together — only the public remote's history catches that. The header/table above
+   `## Entries` stay editable commentary; their cells are protected by provenance, not by hash.
 3. **No unrecomputed numbers** — summarizers only, fail-closed, tamper-tested.
 4. **Experiments refuse until their rules are committed** — the E0/E7/E8/E9 runners read no
    data until the registering entries and their config are committed and unmodified.
