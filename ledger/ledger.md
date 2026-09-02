@@ -13,7 +13,7 @@ first clause is `NOT CONFIRMED` (entry 0004, E0); H-S1/H-S3/H-S4 carry `SHELVED`
 no experiment decided them; none is scheduled; the screen-validation line is CLOSED, entry
 0006); H-E7a is `NOT CONFIRMED` (entry 0015; corrected figures 0018; tokenizer sensitivity
 0022) and H-E7b `UNESTIMABLE` (entry 0015); H-E8 is `NOT CONFIRMED` (entry 0020); H-E9 is
-`unresolved` (entry 0019 — registered, gated, awaiting its run). From entry 0007 on, each entry
+`unresolved` (registered 0019, rule amended 0023 — gated, awaiting its run). From entry 0007 on, each entry
 records a `prior-entries-sha256:` over the entries section above it; from entry 0024 on, an
 entry that changes a verdict cell carries a machine-readable line `verdict: H-XX = <VERDICT>`
 (the cells above are otherwise frozen in `ledger_check.VERDICT_PROVENANCE`), and an entry that
