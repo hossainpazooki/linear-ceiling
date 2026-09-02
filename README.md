@@ -6,8 +6,10 @@ decided clause is scoped to a tied-embeddings vocabulary proxy and never general
 `docs/background.md`; the other hypotheses are `SHELVED`), and a **trace-replay
 measurement program** over agentic KV-cache workloads — registered, built, and replayed across
 three public corpora. The premise hypotheses are decided: **H-E7a `NOT CONFIRMED`**
-(mid-trajectory switch headroom is immaterial on public traces, so the motivation reverts to
-fleet mixing), **H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows any), and
+(mid-trajectory switch headroom is **unevidenced in public benchmark traces** — a claim about
+the evidence base, not about production workloads, which leave no public trace; per 0015 any
+case for cross-model KV transfer must then rest on different models serving different
+requests), **H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows any), and
 **H-E8 `NOT CONFIRMED`** (the fitted cross-model map does not survive agent-trace content
 shift within its band). E9 — the achievable fraction at a real re-rendered handoff — is
 registered and gated, its rule amended before any prefill (entry 0023: a per-token oracle
@@ -46,7 +48,7 @@ Verdicts only — every figure lives in the named ledger entry, never here.
 
 | hypothesis | verdict | what it says | entries |
 |---|---|---|---|
-| H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** | Mid-trajectory switching exists (one designed critic/selector family, always re-rendered, never byte-identical), but its recoverable prefill sits an order of magnitude under the registered cutoff; the motivating story reverts to fleet mixing. | 0006, 0010, 0013–0018 |
+| H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** | Lane A is measurable on 60 of 2,904 trajectories, all from one system with a designed critic stage (always re-rendered, never byte-identical); under the registered denominator its recoverable prefill sits an order of magnitude under the cutoff. Scope: public *benchmark* trajectories are single-model leaderboard runs by construction, so this decides what the public record evidences, not what production routers, fallbacks and cost tiers do — those leave no public trace. 0015's registered consequence: any case for cross-model KV transfer must rest on different models serving different requests. | 0006, 0010, 0013–0018, 0022 |
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** | Zero compaction events on every trajectory that can evidence one; final-transcript traces structurally cannot show it. | 0014, 0015 |
 | H-E8 — the fitted cross-model map survives agent-trace content shift | **NOT CONFIRMED** | The value pathway drops outside the registered band on agent text even with no switch and no position change; the key pathway lands in the dead zone. | 0009, 0016, 0020 |
 | H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, rule amended per-token before any prefill, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling; decided by how many matched tokens an oracle must recompute to reach the mapper's own fidelity. | 0019, 0023 |

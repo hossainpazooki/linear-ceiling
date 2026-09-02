@@ -80,6 +80,7 @@ Tests mirror modules under `tests/`.
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora
 (tau-bench, tau2-bench, SWE-bench), floor **met**, all registered outputs on the record.
+<<<<<<< HEAD
 Decided: **H-E7a `NOT CONFIRMED`** (an order of magnitude under the 10% cutoff after the 0017
 correction; corrected figures in 0018 — 0005's kill condition applies, the motivation reverts
 to fleet mixing), **H-E7b `UNESTIMABLE`** (0015), **H-E8 `NOT CONFIRMED`** (0020: K UNRESOLVED
@@ -91,6 +92,18 @@ the archive; pooled R² is a bridge and decides nothing; built, gated on the 002
 `docs/2026-09-02-e9-gpu-runbook.md`; verdict entry will be 0024). **Entries 0006–0023 are the
 authority; read them whole before touching E7/E8/E9 code.** Per-token deviation is in R²'s own
 units (a token's share of unexplained variance), never a per-token percent error (0023). Every taxonomy class carries its own
+=======
+Decided: **H-E7a `NOT CONFIRMED`** (an order of magnitude under the 10% cutoff under the
+registered denominator after the 0017 correction; corrected figures in 0018, tokenizer
+sensitivity in 0022 — 0005's kill condition applies; this is a claim about what public
+BENCHMARK traces evidence, Lane A being measurable on 60 of 2,904 trajectories from one
+designed critic stage, not about production workloads, which leave no public trace),
+**H-E7b `UNESTIMABLE`** (0015), **H-E8 `NOT CONFIRMED`** (0020: K UNRESOLVED
+/ V DEGRADES at the verdict k, neither read-out alone). Live: **H-E9** (0019; registered,
+built, gated on the `7e41f792` upstream pin; awaiting the A100 run — see
+`docs/2026-09-02-e9-gpu-runbook.md`). **Entries 0006–0020 are the authority; read them whole
+before touching E7/E8/E9 code.** Every taxonomy class carries its own
+>>>>>>> 0c8b44c (docs: scope H-E7a to public benchmark traces; regenerate ledger header)
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
 Quantiles come only from `e7_stats` (lower nearest-rank; no interpolation) — a second
 convention would silently change a p90. The rules newcomers break first: Lane A

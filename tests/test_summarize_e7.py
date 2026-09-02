@@ -142,6 +142,34 @@ def test_recon_flags_append_sections_and_write_recon_json(env):
     assert (cfg.results_dir / "summary.md").read_text(encoding="utf-8").endswith(md)
 
 
+def test_selected_subset_label_follows_the_manifest(env):
+    """Entry 0024: a suite whose local set is a strict subset of the public listing carries the
+    SELECTED SUBSET label on its pooled taxonomy row; a full or unlisted corpus does not."""
+    from linear_ceiling.summarize_e7 import selected_subset_suites
+    assert selected_subset_suites({"swe_bench_selection": {}}) == set()
+    assert selected_subset_suites({"swe_bench_selection": {"s": {"n_local": 15, "s3_instances": 500}}}) == {"swe-bench"}
+    assert selected_subset_suites({"swe_bench_selection": {"s": {"n_local": 500, "s3_instances": 500}}}) == set()
+    cfg, _, _ = env
+    assert "SELECTED SUBSET" not in summarize(cfg)             # the synthetic manifest has no S3 listing
+    p, m = _manifest(cfg)
+    m["swe_bench_selection"] = {"20240820_honeycomb": {"n_local": 2, "s3_instances": 500, "s3_objects": 500,
+                                                       "rule": "first-N in listing order",
+                                                       "listing_positions": [0, 1], "not_in_listing": []}}
+    m["s3"]["listed_at_utc"] = "2026-09-01T00:00:00+00:00"
+    _write(p, m)
+    # the manifest changed, so the report must be regenerated against it before summarizing
+    from linear_ceiling import e7 as driver
+    monkey = driver.assert_ready
+    driver.assert_ready = lambda *a, **k: None
+    try:
+        driver.run(cfg, repo_root=cfg.results_dir.parent)
+    finally:
+        driver.assert_ready = monkey
+    md = summarize(cfg)
+    assert "| **swe-bench (pooled; SELECTED SUBSET -- first-N per submission, see the manifest)** |" in md
+    assert "20240820_honeycomb: 2 of 500 listed instances" in md
+
+
 def test_recon_flags_do_not_run_on_a_refused_report(env):
     cfg, rp, _ = env
     rep = json.loads(rp.read_text(encoding="utf-8"))

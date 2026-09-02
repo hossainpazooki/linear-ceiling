@@ -226,7 +226,14 @@ def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
     return f"{s['median']:,.{digits}f} (p10 {s['p10']:,.{digits}f}, p90 {s['p90']:,.{digits}f})"
 
 
-def _taxonomy_md(tax: dict, cutoff: float) -> str:
+def selected_subset_suites(manifest: dict) -> set[str]:
+    """Suites whose local trajectory set is a strict subset of the public listing (entry 0024:
+    their pooled rows are labelled SELECTED SUBSET, coverage stated beside them)."""
+    sel = manifest.get("swe_bench_selection") or {}
+    return {"swe-bench"} if any(v["n_local"] < v["s3_instances"] for v in sel.values()) else set()
+
+
+def _taxonomy_md(tax: dict, cutoff: float, subset: set[str] = frozenset()) -> str:
     t = tax["taxonomy"]
     cls = t["classes"]
     head = "| scope | " + " | ".join(cls) + " |\n|---|" + "---|" * len(cls)
@@ -239,7 +246,8 @@ def _taxonomy_md(tax: dict, cutoff: float) -> str:
     for k, row in t["per_agent"].items():
         lines.append(f"| {k} | " + " | ".join(cell(row[c]) for c in cls) + " |")
     for k, row in t["per_suite"].items():
-        lines.append(f"| **{k} (pooled)** | " + " | ".join(cell(row[c]) for c in cls) + " |")
+        tag = " (pooled; SELECTED SUBSET -- first-N per submission, see the manifest)" if k in subset else " (pooled)"
+        lines.append(f"| **{k}{tag}** | " + " | ".join(cell(row[c]) for c in cls) + " |")
     lines.append("| **ALL** | " + " | ".join(cell(t["pooled"][c]) for c in cls) + " |")
     h = tax["h_e7a"]
     def hb(name, b):
@@ -334,7 +342,7 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
           + "\n"
           + f"\nLane A (detector keys {list(MODEL_KEYS)}): {measurable} of {tn} trajectories measurable; "
             f"{tn - measurable} carry no per-step model metadata (recorded NOT MEASURABLE, never as zero).\n"
-          + f"\n{head}\n\n{use}\n\n{_taxonomy_md(tax, th['materiality_fraction'])}\n"
+          + f"\n{head}\n\n{use}\n\n{_taxonomy_md(tax, th['materiality_fraction'], selected_subset_suites(load_manifest(cfg)))}\n"
           + "\nNo hypothesis is decided by this summary. H-E7b needs the compaction break-even "
             "distribution, which needs compaction events: see the taxonomy row.\n")
     (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
