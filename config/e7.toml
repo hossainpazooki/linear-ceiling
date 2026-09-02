@@ -37,3 +37,6 @@ tool_args = 3.467
 [e7.lane_b]
 policy = "two-tier-cascade"     # planning turns large tier, tool-execution turns small tier;
                                 # every tier boundary is a switch point (entry 0006, frozen)
+
+[e7.overlap_null]               # entry 0024: null controls for the entry-0010 overlap (summarize_e7 --overlap-null)
+seed = 24                       # derangement over composio trajectory ids, then cross-family partner draws

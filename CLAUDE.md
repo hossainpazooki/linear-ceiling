@@ -24,6 +24,7 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 .venv/Scripts/python.exe -m linear_ceiling.e7 --check           # E7 gate only; refuses until 0006/0007 + config/e7.toml + config/e7-manifest.json are committed
 .venv/Scripts/python.exe -m linear_ceiling.e7 --config config/e7.toml   # replay over ALL corpora under traces/ (gitignored); refuses if disk != manifest
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e7          # fail-closed: recomputes EVERY E7 figure from RAW traces (all 3 suites, headroom, reported usage); refuses if disk, report or manifest disagree
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e7 --overlap-null --cache-aware-ratio   # entry 0024 recon (after full verification): null controls + H-E7a under four denominator readings -> results/e7/recon.json
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
@@ -49,7 +50,11 @@ refuses if disk != manifest) · `summarize_e7` (fail-closed; recomputes every re
 from raw traces via a recursive comparator, refuses on tamper or on disk/report/manifest
 disagreement) · `e7_swe` (LangChain family +
 layout-aware `discover_trajectories`) · `e7_rolecontent` (4 variants) · `e7_tau2` (ground-truth
-usage/timestamps) · `e7_headroom` (entry 0010 measure + rows/summary) · `e7_usage`
+usage/timestamps) · `e7_headroom` (entry 0010 measure + rows/summary; `switch_slices` shared with the
+nulls) · `e7_null` (entry 0024 overlap null controls: seeded derangement same-family + cross-family
+role/content draw; NOT COMPUTABLE where a null cannot be formed) · `e7_cache` (entry 0024 H-E7a
+under registered/request-level x cold/warm denominators; request-level = 0017's `paid` for every
+request, byte-identical prefix vs the preceding request at read_mult) · `e7_usage`
 (reported-vs-estimated, per role) · `e7_taxonomy` (entry 0014's six event classes, each with a
 measurability rule; H-E7a ratio over the Lane A measurable subset) · `e7_stats` (the ONE pinned
 quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the snapshot) · `e8`

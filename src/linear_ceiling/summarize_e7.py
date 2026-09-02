@@ -25,7 +25,9 @@ from pathlib import Path
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E7Config, load_e7_config
 from linear_ceiling.e7 import COST_BASIS, taxonomy_block
+from linear_ceiling.e7_cache import cache_aware_block, render as render_cache
 from linear_ceiling.e7_corpus import LANE_A_ONLY_AGENTS, discover_files, load_corpus
+from linear_ceiling.e7_null import overlap_null as overlap_null_block, render as render_null
 from linear_ceiling.e7_cost import timeline, totals
 from linear_ceiling.e7_headroom import rows as headroom_rows, rows_summary
 from linear_ceiling.e7_lanes import lane_a, lane_b
@@ -114,7 +116,11 @@ def _verify_provenance(cfg: E7Config, rep: dict) -> None:
                          "rerun the driver against the committed manifest, or restore it")
 
 
-def summarize(cfg: E7Config) -> str:
+def summarize(cfg: E7Config, *, overlap_null: bool = False, cache_aware: bool = False) -> str:
+    """The standard summary; with a recon flag, the entry-0024 sections are appended and the
+    figures are also written to `results/e7/recon.json` stamped with the verified config and
+    manifest shas (the append script for an entry pulls them from there, never from a REPL).
+    Recon runs only after every recorded figure has been verified against the raw traces."""
     rp = cfg.results_dir / "skeleton_report.json"
     if not rp.exists():
         raise ValueError(f"{rp} does not exist; E7 has not run (nothing to summarize)")
@@ -196,7 +202,22 @@ def summarize(cfg: E7Config) -> str:
     _compare("taxonomy", tax["taxonomy"], _rec(rep, "taxonomy"))
     _compare("h_e7a", tax["h_e7a"], _rec(rep, "h_e7a"))
 
-    return _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax)
+    md = _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable, hr, usage, tax)
+    if overlap_null or cache_aware:
+        recon = {"config_sha256": rep["config_sha256"], "manifest_sha256": rep["manifest_sha256"],
+                 "trace_files": len(rep["trace_files"]), "entry": "0024 recon flags; decides nothing"}
+        if overlap_null:
+            nb = overlap_null_block(corpus, cfg)
+            recon["overlap_null"] = nb
+            md += "\n\n" + render_null(nb) + "\n"
+        if cache_aware:
+            cb = cache_aware_block(corpus.trajectories, corpus.texts, hr, cfg.pricing, th["materiality_fraction"])
+            recon["cache_aware"] = cb
+            md += "\n\n" + render_cache(cb) + "\n"
+        _walk_nan(recon, "recon")
+        (cfg.results_dir / "recon.json").write_text(json.dumps(recon, indent=1), encoding="utf-8")
+        (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
+    return md
 
 
 def _fmt_summary(s: dict, pct: bool = False, digits: int = 3) -> str:
@@ -323,9 +344,14 @@ def _render(cfg, rep, corpus, agg, cov, floors, cov_ok, lane_a_only, measurable,
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m linear_ceiling.summarize_e7")
     ap.add_argument("--config", default=str(REPO_ROOT / "config" / "e7.toml"))
+    ap.add_argument("--overlap-null", action="store_true",
+                    help="entry 0024: same-family and cross-family null controls for the overlap measure")
+    ap.add_argument("--cache-aware-ratio", action="store_true",
+                    help="entry 0024: H-E7a ratio under every reading of the denominator (cold/warm x registered/request)")
     a = ap.parse_args(argv)
     try:
-        print(summarize(load_e7_config(Path(a.config), REPO_ROOT)))
+        print(summarize(load_e7_config(Path(a.config), REPO_ROOT),
+                        overlap_null=a.overlap_null, cache_aware=a.cache_aware_ratio))
     except ValueError as e:
         print(f"E7 SUMMARY REFUSED: {e}")
         return 1

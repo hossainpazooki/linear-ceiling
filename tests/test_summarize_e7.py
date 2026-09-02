@@ -122,6 +122,42 @@ def test_refuses_report_produced_against_a_different_manifest(env):
         summarize(cfg)
 
 
+def test_recon_flags_append_sections_and_write_recon_json(env):
+    """Entry 0024's flags run only after the full verification and stamp their output with the
+    verified config and manifest shas; the synthetic corpus has one composio trajectory, so the
+    same-family null is NOT COMPUTABLE while the cross-family null and the ratios compute."""
+    import dataclasses
+    cfg, rp, _ = env
+    cfg2 = dataclasses.replace(cfg, overlap_null={"seed": 5})
+    md = summarize(cfg2, overlap_null=True, cache_aware=True)
+    assert "Overlap null controls (entry 0024" in md and "NOT COMPUTABLE" in md
+    assert "cross-family null (role/content) | 1 |" in md
+    assert "H-E7a under every reading" in md and "registered requests, COLD (= 0018)" in md
+    recon = json.loads((cfg.results_dir / "recon.json").read_text(encoding="utf-8"))
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    assert recon["config_sha256"] == rep["config_sha256"] and recon["manifest_sha256"] == rep["manifest_sha256"]
+    assert recon["overlap_null"]["seed"] == 5 and recon["overlap_null"]["same_family"] is None
+    assert recon["cache_aware"]["pooled"]["denominators"]["registered_cold"] == rep["h_e7a"]["pooled"]["input_spend"]
+    assert recon["cache_aware"]["pooled"]["ratios"]["registered_cold"] == pytest.approx(rep["h_e7a"]["pooled"]["ratio"])
+    assert (cfg.results_dir / "summary.md").read_text(encoding="utf-8").endswith(md)
+
+
+def test_recon_flags_do_not_run_on_a_refused_report(env):
+    cfg, rp, _ = env
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["h_e7a"]["pooled"]["ratio"] = 0.5
+    _write(rp, rep)
+    with pytest.raises(ValueError, match=r"h_e7a\.pooled\.ratio"):
+        summarize(cfg, overlap_null=True, cache_aware=True)
+    assert not (cfg.results_dir / "recon.json").exists()
+
+
+def test_overlap_null_refuses_without_a_registered_seed(env):
+    cfg, _, _ = env
+    with pytest.raises(ValueError, match=r"\[e7.overlap_null\]"):
+        summarize(cfg, overlap_null=True)
+
+
 def test_refuses_report_that_predates_the_manifest(env):
     cfg, rp, _ = env
     rep = json.loads(rp.read_text(encoding="utf-8"))

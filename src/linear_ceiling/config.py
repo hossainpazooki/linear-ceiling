@@ -1,6 +1,6 @@
 """TOML config -> frozen dataclasses. Seeds and thresholds live here, never in code."""
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 OPERATIONALIZATIONS = ("", "A", "B", "C")
@@ -75,6 +75,8 @@ class E7Config:
     # e7_manifest.manifest_path. Not a key in config/e7.toml, so the config's registered
     # sha256 (entries 0013-0022) still identifies the same bytes.
     manifest_path: Path | None = None
+    # [e7.overlap_null]: the seed for entry 0024's null controls (e7_null); {} until registered.
+    overlap_null: dict = field(default_factory=dict)
 
 
 _E7_PRICING_KEYS = ("provider", "read_mult", "write_mult", "write_mult_1h", "ttl_seconds")
@@ -103,6 +105,7 @@ def load_e7_config(path: Path, repo_root: Path) -> E7Config:
         lane_b_policy=e7["lane_b"]["policy"],
         config_path=path,
         manifest_path=Path(repo_root) / "config" / "e7-manifest.json",
+        overlap_null=dict(e7.get("overlap_null", {})),
     )
 
 
