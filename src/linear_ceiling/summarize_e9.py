@@ -47,7 +47,7 @@ from linear_ceiling.e9_pertoken import (
     SEAM_BIN_EDGES, SEAM_BIN_LABELS, band_outcome, centered_delta, f_star, layer_mean, null_pairs,
     own_norm_delta, seam_bin, seam_distance, token_mean,
 )
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.rng import make_rng
 from linear_ceiling.upstream_gate import check_upstream
@@ -251,7 +251,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     _walk_nan(rep, "report")
     if not rep.get("complete"):
         raise ValueError("report is a per-handoff checkpoint, not a complete run; finish or rerun E9")
-    if rep.get("config_sha256") != sha256_file_bytes(cfg.config_path):
+    if rep.get("config_sha256") != sha256_text_file(cfg.config_path):      # newline-normalized (Linux box vs CRLF checkout)
         raise ValueError("config/e9.toml changed since the run (config_sha256 mismatch)")
     if rep.get("upstream_sha") != cfg.upstream_sha:
         raise ValueError("report's upstream_sha differs from config; the pin moved")

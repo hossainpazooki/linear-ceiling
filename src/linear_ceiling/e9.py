@@ -39,7 +39,7 @@ from linear_ceiling.e9_align import align, load_handoffs, write_alignment
 from linear_ceiling.e9_pertoken import null_pairs
 from linear_ceiling.e8 import upstream_python
 from linear_ceiling.e8_text import qwen_encoder
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.rng import make_rng
 from linear_ceiling.upstream_gate import check_upstream
@@ -215,7 +215,7 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
     included = sorted(aligned)
     keep = keep_subset(included, cfg.keep_seed, cfg.keep_n)
     report = {
-        "config_sha256": sha256_file_bytes(cfg.config_path),
+        "config_sha256": sha256_text_file(cfg.config_path),   # newline-normalized: the box writes LF, home checks out CRLF
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
         "alignment_method": cfg.alignment_method, "context_cap": cfg.context_cap,
         "coverage": {"observed": len(records), "included": len(included),
