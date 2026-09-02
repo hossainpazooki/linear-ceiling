@@ -1374,3 +1374,73 @@ oracle lower bound (two reasons above) and the seam profile is descriptive; neit
 about what a deployed reuse scheme would achieve. No hypothesis cell changes with this entry.
 
 prior-entries-sha256: 50ee4f2b68fbbb6bb103443f3330f6156f982404f04df71c916d7eacbca2b800
+
+### 0024 — 2026-09-01 — Corpus manifest committed; SWE-bench selection rule recorded; overlap null controls and cache-aware H-E7a readings `[BASELINE]`; no verdict changes
+
+**Manifest.** `config/e7-manifest.json` (canonical-JSON sha256 `371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094`): 188 files over three
+suites; S3 key, ETag and size for 180 SWE-bench objects (anonymous listing of
+`s3://swe-bench-submissions/verified/<submission>/trajs/`, retrieved 2026-09-01T23:41:46+00:00).
+`e7.assert_ready` refuses until it is committed unmodified; the driver and `summarize_e7` refuse on any
+disagreement between disk, report and manifest (a file on disk the manifest does not list, a listed file
+absent or with different bytes, a report not produced against this manifest -- tamper tests
+`tests/test_e7_manifest.py`, `tests/test_summarize_e7.py`). Every E7 figure from this entry on carries the
+manifest sha beside the config sha (`ledger_check` enforces the citation), and `config_sha256` is now the
+newline-normalized digest so a CRLF checkout cites the same `d16cf4659aab` as an LF one.
+
+**Selection rule, as recovered (not assumed).** Local instance set vs the full listing, per submission:
+  - `20240820_honeycomb`: 15 of 500 listed instances (rule: first-N in listing order; listing positions 0..14)
+  - `20241016_composio_swekit`: 30 of 498 listed instances (rule: first-N in listing order; listing positions 0..29)
+  - `20241025_composio_swekit`: 30 of 499 listed instances (rule: first-N in listing order; listing positions 0..29)
+  - `20241125_marscode-agent-dev`: 15 of 500 listed instances (rule: first-N in listing order; listing positions 0..14)
+  - `20250122_autocoderover-v2.1-claude-3-5-sonnet-20241022`: 4 of 500 listed instances (rule: first-N in listing order; listing positions 0..3)
+  - `20250415_openhands`: 15 of 500 listed instances (rule: first-N in listing order; listing positions 0..14)
+  - `20250616_Skywork-SWE-32B`: 15 of 500 listed instances (rule: first-N in listing order; listing positions 0..14)
+Every submission's local set is the first N objects of its S3 listing (first-N in listing order) -- listing order is UTF-8 key order, so the subset is the ALPHABETICALLY FIRST N instances of each submission (astropy-dominated), not a random draw. Bearing: none on Lane A (all 60 composio files present, both submissions); the pooled
+taxonomy rows over SWE-bench are a SELECTED SUBSET and are labelled so from here on (coverage stated
+beside them: entry 0011 units).
+
+**Overlap null controls (`summarize_e7 --overlap-null`, seed 24, same measure and quantile
+convention as 0010/0018).** Observed: overlap 0.988 (p10 0.972, p90 0.994), headroom upper bound
+88.9% (p10 87.5%, p90 89.5%) of paid. Same-family null (each receiver prompt against the
+sender context of a different composio trajectory, seeded derangement): overlap
+0.498 (p10 0.311, p90 0.574), upper bound 44.9% (p10 28.0%, p90 51.7%). Cross-family null
+(against a seeded random SWE-bench role/content trajectory's full text, pool 64): overlap
+0.386 (p10 0.205, p90 0.499), upper bound 34.7% (p10 18.5%, p90 44.9%). What this says:
+roughly half of the receiver's words are template vocabulary any composio prompt shares (the same-family
+null), about 39% is vocabulary any SWE-bench transcript shares; the
+observed 0.988 sits 0.490
+above the same-family null, so the 0018 figure is a bound on task-content redundancy over and above the
+template, not on template vocabulary alone. It is still an UPPER BOUND (0010). Decides nothing; E9 is the
+instrument that measures the achievable fraction.
+
+**Cache-aware readings of H-E7a's denominator (`summarize_e7 --cache-aware-ratio`; numerator unchanged
+496,798; Lane A measurable subset per 0014; base-input-price units).**
+Registered requests (each assistant turn re-bills the trajectory prefix, as priced in 0015/0018): COLD
+244,739,122 -> **0.20%** (= the 0018 figure by construction);
+WARM (previous prefix at read_mult, new messages at write_mult) 27,354,947 ->
+**1.82%**. Request-level requests (entry 0017's reading of `paid`, applied to every
+request: each LLM call's own prompt; 444 requests): COLD 4,967,377 ->
+**10.0012%**; WARM (byte-identical prefix shared with the preceding request --
+7.6% of request-level prefill tokens -- at read_mult, remainder at
+write_mult) 5,775,842 -> **8.60%**. Cutoff 10%.
+Beside 0022's exact-tokenizer sensitivity (0.2210% under the registered reading).
+
+**Verdict, re-examined under each reading of "input-token spend" (rule as written, 0006/0007/0014).**
+Under the registered reading, priced cold or warm, H-E7a `NOT CONFIRMED` stands
+(0.20% / 1.82% vs 10%). Under the request-level reading
+the ratio is AT OR ABOVE the cutoff for: request_cold --
+10.0012% cold, 8.60% warm. Two things bind the reading of that
+number: the numerator is an UPPER BOUND (0010, re-rendering changes every position) and every denominator
+is a visible-only LOWER BOUND (0012, the warm bounds more so, because the hidden block is the most
+cacheable content), so the true request-level ratio is strictly below the 10.0012% stated;
+and 0006's wording does not say which reading it means. **This entry does not change the cell**: the
+registered reading is the one 0014/0015/0018 decided under, and choosing between readings is a
+registration act -- a successor to 0006/0014 must fix the reading BEFORE any verdict is restated under
+it. Until then H-E7a's `NOT CONFIRMED` stands as decided, with the request-level reading on the record
+as the reading under which it would not.
+
+No `verdict:` line: no cell changes. Figures: `summarize_e7 --overlap-null --cache-aware-ratio`
+(results/e7/recon.json), config sha256 d16cf4659aab, 188 trace files verified.
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 43879637a17e16e38afec2dd2134fef53fbc33020ab1288e02941b151708fbaa
