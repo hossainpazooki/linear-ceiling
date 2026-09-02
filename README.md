@@ -24,7 +24,7 @@ flowchart LR
     E0 -.->|operator decision,<br/>opportunity cost| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
     E7["E7 -- trace replay: do switches and<br/>compaction occur in public agent traces,<br/>and at what recoverable cost?"] --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
     E8["E8 -- content shift: does the fitted<br/>cross-model map keep its held-out<br/>fidelity on agent text? no refit"] --> V8[H-E8 NOT CONFIRMED]
-    E9["E9 -- the real handoff: how much of a<br/>matched token's KV survives the observed<br/>re-render? registered, gated"] --> ANCHOR
+    E9["E9 -- the real handoff: how many matched<br/>tokens must an oracle recompute for the<br/>re-render to match the mapper's own fidelity?<br/>registered, gated, per-token rule"] --> ANCHOR
     V7 --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
     V8 --> ANCHOR
     E7 -.->|numbers-freeze gate| WS[workshop 4-pager]
@@ -97,7 +97,13 @@ the record: an invalidation taxonomy with event frequencies, transfer headroom a
 points, and the compaction break-even distribution (as `UNESTIMABLE`). Adapters cover three
 corpora with incompatible formats; the coverage floor (trajectories *and* distinct agents per
 suite, over two suites) is met. E8 and E9 extend the same discipline to the transfer question
-itself, invoking the pinned upstream instrument by subprocess.
+itself, invoking the pinned upstream instrument by subprocess. E9 is decided per token, not by a
+pooled score: each matched token's deviation is its share of unexplained variance in R²'s own
+units, the verdict statistic is the oracle fraction of tokens that would have to be recomputed
+for the rest to sit at the mapper's own fidelity (a lower bound, stated as one), and the
+threshold is calibrated from the archived mapper before any prefill. A pipeline-identity control
+halts the run on any nonzero deviation, a seeded null pairing fixes the top of the scale, and the
+seam and depth profiles are descriptive outputs registered before data.
 
 ```mermaid
 flowchart TD
