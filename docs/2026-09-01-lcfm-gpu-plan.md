@@ -14,7 +14,7 @@ entry refined one (alignment method, S/R slices), the entry wins and is noted.
 | countdown starts at approval, not first login; ~20 usable h per 24 | have the run script tested end-to-end on CPU at tiny sizes BEFORE requesting |
 | machine deleted at expiry; reminders at 36/24/12/2 h (2-day) | every artifact is pulled to local `results/` after each stage, never at the end |
 | idle ~1 h → may be reclaimed | one batch driver runs everything; no interactive sessions; log off when done |
-| A100 40 GB, possibly **shared** (assume 20 GB) | bf16 weights; Qwen3-1.7B at 32k context KV ≈ 3.7 GB — fits even shared |
+| A100 40 GB, possibly **shared** (assume 20 GB) | ~~bf16 weights; Qwen3-1.7B at 32k context KV ≈ 3.7 GB — fits even shared~~ **corrected 2026-09-02:** the upstream runs float32 and its CausalLM forward materializes full logits — peak ≈ 35 GB at \|S\| = 32k; needs the WHOLE card, a 20 GB share OOMs on the first included handoff (runbook §2); paid single-GPU fallback added to the runbook |
 | backup CPU machine when the queue is full | everything in Tier 1 runs on CPU anyway; only Tier 2 is GPU-bound |
 
 Discipline on the box: `results/` synced to local after each stage (`rsync`/`scp` from the
