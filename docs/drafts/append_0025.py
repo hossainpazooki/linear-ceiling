@@ -38,6 +38,7 @@ import numpy as np
 
 from linear_ceiling import REPO_ROOT, e9
 from linear_ceiling.config import load_e7_config, load_e9_config
+from linear_ceiling.e7_manifest import manifest_path, manifest_sha256
 from linear_ceiling.e7_stats import summary
 from linear_ceiling.e8_text import qwen_encoder
 from linear_ceiling.e9 import keep_subset, pair_models, submission_dirs
@@ -107,7 +108,7 @@ def _qi(s):
 
 
 def render(number: int, cfg, prior: dict, records, included, blocks, src, tgt, cov, e8_agent_k: float,
-           e7_sha: str) -> str:
+           e7_sha: str, msha: str) -> str:
     (bpt_src, sh_src), (bpt_tgt, sh_tgt) = src, tgt
     old_n = int(prior["keep"]["n"])
     ids = sorted(included)
@@ -224,6 +225,8 @@ non-nesting of the keep draw pinned; malformed parameters refused.
 
 **Scope.** All of 0019's and 0023's limits. No hypothesis cell changes with this entry; no
 `verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
+The 0018 rows above are E7 figures and name the corpus manifest they were measured against (0024).
+e7-manifest-sha256: {msha}
 """
 
 
@@ -278,7 +281,8 @@ def main(argv=None) -> int:
     if cov["included"] is None or cov["excluded_long"] is None:
         print("REFUSED: the coverage comparison needs both an included and an excluded-by-length group")
         return 2
-    body = render(number, cfg, prior, records, included, blocks, src, tgt, cov, e8_agent_k, sha256_file_bytes(e7_report))
+    msha = manifest_sha256(manifest_path(e7))          # the committed corpus manifest the 0018 rows were measured against
+    body = render(number, cfg, prior, records, included, blocks, src, tgt, cov, e8_agent_k, sha256_file_bytes(e7_report), msha)
     if a.preview:
         print(body)
         return 0
