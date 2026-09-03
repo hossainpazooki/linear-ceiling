@@ -67,6 +67,24 @@ def test_clean_report_summarizes_with_the_0023_statistics(ran):
     assert fig["cross_over_same_median_delta"]["K"]["median"] == pytest.approx(1.0)   # canned: identical arms
 
 
+def test_tau_ladder_is_reported_descriptively_and_is_monotone(ran):
+    """Entry 0025: f* at each ladder tau, every arm, per handoff and as stats; a smaller tau can only
+    demand MORE recompute, so f* is non-decreasing down the ladder; the band still reads tau_K only."""
+    cfg, e7, report, runner = ran
+    md = summarize(cfg, runner=runner, encoder=words, e7=e7)
+    fig = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    assert fig["tau_ladder"] == [0.10, 0.03]
+    assert "tau ladder (entry 0025, DESCRIPTIVE" in md and "at tau = 0.1:" in md and "at tau = 0.03:" in md
+    for arm in ("same_K", "same_V", "cross_K", "cross_V"):
+        per = fig["fstar_ladder_per_handoff"][arm]
+        assert set(per) == {"0.1", "0.03"} and set(per["0.1"]) == set(fig["fstar_per_handoff"][arm])
+        for hid, at_reg in fig["fstar_per_handoff"][arm].items():
+            assert at_reg <= per["0.1"][hid] <= per["0.03"][hid] <= 1.0
+        assert set(fig["fstar_ladder"][arm]) == {"0.1", "0.03"}
+    # verdict-bearing line and band unchanged by the ladder
+    assert "f*(tau_K = 0.2500)" in md and fig["band_outcome"] == s9.band_outcome(fig["fstar"]["same_K"]["median"], cfg.rule)
+
+
 def test_refuses_a_checkpoint_report(ran):
     cfg, e7, rp, runner = ran
     rep = json.loads(rp.read_text(encoding="utf-8"))

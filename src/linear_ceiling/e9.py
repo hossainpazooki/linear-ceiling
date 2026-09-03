@@ -1,5 +1,5 @@
 """E9 driver and its gate -- the achievable fraction at a re-rendered handoff (ledger entries
-0019 and 0023).
+0019 and 0023; 0025 adds the descriptive tau ladder and sets the keep-subset size).
 
 `assert_ready` refuses until ledger/ledger.md (with entries 0019 AND 0023) and config/e9.toml
 are committed unmodified, and the upstream pin holds for every invoked path (ancestor +
@@ -45,7 +45,7 @@ from linear_ceiling.rng import make_rng
 from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import snapshot
 
-REQUIRED_ENTRIES = ("### 0019 ", "### 0023 ")
+REQUIRED_ENTRIES = ("### 0019 ", "### 0023 ", "### 0025 ")   # 0025: tau ladder (descriptive) + keep n, before any prefill
 UPSTREAM_PATHS = ("scripts/dump_kv.py", "scripts/score_positions.py", "scripts/score_mapper.py", "kvt")
 _PENDING = "UPSTREAM_SHA_PENDING"
 
@@ -58,7 +58,7 @@ def assert_ready(cfg: E9Config, repo_root: Path) -> None:
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
-            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023 and config/e9.toml "
+            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023/0025 and config/e9.toml "
                                "must be committed before any prefill")
     committed = subprocess.run(["git", "show", "HEAD:ledger/ledger.md"], cwd=repo_root,
                                capture_output=True, text=True, encoding="utf-8")
@@ -255,7 +255,7 @@ def main(argv=None) -> int:
     try:
         if a.check:
             assert_ready(cfg, REPO_ROOT)
-            print("E9 gate: ready (entries 0019 and 0023 committed; upstream pinned and clean)")
+            print("E9 gate: ready (entries 0019, 0023 and 0025 committed; upstream pinned and clean)")
             return 0
         out = run(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT), repo_root=REPO_ROOT)
         print(f"E9 report: {out}")

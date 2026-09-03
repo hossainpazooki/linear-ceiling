@@ -18,7 +18,8 @@ L, H = 2, 2
 # two layers x two heads of canned moments; r2 per head = 1 - sse/sst
 _LAYER = {"sse": [1.0, 1.0], "sst": [4.0, 2.0], "r2_head_mean": (0.75 + 0.5) / 2}
 _MEAN = _LAYER["r2_head_mean"]
-RULE = {"statistic": "median f*(tau_K)", "holds_max": 0.15, "degrades_min": 0.50, "tau_K": 0.25, "tau_V": 0.40}
+RULE = {"statistic": "median f*(tau_K)", "holds_max": 0.15, "degrades_min": 0.50, "tau_K": 0.25, "tau_V": 0.40,
+        "tau_ladder": [0.10, 0.03]}     # entry 0025: descriptive ladder, strictly decreasing, below tau_K
 CONTROLS = {"null_seed": 23, "seam_bins": [0, 1, 2, 4, 8, 16]}
 
 
@@ -125,6 +126,35 @@ def test_keep_subset_is_seeded_and_sorted():
     assert a == keep_subset(ids, 9, 3) and len(a) == 3 and a == sorted(a)
     assert keep_subset(ids, 10, 3) != a
     assert keep_subset(["x"], 9, 3) == ["x"]
+
+
+def test_keep_subset_redraw_at_a_larger_n_is_not_nested():
+    """Entry 0025 raises n; numpy's choice without replacement is NOT nested across sizes, so the
+    entry states the new set explicitly instead of calling it 'the old three plus five'."""
+    ids = [f"h{i}" for i in range(25)]
+    small, big = keep_subset(ids, 9, 3), keep_subset(ids, 9, 8)
+    assert len(big) == 8 and big == sorted(big)
+    assert not set(small) <= set(big)
+
+
+@pytest.mark.parametrize("ladder,msg", [
+    ([], "tau_ladder"), ([0.10, 0.10], "tau_ladder"), ([0.03, 0.10], "tau_ladder"),
+    ([0.40, 0.03], "tau_ladder"), ([0.10, 0.0], "tau_ladder"), ("0.1", "tau_ladder")])   # 0.40 > tau_K 0.3186
+def test_config_refuses_a_malformed_tau_ladder(tmp_path, ladder, msg):
+    """Entry 0025: the ladder must be strictly decreasing and strictly inside (0, tau_K)."""
+    import json as _json
+    from linear_ceiling import REPO_ROOT
+    from linear_ceiling.config import load_e9_config
+    src = (REPO_ROOT / "config" / "e9.toml").read_text(encoding="utf-8")
+    assert "tau_ladder = [0.10, 0.03]" in src
+    bad = src.replace("tau_ladder = [0.10, 0.03]", f"tau_ladder = {_json.dumps(ladder)}")
+    p = tmp_path / "e9.toml"
+    p.write_text(bad, encoding="utf-8")
+    with pytest.raises(ValueError, match=msg):
+        load_e9_config(p, tmp_path)
+    ok = tmp_path / "ok.toml"
+    ok.write_text(src, encoding="utf-8")
+    assert load_e9_config(ok, tmp_path).rule["tau_ladder"] == [0.10, 0.03]
 
 
 def test_stem_is_filesystem_safe():

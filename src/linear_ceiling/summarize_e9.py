@@ -378,6 +378,10 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
 
     # 4. Per handoff: centered delta, f*(tau), cross/same ratio, own-norm diagnostic, seam, depth.
     fstar = {arm: {} for arm in ARMS}
+    # entry 0025: the tau ladder -- f* at each descriptive tau below the registered one, every arm; the
+    # band is computed at tau_K only. Values come from config (validated strictly decreasing, < tau_K).
+    ladder = [float(t) for t in cfg.rule["tau_ladder"]]
+    fstar_ladder = {arm: {_tau_key(t): {} for t in ladder} for arm in ARMS}
     ratio = {"K": {}, "V": {}}
     own_gt1 = {"K": {}, "V": {}}
     seam_tokens = {arm: [[] for _ in SEAM_BIN_LABELS] for arm in ("same_K", "same_V")}
@@ -392,6 +396,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
             dt[arm] = token_mean(d)
             depth_tokens[arm].append(layer_mean(d))
             fstar[arm][hid] = f_star(dt[arm], tau[key])
+            for t in ladder:
+                fstar_ladder[arm][_tau_key(t)][hid] = f_star(dt[arm], t)
         for key in ("K", "V"):
             ratio[key][hid] = float(np.median(dt[f"cross_{key}"]) / np.median(dt[f"same_{key}"]))
             own_gt1[key][hid] = float((own_norm_delta(tok[f"same_{key}"], tok[f"ref_{key}"]).mean(1) > 1).mean())
@@ -426,6 +432,9 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         "coverage": cov, "tau": tau, "rule": dict(cfg.rule), "band_outcome": outcome,
         "fstar": {arm: _stats(fstar[arm].values()) for arm in ARMS},
         "fstar_per_handoff": fstar,
+        "tau_ladder": ladder,                                                     # entry 0025, descriptive
+        "fstar_ladder": {arm: {tk: _stats(v.values()) for tk, v in fstar_ladder[arm].items()} for arm in ARMS},
+        "fstar_ladder_per_handoff": fstar_ladder,
         "cross_over_same_median_delta": {k: _stats(v.values()) for k, v in ratio.items()},
         "own_norm_delta_gt_1_fraction": {k: _stats(v.values()) for k, v in own_gt1.items()},
         "delta_null": delta_null, "delta_null_handoff": c_hid,
@@ -457,6 +466,9 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
           f"- f*(tau_V = {tau['V']:.4f}) E9-same V per handoff: {fmt(figures['fstar']['same_V'])} (alongside)\n"
           f"- f* E9-cross K / V per handoff: {fmt(figures['fstar']['cross_K'])} / {fmt(figures['fstar']['cross_V'])} "
           "(the k=1 mapper across the handoff; never merged with same)\n"
+          f"- tau ladder (entry 0025, DESCRIPTIVE, decides nothing; how far inside the tolerance f* sits): "
+          + "; ".join(f"same K / V at tau = {t:.4g}: {fmt(figures['fstar_ladder']['same_K'][_tau_key(t)])} / "
+                      f"{fmt(figures['fstar_ladder']['same_V'][_tau_key(t)])}" for t in ladder) + "\n"
           f"- cross/same median-delta ratio K / V: {fmt(figures['cross_over_same_median_delta']['K'], 3)} / "
           f"{fmt(figures['cross_over_same_median_delta']['V'], 3)}\n"
           f"- delta_null (uninformative scale, handoff {c_hid}) same K / V token-mean median: "
@@ -475,6 +487,12 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
           "The verdict on H-E9 is NOT stated here; it enters by a numbered entry.\n")
     (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
     return md
+
+
+def _tau_key(t: float) -> str:
+    """JSON key for a ladder tau (entry 0025): the value printed to 4 significant digits, so 0.10 and
+    0.03 read as themselves in summary.json rather than as float repr."""
+    return f"{float(t):.4g}"
 
 
 def main(argv=None) -> int:

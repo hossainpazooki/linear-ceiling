@@ -13,7 +13,10 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state: **no drafts pending.** Entries 0013–0024 are appended and their scripts deleted
+Current state: **one draft staged — `append_0025.py` = the E9 pre-prefill amendment** (descriptive τ
+ladder + keep-subset n 3 → 8; every figure from config or recomputed from the traces in-process;
+refuses if a prefill has happened; `e9.REQUIRED_ENTRIES` already names 0025 so the gate and the entry
+agree). Entries 0013–0024 are appended and their scripts deleted
 (0023 pulled every figure from `results/e9/calibration/tau.json` via `summarize_e9 --calibrate-tau`;
 0024 from `results/e7/recon.json` via `summarize_e7 --overlap-null --cache-aware-ratio`, behind
 `e7.assert_ready`). Queued, unnumbered: the **H-E9 verdict** (Track A; written from a clean

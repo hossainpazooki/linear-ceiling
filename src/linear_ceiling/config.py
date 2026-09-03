@@ -200,12 +200,18 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
     for section, keys in (("handoffs", ("suite", "agent", "context_cap")),
                           ("alignment", ("method",)), ("mapper", ("k", "space")),
                           ("keep", ("seed", "n")),
-                          ("rule", ("statistic", "holds_max", "degrades_min", "tau_K", "tau_V")),
+                          ("rule", ("statistic", "holds_max", "degrades_min", "tau_K", "tau_V", "tau_ladder")),
                           ("controls", ("null_seed", "seam_bins"))):
         missing = [k for k in keys if k not in e9.get(section, {})]
         if missing:
             raise ValueError(f"config/e9.toml [e9.{section}] is missing {missing}; the registered "
-                             "parameters (ledger entries 0019/0023) must be complete before E9 runs")
+                             "parameters (ledger entries 0019/0023/0025) must be complete before E9 runs")
+    ladder = e9["rule"]["tau_ladder"]
+    if (not isinstance(ladder, list) or not ladder
+            or any(not isinstance(t, (int, float)) or not (0 < float(t) < float(e9["rule"]["tau_K"])) for t in ladder)
+            or any(float(a) <= float(b) for a, b in zip(ladder, ladder[1:]))):
+        raise ValueError("config/e9.toml [e9.rule] tau_ladder must be a strictly decreasing list of values in "
+                         "(0, tau_K): the ladder reads how far INSIDE the registered tolerance f* sits (entry 0025)")
     root = Path(repo_root)
     return E9Config(
         pair=e9["pair"], results_dir=root / e9["results_dir"], scratch_dir=root / e9["scratch_dir"],
