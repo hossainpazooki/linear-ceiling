@@ -1444,3 +1444,112 @@ No `verdict:` line: no cell changes. Figures: `summarize_e7 --overlap-null --cac
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: 43879637a17e16e38afec2dd2134fef53fbc33020ab1288e02941b151708fbaa
+
+### 0025 — 2026-09-02 — E9 amended before any prefill: coverage registered; agent-text τ alongside; prefix-invariance control; causal seam distance; block lengths; bootstrap; τ ladder; keep-subset 3 → 8; no verdict changes
+
+**Why before the box.** An independent pre-run review of E9 (2026-09-02) and the E-RL design each
+proposed additions to what E9 reports and controls. None touches the H-E9 rule, τ_K = 0.3186, the
+band, or the four cells; every one of them is of the kind 0023 forbids after the first score file
+exists, so they are registered together here. No prefill has happened: `results/e9/report.json` is
+absent at append and this script refuses otherwise. Nothing in this entry is verdict-bearing.
+
+**Coverage, registered (review finding 1).** 0019's alignment over the observed handoffs at the
+registered cap 32768: **25 included of 68 observed** (39 excluded because `S` or `R`
+exceeds the cap, 4 because the receiver prompt is empty in the trace). The excluded handoffs
+are the long ones, and what the cap selects on is stated beside every E9 figure from here on:
+included vs excluded-by-length, medians (p10, p90) -- |S| 25,460 (p10 14,269, p90 30,106) vs 52,141 (p10 35,692, p90 147,218);
+|R| 6,551 (p10 4,148, p90 9,165) vs 11,500 (p10 7,085, p90 20,589); entry 0018's per-handoff overlap
+0.985 (p10 0.978, p90 0.990) vs 0.989 (p10 0.983, p90 1.000); 0018's recoverable fraction
+0.886 (p10 0.880, p90 0.891) vs 0.890 (p10 0.885, p90 0.900) (0018 rows from the E7 report verified by
+`summarize_e7` at append, sha256 `0aba0fbe7aba`; 0 handoffs without a row). H-E9 is decided on the
+included set and is a claim about it; `summarize_e9` recomputes this comparison and states it.
+
+**Agent-text τ, alongside (review finding 2).** τ_K anchors HOLDS to "no more than the mapper itself"
+on the mapper's own GENERIC held-out text (0023). Entry 0020 arm (b) measured the same k = 1 mapper on
+AGENT text at K R² = 0.4371, so on the distribution E9 actually reads, the mapper's own tolerance
+is **τ_agent_K = 0.4371** (= 1 − 0.4371, recomputed by `summarize_e9 --calibrate-tau` from
+`results/e8/report.json` and refused on disagreement, like τ_K). f*(τ_agent_K) is reported for the K
+arms (E9-same and E9-cross) beside f*(τ_K), per handoff and as medians. It is a K tolerance and is
+applied to nothing else. **The band reads τ_K only**; this entry does not move it -- a verdict-bearing
+τ chosen after seeing which is looser is exactly what 0023 refused to do -- but the reader sees both.
+
+**τ ladder (descriptive; E-RL design).** f*(τ) is ALSO stated at τ_K ∈ {0.3186, 0.1, 0.03} and
+τ_V ∈ {0.4867, 0.1, 0.03} -- the registered value first, then `[e9.rule] tau_ladder` -- for every arm, per
+handoff and as median / p10 / p90, from the same per-token record (a re-sort). It reads *how far
+inside* the tolerance the re-render sits; the loader refuses a ladder that is not strictly decreasing
+inside (0, τ_K). f* at every τ remains an oracle LOWER BOUND (0023, both reasons).
+
+**Prefix-invariance control (review finding 3; HALTS).** 0023's pipeline-identity control scores the
+receiver's dump of `S` against itself: the scorer loads one dump twice, so its zero is the scorer's
+arithmetic and cannot fail on the box. It stays (it still proves the dump loads and the record sums).
+Added: on the same first included handoff, the receiver prefills `S` followed by **R's first token**
+(recorded), and rows 0..|S|−1 of that dump are scored against the `S` dump at pairs (p, p). Causal
+attention makes them equal up to kernel arithmetic; the max centered per-token deviation (token mean,
+K or V, in R²'s units) must be ≤ **1e-04** -- three orders under τ_K, well above float32 noise -- or
+the run HALTS before any handoff is scored. The S+1 dump is transient; its per-token record and
+score are kept and `summarize_e9` re-derives the maximum, refuses above the tolerance, and refuses a
+record whose extra token is not R's first. The tolerance is a registered judgment, not a citation.
+
+**Causal seam distance b⁻(t) (review finding 4).** 0023's b(t) is the distance to the nearest seam on
+EITHER side; a matched token's K/V depend only on what precedes it, so a seam after it cannot touch
+them and bin 0 is diluted by construction. b⁻(t) = distance to the nearest PRECEDING seam (same seam
+definition; a token with no seam before it reports |R|) is computed from the alignment alone and the
+seam profile is stated under both, same fixed bins. b(t) stays as registered; neither decides anything.
+
+**Matched-block lengths (review finding 5).** A block is a maximal run of pairs consecutive on both
+sides, re-derived from the pairs. Single shared tokens inside otherwise different text carry
+null-level deviation and sit in seam bin 0. Registered: the pooled token count by block length in the
+fixed bins {1, 2-3, 4-7, 8+}, and f*(τ_K) over tokens in blocks of length ≥ **4**
+(`[e9.rule] min_block_len`), E9-same K and V, per handoff and pooled; NOT COMPUTABLE where a handoff has
+no such token. Recomputed here from the raw traces over the 25 included handoffs: 155,257 matched tokens in
+2,278 blocks -- 1: 679 (0.44%), 2-3: 861 (0.55%), 4-7: 1,715 (1.10%), 8+: 152,002 (97.90%); 153,717 tokens (99.01%) in blocks ≥ 4.
+`e9 --align-only` writes every alignment and `results/e9/align/coverage.json` (coverage, reasons,
+keep draw, per-handoff block counts) before any prefill, with no gate and no upstream call; the driver
+recomputes the same files and `summarize_e9` re-derives every alignment from the raw traces regardless.
+
+**Interval on the median (review finding 6).** The rule reads the point median of f*(τ_K) over the
+included handoffs. Beside it, a seeded percentile bootstrap of that median (`[e9.controls]`
+`bootstrap_seed` = 25, `bootstrap_reps` = 2000; 2.5 / 97.5 with the ONE pinned quantile convention,
+`e7_stats.quantile`) is stated. Reported, never read: the band is the point median as 0023 wrote it.
+
+**δ_null equal-token fraction (review finding 7).** The seeded derangement can pair a receiver position
+with a sender position carrying the same token id; the fraction of such pairs is stated beside δ_null.
+
+**Keep subset: n = 3 → 8 (seed 9 unchanged).** 0019 retains a seeded subset of handoffs
+with full dumps so a CPU summarizer can re-score from tensors; 0023 registers a `[STRETCH]` partial-
+prefill experiment and the E-RL design a behavioral control of the same shape; both can only ever run
+on retained dumps, the only tensors that survive the GPU day. Same seed, larger draw: `numpy` choice
+without replacement is NOT nested across sizes, so this is a different set, not the old 3 plus 5.
+Recomputed here: the n = 3 draw was `django__django-10880_traj#60`, `astropy__astropy-7166_traj#66`, `django__django-11066_traj#36` (14.3 GB); the n = 8 draw is
+  - `20241016_composio_swekit/astropy__astropy-14182_traj#68` (4.64 GB)
+  - `20241016_composio_swekit/astropy__astropy-7166_traj#88` (6.56 GB)
+  - `20241016_composio_swekit/astropy__astropy-7606_traj#88` (6.89 GB)
+  - `20241025_composio_swekit/astropy__astropy-14096_traj#80` (7.80 GB)
+  - `20241025_composio_swekit/astropy__astropy-14365_traj#119` (7.14 GB)
+  - `20241025_composio_swekit/astropy__astropy-14995_traj#74` (7.77 GB)
+  - `20241025_composio_swekit/django__django-10999_traj#64` (3.64 GB)
+  - `20241025_composio_swekit/django__django-11066_traj#36` (3.72 GB)
+1 of the 3 carried over (`django__django-11066_traj#36`). Retained volume 48.2 GB of fp16 stride-1 dumps
+(three per handoff; 114,688 B per token on the receiver [28 × 8 × 128 × 2 × 2 B], 114,688 B on the
+source), against 14.3 GB before; the box needs that much free beside the transient dumps, and the sync
+off the box scales with it. The GPU runbook's named keep handoffs, volumes, "68 handoffs" and "< 1 h"
+predate this entry and are superseded by it and by the 09-02 pre-flight; the driver draws from config.
+
+**Instrument and enforcement.** `config/e9.toml` carries every parameter above (`tau_ladder`,
+`tau_agent_K`, `min_block_len`, `prefix_invariance_max_delta`, `bootstrap_seed`, `bootstrap_reps`, keep
+`n`); `load_e9_config` refuses a config missing or malforming any of them; `e9.assert_ready` requires
+THIS entry beside 0019 and 0023 (`REQUIRED_ENTRIES`), so no prefill can start on a ledger that lacks
+it; the driver halts on the prefix control; `summarize_e9` states every quantity above in
+`summary.json` / `summary.md` under lines that say DESCRIPTIVE or ALONGSIDE and refuses on any
+disagreement with config, the calibration, the E7 report, or the per-token record. Tests: ladder and
+agent-τ monotone, band unchanged; prefix control halts above tolerance and its record is refused when
+tampered, absent, or over tolerance; b⁻ vs b on a seam after a token; block lengths re-derive
+difflib's blocks; bootstrap seeded and nearest-rank; coverage comparison never invents a zero;
+non-nesting of the keep draw pinned; malformed parameters refused.
+
+**Scope.** All of 0019's and 0023's limits. No hypothesis cell changes with this entry; no
+`verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
+The 0018 rows above are E7 figures and name the corpus manifest they were measured against (0024).
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 8fb9531f556f91cd2090cffe7014956826e2453cbe49b406a7af6a077b115753
