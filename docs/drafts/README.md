@@ -19,6 +19,8 @@ Current state: **no drafts pending.** Entries 0013–0024 are appended and their
 `e7.assert_ready`). Queued, unnumbered: the **H-E9 verdict** (Track A; written from a clean
 `summarize_e9` run after the A100 day, `docs/2026-09-02-e9-gpu-runbook.md`; must carry a
 `verdict: H-E9 = <VERDICT>` line, `ledger_check`) and the **E8 amendment** (`--holdout-frac 1.0` on
-`36d73b3`, per-sequence moments from the `--per-token` record, re-pin). The 0022 tokenizer
+`36d73b3`, per-sequence moments from the `--per-token` record, re-pin). **E-RL** (KV reuse across RL
+post-training checkpoints) is designed only — `docs/2026-09-02-e-rl-design.md` — and has no
+registration script; it takes a number when its script is staged, not before. The 0022 tokenizer
 sensitivity (`summarize_e7 --strategy-override`) gets no entry of its own: it ships in the 0009
 successor bundled with n = 420, per 0022's "one replay supersedes the figures once."

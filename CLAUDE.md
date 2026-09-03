@@ -88,7 +88,10 @@ amended by **0023** before any prefill — verdict statistic is median oracle se
 fraction f*(τ_K) over included handoffs, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50, τ_K = 1 − 0.6814 from
 the archive; pooled R² is a bridge and decides nothing; built, gated on the 0023 upstream re-pin
 (`--per-token`; 0019's `7e41f792` is its ancestor); awaiting the A100 run — see
-`docs/2026-09-02-e9-gpu-runbook.md`; verdict entry: unnumbered until its script is staged — `docs/drafts/README.md` is the ONE allocator and numbers are provisional). **Entries 0006–0023 are the
+`docs/2026-09-02-e9-gpu-runbook.md`; verdict entry: unnumbered until its script is staged — `docs/drafts/README.md` is the ONE allocator and numbers are provisional). **E-RL** (KV reuse
+across RL post-training checkpoints, same statistic and τ as 0023 on the weight axis) is
+DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; its first
+build step is an upstream change (revision-aware `Pair`). **Entries 0006–0023 are the
 authority; read them whole before touching E7/E8/E9 code.** Per-token deviation is in R²'s own
 units (a token's share of unexplained variance), never a per-token percent error (0023). Every taxonomy class carries its own
 NOT MEASURABLE state; a recorded 0 where the class is unmeasurable is the forbidden zero.
