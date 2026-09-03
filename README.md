@@ -13,8 +13,13 @@ requests), **H-E7b `UNESTIMABLE`** (no corpus that can evidence compaction shows
 **H-E8 `NOT CONFIRMED`** (the fitted cross-model map does not survive agent-trace content
 shift within its band). E9 — the achievable fraction at a real re-rendered handoff — is
 registered and gated, its rule amended before any prefill (entry 0023: a per-token oracle
-selective-recompute fraction replaces pooled R² as the verdict statistic), awaiting its GPU run. The ledger is the authority on state; every figure
-lives there or in `docs/`, never here.
+selective-recompute fraction replaces pooled R² as the verdict statistic) and its coverage,
+controls and descriptive outputs completed by an independent pre-run review (entry 0025: the
+excluded handoffs are named and compared, a prefix-invariance control can halt the box, and
+what the tolerance is anchored to is stated both ways), awaiting its GPU run. A third line,
+**E-RL** — the same statistic on the weight axis, KV reuse across RL post-training checkpoints —
+is **design only** (`docs/2026-09-02-e-rl-design.md`): unregistered, unnumbered, no code. The
+ledger is the authority on state; every figure lives there or in `docs/`, never here.
 
 ```mermaid
 flowchart LR
@@ -26,15 +31,18 @@ flowchart LR
     E0 -.->|operator decision,<br/>opportunity cost| CLOSED[screen line E1..E6 CLOSED<br/>H-S1/S3/S4 SHELVED]
     E7["E7 -- trace replay: do switches and<br/>compaction occur in public agent traces,<br/>and at what recoverable cost?"] --> V7[H-E7a NOT CONFIRMED<br/>H-E7b UNESTIMABLE]
     E8["E8 -- content shift: does the fitted<br/>cross-model map keep its held-out<br/>fidelity on agent text? no refit"] --> V8[H-E8 NOT CONFIRMED]
-    E9["E9 -- the real handoff: how many matched<br/>tokens must an oracle recompute for the<br/>re-render to match the mapper's own fidelity?<br/>registered, gated, per-token rule"] --> ANCHOR
+    E9["E9 -- the real handoff: how many matched<br/>tokens must an oracle recompute for the<br/>re-render to match the mapper's own fidelity?<br/>registered, gated, per-token rule;<br/>coverage + controls completed by review (0025)"] --> ANCHOR
+    E9 -.->|same statistic,<br/>weight axis| ERL["E-RL -- across RL checkpoints:<br/>recompute the cache or continue stale?<br/>DESIGN ONLY, unregistered"]
     V7 --> ANCHOR[measurement paper<br/>anchor venue: MLSys]
     V8 --> ANCHOR
     E7 -.->|numbers-freeze gate| WS[workshop 4-pager]
     E8 -.->|admitted by 0016,<br/>same gate| WS
     classDef rule fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
     classDef verdict fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
+    classDef design fill:#eeeeee,stroke:#8b949e,color:#24292f,stroke-dasharray:4 3;
     class RULE,CLOSED,E9 rule;
     class VS,V7,V8 verdict;
+    class ERL design;
 ```
 
 The scope sentence, held verbatim:
@@ -51,7 +59,7 @@ Verdicts only — every figure lives in the named ledger entry, never here.
 | H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** | Lane A is measurable on 60 of 2,904 trajectories, all from one system with a designed critic stage (always re-rendered, never byte-identical); under the registered denominator its recoverable prefill sits an order of magnitude under the cutoff. Scope: public *benchmark* trajectories are single-model leaderboard runs by construction, so this decides what the public record evidences, not what production routers, fallbacks and cost tiers do — those leave no public trace. 0015's registered consequence: any case for cross-model KV transfer must rest on different models serving different requests. | 0006, 0010, 0013–0018, 0022 |
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** | Zero compaction events on every trajectory that can evidence one; final-transcript traces structurally cannot show it. | 0014, 0015 |
 | H-E8 — the fitted cross-model map survives agent-trace content shift | **NOT CONFIRMED** | The value pathway drops outside the registered band on agent text even with no switch and no position change; the key pathway lands in the dead zone. | 0009, 0016, 0020 |
-| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, rule amended per-token before any prefill, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling; decided by how many matched tokens an oracle must recompute to reach the mapper's own fidelity. | 0019, 0023 |
+| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | *unresolved* — registered, gated, rule amended per-token before any prefill, coverage and controls completed before any prefill, awaiting the GPU run | Turns the headroom **upper bound** into an observed ceiling; decided by how many matched tokens an oracle must recompute to reach the mapper's own fidelity. Decided on the handoffs inside the registered context cap (25 of 68; the excluded are the long ones, compared on the record), against the mapper's generic-text tolerance, with its agent-text tolerance stated alongside. | 0019, 0023, 0025 |
 | H-S1…H-S4 (pre-fit line) | `SHELVED` / `NOT CONFIRMED` (H-S2 first clause) | Line closed by operator decision; the one decided clause rests on a tied-embeddings vocabulary proxy and was never generalized (`docs/background.md`). | 0003–0006 |
 
 ## How a number becomes a claim
@@ -107,9 +115,15 @@ itself, invoking the pinned upstream instrument by subprocess. E9 is decided per
 pooled score: each matched token's deviation is its share of unexplained variance in R²'s own
 units, the verdict statistic is the oracle fraction of tokens that would have to be recomputed
 for the rest to sit at the mapper's own fidelity (a lower bound, stated as one), and the
-threshold is calibrated from the archived mapper before any prefill. A pipeline-identity control
-halts the run on any nonzero deviation, a seeded null pairing fixes the top of the scale, and the
-seam and depth profiles are descriptive outputs registered before data.
+threshold is calibrated from the archived mapper before any prefill. Two controls can halt the
+run before any handoff is scored: a pipeline-identity score (the scorer against one dump twice,
+which proves the record sums but cannot fail on the box) and a prefix-invariance score (the
+sender context prefilled with one extra token must reproduce its own dump within a registered
+tolerance, which can). A seeded null pairing fixes the top of the scale; the seam profile is
+stated under both the bidirectional and the causal seam distance; matched-block lengths, the
+recompute fraction over long blocks, a ladder of stricter tolerances, the mapper's own tolerance
+on agent text, and a seeded bootstrap of the median are all registered before data and decide
+nothing — the band reads one point median at one tolerance, as written in 0023.
 
 ```mermaid
 flowchart TD
@@ -121,13 +135,17 @@ flowchart TD
     C --> B["Lane B: counterfactual cascade<br/>descriptive only"]
     A -->|alone decided| HA[H-E7a NOT CONFIRMED: an order of<br/>magnitude under the 10% cutoff -- 0018]
     A --> HR[headroom at observed handoffs<br/>reported as an UPPER BOUND]
+    HR --> E9["E9: the achievable fraction, per token<br/>on the handoffs inside the cap; excluded<br/>ones named and compared -- 0019/0023/0025"]
+    E9 --> CTL["controls halt before scoring:<br/>identity (arithmetic) + prefix invariance (the box)"]
     B -.->|never resolves a hypothesis| DESC[labeled counterfactual]
     C --> TAX[invalidation taxonomy<br/>six classes, each with its own<br/>NOT MEASURABLE state]
     TAX --> CB[compaction events: measured zero<br/>where measurable, so H-E7b UNESTIMABLE]
     classDef verdict fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
     classDef bounded fill:#fdf2d0,stroke:#d29922,color:#5c4a00;
+    classDef halt fill:#ffe0e0,stroke:#f85149,color:#6a0d0d;
     class HA,CB verdict;
-    class B,HR,DESC bounded;
+    class B,HR,DESC,E9 bounded;
+    class CTL halt;
 ```
 
 Two properties of the corpora shape every figure. Serving-model identity is recorded per step
@@ -239,6 +257,7 @@ flowchart LR
 | `docs/2026-09-01-swe-bench-trace-recon.md` | trajectory availability, formats, and what they do and do not record |
 | `docs/2026-09-01-lcfm-gpu-plan.md` | the LCFM sprint plan with GPU runs: what runs on CPU (E8), what needs the A100 (E9) |
 | `docs/2026-09-02-e9-gpu-runbook.md` | the E9 GPU day, step by step: pin, environments, run, sync-before-expiry, CPU fallback |
+| `docs/2026-09-02-e-rl-design.md` | E-RL design, **unregistered**: KV reuse across RL post-training checkpoints on E9's statistic; citations pinned at source; open rulings listed |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
 | `CLAUDE.md` | repo brief for agent sessions: commands, layout, binding rules |
 
@@ -253,8 +272,11 @@ flowchart TD
     LED --> PLAN[GPU plan + E9 runbook]
     LED --> SPEC[design spec + seed + gap map<br/>verbatim, immutable]
     LED --> UP[UPSTREAM.md<br/>pin + borrow provenance]
+    LED -.-> ERL[E-RL design<br/>unregistered, no number]
     classDef record fill:#d7f4de,stroke:#2ea043,color:#0f3d1e;
+    classDef design fill:#eeeeee,stroke:#8b949e,color:#24292f,stroke-dasharray:4 3;
     class LED record;
+    class ERL design;
 ```
 
 Status tags used in the ledger: `[VALIDATED]` ran and survived refutation · `[BASELINE]` ran,
