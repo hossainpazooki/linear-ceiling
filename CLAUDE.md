@@ -31,7 +31,8 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
-.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + config/e9.toml committed AND the 0023 upstream re-pin holds
+.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + 0025 + config/e9.toml committed AND the 0023 upstream re-pin holds
+.venv/Scripts/python.exe -m linear_ceiling.e9 --align-only      # entry 0025: every alignment + results/e9/align/coverage.json (coverage, reasons, keep draw, block counts) before any prefill; CPU, no gate
 .venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau   # 0023, before the GPU run: tau = 1 - archived k=1 held-out R^2 via upstream score_mapper --per-token; writes results/e9/calibration/tau.json (~1 min CPU)
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: alignments from raw traces, R^2 from moments, per-token sums to moments, keep subset re-scored, tau recomputed, controls checked -> f*(tau), seam/depth profiles, band
@@ -87,8 +88,13 @@ designed critic stage, not about production workloads, which leave no public tra
 amended by **0023** before any prefill — verdict statistic is median oracle selective-recompute
 fraction f*(τ_K) over included handoffs, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50, τ_K = 1 − 0.6814 from
 the archive; pooled R² is a bridge and decides nothing; built, gated on the 0023 upstream re-pin
-(`--per-token`; 0019's `7e41f792` is its ancestor); **0025 staged** (`docs/drafts/append_0025.py`):
-descriptive τ ladder `[e9.rule] tau_ladder` and keep-subset n 3 → 8, gate requires it; awaiting the A100 run — see
+(`--per-token`; 0019's `7e41f792` is its ancestor); **0025 staged, NOT appended** (`docs/drafts/append_0025.py`;
+the first staging was retired before its append — the ledger has no 0025 anywhere): registers, all
+descriptive, coverage 25/68 with an included-vs-excluded comparison, τ_agent_K = 1 − 0020 arm (b)
+alongside, the τ ladder, a prefix-invariance control that HALTS (the 0023 identity control cannot fail
+on the box), causal seam distance b⁻(t), matched-block lengths + f* over blocks ≥ 4, a seeded bootstrap
+of the median, the δ_null equal-token fraction, `e9 --align-only`, keep-subset n 3 → 8; the gate
+requires it; awaiting the A100 run — see
 `docs/2026-09-02-e9-gpu-runbook.md`; verdict entry: unnumbered until its script is staged — `docs/drafts/README.md` is the ONE allocator and numbers are provisional). **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is

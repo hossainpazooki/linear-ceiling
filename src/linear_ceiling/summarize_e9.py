@@ -41,7 +41,12 @@ from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E9Config, load_e7_config, load_e9_config
 from linear_ceiling.e7_stats import summary
 from linear_ceiling.e8_text import qwen_encoder
-from linear_ceiling.e9 import UPSTREAM_PATHS, _stem, dump_fingerprint, keep_subset, run_upstream, submission_dirs
+from linear_ceiling.e9 import (UPSTREAM_PATHS, _stem, dump_fingerprint, keep_subset, prefix_invariance_max_delta,
+                               run_upstream, submission_dirs)
+from linear_ceiling.e7_stats import quantile as _quantile
+from linear_ceiling.e9_align import coverage_comparison
+from linear_ceiling.e9_pertoken import (BLOCK_BIN_LABELS, block_bin, block_lengths, bootstrap_median_interval,
+                                        seam_distance_left)
 from linear_ceiling.e9_align import align, load_handoffs
 from linear_ceiling.e9_pertoken import (
     SEAM_BIN_EDGES, SEAM_BIN_LABELS, band_outcome, centered_delta, f_star, layer_mean, null_pairs,
@@ -214,7 +219,10 @@ def calibrate_tau(cfg: E9Config, runner=subprocess.run, *, allow_dirty_upstream:
         "heldout": {"n_tokens": n, "K_r2_layer_mean": held["K"], "V_r2_layer_mean": held["V"],
                     "definition": "A5 per head, averaged over heads then layers (kvt.mapper.mapper_r2)"},
         "tau": {"K": 1.0 - held["K"], "V": 1.0 - held["V"],
-                "definition": "1 - held-out R^2 per read-out; the mean centered per-token deviation of the k=1 mapper"},
+                "definition": "1 - held-out R^2 per read-out; the mean centered per-token deviation of the k=1 mapper",
+                # entry 0025: the same mapper on AGENT text (E8 arm (b), entry 0020), the looser alongside tolerance
+                "agent_K": 1.0 - float(e8["per_k"][str(cfg.mapper_k)]["agent"]["K"]),
+                "agent_definition": "1 - E8 arm (b) K R^2 at the verdict k (entry 0020); alongside, verdict-bearing for nothing"},
         "bridge_check_max_abs": bridge_worst,
         "diagnostics": diag,
         "per_token_file": pt_path.name, "per_token_sha256": sha256_file_bytes(pt_path),
@@ -236,6 +244,12 @@ def _check_calibration(cfg: E9Config, runner) -> dict:
             raise ValueError(f"tau_{key}: recorded calibration {cal['tau'][key]} != recomputed {fresh['tau'][key]}")
         if not _close(float(cfg.rule[f"tau_{key}"]), fresh["tau"][key], _TAU_TOL):
             raise ValueError(f"config tau_{key} {cfg.rule[f'tau_{key}']} != recomputed {fresh['tau'][key]}")
+    # entry 0025: the alongside agent-text tau re-derives from E8's report (arm (b)) and matches config
+    if "agent_K" not in cal["tau"] or not _close(cal["tau"]["agent_K"], fresh["tau"]["agent_K"], _TAU_TOL):
+        raise ValueError("tau_agent_K: recorded calibration lacks it or disagrees with the recomputation; "
+                         "rerun `summarize_e9 --calibrate-tau` (entry 0025)")
+    if not _close(float(cfg.rule["tau_agent_K"]), fresh["tau"]["agent_K"], _TAU_TOL):
+        raise ValueError(f"config tau_agent_K {cfg.rule['tau_agent_K']} != 1 - E8 arm (b) K R^2 ({fresh['tau']['agent_K']})")
     if list(cfg.controls["seam_bins"]) != list(SEAM_BIN_EDGES):
         raise ValueError("config seam_bins differ from the registered edges (0023)")
     return fresh
@@ -261,6 +275,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         raise ValueError(str(e)) from e
     cal = _check_calibration(cfg, runner)
     tau = {"K": float(cfg.rule["tau_K"]), "V": float(cfg.rule["tau_V"])}
+    tau_agent = float(cfg.rule["tau_agent_K"])                        # entry 0025, alongside
+    min_block = int(cfg.rule["min_block_len"])
 
     # 1. Re-derive every alignment from the raw traces and compare, records and arrays.
     e7 = e7 or load_e7_config(REPO_ROOT / "config" / "e7.toml", REPO_ROOT)
@@ -270,7 +286,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     recorded = {a["handoff_id"]: a for a in rep.get("alignments") or []}
     if set(handoffs) != set(recorded):
         raise ValueError(f"handoff set differs: recomputed {len(handoffs)}, recorded {len(recorded)}")
-    included, pairs_of, n_recv = [], {}, {}
+    included, pairs_of, n_recv, ids_of = [], {}, {}, {}
     for hid, h in sorted(handoffs.items()):
         rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap)
         if asdict(rec) != recorded[hid]:
@@ -281,10 +297,18 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
                     and np.array_equal(z["pairs"], pairs)):
                 raise ValueError(f"{hid}: stored alignment arrays do not match the recomputation")
             included.append(hid)
-            pairs_of[hid], n_recv[hid] = pairs, len(r_ids)
+            pairs_of[hid], n_recv[hid], ids_of[hid] = pairs, len(r_ids), (s_ids, r_ids)
     cov = {"observed": len(handoffs), "included": len(included), "excluded": len(handoffs) - len(included)}
     if cov != rep["coverage"]:
         raise ValueError(f"coverage recomputed {cov} != recorded {rep['coverage']}")
+    # entry 0025 (review finding 1): what the cap selects on -- included vs excluded on |S|, |R| and on
+    # 0018's per-handoff overlap / recoverable fractions from the VERIFIED E7 report (its sha is recorded).
+    e7_report = e7.results_dir / "skeleton_report.json"
+    if not e7_report.exists():
+        raise ValueError(f"{e7_report} does not exist; the coverage comparison (0025) reads entry 0018's rows from it")
+    e7_rows = json.loads(e7_report.read_text(encoding="utf-8"))["headroom"]["rows"]
+    coverage_cmp = coverage_comparison(list(recorded.values()), e7_rows, _stats)
+    coverage_cmp["e7_report_sha256"] = sha256_file_bytes(e7_report)
     if keep_subset(included, cfg.keep_seed, cfg.keep_n) != rep["keep_subset"]:
         raise ValueError("keep_subset does not re-derive from the seed and the included set")
     if set(rep.get("scores") or {}) != set(included):
@@ -363,6 +387,28 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     n_s = int(np.load(cdir / ctl["identity"]["pairs_file"])["pairs"].shape[0])
     if n_s != recorded[c_hid]["n_sender"]:
         raise ValueError("identity control did not cover every sender position")
+    # entry 0025: prefix-invariance control -- files by hash, squares sum to moments, the max centered
+    # deviation re-derived and under the registered tolerance (the driver halted on it; this refuses on it).
+    pre = ctl.get("prefix")
+    if not pre:
+        raise ValueError("prefix-invariance control missing from the report (entry 0025)")
+    for f, sha in ((pre["score_file"], pre["score_sha256"]), (pre["tokens_file"], pre["tokens_sha256"]),
+                   (pre["pairs_file"], pre["pairs_sha256"])):
+        if not (cdir / f).exists() or sha256_file_bytes(cdir / f) != sha:
+            raise ValueError(f"control prefix: {f} missing or off-hash")
+    if pre["pairs_sha256"] != ctl["identity"]["pairs_sha256"]:
+        raise ValueError("prefix control did not use the identity pairs (every sender position, (p, p))")
+    pre_body = json.loads((cdir / pre["score_file"]).read_text(encoding="utf-8"))
+    pre_tok = _load_tokens(cdir / pre["tokens_file"], pre["tokens_sha256"], "prefix")
+    _check_tokens(pre_body, pre_tok, n_s, "prefix control", arms=("same_K", "same_V"))
+    pre_max = prefix_invariance_max_delta(cdir / pre["score_file"], cdir / pre["tokens_file"], n_s)
+    pre_tol = float(cfg.controls["prefix_invariance_max_delta"])
+    if not _close(pre_max, float(pre["max_token_delta"])) or float(pre["tolerance"]) != pre_tol:
+        raise ValueError("prefix control: recorded max deviation or tolerance does not re-derive from the record and config")
+    if pre_max > pre_tol:
+        raise ValueError(f"prefix control: max centered deviation {pre_max:.3e} exceeds the registered tolerance {pre_tol:.1e}")
+    if int(pre["extra_token"]) != int(ids_of[c_hid][1][0]):
+        raise ValueError("prefix control: the extra token is not R's first token")
     want_null = null_pairs(pairs_of[c_hid], make_rng(int(cfg.controls["null_seed"])))
     if not np.array_equal(np.load(cdir / ctl["null"]["pairs_file"])["pairs"], want_null):
         raise ValueError("null control pairs do not re-derive from the alignment and the seed")
@@ -382,6 +428,11 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     # band is computed at tau_K only. Values come from config (validated strictly decreasing, < tau_K).
     ladder = [float(t) for t in cfg.rule["tau_ladder"]]
     fstar_ladder = {arm: {_tau_key(t): {} for t in ladder} for arm in ARMS}
+    fstar_agent = {arm: {} for arm in ("same_K", "cross_K")}                  # 0025: at tau_agent_K, K arms only
+    seam_left_tokens = {arm: [[] for _ in SEAM_BIN_LABELS] for arm in ("same_K", "same_V")}   # 0025: b^-(t)
+    seam_left_per_handoff = {}
+    block_counts = {lab: 0 for lab in BLOCK_BIN_LABELS}                       # 0025: matched-block lengths
+    block_per_handoff, fstar_long = {}, {"same_K": {}, "same_V": {}}
     ratio = {"K": {}, "V": {}}
     own_gt1 = {"K": {}, "V": {}}
     seam_tokens = {arm: [[] for _ in SEAM_BIN_LABELS] for arm in ("same_K", "same_V")}
@@ -398,6 +449,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
             fstar[arm][hid] = f_star(dt[arm], tau[key])
             for t in ladder:
                 fstar_ladder[arm][_tau_key(t)][hid] = f_star(dt[arm], t)
+            if key == "K":                                                 # tau_agent_K is a K tolerance only
+                fstar_agent[arm][hid] = f_star(dt[arm], tau_agent)
         for key in ("K", "V"):
             ratio[key][hid] = float(np.median(dt[f"cross_{key}"]) / np.median(dt[f"same_{key}"]))
             own_gt1[key][hid] = float((own_norm_delta(tok[f"same_{key}"], tok[f"ref_{key}"]).mean(1) > 1).mean())
@@ -411,6 +464,38 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
                 seam_tokens[arm][i].append(sel)
                 row.append(None if len(sel) == 0 else float(np.median(sel)))
             seam_per_handoff[hid][arm] = row
+        # entry 0025: causal seam distance b^-(t) alongside 0023's b(t), same bins
+        bins_left = seam_bin(seam_distance_left(pairs_of[hid], n_recv[hid]))
+        seam_left_per_handoff[hid] = {}
+        for arm in ("same_K", "same_V"):
+            row = []
+            for i in range(len(SEAM_BIN_LABELS)):
+                sel = dt[arm][bins_left == i]
+                seam_left_tokens[arm][i].append(sel)
+                row.append(None if len(sel) == 0 else float(np.median(sel)))
+            seam_left_per_handoff[hid][arm] = row
+        # entry 0025: matched-block lengths re-derived from the pairs; f*(tau) over blocks >= min_block_len
+        bl = block_lengths(pairs_of[hid])
+        bb = block_bin(bl)
+        block_per_handoff[hid] = {lab: int((bb == i).sum()) for i, lab in enumerate(BLOCK_BIN_LABELS)}
+        for lab, c in block_per_handoff[hid].items():
+            block_counts[lab] += c
+        long_sel = bl >= min_block
+        block_per_handoff[hid]["n_tokens_ge_min"] = int(long_sel.sum())
+        for arm, key in (("same_K", "K"), ("same_V", "V")):
+            fstar_long[arm][hid] = f_star(dt[arm][long_sel], tau[key]) if long_sel.any() else None
+    seam_left_pooled = {}
+    for arm in ("same_K", "same_V"):
+        seam_left_pooled[arm] = []
+        for i, label in enumerate(SEAM_BIN_LABELS):
+            allv = np.concatenate(seam_left_tokens[arm][i]) if seam_left_tokens[arm][i] else np.zeros(0)
+            seam_left_pooled[arm].append({"bin": label, "n_tokens": int(len(allv)),
+                                          "median": None if len(allv) == 0 else float(np.median(allv))})
+    fstar_long_stats = {arm: (_stats(v for v in d.values() if v is not None) if any(v is not None for v in d.values()) else None)
+                        for arm, d in fstar_long.items()}
+    # entry 0025 (review finding 7): the null pairing can pair equal token ids; report the fraction
+    s_c, r_c = ids_of[c_hid]
+    null_equal_frac = float(np.mean(s_c[want_null[:, 0]] == r_c[want_null[:, 1]]))
     seam_pooled = {}
     for arm in ("same_K", "same_V"):
         seam_pooled[arm] = []
@@ -423,6 +508,10 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     # 5. Verdict statistic, band, medians -- stated here for the first time.
     f_same_k = _stats(fstar["same_K"].values())
     outcome = band_outcome(f_same_k["median"], cfg.rule)
+    # entry 0025 (review finding 6): seeded bootstrap interval on the median the rule reads; reported, not read
+    boot = bootstrap_median_interval(fstar["same_K"].values(), make_rng(int(cfg.controls["bootstrap_seed"])),
+                                     int(cfg.controls["bootstrap_reps"]), _quantile)
+    boot["seed"] = int(cfg.controls["bootstrap_seed"])
     same_k = _stats(per_handoff[h]["same"]["K"] for h in included)
     same_v = _stats(per_handoff[h]["same"]["V"] for h in included)
     cross_k = _stats(per_handoff[h]["cross"]["K"] for h in included)
@@ -435,6 +524,17 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         "tau_ladder": ladder,                                                     # entry 0025, descriptive
         "fstar_ladder": {arm: {tk: _stats(v.values()) for tk, v in fstar_ladder[arm].items()} for arm in ARMS},
         "fstar_ladder_per_handoff": fstar_ladder,
+        "tau_agent_K": tau_agent,                                                 # entry 0025, alongside
+        "fstar_at_tau_agent": {arm: _stats(v.values()) for arm, v in fstar_agent.items()},
+        "fstar_at_tau_agent_per_handoff": fstar_agent,
+        "median_fstar_same_K_bootstrap": boot,                                    # entry 0025, reported
+        "seam_profile_left_pooled": seam_left_pooled, "seam_profile_left_per_handoff": seam_left_per_handoff,
+        "block_length_bins": list(BLOCK_BIN_LABELS), "block_length_tokens_pooled": block_counts,
+        "block_length_per_handoff": block_per_handoff, "min_block_len": min_block,
+        "fstar_blocks_ge_min": fstar_long_stats, "fstar_blocks_ge_min_per_handoff": fstar_long,
+        "delta_null_equal_token_fraction": null_equal_frac,
+        "prefix_control": {"max_token_delta": pre_max, "tolerance": pre_tol, "n_positions": n_s},
+        "coverage_comparison": coverage_cmp,
         "cross_over_same_median_delta": {k: _stats(v.values()) for k, v in ratio.items()},
         "own_norm_delta_gt_1_fraction": {k: _stats(v.values()) for k, v in own_gt1.items()},
         "delta_null": delta_null, "delta_null_handoff": c_hid,
@@ -469,6 +569,22 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
           f"- tau ladder (entry 0025, DESCRIPTIVE, decides nothing; how far inside the tolerance f* sits): "
           + "; ".join(f"same K / V at tau = {t:.4g}: {fmt(figures['fstar_ladder']['same_K'][_tau_key(t)])} / "
                       f"{fmt(figures['fstar_ladder']['same_V'][_tau_key(t)])}" for t in ladder) + "\n"
+          f"- f*(tau_agent_K = {tau_agent:.4f}) (entry 0025, ALONGSIDE: the same mapper's tolerance on agent text, "
+          f"E8 arm (b)) same K / cross K: {fmt(figures['fstar_at_tau_agent']['same_K'])} / "
+          f"{fmt(figures['fstar_at_tau_agent']['cross_K'])}\n"
+          f"- bootstrap of the median f*(tau_K) same K (entry 0025, seed {boot['seed']}, {boot['reps']} reps, reported "
+          f"not read): [{boot['lower_2.5']:.4f}, {boot['upper_97.5']:.4f}]\n"
+          f"- seam profile under the CAUSAL distance b^-(t) (entry 0025), E9-same K, pooled medians by bin: "
+          + _bin_line(seam_left_pooled["same_K"]) + "\n"
+          f"- matched-block lengths (entry 0025), pooled tokens by bin: {block_counts}; f*(tau_K) same K over blocks >= "
+          f"{min_block}: {fmt(fstar_long_stats['same_K']) if fstar_long_stats['same_K'] else 'NOT COMPUTABLE (no such tokens)'}\n"
+          f"- delta_null pairs with equal token ids (entry 0025): {null_equal_frac:.4f}\n"
+          f"- prefix-invariance control (entry 0025): max centered delta {pre_max:.3e} over {n_s} positions, tolerance {pre_tol:.1e}\n"
+          f"- coverage (entry 0025): included {coverage_cmp['n']['included']} / excluded-long {coverage_cmp['n']['excluded_long']} / "
+          f"excluded-empty-R {coverage_cmp['n']['excluded_empty_r']}; medians |S| {coverage_cmp['included']['n_sender']['median']} vs "
+          f"{coverage_cmp['excluded_long']['n_sender']['median'] if coverage_cmp['excluded_long'] else 'n/a'}, 0018 overlap "
+          f"{coverage_cmp['included']['overlap_fraction_0018']['median'] if coverage_cmp['included']['overlap_fraction_0018'] else 'n/a'} vs "
+          f"{coverage_cmp['excluded_long']['overlap_fraction_0018']['median'] if coverage_cmp['excluded_long'] and coverage_cmp['excluded_long']['overlap_fraction_0018'] else 'n/a'}\n"
           f"- cross/same median-delta ratio K / V: {fmt(figures['cross_over_same_median_delta']['K'], 3)} / "
           f"{fmt(figures['cross_over_same_median_delta']['V'], 3)}\n"
           f"- delta_null (uninformative scale, handoff {c_hid}) same K / V token-mean median: "
@@ -487,6 +603,12 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
           "The verdict on H-E9 is NOT stated here; it enters by a numbered entry.\n")
     (cfg.results_dir / "summary.md").write_text(md, encoding="utf-8")
     return md
+
+
+def _bin_line(rows: list) -> str:
+    """'bin: median (n=…)' per seam bin; 'n/a' where a bin holds no token (never a zero)."""
+    return ", ".join(f"{r['bin']}: {'n/a' if r['median'] is None else format(r['median'], '.3f')} (n={r['n_tokens']})"
+                     for r in rows)
 
 
 def _tau_key(t: float) -> str:

@@ -13,13 +13,28 @@ from linear_ceiling.hashing import sha256_file_bytes
 from linear_ceiling.summarize_e9 import calibrate_tau, summarize
 from tests.test_e9 import _MEAN, PAIR, RULE, env, fake_runner_factory, words  # noqa: F401  (pytest fixture)
 
-FAKE_CAL = {"tau": {"K": RULE["tau_K"], "V": RULE["tau_V"]}, "heldout": {"n_tokens": 0, "K_r2_layer_mean": 0.75, "V_r2_layer_mean": 0.6}}
+FAKE_CAL = {"tau": {"K": RULE["tau_K"], "V": RULE["tau_V"], "agent_K": RULE["tau_agent_K"]},
+            "heldout": {"n_tokens": 0, "K_r2_layer_mean": 0.75, "V_r2_layer_mean": 0.6}}
+
+
+def write_fake_e7_report(e7, report_path):
+    """Entry 0025's coverage comparison reads 0018's per-handoff headroom rows from the verified E7
+    report; the synthetic corpus gets one row per observed handoff, keyed like the driver's ids."""
+    rep = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    rows = []
+    for i, a in enumerate(rep["alignments"]):
+        traj, sw = a["handoff_id"].rsplit("#", 1)
+        rows.append({"traj_id": traj, "switch_index": int(sw), "paid_tokens": 10 * (i + 1),
+                     "overlap_fraction": 0.9 - 0.1 * i, "recoverable_fraction": 0.8 - 0.1 * i})
+    e7.results_dir.mkdir(parents=True, exist_ok=True)
+    (e7.results_dir / "skeleton_report.json").write_text(json.dumps({"headroom": {"rows": rows}}), encoding="utf-8")
 
 
 @pytest.fixture
 def ran(env, tmp_path, monkeypatch):
     cfg, e7, calls, runner = env
     driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    write_fake_e7_report(e7, tmp_path / "results" / "e9" / "report.json")
     monkeypatch.setattr(s9, "check_upstream", lambda *a, **k: None)
     monkeypatch.setattr(s9, "_check_calibration", lambda cfg, runner: FAKE_CAL)
     return cfg, e7, tmp_path / "results" / "e9" / "report.json", runner
@@ -83,6 +98,77 @@ def test_tau_ladder_is_reported_descriptively_and_is_monotone(ran):
         assert set(fig["fstar_ladder"][arm]) == {"0.1", "0.03"}
     # verdict-bearing line and band unchanged by the ladder
     assert "f*(tau_K = 0.2500)" in md and fig["band_outcome"] == s9.band_outcome(fig["fstar"]["same_K"]["median"], cfg.rule)
+
+
+def test_0025_outputs_are_present_consistent_and_descriptive(ran):
+    """Entry 0025: alongside tau, bootstrap, causal seam profile, block lengths, null equal-token
+    fraction, prefix control, coverage comparison -- all stated, none read by the band."""
+    cfg, e7, report, runner = ran
+    md = summarize(cfg, runner=runner, encoder=words, e7=e7)
+    fig = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    hid = next(iter(fig["fstar_per_handoff"]["same_K"]))
+    n_pairs = json.loads(report.read_text(encoding="utf-8"))["scores"][hid]["n_pairs"]
+    assert fig["tau_agent_K"] == 0.30
+    assert set(fig["fstar_at_tau_agent_per_handoff"]) == {"same_K", "cross_K"}          # a K tolerance only
+    for arm in ("same_K", "cross_K"):
+        assert fig["fstar_at_tau_agent_per_handoff"][arm][hid] <= fig["fstar_per_handoff"][arm][hid]   # looser tau
+    boot = fig["median_fstar_same_K_bootstrap"]
+    assert boot["seed"] == 25 and boot["reps"] == 200 and boot["lower_2.5"] <= fig["fstar"]["same_K"]["median"] <= boot["upper_97.5"]
+    assert len(fig["seam_profile_left_pooled"]["same_K"]) == 6
+    assert sum(r["n_tokens"] for r in fig["seam_profile_left_pooled"]["same_K"]) == n_pairs
+    assert sum(fig["block_length_tokens_pooled"].values()) == n_pairs and fig["min_block_len"] == 4
+    assert fig["block_length_per_handoff"][hid]["n_tokens_ge_min"] <= n_pairs
+    assert 0.0 <= fig["delta_null_equal_token_fraction"] <= 1.0
+    assert fig["prefix_control"] == {"max_token_delta": 0.0, "tolerance": 1e-4, "n_positions": fig["prefix_control"]["n_positions"]}
+    cc = fig["coverage_comparison"]
+    assert cc["n"] == {"included": 1, "excluded_long": 1, "excluded_empty_r": 0} and len(cc["e7_report_sha256"]) == 64
+    assert cc["included"]["overlap_fraction_0018"]["n"] == 1 and cc["excluded_long"]["n_sender"]["median"] > 100
+    for s in ("ALONGSIDE", "bootstrap of the median", "CAUSAL distance b^-(t)", "matched-block lengths",
+              "equal token ids", "prefix-invariance control", "coverage (entry 0025)"):
+        assert s in md
+    assert fig["band_outcome"] == s9.band_outcome(fig["fstar"]["same_K"]["median"], cfg.rule)
+
+
+def test_refuses_prefix_control_tamper_or_absence(ran):
+    cfg, e7, rp, runner = ran
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["controls"]["prefix"]["max_token_delta"] = 5e-5              # under tolerance but not what the record says
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="does not re-derive from the record and config"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    del rep["controls"]["prefix"]
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="prefix-invariance control missing"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+
+
+def test_refuses_a_prefix_record_over_tolerance_even_if_self_consistent(ran, tmp_path):
+    """A box that recorded a deviation over the tolerance and did not halt (an edited driver) is refused."""
+    cfg, e7, rp, runner = ran
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    pre = rep["controls"]["prefix"]
+    cdir = cfg.results_dir / "controls"
+    tp = cdir / pre["tokens_file"]
+    z = dict(np.load(tp))
+    z["same_K"] = z["same_K"] + np.float32(1.0)                    # squares that no longer sum to sse 0
+    np.savez_compressed(tp, **z)
+    pre["tokens_sha256"] = sha256_file_bytes(tp)
+    sf = cdir / pre["score_file"]
+    body = json.loads(sf.read_text(encoding="utf-8"))
+    body["per_token"]["sha256"] = pre["tokens_sha256"]
+    _write(sf, body)
+    pre["score_sha256"] = sha256_file_bytes(sf)
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="prefix control: same_K per-token squares do not sum"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+
+
+def test_refuses_without_the_e7_report_for_the_coverage_comparison(ran):
+    cfg, e7, rp, runner = ran
+    (e7.results_dir / "skeleton_report.json").unlink()
+    with pytest.raises(ValueError, match="coverage comparison"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
 
 
 def test_refuses_a_checkpoint_report(ran):
@@ -250,6 +336,19 @@ def test_refuses_missing_calibration_and_tau_drift(ran, monkeypatch):
     monkeypatch.setattr(s9, "calibrate_tau", lambda *a, **k: {"tau": {"K": 0.26, "V": 0.40}, "heldout": {}})
     with pytest.raises(ValueError, match="tau_K: recorded calibration"):
         summarize(cfg, runner=runner, encoder=words, e7=e7)
+    # entry 0025: the alongside agent-text tau is checked the same way
+    _write(cal_dir / "tau.json", {"tau": {"K": 0.25, "V": 0.40}})
+    monkeypatch.setattr(s9, "calibrate_tau", lambda *a, **k: {"tau": {"K": 0.25, "V": 0.40, "agent_K": 0.30}, "heldout": {}})
+    with pytest.raises(ValueError, match="tau_agent_K: recorded calibration lacks it"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+    _write(cal_dir / "tau.json", {"tau": {"K": 0.25, "V": 0.40, "agent_K": 0.30}})
+    monkeypatch.setattr(s9, "calibrate_tau", lambda *a, **k: {"tau": {"K": 0.25, "V": 0.40, "agent_K": 0.31}, "heldout": {}})
+    with pytest.raises(ValueError, match="tau_agent_K: recorded calibration"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+    _write(cal_dir / "tau.json", {"tau": {"K": 0.25, "V": 0.40, "agent_K": 0.31}})
+    with pytest.raises(ValueError, match="config tau_agent_K"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+    _write(cal_dir / "tau.json", {"tau": {"K": 0.25, "V": 0.40}})
     monkeypatch.setattr(s9, "calibrate_tau", lambda *a, **k: {"tau": {"K": 0.25, "V": 0.41}, "heldout": {}})
     _write(cal_dir / "tau.json", {"tau": {"K": 0.25, "V": 0.41}})
     with pytest.raises(ValueError, match="config tau_V"):
@@ -276,7 +375,8 @@ def _fake_archive(tmp_path, cfg, k_r2=0.75, v_r2=0.6, n=8, L=2, H=2):
     _write(up / "results" / "mapper" / PAIR / "r2.json",
            {"k": {"1": {"K_r2_heldout_layer_mean": k_r2, "V_r2_heldout_layer_mean": v_r2}}})
     e8 = tmp_path / "e8_report.json"
-    _write(e8, {"dumps": {"generic": fps}, "per_k": {"1": {"generic": {"K": k_r2, "V": v_r2}}}})
+    _write(e8, {"dumps": {"generic": fps}, "per_k": {"1": {"generic": {"K": k_r2, "V": v_r2},
+                                                          "agent": {"K": k_r2 - 0.1, "V": v_r2 - 0.1}}}})   # 0025: arm (b)
 
     def runner(cmd, cwd, capture_output):
         args = cmd[1:]

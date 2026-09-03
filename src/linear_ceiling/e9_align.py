@@ -121,3 +121,35 @@ def write_alignment(out_dir: Path, rec: Alignment, s_ids, r_ids, pairs) -> Path:
     import json
     (out_dir / f"{stem}.json").write_text(json.dumps(asdict(rec), indent=1), encoding="utf-8")
     return p
+
+
+def coverage_comparison(records: list, headroom_rows: list, summary_fn) -> dict:
+    """Entry 0025 (review finding 1): included vs excluded handoffs compared on |S|, |R| (from the
+    alignment records) and on entry 0018's per-handoff overlap and recoverable fractions (the
+    verified E7 headroom rows, keyed `<traj_id>#<switch_index>` = the E9 handoff id). Says what the
+    32,768 cap selects on; decides nothing. Excluded handoffs whose R is empty have no |R| and no
+    0018 row worth reading, and are counted separately."""
+    by_id = {f"{r['traj_id']}#{r['switch_index']}": r for r in headroom_rows}
+    groups = {"included": [], "excluded_long": [], "excluded_empty_r": []}
+    for rec in records:
+        r = rec if isinstance(rec, dict) else asdict(rec)
+        if not r["excluded"]:
+            groups["included"].append(r)
+        elif r["n_receiver"] == 0:
+            groups["excluded_empty_r"].append(r)
+        else:
+            groups["excluded_long"].append(r)
+    out = {"n": {k: len(v) for k, v in groups.items()}, "unmatched_0018_rows": 0}
+    for name in ("included", "excluded_long"):
+        rows = groups[name]
+        if not rows:
+            out[name] = None
+            continue
+        ov = [by_id[r["handoff_id"]]["overlap_fraction"] for r in rows if r["handoff_id"] in by_id]
+        rf = [by_id[r["handoff_id"]]["recoverable_fraction"] for r in rows if r["handoff_id"] in by_id]
+        out["unmatched_0018_rows"] += len(rows) - len(ov)
+        out[name] = {"n_sender": summary_fn([r["n_sender"] for r in rows]),
+                     "n_receiver": summary_fn([r["n_receiver"] for r in rows]),
+                     "overlap_fraction_0018": summary_fn(ov) if ov else None,
+                     "recoverable_fraction_0018": summary_fn(rf) if rf else None}
+    return out

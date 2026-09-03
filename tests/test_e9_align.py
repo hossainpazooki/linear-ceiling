@@ -93,6 +93,27 @@ def test_load_handoffs_reads_both_composio_shapes(tmp_path):
     assert all("solve" in h.sender_text for h in hs)
 
 
+def test_coverage_comparison_groups_included_and_excluded_and_joins_0018_rows():
+    """Entry 0025 (review finding 1)."""
+    from linear_ceiling.e7_stats import summary
+    from linear_ceiling.e9_align import coverage_comparison
+    recs = [
+        {"handoff_id": "s/a_traj#1", "n_sender": 100, "n_receiver": 50, "n_matched": 40, "excluded": False, "reason": None, "text_sha256": "x"},
+        {"handoff_id": "s/a_traj#2", "n_sender": 200, "n_receiver": 60, "n_matched": 40, "excluded": False, "reason": None, "text_sha256": "x"},
+        {"handoff_id": "s/b_traj#3", "n_sender": 40000, "n_receiver": 70, "n_matched": 0, "excluded": True, "reason": "S exceeds context cap 32768", "text_sha256": "x"},
+        {"handoff_id": "s/b_traj#4", "n_sender": 500, "n_receiver": 0, "n_matched": 0, "excluded": True, "reason": "receiver prompt is empty in the trace", "text_sha256": "x"},
+    ]
+    rows = [{"traj_id": "s/a_traj", "switch_index": 1, "overlap_fraction": 0.9, "recoverable_fraction": 0.8},
+            {"traj_id": "s/a_traj", "switch_index": 2, "overlap_fraction": 0.7, "recoverable_fraction": 0.6},
+            {"traj_id": "s/b_traj", "switch_index": 3, "overlap_fraction": 0.5, "recoverable_fraction": 0.4}]
+    out = coverage_comparison(recs, rows, summary)
+    assert out["n"] == {"included": 2, "excluded_long": 1, "excluded_empty_r": 1} and out["unmatched_0018_rows"] == 0
+    assert out["included"]["n_sender"]["median"] == 150 and out["included"]["overlap_fraction_0018"]["median"] == pytest.approx(0.8)
+    assert out["excluded_long"]["n_sender"]["median"] == 40000 and out["excluded_long"]["recoverable_fraction_0018"]["median"] == 0.4
+    out2 = coverage_comparison(recs, rows[:1], summary)
+    assert out2["unmatched_0018_rows"] == 2 and out2["excluded_long"]["overlap_fraction_0018"] is None   # never a zero
+
+
 def test_align_excludes_an_empty_receiver_prompt():
     """A switch whose request prompt is invisible (paid 0) has nothing to measure."""
     h = Handoff("id", "t", 1, "m1", "m2", "a b c", "")

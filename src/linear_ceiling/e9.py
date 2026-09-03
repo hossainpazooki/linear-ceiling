@@ -42,6 +42,7 @@ from linear_ceiling.e8_text import qwen_encoder
 from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.rng import make_rng
+from linear_ceiling.e9_pertoken import centered_delta as _centered_delta, token_mean as _token_mean
 from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import snapshot
 
@@ -147,10 +148,25 @@ def dump_handoff(cfg: E9Config, hdir: Path, s_ids: np.ndarray, r_ids: np.ndarray
     return dumps
 
 
-def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, pairs: np.ndarray,
+def prefix_invariance_max_delta(score_json: Path, tokens_npz: Path, n_s: int) -> float:
+    """Entry 0025 control statistic: the largest token-mean centered deviation (K or V) between the
+    S dump and rows 0..|S|-1 of the S+1 dump, in R²'s units (0023). Pure arithmetic over the
+    per-token record, shared by the driver (halt) and the summarizer (recheck)."""
+    body = json.loads(score_json.read_text(encoding="utf-8"))
+    worst = 0.0
+    with np.load(tokens_npz) as z:
+        for key in ("K", "V"):
+            sst = np.asarray([layer["sst"] for layer in body["same"][key]], dtype=np.float64)
+            d = _token_mean(_centered_delta(z[f"same_{key}"], sst, n_s))
+            worst = max(worst, float(np.max(d)) if d.size else 0.0)
+    return worst
+
+
+def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, r_ids: np.ndarray, pairs: np.ndarray,
                  runner=subprocess.run) -> dict:
-    """0023 pre-batch controls on the first included handoff's dumps. The identity control
-    HALTS the run on any nonzero square."""
+    """0023 pre-batch controls on the first included handoff's dumps, plus 0025's prefix-invariance
+    control. The identity control HALTS the run on any nonzero square; the prefix control HALTS
+    when the max centered deviation exceeds the registered tolerance."""
     cdir = cfg.results_dir / "controls"
     cdir.mkdir(parents=True, exist_ok=True)
     n_s = int(s_ids.shape[0])
@@ -164,6 +180,26 @@ def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, pairs: 
     if max_abs != 0.0:
         raise RuntimeError(f"E9 HALTED: pipeline identity control is nonzero (max square {max_abs}); "
                            "the dump/score path does not reproduce a prefill against itself")
+    # Entry 0025 (review finding 3): the identity score above loads one dump twice, so zero is the
+    # scorer's arithmetic, not the box's. Prefix invariance is the box's: prefill S followed by R's
+    # first token, and rows 0..|S|-1 must reproduce the S dump up to kernel arithmetic (causal
+    # attention). Transient dump, deleted after scoring; the per-token record is kept.
+    plus_dir, tok_p = hdir / "same_src_plus1", hdir / "S_plus1.npy"
+    np.save(tok_p, np.concatenate([s_ids, r_ids[:1]]).reshape(1, -1))
+    run_upstream(cfg, ["scripts/dump_kv.py", "--pair", cfg.pair, "--which", "target",
+                       "--tokens", str(tok_p.resolve()), "--stride", "1", "--out", str(plus_dir.resolve())], runner)
+    if not (plus_dir / "meta.json").exists():
+        raise RuntimeError(f"E9 REFUSED: prefix-invariance dump did not produce {plus_dir}/meta.json")
+    pre = score_pairs(cfg, hdir, id_pairs, cdir / "prefix.json", cdir / "prefix.tokens.npz",
+                      cross=False, same_tgt="same_src_plus1", runner=runner)
+    shutil.rmtree(plus_dir, ignore_errors=True)
+    worst = prefix_invariance_max_delta(cdir / "prefix.json", cdir / "prefix.tokens.npz", n_s)
+    tol = float(cfg.controls["prefix_invariance_max_delta"])
+    pre.update({"max_token_delta": worst, "tolerance": tol, "extra_token": int(r_ids[0]),
+                "pairs_file": id_pairs.name, "pairs_sha256": sha256_file_bytes(id_pairs)})
+    if worst > tol:
+        raise RuntimeError(f"E9 HALTED: prefix-invariance control exceeds tolerance (max centered delta "
+                           f"{worst:.3e} > {tol:.1e}); the box does not reproduce a prefix under one extra token")
     null_np = null_pairs(pairs, make_rng(int(cfg.controls["null_seed"])))
     null_file = cdir / "null_pairs.npz"
     np.savez(null_file, pairs=null_np)
@@ -172,7 +208,7 @@ def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, pairs: 
     null["pairs_file"], null["pairs_sha256"] = null_file.name, sha256_file_bytes(null_file)
     return {"handoff_id": hid, "identity": {**ident, "pairs_file": id_pairs.name,
                                             "pairs_sha256": sha256_file_bytes(id_pairs)},
-            "null": null}
+            "prefix": pre, "null": null}
 
 
 def score_handoff(cfg: E9Config, stem: str, s_ids: np.ndarray, r_ids: np.ndarray, pairs_npz: Path,
@@ -184,7 +220,7 @@ def score_handoff(cfg: E9Config, stem: str, s_ids: np.ndarray, r_ids: np.ndarray
     dumps = dump_handoff(cfg, hdir, s_ids, r_ids, runner)
     controls = None
     if controls_for is not None:
-        controls = run_controls(cfg, controls_for, hdir, s_ids, pairs, runner)
+        controls = run_controls(cfg, controls_for, hdir, s_ids, r_ids, pairs, runner)
     tdir = cfg.results_dir / "tokens"
     tdir.mkdir(parents=True, exist_ok=True)
     rec = score_pairs(cfg, hdir, pairs_npz, cfg.results_dir / "scores" / f"{stem}.json",
@@ -195,6 +231,43 @@ def score_handoff(cfg: E9Config, stem: str, s_ids: np.ndarray, r_ids: np.ndarray
     else:
         shutil.rmtree(hdir, ignore_errors=True)
     return rec, controls
+
+
+def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
+    """Entry 0025 (review finding 5): the alignment outputs on the record BEFORE any prefill --
+    per handoff ids + pairs (.npz) and the record (.json) under results/e9/align, plus
+    results/e9/align/coverage.json (observed / included / excluded with reasons, keep draw, and
+    the matched-block length distribution). No gate: it reads traces and writes under results/
+    only; the driver recomputes and overwrites the same files, and summarize_e9 re-derives every
+    alignment from the raw traces regardless."""
+    from linear_ceiling.e9_pertoken import BLOCK_BIN_LABELS, block_bin, block_lengths
+    src_id, _ = pair_models(cfg.pair)
+    enc = encoder or qwen_encoder(snapshot(src_id))
+    counter = lambda t, ct="assistant": 0     # noqa: E731
+    align_dir = cfg.results_dir / "align"
+    records, included, blocks = [], [], {}
+    for h in load_handoffs(submission_dirs(e7, cfg), counter):
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap)
+        write_alignment(align_dir, rec, s_ids, r_ids, pairs)
+        records.append(asdict(rec))
+        if not rec.excluded:
+            included.append(h.handoff_id)
+            bl = block_lengths(pairs)
+            bins = block_bin(bl)
+            blocks[h.handoff_id] = {"n_blocks": int(round(float(np.sum(1.0 / bl)))) if len(bl) else 0,
+                                    "tokens_by_block_len_bin": {lab: int((bins == i).sum()) for i, lab in enumerate(BLOCK_BIN_LABELS)},
+                                    "tokens_in_blocks_ge_min": int((bl >= int(cfg.rule["min_block_len"])).sum())}
+    included = sorted(included)
+    out = {"config_sha256": sha256_text_file(cfg.config_path), "context_cap": cfg.context_cap,
+           "coverage": {"observed": len(records), "included": len(included), "excluded": len(records) - len(included)},
+           "exclusion_reasons": sorted({r["reason"] for r in records if r["excluded"]}),
+           "keep_subset": keep_subset(included, cfg.keep_seed, cfg.keep_n),
+           "min_block_len": int(cfg.rule["min_block_len"]), "blocks_per_handoff": blocks,
+           "alignments": records}
+    align_dir.mkdir(parents=True, exist_ok=True)
+    p = align_dir / "coverage.json"
+    p.write_text(json.dumps(out, indent=1), encoding="utf-8")
+    return p
 
 
 def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
@@ -250,12 +323,19 @@ def main(argv=None) -> int:
     ap.add_argument("--config", default=str(REPO_ROOT / "config" / "e9.toml"))
     ap.add_argument("--e7-config", default=str(REPO_ROOT / "config" / "e7.toml"))
     ap.add_argument("--check", action="store_true", help="run the gate only; read no trace, dump nothing")
+    ap.add_argument("--align-only", action="store_true",
+                    help="entry 0025: write every alignment (ids, pairs, records) and the coverage report under "
+                         "results/e9/align before any prefill; CPU, no gate, no upstream, no dump")
     a = ap.parse_args(argv)
     cfg = load_e9_config(Path(a.config), REPO_ROOT)
     try:
         if a.check:
             assert_ready(cfg, REPO_ROOT)
             print("E9 gate: ready (entries 0019, 0023 and 0025 committed; upstream pinned and clean)")
+            return 0
+        if a.align_only:
+            out = align_only(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT))
+            print(f"E9 alignments: {out}")
             return 0
         out = run(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT), repo_root=REPO_ROOT)
         print(f"E9 report: {out}")

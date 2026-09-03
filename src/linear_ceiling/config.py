@@ -200,8 +200,10 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
     for section, keys in (("handoffs", ("suite", "agent", "context_cap")),
                           ("alignment", ("method",)), ("mapper", ("k", "space")),
                           ("keep", ("seed", "n")),
-                          ("rule", ("statistic", "holds_max", "degrades_min", "tau_K", "tau_V", "tau_ladder")),
-                          ("controls", ("null_seed", "seam_bins"))):
+                          ("rule", ("statistic", "holds_max", "degrades_min", "tau_K", "tau_V", "tau_ladder",
+                                    "tau_agent_K", "min_block_len")),
+                          ("controls", ("null_seed", "seam_bins", "prefix_invariance_max_delta",
+                                        "bootstrap_seed", "bootstrap_reps"))):
         missing = [k for k in keys if k not in e9.get(section, {})]
         if missing:
             raise ValueError(f"config/e9.toml [e9.{section}] is missing {missing}; the registered "
@@ -212,6 +214,16 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
             or any(float(a) <= float(b) for a, b in zip(ladder, ladder[1:]))):
         raise ValueError("config/e9.toml [e9.rule] tau_ladder must be a strictly decreasing list of values in "
                          "(0, tau_K): the ladder reads how far INSIDE the registered tolerance f* sits (entry 0025)")
+    rule, ctl = e9["rule"], e9["controls"]
+    if not (float(rule["tau_K"]) < float(rule["tau_agent_K"]) < 1.0):
+        raise ValueError("config/e9.toml [e9.rule] tau_agent_K must sit in (tau_K, 1): it is the LOOSER agent-text "
+                         "tolerance from entry 0020 arm (b), reported alongside (entry 0025)")
+    if not (isinstance(rule["min_block_len"], int) and rule["min_block_len"] >= 1):
+        raise ValueError("config/e9.toml [e9.rule] min_block_len must be an integer >= 1 (entry 0025)")
+    if not (isinstance(ctl["prefix_invariance_max_delta"], (int, float)) and 0 < float(ctl["prefix_invariance_max_delta"]) < 1):
+        raise ValueError("config/e9.toml [e9.controls] prefix_invariance_max_delta must be in (0, 1) (entry 0025)")
+    if not (isinstance(ctl["bootstrap_reps"], int) and ctl["bootstrap_reps"] >= 100 and isinstance(ctl["bootstrap_seed"], int)):
+        raise ValueError("config/e9.toml [e9.controls] bootstrap_seed must be an int and bootstrap_reps an int >= 100 (entry 0025)")
     root = Path(repo_root)
     return E9Config(
         pair=e9["pair"], results_dir=root / e9["results_dir"], scratch_dir=root / e9["scratch_dir"],

@@ -19,8 +19,10 @@ L, H = 2, 2
 _LAYER = {"sse": [1.0, 1.0], "sst": [4.0, 2.0], "r2_head_mean": (0.75 + 0.5) / 2}
 _MEAN = _LAYER["r2_head_mean"]
 RULE = {"statistic": "median f*(tau_K)", "holds_max": 0.15, "degrades_min": 0.50, "tau_K": 0.25, "tau_V": 0.40,
-        "tau_ladder": [0.10, 0.03]}     # entry 0025: descriptive ladder, strictly decreasing, below tau_K
-CONTROLS = {"null_seed": 23, "seam_bins": [0, 1, 2, 4, 8, 16]}
+        "tau_ladder": [0.10, 0.03],     # entry 0025: descriptive ladder, strictly decreasing, below tau_K
+        "tau_agent_K": 0.30, "min_block_len": 4}   # entry 0025: alongside agent-text tau (> tau_K); block floor
+CONTROLS = {"null_seed": 23, "seam_bins": [0, 1, 2, 4, 8, 16],
+            "prefix_invariance_max_delta": 1e-4, "bootstrap_seed": 25, "bootstrap_reps": 200}   # entry 0025
 
 
 def canned_scores(shift=0.0, cross=True):
@@ -43,7 +45,7 @@ def per_token_arrays(n, cross=True, zero=False):
     return arrays
 
 
-def fake_runner_factory(calls=None, recheck_shift=0.0, identity_nonzero=False):
+def fake_runner_factory(calls=None, recheck_shift=0.0, identity_nonzero=False, prefix_nonzero=False):
     def runner(cmd, cwd, capture_output):
         if calls is not None:
             calls.append(cmd)
@@ -60,10 +62,13 @@ def fake_runner_factory(calls=None, recheck_shift=0.0, identity_nonzero=False):
             n = int(pairs.shape[0])
             cross = "--cross-src" in opt
             identity = opt["--same-tgt"] == opt["--same-src"]
+            # entry 0025 prefix-invariance control: S vs S+1 dump; a real box reproduces the prefix
+            prefix = opt["--same-tgt"].replace("\\", "/").endswith("same_src_plus1")
+            zero = (identity and not identity_nonzero) or (prefix and not prefix_nonzero)
             shift = recheck_shift if "recheck" in opt["--out"].replace("\\", "/") else 0.0
             rec = canned_scores(shift, cross=cross)
-            arrays = per_token_arrays(n, cross=cross, zero=identity and not identity_nonzero)
-            if identity and not identity_nonzero:
+            arrays = per_token_arrays(n, cross=cross, zero=zero)
+            if zero:
                 for part in rec["same"].values():
                     for layer in part:
                         layer["sse"] = [0.0, 0.0]
@@ -182,12 +187,73 @@ def test_run_scores_included_counts_excluded_and_runs_controls(env, tmp_path):
     assert ctl["null"]["seed"] == 23 and (cfg.results_dir / "controls" / ctl["null"]["pairs_file"]).exists()
     scripts = [c[1] for c in calls]
     # three dumps; three scorings: identity, null, the handoff itself -- in that order
-    assert scripts.count("scripts/dump_kv.py") == 3 and scripts.count("scripts/score_positions.py") == 3
+    # 3 dumps + 1 prefix-invariance dump (0025); scores: identity, prefix, null, the handoff itself
+    assert scripts.count("scripts/dump_kv.py") == 4 and scripts.count("scripts/score_positions.py") == 4
+    pre = ctl["prefix"]
+    assert pre["max_token_delta"] == 0.0 and pre["tolerance"] == 1e-4 and pre["pairs_sha256"] == ctl["identity"]["pairs_sha256"]
+    assert (cfg.results_dir / "controls" / pre["tokens_file"]).exists()
+    assert not (cfg.scratch_dir / _stem(hid) / "same_src_plus1").exists()      # transient, deleted after scoring
     outs = [c[c.index("--out") + 1].replace("\\", "/") for c in calls if c[1] == "scripts/score_positions.py"]
-    assert outs[0].endswith("controls/identity.json") and outs[1].endswith("controls/null.json")
+    # 0025: identity, then the prefix-invariance score, then the null, then the handoff
+    assert outs[0].endswith("controls/identity.json") and outs[1].endswith("controls/prefix.json")
+    assert outs[2].endswith("controls/null.json")
     assert "--per-token" in calls[-1] and "--cross-src" in calls[-1] and "--cross-src" not in calls[3]
     dump = next(c for c in calls if c[1] == "scripts/dump_kv.py")
     assert dump[dump.index("--stride") + 1] == "1"
+
+
+def test_prefix_invariance_control_halts_above_tolerance(env, tmp_path):
+    """Entry 0025: the identity control cannot fail on the box (one dump twice); the prefix control
+    can, and does when the S+1 dump's rows deviate from the S dump beyond the registered tolerance."""
+    cfg, e7, calls, _ = env
+    runner = fake_runner_factory(calls=calls, prefix_nonzero=True)
+    with pytest.raises(RuntimeError, match="prefix-invariance control exceeds tolerance"):
+        driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    assert not (cfg.results_dir / "report.json").exists() or not json.loads(
+        (cfg.results_dir / "report.json").read_text(encoding="utf-8"))["complete"]
+
+
+def test_prefix_control_extra_token_is_the_receivers_first(env, tmp_path):
+    cfg, e7, calls, runner = env
+    out = driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    hid = rep["controls"]["handoff_id"]
+    z = np.load(cfg.results_dir / "align" / f"{_stem(hid)}.npz")
+    assert rep["controls"]["prefix"]["extra_token"] == int(z["receiver"][0])
+    plus = np.load(cfg.scratch_dir / _stem(hid) / "S_plus1.npy")
+    assert plus.shape == (1, len(z["sender"]) + 1) and plus[0, -1] == z["receiver"][0]
+
+
+def test_align_only_writes_alignments_and_coverage_without_the_gate(env, tmp_path, monkeypatch):
+    """Entry 0025 (review finding 5): alignment outputs on the record before any prefill; no upstream call."""
+    cfg, e7, calls, _ = env
+    monkeypatch.setattr(driver, "assert_ready", lambda *a, **k: (_ for _ in ()).throw(AssertionError("gate must not run")))
+    p = driver.align_only(cfg, e7, encoder=words)
+    cov = json.loads(p.read_text(encoding="utf-8"))
+    assert cov["coverage"] == {"observed": 2, "included": 1, "excluded": 1} and calls == []
+    hid = cov["keep_subset"][0]
+    assert (cfg.results_dir / "align" / f"{_stem(hid)}.npz").exists()
+    b = cov["blocks_per_handoff"][hid]
+    assert sum(b["tokens_by_block_len_bin"].values()) == json.loads(
+        (cfg.results_dir / "align" / f"{_stem(hid)}.json").read_text(encoding="utf-8"))["n_matched"]
+    assert b["n_blocks"] >= 1 and cov["min_block_len"] == 4 and "exceeds context cap" in cov["exclusion_reasons"][0]
+
+
+@pytest.mark.parametrize("old,new,msg", [
+    ("tau_agent_K = 0.4371020133925453", "tau_agent_K = 0.2", "tau_agent_K"),
+    ("tau_agent_K = 0.4371020133925453", "tau_agent_K = 1.0", "tau_agent_K"),
+    ("min_block_len = 4", "min_block_len = 0", "min_block_len"),
+    ("prefix_invariance_max_delta = 1e-4", "prefix_invariance_max_delta = 0", "prefix_invariance"),
+    ("bootstrap_reps = 2000", "bootstrap_reps = 10", "bootstrap")])
+def test_config_refuses_malformed_0025_parameters(tmp_path, old, new, msg):
+    from linear_ceiling import REPO_ROOT
+    from linear_ceiling.config import load_e9_config
+    src = (REPO_ROOT / "config" / "e9.toml").read_text(encoding="utf-8")
+    assert old in src
+    p = tmp_path / "e9.toml"
+    p.write_text(src.replace(old, new), encoding="utf-8")
+    with pytest.raises(ValueError, match=msg):
+        load_e9_config(p, tmp_path)
 
 
 def test_identity_control_halts_the_run(env, tmp_path):

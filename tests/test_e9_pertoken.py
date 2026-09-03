@@ -73,6 +73,49 @@ def test_seam_distance_counts_positions_strictly_between():
         seam_distance(np.array([[0, 0], [1, 0]]), 3)
 
 
+def test_seam_distance_left_counts_only_preceding_seams():
+    """Entry 0025 (review finding 4): one unmatched receiver position (5) in a 10-token R. The
+    bidirectional b(t) puts token 4 in bin 0 (its seam is AFTER it); the causal b^-(t) does not."""
+    from linear_ceiling.e9_pertoken import seam_distance, seam_distance_left
+    pairs = np.asarray([(p, p) for p in range(10) if p != 5])
+    b = seam_distance(pairs, 10)
+    bl = seam_distance_left(pairs, 10)
+    assert list(b) == [4, 3, 2, 1, 0, 0, 1, 2, 3]
+    assert list(bl) == [10, 10, 10, 10, 10, 0, 1, 2, 3]
+    # a reordering gap between receiver-adjacent tokens is a seam for the LATER token only
+    pairs2 = np.asarray([(0, 0), (1, 1), (7, 2), (8, 3)])
+    assert list(seam_distance_left(pairs2, 4)) == [4, 4, 0, 1]
+    # permuted input order is respected
+    perm = np.asarray([(8, 3), (0, 0), (7, 2), (1, 1)])
+    assert list(seam_distance_left(perm, 4)) == [1, 4, 0, 4]
+
+
+def test_block_lengths_re_derive_the_matching_blocks():
+    """Entry 0025 (review finding 5): a block is a run consecutive on BOTH sides."""
+    from linear_ceiling.e9_pertoken import BLOCK_BIN_LABELS, block_bin, block_lengths
+    pairs = np.asarray([(0, 0), (1, 1), (2, 2), (10, 5), (11, 6), (20, 8), (30, 9)])   # 3, 2, 1, 1 (30,9 breaks sender run)
+    assert list(block_lengths(pairs)) == [3, 3, 3, 2, 2, 1, 1]
+    perm = np.asarray([(20, 8), (11, 6), (0, 0), (2, 2), (10, 5), (1, 1), (30, 9)])
+    assert list(block_lengths(perm)) == [1, 2, 3, 3, 2, 3, 1]
+    assert list(block_bin(np.asarray([1, 2, 3, 4, 7, 8, 100]))) == [0, 1, 1, 2, 2, 3, 3] and len(BLOCK_BIN_LABELS) == 4
+    assert block_lengths(np.zeros((0, 2))).size == 0
+
+
+def test_bootstrap_median_interval_is_seeded_and_uses_the_pinned_quantile():
+    """Entry 0025 (review finding 6)."""
+    from linear_ceiling.e7_stats import quantile
+    from linear_ceiling.e9_pertoken import bootstrap_median_interval
+    vals = [i / 24 for i in range(25)]
+    a = bootstrap_median_interval(vals, make_rng(25), 500, quantile)
+    b = bootstrap_median_interval(vals, make_rng(25), 500, quantile)
+    assert a == b and a["reps"] == 500 and a["lower_2.5"] <= 0.5 <= a["upper_97.5"]
+    assert a["lower_2.5"] in vals and a["upper_97.5"] in vals            # nearest-rank: an observed median
+    with pytest.raises(ValueError):
+        bootstrap_median_interval([], make_rng(1), 10, quantile)
+    with pytest.raises(ValueError):
+        bootstrap_median_interval(vals, make_rng(1), 0, quantile)
+
+
 def test_seam_bins_are_the_registered_edges():
     b = np.array([0, 1, 2, 3, 4, 7, 8, 15, 16, 1000])
     labels = [SEAM_BIN_LABELS[i] for i in seam_bin(b)]
