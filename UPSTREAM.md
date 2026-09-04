@@ -7,7 +7,7 @@
   and passes `logits_to_keep=1` in `kvt/data.py::dump_kv` (re-pin by ledger entry 0026 after the
   2026-09-04 CUDA OOM at the first included handoff; the operator records the sha here and in
   `config/e9.toml` after committing upstream -- `e9.assert_ready` refuses the placeholder by name).
-  Its parent is `36d73b3f29d9b1f3a7c5148525de92b0b1b8ff5b` -- the commit that adds `--per-token` to
+  Its parent is `36d73b3f` -- the commit that adds `--per-token` to
   `scripts/score_positions.py` and `scripts/score_mapper.py` plus `kvt/pertoken.py` (re-pin by
   ledger entry 0023; the operator records the sha here and in `config/e9.toml` after committing
   upstream -- `e9.assert_ready` refuses the placeholder by name). Its parent is the prior pin
