@@ -31,11 +31,11 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
-.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + 0025 + config/e9.toml committed AND the 0023 upstream re-pin holds
+.venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + 0025 + 0026 + 0027 + config/e9.toml committed AND the 0026 upstream re-pin holds (and the mapper artifact is present)
 .venv/Scripts/python.exe -m linear_ceiling.e9 --align-only      # entry 0025: every alignment + results/e9/align/coverage.json (coverage, reasons, keep draw, block counts) before any prefill; CPU, no gate
 .venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau   # 0023, before the GPU run: tau = 1 - archived k=1 held-out R^2 via upstream score_mapper --per-token; writes results/e9/calibration/tau.json (~1 min CPU)
-.venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: alignments from raw traces, R^2 from moments, per-token sums to moments, keep subset re-scored, tau recomputed, controls checked -> f*(tau), seam/depth profiles, band
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: alignments from raw traces, R^2 from moments, per-token sums to moments, keep subset re-scored under 0028's cross-platform tolerance (sums 1e-5, squares 1e-2), tau recomputed, controls checked -> f*(tau), seam/depth profiles, band
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
@@ -75,6 +75,8 @@ profiles, band) · `lint_scope` · `ledger_check` (structure, entry chain, block
 through 0022 + `verdict: H-XX = <VERDICT>` lines from 0024 on — and the manifest citation).
 Tests mirror modules under `tests/`.
 `docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
+`docs/probes/` holds the scratch probes entries 0026 and 0028 cite (SDPA memory probe, the shipped
+candidate module's validation, the matching-platform re-score and its determinism test).
 
 Program state: screen line closed (H-S1/S3/S4 `SHELVED`); E7 replayed across three corpora
 (tau-bench, tau2-bench, SWE-bench), floor **met**, all registered outputs on the record.
@@ -84,18 +86,19 @@ sensitivity in 0022 — 0005's kill condition applies; this is a claim about wha
 BENCHMARK traces evidence, Lane A being measurable on 60 of 2,904 trajectories from one
 designed critic stage, not about production workloads, which leave no public trace),
 **H-E7b `UNESTIMABLE`** (0015), **H-E8 `NOT CONFIRMED`** (0020: K UNRESOLVED
-/ V DEGRADES at the verdict k, neither read-out alone). Live: **H-E9** (0019 registered; rule
-amended by **0023** before any prefill — verdict statistic is median oracle selective-recompute
-fraction f*(τ_K) over included handoffs, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50, τ_K = 1 − 0.6814 from
-the archive; pooled R² is a bridge and decides nothing; built, gated on the 0023 upstream re-pin
-(`--per-token`; 0019's `7e41f792` is its ancestor); **0025 appended** (before any prefill; all
-descriptive, rule/τ_K/band untouched): coverage 25/68 with an included-vs-excluded comparison,
-τ_agent_K = 1 − 0020 arm (b) alongside (K arms), the τ ladder, a prefix-invariance control that HALTS
-(the 0023 identity control loads one dump twice and cannot fail on the box), causal seam distance
-b⁻(t), matched-block lengths + f* over blocks ≥ 4, a seeded bootstrap of the median, the δ_null
-equal-token fraction, `e9 --align-only`, keep-subset n 3 → 8 (48 GB retained); the gate requires
-0019 + 0023 + 0025; awaiting the A100 run — see
-`docs/2026-09-02-e9-gpu-runbook.md`; verdict entry: unnumbered until its script is staged — `docs/drafts/README.md` is the ONE allocator and numbers are provisional). **E-RL** (KV reuse
+/ V DEGRADES at the verdict k, neither read-out alone). **H-E9 `HELD`** (0029, 2026-09-04): E9 ran on an Algoverse H100 MIG 3g.40gb slice (JupyterHub only) at
+`0a19b56` / upstream `d5786df`; 25 of 68 handoffs scored (the shorter half by |S|); median f*(τ_K) on the
+same-model K arm is 0.0000 on every handoff (bootstrap [0, 0]) against HOLDS ≤ 0.15, read ON A FLOOR (0027:
+f* is an oracle lower bound, CacheBlend's 10–15% is achieved); the cross arm's named descriptive outcome
+sits beyond the DEGRADES edge (median f*_cross(τ_K) 0.9286). Pre-prefill amendments 0025, 0026 (upstream
+re-pin after the 0023 pin OOMed on float32 attention scores, not logits: `sdpa_repeat_kv` +
+`logits_to_keep=1`), 0027 (cross-arm outcome named, HOLDS-on-a-floor, kernel change as a bound, box
+discipline); post-run 0028 registers the keep-subset re-score tolerance after the Windows re-score refused
+on float32 thread-order jitter (same-model arrays reproduce bit-for-bit on a matching Linux platform). The
+gate requires 0019 + 0023 + 0025 + 0026 + 0027. Runbook `docs/2026-09-02-e9-gpu-runbook.md` (amended
+09-04); closing brief `docs/handoff/2026-09-04-e9-gpu-day-and-verdict.md`. Retained dumps (45 GB, 8
+handoffs) live under `results/e9/scratch/` at home only; the `[STRETCH]` partial-prefill experiment on them
+is registered and unrun. **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own

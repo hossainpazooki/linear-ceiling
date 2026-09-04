@@ -13,7 +13,10 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state: **no drafts pending.** 0025 (the E9 pre-prefill amendment: the independent review's
+Current state: **no drafts pending.** 0028 (the keep-subset re-score tolerance, post-run, pre-verdict) and
+0029 (H-E9 verdict, `verdict: H-E9 = HELD`) were appended 2026-09-04 by `append_0028.py` / `append_0029.py`,
+each running `summarize_e9` in-process and pulling every figure from `results/e9/summary.json`; the scripts are
+deleted in the same commit set. Earlier: 0025 (the E9 pre-prefill amendment: the independent review's
 findings 1–7 plus the E-RL design's τ ladder and keep-subset n 3 → 8) was appended by `append_0025.py`
 on its second staging — every figure from config or recomputed in-process from the traces, the
 verified E7 report and E8's report, with the `e7-manifest-sha256:` line the 0018 rows require. Its
@@ -23,9 +26,7 @@ it refused and the retire step ran anyway (learnings entry). Rule from it: a dra
 from a pinned revision, never HEAD, and a retire step is chained to the append with `&&`. Entries 0013–0024 are appended and their scripts deleted
 (0023 pulled every figure from `results/e9/calibration/tau.json` via `summarize_e9 --calibrate-tau`;
 0024 from `results/e7/recon.json` via `summarize_e7 --overlap-null --cache-aware-ratio`, behind
-`e7.assert_ready`). Queued, unnumbered: the **H-E9 verdict** (Track A; written from a clean
-`summarize_e9` run after the A100 day, `docs/2026-09-02-e9-gpu-runbook.md`; must carry a
-`verdict: H-E9 = <VERDICT>` line, `ledger_check`) and the **E8 amendment** (`--holdout-frac 1.0` on
+`e7.assert_ready`). The **H-E9 verdict** is 0029. Queued, unnumbered: the **E8 amendment** (`--holdout-frac 1.0` on
 `36d73b3`, per-sequence moments from the `--per-token` record, re-pin). **E-RL** (KV reuse across RL
 post-training checkpoints) is designed only — `docs/2026-09-02-e-rl-design.md` — and has no
 registration script; it takes a number when its script is staged, not before. The 0022 tokenizer

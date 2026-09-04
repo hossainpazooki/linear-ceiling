@@ -179,6 +179,12 @@ profile and per-handoff rows. The H-E9 verdict entry (unnumbered until its scrip
 is written ONLY from that
 output, in the pattern of 0015/0020. A refusal is a finding, not an obstacle — paste it verbatim.
 
+**Done 2026-09-04.** The first home run REFUSED (keep-subset per-token re-score disagreed on same_K under the
+code's same-machine constant `rtol 1e-5, atol 0`); the disagreement was measured (entry 0028: same-model arrays
+reproduce bit-for-bit on a matching Linux platform, cross arrays move with thread count alone, f* unchanged),
+the tolerance registered by 0028, and the summary passed: **HOLDS**, median f*(τ_K) same K 0.0000 on all 25.
+Verdict entry **0029: H-E9 HELD**, read on a floor (0027).
+
 ## If the queue is full / no GPU
 
 E9 on CPU is roughly 0.5–2 min per 1k tokens of prefill per model; the included handoffs are
