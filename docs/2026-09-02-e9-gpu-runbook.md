@@ -135,6 +135,15 @@ anything else heavy if the card is shared (dumps are bf-free f32 forward passes 
 
 ## 5. Sync off the box — during the run and again at the end
 
+**Discipline (entry 0027, 2026-09-04).** Launch detached: `setsid nohup .venv/bin/python -m linear_ceiling.e9
+> e9.log 2>&1 < /dev/null &`. Never `pkill -f <pattern>` from a shell whose own command line matches the
+pattern (the 09-04 self-kill). On a JupyterHub-only grant there is no scp: pull over the Jupyter `/files/`
+endpoint. Per handoff, in this order: download the kept `scratch/<stem>/` files, verify each sha256
+against `report.json`'s `kept_dumps` fingerprint, and only then delete that directory on the box. With
+n = 8 kept (48.2 GB) that is what keeps the box under its ≈ 50 GB shared-disk policy. A puller that does
+exactly this (`pull.py`, session scratch, 2026-09-04) mirrors `report.json`, `align/`, `controls/`,
+`scores/`, `tokens/` and `e9.log` every two minutes.
+
 ```bash
 # from the local machine, repeat every ~15 min and once after "E9 report:" appears in e9.log
 rsync -avz --exclude calibration/ <box>:linear-ceiling/results/e9/ ~/dev/linear-ceiling/results/e9/

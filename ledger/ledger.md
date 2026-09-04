@@ -1622,3 +1622,61 @@ invoked path clean.
 `verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
 
 prior-entries-sha256: 070daf0b6ba80a03fe0639235495b4d4186e95456855332a9098d4d3e4212c30
+
+### 0027 — 2026-09-04 — E9 amended before any score: cross-arm outcome named (descriptive); HOLDS bound to a floor; the 0026 kernel change stated as a bound; box discipline
+
+**Precondition, as 0023 and 0025: no score file under `results/e9/` at append.** Home: `results/e9/`
+holds `align/` and `calibration/` only, no `report.json` (this entry's script refuses otherwise). Box:
+two refused runs on 2026-09-04 left transients and no score — the 16:43 run (0023 pin, OOM in the first
+dump; 312 KB of `scratch/`: `S.npy`, `R.npy`, an empty `same_src/`) deleted 17:14 before the relaunch,
+and the 17:16 run (0026 pin; died at the first `score_positions` call on the missing mapper) which left
+7.2 GB of `scratch/<astropy-13033_traj#80>/` dumps and 93 MB of `controls/` records (identity, prefix,
+null pairs) and no `scores/`, `tokens/` or `report.json`; both deleted at 17:29 UTC, confirmed by
+listing (`results/e9/` on the box: `align/` only). Nothing scored anywhere. Two review findings not
+folded into 0025 or 0026, and the 0026 kernel change quantified as a bound instead of a fix. None
+touches the instrument, the H-E9 rule, τ_K, the band or the four cells; `verdict:` lines: none (a
+no-op list, as 0025).
+
+**Cross-arm outcome, named (review finding A; descriptive).** 0023 reports E9-cross as its own
+f*(τ_K) / f*(τ_V) and as the ratio of its median δ to E9-same's, per handoff, never merged. This entry
+names the comparison the verdict entry must state: the median over included handoffs of f*_cross(τ_K),
+read against the same edges the same-arm band uses (≤ 0.15 / ≥ 0.50), and the median over handoffs of
+the cross/same median-δ ratio. Both are already emitted by `summarize_e9` (the cross-arm f* statistics
+and `cross_over_same_median_delta`); no instrument change. Verdict-bearing for nothing — the shape 0025
+gave the τ ladder: it reads whether the transfer sits inside, between or beyond the band the same-model
+reuse is judged by, and decides no cell.
+
+**HOLDS reads on a floor (review finding C).** f*(τ) is an oracle LOWER BOUND on the recompute fraction
+(0023, both reasons: oracle selection of the tokens, and recompute in isolation). CacheBlend's 10–15%
+is an ACHIEVED figure. A HOLDS therefore reads: the oracle floor of the re-render's repair is no more
+than the budget a same-model reuse the literature already spends — "no more than the mapper, on a
+floor" — and not that an achievable scheme reaches it. The verdict entry writes this sentence beside
+any HOLDS on the K read-out.
+
+**The 0026 kernel change, as a bound.** τ_K = 0.3186 and τ_V = 0.4867 come from `--calibrate-tau` over
+the archived E8 record, whose dumps were produced under the math kernel; E9's dumps come from the
+memory-efficient kernel. Measured gap (0026): max |ΔK| = 9.232e-04 on a K scale of 423.09 and
+max |ΔV| = 3.891e-04 on 215.46, i.e. a relative perturbation ε ≤ 2.2e-06 of the tensors. δ is a
+variance share (a per-token squared deviation over the receiver's centered variance), so a kernel-order
+difference enters as ε² where the true deviation is zero and as at most 2ε√δ + ε² elsewhere. For the
+prefix-invariance control (true δ = 0) that is ≈ 5e-12, eight orders under the 1e-04 halt — and on the
+box the S+1 record came out bit-identical to the identity record (equal sha256). For a measured δ the
+shift is ≤ 2.5e-06 absolute at δ = 0.32, below the last stated digit of τ_K (four decimals) and forty
+times under the 1e-04 control tolerance. The memory-efficient kernel's block-tiled reduction order, which
+can differ between the `S` and `S`+1 forwards at the same prefix position, is the same ε-class effect
+and cannot trip a 1e-04 threshold. τ_K and τ_V are not moved.
+
+**Box discipline (runbook, same change).** The 2026-09-04 grant is JupyterHub-only with a ≈ 50 GB
+shared-disk policy, against 48.2 GB of kept dumps (0025). Launch detached
+(`setsid nohup … > e9.log 2>&1 < /dev/null &`); never `pkill -f` with a pattern the issuing shell
+itself matches (the 09-04 self-kill cost eight minutes of stale polling); per handoff, pull each kept
+`scratch/<stem>/` home over the Jupyter `/files/` endpoint, verify every file's sha256 against the
+`kept_dumps` fingerprint the driver wrote into `report.json`, and only then delete it on the box.
+`summarize_e9` at home re-checks the same fingerprints before it re-scores a retained dump.
+
+**Enforcement.** `e9.REQUIRED_ENTRIES` names this entry beside 0019, 0023, 0025 and 0026.
+
+**Scope.** All of 0019's, 0023's, 0025's and 0026's limits. No hypothesis cell changes with this entry;
+no `verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
+
+prior-entries-sha256: 8a0e344bd6ffdfeb9acec713f2017679d21d28f39a7f0781987a9900409aa15c

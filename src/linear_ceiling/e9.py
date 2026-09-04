@@ -46,7 +46,7 @@ from linear_ceiling.e9_pertoken import centered_delta as _centered_delta, token_
 from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import snapshot
 
-REQUIRED_ENTRIES = ("### 0019 ", "### 0023 ", "### 0025 ", "### 0026 ")   # 0025: tau ladder + keep n; 0026: upstream re-pin (attention kernel, logits_to_keep) after the 09-04 OOM
+REQUIRED_ENTRIES = ("### 0019 ", "### 0023 ", "### 0025 ", "### 0026 ", "### 0027 ")   # 0025: tau ladder + keep n; 0026: upstream re-pin after the 09-04 OOM; 0027: cross-arm outcome, HOLDS-on-a-floor, kernel bound
 UPSTREAM_PATHS = ("scripts/dump_kv.py", "scripts/score_positions.py", "scripts/score_mapper.py", "kvt")
 _PENDING = "UPSTREAM_SHA_PENDING"
 
@@ -63,7 +63,7 @@ def assert_ready(cfg: E9Config, repo_root: Path) -> None:
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
-            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023/0025/0026 and config/e9.toml "
+            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023/0025/0026/0027 and config/e9.toml "
                                "must be committed before any prefill")
     committed = subprocess.run(["git", "show", "HEAD:ledger/ledger.md"], cwd=repo_root,
                                capture_output=True, text=True, encoding="utf-8")
@@ -335,7 +335,7 @@ def main(argv=None) -> int:
     try:
         if a.check:
             assert_ready(cfg, REPO_ROOT)
-            print("E9 gate: ready (entries 0019, 0023, 0025 and 0026 committed; upstream pinned and clean)")
+            print("E9 gate: ready (entries 0019, 0023, 0025, 0026 and 0027 committed; upstream pinned and clean)")
             return 0
         if a.align_only:
             out = align_only(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT))
