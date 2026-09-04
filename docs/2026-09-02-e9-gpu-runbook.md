@@ -35,7 +35,7 @@ cd kv-transfer-replication && git checkout "$(grep -oE 'upstream_sha = "[0-9a-f]
 
 ```bash
 cd kv-transfer-replication
-uv venv --python 3.12 .venv && uv pip install torch      # PyPI's Linux wheel bundles CUDA 12.x; do NOT use the cu121 index
+uv venv --python 3.12 .venv && uv pip install torch --index-url https://download.pytorch.org/whl/cu128   # see the 09-04 amendment: PyPI torch is now a CUDA 13.0 build
 uv pip install -e .
 cd ../linear-ceiling
 uv venv --python 3.12 .venv && uv pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -51,6 +51,20 @@ cp312 wheel is torch 2.5.1 (checked 2026-09-02) — it would pair a year-old tor
 transformers 5.x and is not what the local env runs (torch 2.13). If the box has no `uv`:
 `python3.12 -m venv .venv && .venv/bin/pip install torch && .venv/bin/pip install -e .` (and
 `-e ".[dev]"` for linear-ceiling) is the same environment.
+
+**Amended 2026-09-04, on the box (Algoverse grant, JupyterHub only — no ssh/scp; driven over the Jupyter
+REST API + kernel websocket from home).** (i) PyPI `torch` 2.14.0 is a **cu130** build and the box driver is
+570.148.08 / CUDA 12.8, so `torch.cuda.is_available()` was False: install from the `cu128` index (2.11.0+cu128
+worked). (ii) The grant is an H100 80 GB **MIG 3g.40gb** slice (39.5 GiB), assigned by `CUDA_VISIBLE_DEVICES`;
+exclusive by construction. (iii) Entry 0025 raised the keep subset to 8 handoffs = **48.2 GB** retained (the
+3-handoff / 14.3 GB figures above are superseded); the box's policy is ≈50 GB of shared disk, so pull each kept
+handoff home and delete it on the box as it completes. (iv) **The run OOMed at the first included handoff and
+not on the logits**: in float32 with grouped-query heads, transformers' `sdpa` passes `enable_gqa=True`, no
+fused kernel accepts that in f32, and PyTorch falls back to the math kernel — the [16, T, T] scores are 51.5 GiB
+at T = 29,391 (measured allocation request), so NO single card runs the 0023 pin as-is. Remedy landed at home as
+the entry 0026 upstream re-pin (`sdpa_repeat_kv` attention + `logits_to_keep=1`): measured peak 16.5 GiB at
+T = 32,123 on the slice, K/V bit-identical to the probe path and within float32 rounding of the math kernel
+(max |ΔK| 9.2e-4 on a scale of 423). No cap, dtype or handoff set changed.
 
 **Memory — the card must be yours alone.** The upstream loads both models in **float32**
 (`kvt/models.py`, by design of the CPU replication; the plan doc's "bf16" was never what the code

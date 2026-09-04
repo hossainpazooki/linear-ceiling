@@ -1553,3 +1553,72 @@ The 0018 rows above are E7 figures and name the corpus manifest they were measur
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: 8fb9531f556f91cd2090cffe7014956826e2453cbe49b406a7af6a077b115753
+
+### 0026 — 2026-09-04 — E9 upstream re-pin before any score: SDPA attention kernel and logits at dump time, after the first-handoff CUDA OOM; no rule, cap, dtype, τ or handoff-set change
+
+**What happened on the box.** Algoverse grant, one H100 80 GB **MIG 3g.40gb** slice (39.5 GiB, assigned by
+`CUDA_VISIBLE_DEVICES`, no other process), linear-ceiling `d965e22`, upstream `36d73b3` (the 0023 pin),
+torch 2.11.0+cu128, transformers 5.16.1. `e9 --check` printed ready; the driver refused at the FIRST
+included handoff (`astropy__astropy-13033_traj#80`, |S| = 29,391) inside the receiver's dump of `S`:
+`torch.OutOfMemoryError: Tried to allocate 51.49 GiB` in `scaled_dot_product_attention`. No score file
+was written; `results/e9/report.json` is absent at append and this entry's script refuses otherwise.
+
+**Mechanism (verified, not inferred).** 51.49 GiB = 16 × 29,391² × 4 B exactly: the float32 [heads, T, T]
+attention scores. transformers' `sdpa` integration passes `enable_gqa=True` whenever no attention mask is
+present (`use_gqa_in_sdpa`); in float32 no fused kernel accepts that (flash needs fp16/bf16, the
+memory-efficient kernel does not take `enable_gqa`), so PyTorch takes the math kernel and materializes
+the scores. The 2026-09-02 pre-flight budgeted the logits (19.5 GB) and missed this term; at |S| = 32,123
+the scores alone are 61.5 GiB, so **no single card runs the 0023 pin as written**, and a bigger card was
+never the fix. A scratch probe on the slice (outside `results/`, real Qwen3-1.7B weights, random ids)
+measured peak allocated memory of the pinned forward against candidates, GiB:
+
+| T | pinned (`sdpa`, f32) | all-ones mask | `repeat_kv` instead of `enable_gqa` | + `logits_to_keep=1` |
+|---|---|---|---|---|
+| 4,096 | 10.07 | 10.07 | 9.89 | 7.95 |
+| 8,192 | 18.11 | 18.11 | 13.11 | 9.23 |
+| 16,384 | OOM (16.0 GiB request) | OOM | 19.56 | 11.80 |
+| 29,391 | (51.5 GiB scores alone) | — | 29.80 | 15.89 |
+| 32,123 | (61.5 GiB scores alone) | — | 31.95 | 16.74 |
+
+The all-ones mask is dropped before SDPA (K/V bit-identical to the pinned path), so it is not a remedy.
+At T = 1,024, where the pinned path runs, K/V under the `repeat_kv` path differ from the math kernel by
+max |ΔK| = 9.232e-04 on a K scale of 423.09 and max |ΔV| = 3.891e-04 on a V scale of 215.46 (float32
+kernel arithmetic, ≈ 2e-06 relative); `logits_to_keep=1` leaves K/V bit-identical.
+
+**Upstream change (re-pin).** `kvt/models.py` registers an attention implementation `sdpa_repeat_kv`
+(the body of `sdpa_attention_forward` with the KV heads expanded by `repeat_kv` and no `enable_gqa`
+branch) and `load_model` asks for it; `kvt/data.py::dump_kv` passes `logits_to_keep=1` (K/V are read
+from `past_key_values`; the logits were never used). New upstream test `tests/test_models.py`: on a tiny
+GQA Qwen3 the registered implementation reproduces eager attention to 1e-05 and returns one logits
+row; upstream suite 143 passed. The exact module shipped was validated on the slice before this entry:
+K/V bit-identical to the probe's `repeat_kv` path at T = 1,024, peak **15.67 GiB at T = 29,391 and
+16.52 GiB at T = 32,123** with the dump call as shipped. Parent of the new pin: `36d73b3` (the 0023
+re-pin), so 0019's and 0023's ancestry checks still hold. Re-pin recorded in `config/e9.toml` and
+`UPSTREAM.md` by the operator after committing upstream (the placeholder refuses by name).
+
+**What this changes in the measurement, stated plainly.** Every dumped K/V tensor (receiver on `S`, on
+`R`, on `S`+1, source on `S`) is now produced by the memory-efficient SDPA kernel instead of the math
+kernel: layer-0 K/V are unchanged (no attention upstream of them), deeper layers move at float32
+rounding, ≈ 2e-06 relative. All four dumps of a handoff take the same path, so the per-token deviations
+0023 defines compare like with like; the pipeline-identity control (exact zero) and the 0025
+prefix-invariance control (≤ 1e-04 in R²'s units) still run first on the box and halt on failure.
+τ_K = 0.3186 and τ_V = 0.4867 are 0023's recorded numbers from the E8 report (a held-out R² of 0.68 on
+generic text, CPU, math kernel); a 2e-06 relative change in the tensors does not move a tolerance
+stated to four decimals, and this entry does not touch it. Nothing else moves: context cap 32,768,
+float32, pair, band, four cells, keep subset (0025), coverage 25/68, seeds, controls.
+
+**Also learned on the box, for the runbook.** PyPI `torch` 2.14.0 is a CUDA 13.0 build and the box
+driver is CUDA 12.8 (`cuda: False` until installed from the `cu128` index); the grant is JupyterHub
+only (no ssh/scp — driven over the Jupyter REST API and kernel websocket from home); entry 0025's
+8-handoff keep subset is 48.2 GB against a ≈ 50 GB shared-disk policy, so each kept handoff is pulled
+home and deleted on the box as it completes. Runbook amended in the same change.
+
+**Enforcement.** `e9.REQUIRED_ENTRIES` now names this entry beside 0019, 0023 and 0025, so no prefill
+can start on a ledger that lacks it; `assert_ready` refuses the pending placeholder by name and
+`check_upstream` requires the recorded sha to be an ancestor of the upstream checkout with every
+invoked path clean.
+
+**Scope.** All of 0019's, 0023's and 0025's limits. No hypothesis cell changes with this entry; no
+`verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
+
+prior-entries-sha256: 070daf0b6ba80a03fe0639235495b4d4186e95456855332a9098d4d3e4212c30

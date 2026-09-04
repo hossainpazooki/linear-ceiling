@@ -46,7 +46,7 @@ from linear_ceiling.e9_pertoken import centered_delta as _centered_delta, token_
 from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import snapshot
 
-REQUIRED_ENTRIES = ("### 0019 ", "### 0023 ", "### 0025 ")   # 0025: tau ladder (descriptive) + keep n, before any prefill
+REQUIRED_ENTRIES = ("### 0019 ", "### 0023 ", "### 0025 ", "### 0026 ")   # 0025: tau ladder + keep n; 0026: upstream re-pin (attention kernel, logits_to_keep) after the 09-04 OOM
 UPSTREAM_PATHS = ("scripts/dump_kv.py", "scripts/score_positions.py", "scripts/score_mapper.py", "kvt")
 _PENDING = "UPSTREAM_SHA_PENDING"
 
@@ -54,12 +54,12 @@ _PENDING = "UPSTREAM_SHA_PENDING"
 def assert_ready(cfg: E9Config, repo_root: Path) -> None:
     if _PENDING in cfg.upstream_sha:
         raise RuntimeError("E9 REFUSED: config/e9.toml still carries the pending upstream pin placeholder; "
-                           "commit the upstream --per-token change and record its sha (entry 0023)")
+                           "commit the upstream change and record its sha (entry 0023 for --per-token; entry 0026 for the attention re-pin)")
     for rel in ("ledger/ledger.md", cfg.config_path.resolve().relative_to(Path(repo_root).resolve()).as_posix()):
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
-            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023/0025 and config/e9.toml "
+            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023/0025/0026 and config/e9.toml "
                                "must be committed before any prefill")
     committed = subprocess.run(["git", "show", "HEAD:ledger/ledger.md"], cwd=repo_root,
                                capture_output=True, text=True, encoding="utf-8")

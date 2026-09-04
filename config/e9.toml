@@ -1,6 +1,6 @@
 # E9 -- achievable fraction of the headroom upper bound at a re-rendered handoff (ledger entries
 # 0019, rule amended by 0023 before any prefill).
-# e9.assert_ready refuses until this file and ledger/ledger.md (with 0019 and 0023) are committed
+# e9.assert_ready refuses until this file and ledger/ledger.md (with 0019, 0023, 0025 and 0026) are committed
 # unmodified AND the upstream checkout is at `upstream_sha` (a commit whose scripts/score_positions.py
 # and scripts/score_mapper.py carry `--per-token`), clean for every invoked path.
 
@@ -9,7 +9,7 @@ pair = "qwen3-0.6b-to-1.7b"          # receiver = target (1.7B), source = 0.6B; 
 results_dir = "results/e9"
 scratch_dir = "results/e9/scratch"   # per-handoff dumps, deleted after scoring unless kept
 upstream_path = "../kv-transfer-replication"
-upstream_sha = "36d73b3f29d9b1f3a7c5148525de92b0b1b8ff5b"   # entry 0023 re-pin: adds --per-token to score_positions.py / score_mapper.py
+upstream_sha = "d5786df91f55629933067e3c4bb14f1288c4bef2"   # entry 0026 re-pin: kvt/models.py sdpa_repeat_kv attention + logits_to_keep=1 in dump_kv (parent 36d73b3f, the 0023 re-pin)
 
 [e9.handoffs]
 suite = "swe-bench"
