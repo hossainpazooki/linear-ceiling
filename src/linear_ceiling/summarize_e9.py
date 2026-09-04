@@ -60,6 +60,9 @@ from linear_ceiling.weights import snapshot
 
 _TOL = 1e-6
 _SUM_TOL = 1e-5          # float32 per-token squares vs the float64 SSE they were summed into
+_RESCORE_RTOL = 1e-2     # entry 0028: a kept dump re-scored on another platform (BLAS reduction order) reproduces each
+                         # float32 square to this relative tolerance; per-head SUMS still to _SUM_TOL. Measured max 2.9e-3
+                         # over 8 handoffs x 6 arms (Linux box vs Windows home, 2026-09-04).
 _TAU_TOL = 1e-9
 ARMS = ("same_K", "same_V", "cross_K", "cross_V")
 
@@ -97,6 +100,29 @@ def _r2_from_moments(part: dict) -> dict:
 
 def _sst(body: dict, part: str, key: str) -> np.ndarray:
     return np.asarray([layer["sst"] for layer in body[part][key]], dtype=np.float64)       # [L, H]
+
+
+def _rescore_agreement(box: dict, home: dict, who: str) -> dict:
+    """Entry 0028: a kept dump re-scored at home against the box's per-token record. Per-head float64 sums
+    of the squares must agree to _SUM_TOL; every individual float32 square to _RESCORE_RTOL relative (no
+    absolute floor). Returns the agreement figures the ledger cites, per arm."""
+    out = {}
+    for arm in ARMS + ("ref_K", "ref_V"):
+        if arm not in box or arm not in home:
+            raise ValueError(f"{who}: re-score record lacks {arm}")
+        a, b = np.asarray(box[arm], dtype=np.float64), np.asarray(home[arm], dtype=np.float64)
+        if a.shape != b.shape:
+            raise ValueError(f"{who}: keep-subset per-token re-score disagrees on {arm} (shape {b.shape} vs {a.shape})")
+        sa, sb = a.sum(0), b.sum(0)
+        if not np.allclose(sb, sa, rtol=_SUM_TOL, atol=0):
+            raise ValueError(f"{who}: keep-subset per-token re-score disagrees on {arm} (per-head sums beyond {_SUM_TOL:.0e} relative)")
+        if not np.allclose(b, a, rtol=_RESCORE_RTOL, atol=0):
+            raise ValueError(f"{who}: keep-subset per-token re-score disagrees on {arm} (a square beyond {_RESCORE_RTOL:.0e} relative)")
+        rel = np.abs(a - b) / np.maximum(np.abs(a), 1e-300)
+        srel = np.abs(sa - sb) / np.maximum(np.abs(sa), 1e-300)
+        out[arm] = {"max_rel_square": float(rel.max()), "max_rel_sum": float(srel.max()),
+                    "bit_identical_frac": float((a == b).mean())}
+    return out
 
 
 def _check_tokens(body: dict, tokens: dict, n: int, who: str, arms=ARMS) -> None:
@@ -317,6 +343,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     # 2. Every R² from moments; score + per-token files by hash; squares sum to moments;
     #    kept dumps by fingerprint + re-score (moments AND per-token).
     per_handoff, tokens_of, bodies = {}, {}, {}
+    rescore_agreement = {}   # entry 0028: per kept handoff, the box-vs-home re-score agreement figures
+    home_tokens, home_bodies = {}, {}   # entry 0028: the home re-score's per-token record, for the effect on delta and f*
     for hid in included:
         rec = rep["scores"][hid]
         sf = cfg.results_dir / "scores" / rec["score_file"]
@@ -365,9 +393,9 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
                     if not _close(re_body[f"{label}_{key}_r2_layer_mean"], body[f"{label}_{key}_r2_layer_mean"]):
                         raise ValueError(f"{hid}: keep-subset re-score disagrees on {label} {key}")
             with np.load(out_tok) as z:
-                for arm in ARMS:
-                    if not np.allclose(z[arm], tok[arm], rtol=_SUM_TOL, atol=0):
-                        raise ValueError(f"{hid}: keep-subset per-token re-score disagrees on {arm}")
+                home_tok = {k: z[k] for k in z.files}
+            rescore_agreement[hid] = _rescore_agreement(tok, home_tok, hid)   # entry 0028
+            home_tokens[hid], home_bodies[hid] = home_tok, re_body
 
     # 3. Controls (0023): identity exactly zero; null pairing re-derived from the seed.
     ctl = rep.get("controls")
@@ -445,6 +473,10 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
             part, key = arm.split("_")
             d = centered_delta(tok[arm], _sst(body, part, key), n)
             dt[arm] = token_mean(d)
+            if hid in home_tokens:   # entry 0028: what the cross-platform jitter does to the statistic itself
+                dth = token_mean(centered_delta(home_tokens[hid][arm], _sst(home_bodies[hid], part, key), n))
+                rescore_agreement[hid][arm]["max_abs_token_delta_diff"] = float(np.abs(dt[arm] - dth).max())
+                rescore_agreement[hid][arm]["fstar_abs_diff"] = float(abs(f_star(dt[arm], tau[key]) - f_star(dth, tau[key])))
             depth_tokens[arm].append(layer_mean(d))
             fstar[arm][hid] = f_star(dt[arm], tau[key])
             for t in ladder:
@@ -536,6 +568,14 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         "prefix_control": {"max_token_delta": pre_max, "tolerance": pre_tol, "n_positions": n_s},
         "coverage_comparison": coverage_cmp,
         "cross_over_same_median_delta": {k: _stats(v.values()) for k, v in ratio.items()},
+        "rescore_agreement": {   # entry 0028
+            "per_handoff": rescore_agreement,
+            "rtol_square": _RESCORE_RTOL, "rtol_sum": _SUM_TOL,
+            "max_rel_square": max((v["max_rel_square"] for a in rescore_agreement.values() for v in a.values()), default=None),
+            "max_rel_sum": max((v["max_rel_sum"] for a in rescore_agreement.values() for v in a.values()), default=None),
+            "min_bit_identical_frac": min((v["bit_identical_frac"] for a in rescore_agreement.values() for v in a.values()), default=None),
+            "max_abs_token_delta_diff": max((v.get("max_abs_token_delta_diff", 0.0) for a in rescore_agreement.values() for v in a.values()), default=None),
+            "max_fstar_abs_diff": max((v.get("fstar_abs_diff", 0.0) for a in rescore_agreement.values() for v in a.values()), default=None)},
         "own_norm_delta_gt_1_fraction": {k: _stats(v.values()) for k, v in own_gt1.items()},
         "delta_null": delta_null, "delta_null_handoff": c_hid,
         "seam_profile_pooled": seam_pooled, "seam_profile_per_handoff": seam_per_handoff,
@@ -557,7 +597,13 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
           "fingerprinted tensors; tau recomputed from the archived mapper; controls checked\n\n"
           f"pair {cfg.pair} | upstream {cfg.upstream_sha[:12]} | config {rep['config_sha256'][:12]} | "
           f"coverage: {cov['included']} included / {cov['excluded']} excluded (cap {cfg.context_cap}) "
-          f"of {cov['observed']} observed handoffs\n\n"
+          f"of {cov['observed']} observed handoffs\n"
+          f"keep-subset re-score (entry 0028): {len(rescore_agreement)} kept handoffs; per-head sums within "
+          f"{figures['rescore_agreement']['max_rel_sum']:.1e} relative (tolerance {_SUM_TOL:.0e}); every square within "
+          f"{figures['rescore_agreement']['max_rel_square']:.1e} relative (tolerance {_RESCORE_RTOL:.0e}); "
+          f"bit-identical fraction >= {figures['rescore_agreement']['min_bit_identical_frac']:.3f}; effect on the statistic: "
+          f"max |delta_token diff| {figures['rescore_agreement']['max_abs_token_delta_diff']:.1e}, "
+          f"max |f*(tau) diff| {figures['rescore_agreement']['max_fstar_abs_diff']:.1e}\n\n"
           "Units: centered per-token deviation = the token's share of unexplained variance, in R²'s own "
           "units (token mean == 1 - R²); NOT a per-token percent error (0023).\n\n"
           f"- matched fraction |M|/|R| (a FLOOR; blocks method, entry 0019): {fmt(matched)}\n"

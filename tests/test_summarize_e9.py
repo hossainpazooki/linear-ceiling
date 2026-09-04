@@ -443,3 +443,30 @@ def test_calibrate_tau_refuses_a_dirty_upstream_unless_allowed(env, tmp_path, mo
         calibrate_tau(cfg, runner, e8_report=e8)
     out = calibrate_tau(cfg, runner, e8_report=e8, allow_dirty_upstream=True)
     assert out["upstream_pin_check"] == "pin not held"
+
+
+def test_rescore_agreement_tolerates_platform_jitter_and_refuses_real_drift():
+    """Entry 0028: a re-score on another platform reproduces float32 squares to ~1e-3 relative (BLAS
+    reduction order) while per-head sums agree to 1e-5; both are accepted. A 5% square or a sum
+    off by 1e-4 is a bad record and is refused."""
+    from linear_ceiling.summarize_e9 import _rescore_agreement, ARMS
+    rng = np.random.default_rng(0)
+    box = {arm: rng.random((50, 3, 2)).astype(np.float32) + 1e-3 for arm in ARMS + ("ref_K", "ref_V")}
+    for arm in box:
+        box[arm][1::2] = box[arm][0::2]   # paired rows equal, so +x on one and -x on the other is the same relative move
+    jitter = {}
+    for arm in box:   # +0.2% on even rows, the same amounts subtracted on odd rows: squares move, per-head sums do not
+        d = 2e-3 * box[arm].astype(np.float64); d[1::2] = -d[0::2]
+        jitter[arm] = (box[arm].astype(np.float64) + d).astype(np.float32)
+    out = _rescore_agreement(box, jitter, "h")
+    assert set(out) == set(box) and all(0 < v["max_rel_square"] < 1e-2 for v in out.values())
+    assert all(v["max_rel_sum"] < 1e-5 for v in out.values()) and all(v["bit_identical_frac"] < 1.0 for v in out.values())
+    one = {k: v.copy() for k, v in box.items()}
+    one["same_K"][0, 0, 0] *= 1.05                       # a 5% square...
+    one["same_K"][1, 0, 0] -= 0.05 * box["same_K"][0, 0, 0]   # ...hidden from the per-head sum by its paired row
+    with pytest.raises(ValueError, match="a square beyond"):
+        _rescore_agreement(box, one, "h")
+    drift = {k: v.copy() for k, v in box.items()}
+    drift["cross_V"] *= (1 + 1e-4)
+    with pytest.raises(ValueError, match="per-head sums beyond"):
+        _rescore_agreement(box, drift, "h")
