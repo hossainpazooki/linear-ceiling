@@ -88,6 +88,18 @@ scp -r ~/dev/linear-ceiling/traces/swe-bench/20241016_composio_swekit \
        <box>:linear-ceiling/traces/swe-bench/
 ```
 
+### 3b. The fitted mapper (added 2026-09-04 — the box run died here after the first handoff's dumps)
+
+`scripts/score_positions.py --cross-src` loads `mappers/qwen3-0.6b-to-1.7b/k1.{json,safetensors}` from
+the UPSTREAM tree — a gitignored E8 artifact (235 MB) that a fresh clone never has. Copy it from the
+home checkout and verify the hash before §4; `e9 --check` now refuses when it is absent.
+
+```bash
+sha256sum ~/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.*          # at home
+scp ~/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.* <box>:kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/
+# JupyterHub-only box: split -b 60m, upload the parts through /api/contents, cat them back, compare sha256sum
+```
+
 ## 4. Gate, then run (interpreter is `.venv/bin/python` on Linux)
 
 ```bash

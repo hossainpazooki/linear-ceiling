@@ -55,6 +55,10 @@ def assert_ready(cfg: E9Config, repo_root: Path) -> None:
     if _PENDING in cfg.upstream_sha:
         raise RuntimeError("E9 REFUSED: config/e9.toml still carries the pending upstream pin placeholder; "
                            "commit the upstream change and record its sha (entry 0023 for --per-token; entry 0026 for the attention re-pin)")
+    mapper = cfg.upstream_path / "mappers" / cfg.pair / f"k{cfg.mapper_k}.safetensors"
+    if not mapper.exists():   # gitignored E8 artifact; a fresh clone never has it (the 2026-09-04 box run died here after the first handoff's dumps)
+        raise RuntimeError(f"E9 REFUSED: mapper artifact missing at {mapper}; copy mappers/{cfg.pair}/k{cfg.mapper_k}.json "
+                           "and .safetensors from the home checkout (sha256-verify) before any prefill")
     for rel in ("ledger/ledger.md", cfg.config_path.resolve().relative_to(Path(repo_root).resolve()).as_posix()):
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
@@ -331,7 +335,7 @@ def main(argv=None) -> int:
     try:
         if a.check:
             assert_ready(cfg, REPO_ROOT)
-            print("E9 gate: ready (entries 0019, 0023 and 0025 committed; upstream pinned and clean)")
+            print("E9 gate: ready (entries 0019, 0023, 0025 and 0026 committed; upstream pinned and clean)")
             return 0
         if a.align_only:
             out = align_only(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT))

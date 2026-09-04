@@ -275,6 +275,16 @@ def test_run_deletes_unkept_dumps(env, tmp_path):
     assert (cfg.results_dir / "scores" / rec["score_file"]).exists()   # scores always survive
 
 
+def test_assert_ready_refuses_a_missing_mapper_artifact(env, tmp_path, monkeypatch):
+    """The fitted k=1 mapper is a gitignored upstream artifact; a fresh clone lacks it and the run would
+    die at the first score (box, 2026-09-04). Refuse before any prefill, right after the placeholder check."""
+    cfg, _, _, _ = env
+    monkeypatch.undo()
+    cfg = cfg.__class__(**{**cfg.__dict__, "upstream_sha": "0" * 40, "upstream_path": tmp_path / "no-such-upstream"})
+    with pytest.raises(RuntimeError, match="mapper artifact missing"):
+        driver.assert_ready(cfg, tmp_path)
+
+
 def test_assert_ready_refuses_the_pending_pin_placeholder(env, tmp_path, monkeypatch):
     cfg, _, _, _ = env
     monkeypatch.undo()
