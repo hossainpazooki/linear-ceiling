@@ -37,7 +37,7 @@ cell changes.
 | H-E7a | switch-point frequency × recoverable prefill cost makes transfer headroom material (threshold: define the materiality cutoff in entry 0005's successor before replay). | E7 | NOT CONFIRMED |
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | UNESTIMABLE |
 | H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | NOT CONFIRMED |
-| H-E9 | (achievable fraction of the headroom upper bound at a re-rendered handoff) at a re-rendered handoff, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity. Rule (entry 0019, band approved 2026-09-01, frozen before any prefill): per-handoff E9-same pooled K R² (definition A5) at LCS-floor matched positions, median over included handoffs — HOLDS >= 0.70, DEGRADES <= 0.40, UNRESOLVED between; V reported alongside, verdict-bearing for nothing; handoffs over the 32,768-token cap excluded and counted. Row added with 0019's commit set completion — the entry says "registered in the table" and the row was initially missing (process slip, noted in the handoff; the entry text is immutable and unchanged). | E9 (band in entry 0019) | unresolved |
+| H-E9 | (achievable fraction of the headroom upper bound at a re-rendered handoff) at a re-rendered handoff, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity. Rule (entry 0019, band approved 2026-09-01, frozen before any prefill): per-handoff E9-same pooled K R² (definition A5) at LCS-floor matched positions, median over included handoffs — HOLDS >= 0.70, DEGRADES <= 0.40, UNRESOLVED between; V reported alongside, verdict-bearing for nothing; handoffs over the 32,768-token cap excluded and counted. Row added with 0019's commit set completion — the entry says "registered in the table" and the row was initially missing (process slip, noted in the handoff; the entry text is immutable and unchanged). | E9 (band in entry 0019) | HELD |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -1680,3 +1680,141 @@ itself matches (the 09-04 self-kill cost eight minutes of stale polling); per ha
 no `verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
 
 prior-entries-sha256: 8a0e344bd6ffdfeb9acec713f2017679d21d28f39a7f0781987a9900409aa15c
+
+### 0028 — 2026-09-04 — E9 summarizer enforcement: the keep-subset re-score tolerance registered for a cross-platform re-score; no rule, τ, band, score or handoff change
+
+**What this is, and when.** After the run (2026-09-04, entries 0026/0027 on the record before any score;
+`results/e9/report.json` complete, 25 of 68 handoffs scored, 8 kept dumps home and fingerprint-verified)
+and BEFORE any figure or verdict is stated. 0023 registered that `summarize_e9` "re-runs the keep-subset
+scorer with `--per-token` and compares the squares" and left the comparison's tolerance to the code, which
+carried `rtol = 1e-05, atol = 0` -- written for a same-machine comparison of float32 squares against the
+float64 sums they were summed into. The re-score at home is a different platform from the box (Linux,
+torch 2.11 CPU on the box; Windows, torch 2.13 CPU / numpy 2.5 at home; the scorer has no GPU path), and
+under that constant the summarizer refused on the first kept handoff:
+`E9 SUMMARY REFUSED: 20241016_composio_swekit/astropy__astropy-14182_traj#68: keep-subset per-token
+re-score disagrees on same_K`. This entry registers the tolerance for that check as a judgment, with the
+measurement it rests on; it is enforcement of 0023, not a change to anything 0023 registers. The rule
+section, τ_K = 0.3186, τ_V = 0.4867, the band, the four cells, the scores on disk and the
+handoff set are untouched; `verdict:` lines: none.
+
+**Registered check (replaces the unstated constant).** For every kept handoff, the home re-score's
+per-token record must (i) reproduce each per-head float64 SUM of squares to `1e-05` relative
+(unchanged: this is what the moments are), and (ii) reproduce every individual float32 square to
+`1e-02` relative with no absolute floor; a shape mismatch, a sum beyond (i) or a square beyond
+(ii) refuses the summary, as before. The summarizer now also reports what the cross-platform jitter does
+to the statistic itself: the largest change in any token's centered δ and in any handoff's f*(τ) between
+the box record and the home re-score.
+
+**Measured, by `summarize_e9` on this run (8 kept handoffs × 6 arrays; `rescore_agreement` in
+`results/e9/summary.json`):**
+
+| array | bit-identical fraction (min – max over handoffs) | max square rel. diff | max per-head sum rel. diff | max \|Δδ_token\| | max \|Δf*(τ)\| |
+|---|---|---|---|---|---|
+| same_K | 0.991 – 1.000 | 2.5e-04 | 3.1e-08 | 3.6e-09 | 0.0e+00 |
+| same_V | 1.000 – 1.000 | 0.0e+00 | 0.0e+00 | 0.0e+00 | 0.0e+00 |
+| cross_K | 0.095 – 0.101 | 2.9e-03 | 2.8e-07 | 2.0e-07 | 0.0e+00 |
+| cross_V | 0.043 – 0.045 | 3.8e-04 | 2.5e-07 | 4.0e-06 | 0.0e+00 |
+| ref_K | 1.000 – 1.000 | 0.0e+00 | 0.0e+00 | 0.0e+00 | 0.0e+00 |
+| ref_V | 1.000 – 1.000 | 0.0e+00 | 0.0e+00 | 0.0e+00 | 0.0e+00 |
+
+Overall: every per-head sum within 2.8e-07 relative (tolerance 1e-05); every square within
+2.9e-03 relative (tolerance 1e-02); the largest change in any token's δ is
+4.0e-06 and f*(τ_K) / f*(τ_V) is unchanged on every kept handoff and arm (max |Δf*| =
+0.0e+00). The same-model arrays and the reference norms reproduce almost or exactly
+bit-for-bit; the cross-arm squares pass through the k = 1 mapper's matmul, where the two platforms' BLAS
+reduce in a different order, and never differ by more than a third of a percent. The ref arrays are not
+squares; they are checked under the same rule for uniformity.
+
+**Basis beyond this run: what the disagreement is (scratch, 2026-09-04, one kept handoff, astropy-14182).**
+Re-scored in an Ubuntu WSL on the home machine with the box's torch build (2.11.0 from the cu128 index,
+numpy 2.5.2, python 3.12): `same_K`, `same_V`, `ref_K`, `ref_V` reproduce the box record **bit-for-bit**
+(the 132 differing same-K squares at home were Windows-vs-Linux, ≤ 2.5e-04 relative on near-zero squares);
+two identical runs on one machine are bit-identical on every array; the cross arrays change with the
+THREAD COUNT alone (8 threads vs 1 thread on the same machine: 69% / 48% of cross-K / cross-V squares
+identical, ≤ 1.2e-03 relative) and against the 104-core box at any thread count agree on ≈ 10% / 4% of
+squares within 2.5e-03 / 3.8e-04 relative. So: the verdict-bearing arrays are exactly reproducible on a
+matching platform; the cross arrays' per-square disagreement is reduction order inside the mapper's
+float32 matmul, a function of thread count and hardware, not of the record. This is a measured
+explanation, not an inference from the sizes of the differences.
+
+**Why 1e-02 and not the measured 2.9e-03.** A tolerance set at the observed
+maximum is a tautology; one order above it still refuses any square that moved by a percent, which is
+339× the largest platform effect seen here and far below anything that could move a
+token across τ_K (a token would need δ to move by a factor, not a percent, and the measured max |Δδ| is
+4.0e-06 against τ_K = 0.3186). The sum check keeps the tight floor: a record whose
+squares were altered in a way that preserved every per-head sum would still have to keep every square
+within a percent of the box's.
+
+**Scope.** All of 0019's, 0023's, 0025's, 0026's and 0027's limits. No hypothesis cell changes with this
+entry; no `verdict:` line. The verdict on H-E9 enters only by its own numbered entry, from a summary that
+passes under this check.
+
+prior-entries-sha256: 3eef45b79417ef3270281c08bfeb7a177aaf4c95d5a6daa909ac8151d7de9a1f
+
+### 0029 — 2026-09-04 — E9 ran `[BASELINE]`; H-E9 HELD
+
+**Setup, as registered.** Algoverse grant, one H100 80 GB MIG 3g.40gb slice, JupyterHub only; linear-ceiling
+`0a19b56` (entries 0019, 0023, 0025, 0026, 0027 required by the gate and committed), upstream pin
+`d5786df` (entry 0026). Pair qwen3-0.6b-to-1.7b; receiver Qwen3-1.7B, source Qwen3-0.6B, the k = 1
+content-space mapper of 0016/0020 for the cross arm. Launched 17:35:32 UTC after two refused attempts (0027
+names them; nothing scored in either), finished 18:13 UTC: 25 handoffs scored in 38 minutes wall,
+68 observed, 43 excluded (39 over the 32,768 cap, 4 with an empty receiver prompt).
+Every figure below is `summarize_e9`'s, from a run that passed all of its checks: alignments re-derived from
+the raw traces; every R² recomputed from recorded moments; per-token squares summed against the moments;
+the 8 kept dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square within
+2.9e-03 relative, f* unchanged on every kept handoff); τ recomputed from the archived mapper; controls checked.
+
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance: max centered per-token δ
+0.000e+00 over 29,391 positions (tolerance 1e-04) -- the box reproduced the prefix under one extra
+token bit-for-bit. δ_null (deranged pairing, the top of the deviation scale) same K / V token-mean median
+2.009 / 1.962; fraction of null pairs with equal token ids 0.0099.
+Matched fraction |M|/|R| (a floor; blocks method): 0.9344 (p10 0.8838, p90 0.9783).
+
+**The rule (0023, frozen before any prefill) and the figure it reads.** Per included handoff, E9-same, K
+read-out: f*(τ_K) = the fraction of matched tokens whose centered per-token deviation exceeds
+τ_K = 0.3186 (1 − the k = 1 mapper's own held-out K R²); median over included handoffs; HOLDS ≤ 0.15,
+DEGRADES ≥ 0.5, UNRESOLVED between.
+
+- **median f*(τ_K), E9-same K: 0.0000 (p10 0.0000, p90 0.0000)** over 25 handoffs. Seeded bootstrap of the
+  median (0025, seed 25, 2000 reps; reported, not read): [0.0000, 0.0000].
+- f*(τ_V = 0.4867), E9-same V (alongside, verdict-bearing for nothing): 0.0000 (p10 0.0000, p90 0.0000).
+- τ ladder (0025, descriptive): τ = 0.1: same K 0.0000 (p10 0.0000, p90 0.1563) / V 0.0000 (p10 0.0000, p90 0.1888); τ = 0.03: same K 0.1433 (p10 0.0115, p90 0.5823) / V 0.1394 (p10 0.0177, p90 0.5109).
+- f*(τ_agent_K = 0.4371) (0025, alongside): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.5045 (p10 0.3825, p90 0.6698).
+- f*(τ_K) over matched blocks of length ≥ 4 (0025): same K 0.0000 (p10 0.0000, p90 0.0000).
+- Seam profile under the causal distance b⁻(t) (0025), E9-same K, pooled median δ by bin: 0: 0.236 (n=2278) · 1: 0.127 (n=1599) · 2-3: 0.081 (n=2571) · 4-7: 0.062 (n=4039) · 8-15: 0.063 (n=5480) · 16+: 0.019 (n=139290).
+
+**Band outcome, against the rule as written: HOLDS.** Not one included handoff has a single matched token whose centered deviation exceeds τ_K on the same-model arm: the receiver's KV at the re-rendered position agrees with its KV at the original position to within the mapper's own tolerance at every matched token, on every handoff.
+
+**Read on a floor (0027, bound to this cell).** f*(τ) is an oracle LOWER BOUND on the recompute fraction
+(0023: oracle selection of the tokens, and recompute in isolation). CacheBlend's 10–15% is an ACHIEVED
+figure. This HOLDS therefore reads: the oracle floor of the re-render's repair is no more than the budget a
+same-model reuse the literature already spends -- "no more than the mapper, on a floor" -- and not that an
+achievable scheme reaches it.
+
+**Cross-arm outcome, named (0027; descriptive, decides nothing).** E9-cross, the 0.6B source mapped through
+the k = 1 mapper: median f*(τ_K) = 0.9286 (p10 0.8579, p90 0.9607) and f*(τ_V) = 0.9089 (p10 0.8656, p90 0.9371); read against the same
+edges, the transfer arm sits beyond the DEGRADES edge. Cross/same median-δ ratio K / V: 26.9 (p10 5.6, p90 51.9) / 40.6 (p10 7.5, p90 104.0).
+Bridge R² (A5, head- and layer-averaged; decides nothing): same K 0.9318 (p10 0.8430, p90 0.9616), same V 0.9171 (p10 0.8156, p90 0.9521),
+cross K 0.4557 (p10 0.4196, p90 0.4760), cross V 0.1722 (p10 0.1458, p90 0.2030) -- the cross K figure lands where 0020's arm (b) put the same
+mapper on agent text (K R² 0.4371). Own-norm diagnostic, fraction of tokens with δ_own > 1, same K / V:
+0.0000 (p10 0.0000, p90 0.0000) / 0.0043 (p10 0.0028, p90 0.0066).
+
+**Coverage (0025; what the cap selected on).** Included vs excluded-by-length, medians (p10, p90): |S|
+25,460 (14,269, 30,106) vs 52,141 (35,692, 147,218); |R| 6,551 vs 11,500;
+0018 overlap 0.9846 vs 0.9894; 0018 recoverable fraction 0.8861 vs 0.8904
+(0 handoffs without a 0018 row). H-E9 is decided on the included set and is a claim about it: the
+shorter half of the corpus by |S|.
+
+**What this establishes, stated narrowly.** On Qwen3-1.7B re-rendering 25 real SWE-bench composio handoffs
+under the 32,768-token cap, with the LCS-floor alignment of 0019 and the per-token rule of 0023, the
+same-model KV agreement at content-matched tokens is inside the k = 1 mapper's own tolerance at every
+matched token of every handoff, so the oracle recompute floor is zero. **Not established:** anything about
+the excluded long handoffs; any achievable recompute scheme (floor, not method); the cross-model transfer
+at this handoff, which by the named descriptive outcome sits beyond the DEGRADES edge; one pair, one
+direction, one mapper, one alignment method; and nothing about generation quality after reuse (0023's
+`[STRETCH]` partial-prefill experiment, registered for the retained dumps, is not run).
+
+verdict: H-E9 = HELD
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 2be23eb054eaceb14c0c8016a015f075be82817f36189b94a684542582bee8ce
