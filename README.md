@@ -257,6 +257,7 @@ flowchart LR
 | `docs/2026-09-01-swe-bench-trace-recon.md` | trajectory availability, formats, and what they do and do not record |
 | `docs/2026-09-01-lcfm-gpu-plan.md` | the LCFM sprint plan with GPU runs: what runs on CPU (E8), what needs the A100 (E9) |
 | `docs/2026-09-02-e9-gpu-runbook.md` | the E9 GPU day, step by step: pin, environments, run, sync-before-expiry, CPU fallback |
+| `docs/gpu-experiment-protocol.md` · `tools/jupyterhub/` | standing rules for every GPU run (R1–R12: register before request, launch/pull/verify/delete, release checklist, HF backup, tokens) and the JupyterHub box driver + puller |
 | `docs/2026-09-02-e-rl-design.md` | E-RL design, **unregistered**: KV reuse across RL post-training checkpoints on E9's statistic; citations pinned at source; open rulings listed |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
 | `CLAUDE.md` | repo brief for agent sessions: commands, layout, binding rules |
