@@ -27,6 +27,15 @@ from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import WeightReader, assert_shared_vocab, snapshot
 
 REQUIRED_ENTRIES = ("### 0009 ", "### 0016 ")
+
+
+def required_entries(cfg: E8Config) -> tuple[str, ...]:
+    """0009 + 0016 always; an amendment run also requires its own registering entry (e.g. 0030)."""
+    return REQUIRED_ENTRIES + ((f"### {cfg.amendment['entry']} ",) if cfg.amendment else ())
+
+
+def agent_holdout_frac(cfg: E8Config) -> float:
+    return cfg.holdout_frac if cfg.agent_holdout_frac is None else cfg.agent_holdout_frac
 UPSTREAM_PATHS = ("scripts/dump_kv.py", "scripts/score_mapper.py", "kvt")
 _TOL = 1e-6
 
@@ -41,7 +50,7 @@ def upstream_python(upstream: Path) -> Path:
 
 def assert_ready(cfg: E8Config, repo_root: Path) -> None:
     if not re.fullmatch(r"[0-9a-f]{40}", cfg.upstream_sha):
-        raise RuntimeError("E8 REFUSED: config/e8.toml upstream_sha is not a commit sha; entry 0016's re-pin "
+        raise RuntimeError(f"E8 REFUSED: {cfg.config_path.name} upstream_sha is not a commit sha; the re-pin "
                            "must be recorded before any dump is generated")
     for rel in ("ledger/ledger.md", cfg.config_path.resolve().relative_to(Path(repo_root).resolve()).as_posix()):  # noqa: E501
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
@@ -53,7 +62,7 @@ def assert_ready(cfg: E8Config, repo_root: Path) -> None:
                                capture_output=True, text=True, encoding="utf-8")
     if committed.returncode != 0:
         raise RuntimeError("E8 REFUSED: cannot read HEAD:ledger/ledger.md")
-    for marker in REQUIRED_ENTRIES:
+    for marker in required_entries(cfg):
         if marker not in committed.stdout:
             raise RuntimeError(f"E8 REFUSED: committed ledger has no entry {marker.strip('# ').strip()}")
     # Ancestor + paths-unchanged, not HEAD equality: a later experiment's re-pin must not make
@@ -90,14 +99,21 @@ def dump_agent(cfg: E8Config, tokens_path: Path, runner=subprocess.run) -> dict[
     return out
 
 
-def score(cfg: E8Config, k: int, src: Path, tgt: Path, out: Path, runner=subprocess.run) -> dict:
+def score(cfg: E8Config, k: int, src: Path, tgt: Path, out: Path, runner=subprocess.run, *,
+          holdout_frac: float | None = None, per_token: Path | None = None) -> dict:
+    """One score_mapper call. `holdout_frac` defaults to the config's arm (a) fraction; the amendment
+    passes arm (b)'s (1.0 = every agent sequence) and a `--per-token` path for the per-sequence record."""
     mapper = cfg.upstream_path / "mappers" / cfg.pair / f"k{k}"
     if not mapper.with_suffix(".safetensors").exists():
         raise RuntimeError(f"E8 REFUSED: no fitted mapper at {mapper} (upstream artifact, gitignored)")
-    run_upstream(cfg, ["scripts/score_mapper.py", "--mapper", str(mapper), "--src", str(Path(src).resolve()),
-                       "--tgt", str(Path(tgt).resolve()), "--holdout-frac", str(cfg.holdout_frac),
-                       "--out", str(Path(out).resolve())], runner)
-    if not Path(out).exists():
+    frac = cfg.holdout_frac if holdout_frac is None else holdout_frac
+    args = ["scripts/score_mapper.py", "--mapper", str(mapper), "--src", str(Path(src).resolve()),
+            "--tgt", str(Path(tgt).resolve()), "--holdout-frac", str(frac), "--out", str(Path(out).resolve())]
+    if per_token is not None:
+        Path(per_token).parent.mkdir(parents=True, exist_ok=True)
+        args += ["--per-token", str(Path(per_token).resolve())]
+    run_upstream(cfg, args, runner)
+    if not Path(out).exists() or (per_token is not None and not Path(per_token).exists()):
         raise RuntimeError(f"E8 REFUSED: score_mapper wrote nothing to {out}")
     return json.loads(Path(out).read_text(encoding="utf-8"))
 
@@ -130,7 +146,14 @@ def crosscheck(k: int, recomputed: dict, archived: dict) -> dict:
     return row
 
 
-def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks: dict) -> dict:
+def _rel(p: Path) -> str:
+    p = Path(p).resolve()
+    r = Path(REPO_ROOT).resolve()
+    return p.relative_to(r).as_posix() if str(p).startswith(str(r)) else str(p).replace("\\", "/")
+
+
+def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks: dict,
+             prior_ref: dict | None = None, per_token: dict | None = None) -> dict:
     per_k = {}
     for k in cfg.report_k:
         g, a = scores[("generic", k)], scores[("agent", k)]
@@ -138,8 +161,24 @@ def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks
                "agent": {"K": a["K_r2_heldout_layer_mean"], "V": a["V_r2_heldout_layer_mean"]}}
         row["drop"] = {"K": row["generic"]["K"] - row["agent"]["K"], "V": row["generic"]["V"] - row["agent"]["V"]}
         row["band_outcome"] = {"K": band_outcome(row["drop"]["K"], cfg.band), "V": band_outcome(row["drop"]["V"], cfg.band)}
+        if cfg.amendment:
+            row["holdout_frac"] = {"generic": cfg.holdout_frac, "agent": agent_holdout_frac(cfg)}
+            row["n_heldout_tokens"] = {"generic": g.get("n_heldout_tokens"), "agent": a.get("n_heldout_tokens")}
+            row["n_heldout_seqs"] = {"generic": g.get("n_heldout_seqs"), "agent": a.get("n_heldout_seqs")}
+            row["per_sequence"] = {arm: {"seq_ids": s["per_sequence"]["seq_ids"],
+                                         "K": s["per_sequence"]["K_r2_layer_mean"],
+                                         "V": s["per_sequence"]["V_r2_layer_mean"]}
+                                   for arm, s in (("generic", g), ("agent", a))}
+            row["per_token"] = {arm: {"path": _rel(per_token[(arm, k)]), "sha256": sha256_file_bytes(per_token[(arm, k)])}
+                                for arm in ("generic", "agent")}
         per_k[str(k)] = row
     manifest = tokens_path.with_suffix(".manifest.json")
+    note = ("band outcomes for the verdict k, K and V separately (entry 0009 reports neither alone); the verdict on "
+            "H-E8 enters by a numbered entry")
+    if cfg.amendment:
+        note = (f"entry {cfg.amendment['entry']}: a DESCRIPTIVE restatement of arm (b) over every agent sequence "
+                "(the mapper was never fit on them); band words are read against 0009's band for orientation only; "
+                "the H-E8 cell was decided by entry 0020 under the registered 0016 protocol and does not move here")
     return {
         "config_sha256": sha256_file_bytes(cfg.config_path),
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
@@ -149,35 +188,66 @@ def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks
         "dumps": {arm: {which: dump_fingerprint(p) for which, p in d.items()} for arm, d in dumps.items()},
         "archived_crosscheck": checks,
         "verdict_k": cfg.verdict_k, "band": cfg.band, "per_k": per_k,
-        "verdict_bearing": {"k": cfg.verdict_k, "outcome": per_k[str(cfg.verdict_k)]["band_outcome"],
-                            "note": "band outcomes for the verdict k, K and V separately (entry 0009 "
-                                    "reports neither alone); the verdict on H-E8 enters by a numbered entry"},
+        "verdict_bearing": {"k": cfg.verdict_k, "outcome": per_k[str(cfg.verdict_k)]["band_outcome"], "note": note},
         "scope": "off-policy text for Qwen; single pair; not a real switch point; visible messages only (0012)",
+        **({"amendment": dict(cfg.amendment), "reused_agent_dumps_from": prior_ref} if cfg.amendment else {}),
     }
+
+
+def reuse_agent_dumps(cfg: E8Config, repo_root: Path) -> tuple[dict, Path, dict]:
+    """E8 amendment: the agent dumps and token file of a prior run are reused, and must match that run's
+    recorded fingerprints byte for byte -- the amendment rescores 0020's tensors, it does not resample."""
+    prior_path = Path(cfg.reuse_agent_dumps_from)
+    if not prior_path.exists():
+        raise RuntimeError(f"E8 REFUSED: prior report {prior_path} to reuse dumps from does not exist")
+    prior = json.loads(prior_path.read_text(encoding="utf-8"))
+    agent = {w: cfg.agent_dumps / w for w in ("source", "target")}
+    for w, p in agent.items():
+        want = (prior.get("dumps") or {}).get("agent", {}).get(w)
+        if not want or dump_fingerprint(p) != want:
+            raise RuntimeError(f"E8 REFUSED: agent/{w} dump at {p} does not match the fingerprint recorded in {prior_path}")
+    tok = prior.get("tokens") or {}
+    tokens_path = Path(tok.get("path", "")) if Path(tok.get("path", "")).is_absolute() else Path(repo_root) / tok.get("path", "")
+    if not tokens_path.exists() or sha256_file_bytes(tokens_path) != tok.get("sha256"):
+        raise RuntimeError(f"E8 REFUSED: the prior run's agent token file is missing or changed ({tokens_path})")
+    if sha256_file_bytes(tokens_path.with_suffix(".manifest.json")) != tok.get("manifest_sha256"):
+        raise RuntimeError("E8 REFUSED: the prior run's token manifest changed")
+    return agent, tokens_path, {"report": _rel(prior_path), "sha256": sha256_file_bytes(prior_path),
+                                "upstream_sha": prior.get("upstream_sha")}
 
 
 def run(cfg: E8Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run) -> Path:
     assert_ready(cfg, repo_root)
-    src_id, tgt_id = pair_models(cfg.pair)
-    snap_s, snap_t = snapshot(src_id), snapshot(tgt_id)
-    assert_shared_vocab(WeightReader(snap_s, src_id), WeightReader(snap_t, tgt_id))
-    items = list(iter_trace_texts(e7, tuple(cfg.text["suites"])))
-    tokens, manifest = sample_windows(items, qwen_encoder(snap_s), cfg)
-    tokens_path = write_tokens(cfg, tokens, manifest)
     cfg.results_dir.mkdir(parents=True, exist_ok=True)
+    prior_ref = None
+    if cfg.reuse_agent_dumps_from is not None:
+        agent, tokens_path, prior_ref = reuse_agent_dumps(cfg, repo_root)
+    else:
+        src_id, tgt_id = pair_models(cfg.pair)
+        snap_s, snap_t = snapshot(src_id), snapshot(tgt_id)
+        assert_shared_vocab(WeightReader(snap_s, src_id), WeightReader(snap_t, tgt_id))
+        items = list(iter_trace_texts(e7, tuple(cfg.text["suites"])))
+        tokens, manifest = sample_windows(items, qwen_encoder(snap_s), cfg)
+        tokens_path = write_tokens(cfg, tokens, manifest)
     generic = {w: cfg.upstream_path / cfg.generic_dumps / w for w in ("source", "target")}
     for w, p in generic.items():
         if not (p / "meta.json").exists():
             raise RuntimeError(f"E8 REFUSED: archived generic dump missing at {p} (entry 0016 §2 says it exists)")
-    agent = dump_agent(cfg, tokens_path, runner)
-    scores, checks = {}, {}
+    if cfg.reuse_agent_dumps_from is None:
+        agent = dump_agent(cfg, tokens_path, runner)
+    scores, checks, per_token = {}, {}, {}
+    pt = (lambda arm, k: cfg.results_dir / "per_token" / f"{arm}_k{k}.npz") if cfg.amendment else (lambda arm, k: None)
     for k in cfg.report_k:
+        per_token[("generic", k)] = pt("generic", k)
         scores[("generic", k)] = score(cfg, k, generic["source"], generic["target"],
-                                       cfg.results_dir / "r2" / f"generic_k{k}.json", runner)
+                                       cfg.results_dir / "r2" / f"generic_k{k}.json", runner, per_token=per_token[("generic", k)])
         checks[str(k)] = crosscheck(k, scores[("generic", k)], archived_r2(cfg, k))
+        per_token[("agent", k)] = pt("agent", k)
         scores[("agent", k)] = score(cfg, k, agent["source"], agent["target"],
-                                     cfg.results_dir / "r2" / f"agent_k{k}.json", runner)
-    report = assemble(cfg, tokens_path, {"generic": generic, "agent": agent}, scores, checks)
+                                     cfg.results_dir / "r2" / f"agent_k{k}.json", runner,
+                                     holdout_frac=agent_holdout_frac(cfg), per_token=per_token[("agent", k)])
+    report = assemble(cfg, tokens_path, {"generic": generic, "agent": agent}, scores, checks,
+                      prior_ref=prior_ref, per_token=per_token if cfg.amendment else None)
     out = cfg.results_dir / "report.json"
     out.write_text(json.dumps(report, indent=1), encoding="utf-8")
     return out
@@ -193,7 +263,8 @@ def main(argv=None) -> int:
     try:
         if a.check:
             assert_ready(cfg, REPO_ROOT)
-            print("E8 gate: ready (entries 0009/0016 committed; upstream pinned and clean)")
+            ents = "/".join(m.strip("# ").strip() for m in required_entries(cfg))
+            print(f"E8 gate: ready (entries {ents} committed; upstream pinned and clean)")
             return 0
         out = run(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT), repo_root=REPO_ROOT)
         print(f"E8 report: {out}")

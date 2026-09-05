@@ -10,6 +10,21 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 - Never edit a hypothesis after its experiment starts; never edit a sealed prediction.
 - Seeds and thresholds live in `config/*.toml`. Randomness only via `linear_ceiling.rng.make_rng`.
 
+## GPU runs
+`docs/gpu-experiment-protocol.md` (rules R1–R12) governs every GPU experiment; each run also gets a
+dated runbook (E9: `docs/2026-09-02-e9-gpu-runbook.md`). The short form: registered before requested
+(no rule/τ/band/cap change once a score file exists); budget the attention backend, not the parameters
+(f32 + GQA takes the math kernel); every input the driver reads is in git, the manifest, or listed by
+sha in the runbook (gitignored mappers included); launch detached, rotate the log before any relaunch,
+never `pkill -f` a self-matching pattern; pull → verify against `report.json` `kept_dumps` → delete,
+per handoff; release by the seven-step checklist (mirror re-verified, box swept, HF cache removed,
+server stopped and the effect probed); back the verified home mirror up to a private HF dataset
+(`results/<exp>/` at the root + upstream artifacts in upstream layout; every file checked by
+`lfs.sha256`), transport only — the summarizer reads the local mirror and a refusal is a finding.
+Tokens: scoped, expiring, env-only, revoked once pasted anywhere. `tools/jupyterhub/` drives a
+JupyterHub-only box (Algoverse) from home. E9's backup: `hossainpazooki/linear-ceiling-e9-2026-09-04`
+(private; kept dumps 48 GB + `mappers/qwen3-0.6b-to-1.7b/k1.*`).
+
 ## Commands
 ```
 .venv/Scripts/python.exe -m pytest -q                 # suite (synthetic, offline)
@@ -31,6 +46,9 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check           # E8 gate: refuses until 0016 + config/e8.toml committed AND upstream HEAD == pinned sha, clean
 .venv/Scripts/python.exe -m linear_ceiling.e8                   # CPU: sample agent text (0016 s4) -> upstream dump_kv -> score_mapper both arms -> results/e8/report.json
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8          # fail-closed: re-runs the upstream scorer on fingerprinted dumps (~25 min CPU) and compares
+.venv/Scripts/python.exe -m linear_ceiling.e8 --check --config config/e8a.toml   # E8 amendment gate (entry 0030): 0009 + 0016 + 0030 committed, the 0030 upstream re-pin, 0020's dumps by fingerprint
+.venv/Scripts/python.exe -m linear_ceiling.e8 --config config/e8a.toml           # CPU (~10 min): rescores 0020's agent dumps with --holdout-frac 1.0 + per-token records -> results/e8a/report.json; re-dumps nothing
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e8 --config config/e8a.toml # fail-closed: re-scores, per-sequence R^2 from the record, seeded bootstrap over agent sequences, change from 0020 -> results/e8a/summary.{md,json}
 .venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + 0025 + 0026 + 0027 + config/e9.toml committed AND the 0026 upstream re-pin holds (and the mapper artifact is present)
 .venv/Scripts/python.exe -m linear_ceiling.e9 --align-only      # entry 0025: every alignment + results/e9/align/coverage.json (coverage, reasons, keep draw, block counts) before any prefill; CPU, no gate
 .venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained
@@ -98,7 +116,9 @@ on float32 thread-order jitter (same-model arrays reproduce bit-for-bit on a mat
 gate requires 0019 + 0023 + 0025 + 0026 + 0027. Runbook `docs/2026-09-02-e9-gpu-runbook.md` (amended
 09-04); closing brief `docs/handoff/2026-09-04-e9-gpu-day-and-verdict.md`. Retained dumps (45 GB, 8
 handoffs) live under `results/e9/scratch/` at home only; the `[STRETCH]` partial-prefill experiment on them
-is registered and unrun. **E-RL** (KV reuse
+is registered and unrun. **E8 amendment (0030, registered 2026-09-04, descriptive):** arm (b) rescored over every agent
+sequence with per-sequence moments and a seeded bootstrap, on 0020's dumps by fingerprint, under `config/e8a.toml`
+and a separate `results/e8a/`; the H-E8 cell and τ_agent_K do not move; figures enter by their own entry. **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own

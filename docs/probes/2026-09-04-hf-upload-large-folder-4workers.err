@@ -1,0 +1,109 @@
+Warning: 
+================================================================================
+`hf upload-large-folder` is DEPRECATED and will be removed in a future release.
+
+Use `hf upload` instead:
+
+    hf upload hossainpazooki/linear-ceiling-e9-2026-09-04 'results/e9' --repo-type dataset --include 'scratch/**'
+================================================================================
+Repo created: https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04
+Found 720 candidate files to upload
+Running validation checks on files to upload...
+Validation checks complete.
+Starting upload...
+'Server disconnected without sending a response.' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 5/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 5/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 5/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Failed to get upload mode: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Failed to get upload mode: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Failed to get upload mode: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 5/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 5/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 5/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Failed to get upload mode: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Failed to get upload mode: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Failed to get upload mode: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 1s [Retry 1/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 2s [Retry 2/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 4s [Retry 3/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].
+'[WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond' thrown while requesting POST https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04/preupload/main
+Retrying in 8s [Retry 4/5].

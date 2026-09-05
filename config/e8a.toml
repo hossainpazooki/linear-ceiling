@@ -1,0 +1,40 @@
+# E8 amendment -- arm (b) scored over EVERY agent sequence (ledger entry 0030; E8 itself: 0009, amended by 0016;
+# verdict 0020). e8.assert_ready refuses until this file and ledger/ledger.md (with 0009, 0016 and 0030) are
+# committed unmodified AND the upstream checkout is at `upstream_sha` with a clean tree for the scripts E8 invokes.
+# The agent dumps and token file are 0020's, reused by fingerprint (nothing is resampled or re-dumped); the
+# generic arm keeps its own held-out fraction because the mapper was fit on those dumps.
+
+[e8]
+pair = "qwen3-0.6b-to-1.7b"
+results_dir = "results/e8a"                     # separate from results/e8: E9's tau checks read results/e8/report.json
+tokens_dir = "data/e8"                          # the 0020 token file lives here (gitignored)
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "223f469164734a5780110a5e2e906a2af3c36b1a"           # entry 0030 re-pin: score_mapper.py accepts --holdout-frac 1.0 and writes per-sequence moments (parent d5786df, the 0026 pin)
+
+[e8.mappers]
+verdict_k = 1                                   # as 0016; band words are descriptive here (0020 decided the cell)
+report_k = [1, 4, 8]
+
+[e8.arms]
+generic_dumps = "data/kv/qwen3-0.6b-to-1.7b"    # relative to upstream; the mapper's own calibration dumps
+agent_dumps = "results/e8/kv/agent"             # 0020's agent dumps, reused; fingerprints checked against results/e8/report.json
+reuse_agent_dumps_from = "results/e8/report.json"
+holdout_frac = 0.2                              # arm (a): the mapper's own held-out sequences (in-sample otherwise)
+agent_holdout_frac = 1.0                        # arm (b): every agent sequence -- the mapper was never fit on them
+stride = 4
+
+[e8.text]                                       # 0016's sampling rule; recorded for the loader, NOT re-run (dumps reused)
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["tau2-bench", "swe-bench"]
+window = "first"
+
+[e8.band]                                       # 0009's band, read descriptively in this amendment
+holds_max_drop = 0.05
+degrades_min_drop = 0.15
+
+[e8.amendment]
+entry = "0030"
+bootstrap_seed = 30                             # seeded percentile bootstrap over agent sequences (seed + k per k)
+bootstrap_reps = 2000

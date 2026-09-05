@@ -7,7 +7,7 @@ import pytest
 from linear_ceiling import e8 as driver
 from linear_ceiling import summarize_e8 as s8
 from linear_ceiling.summarize_e8 import summarize
-from tests.test_e8 import AGENT, env, fake_runner_factory  # noqa: F401  (pytest fixture, imported by name)
+from tests.test_e8 import AGENT, AGENT_ALL, N_SEQS, cfg_for, env, fake_runner_factory  # noqa: F401  (pytest fixture, imported by name)
 
 
 @pytest.fixture
@@ -91,3 +91,48 @@ def test_refuses_a_broken_upstream_pin(ran, monkeypatch):
     monkeypatch.setattr(s8, "check_upstream", broken)
     with pytest.raises(ValueError, match="not an ancestor"):
         summarize(cfg, runner=runner)
+
+
+@pytest.fixture
+def ran_amendment(ran, tmp_path):
+    cfg, _, runner = ran
+    acfg = cfg_for(tmp_path, cfg.upstream_path, amendment=True)
+    from tests.test_e8 import E7Config
+    e7 = E7Config(traces_dir=tmp_path / "traces", results_dir=tmp_path / "r7", pricing={}, thresholds={},
+                  tokenizer={}, lane_b_policy="x", config_path=tmp_path / "c7")
+    driver.run(acfg, e7, repo_root=tmp_path, runner=runner)
+    return acfg, acfg.results_dir / "report.json", runner
+
+
+def test_amendment_summary_recomputes_per_sequence_and_bootstraps(ran_amendment):
+    """Entry 0030: per-sequence R^2 recomputed from the per-token record and checked against the report; a
+    seeded bootstrap over agent sequences; the change from the 0016-protocol figure named."""
+    acfg, _, runner = ran_amendment
+    md = summarize(acfg, runner=runner)
+    assert "E8 amendment (entry 0030)" in md and "does not move" in md.lower() or "decided by 0020" in md
+    fig = json.loads((acfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    k1 = fig["per_k"]["1"]
+    assert k1["n_heldout_seqs"]["agent"] == N_SEQS and k1["per_sequence"]["agent_K"]["n"] == N_SEQS
+    assert k1["change_from_prior"] == pytest.approx({"K": 0.61 - 0.60, "V": 0.44 - 0.45})
+    b = k1["bootstrap"]["K"]
+    assert b["reps"] == 50 and b["n_seqs"] == N_SEQS and b["agent_lower_2.5"] <= 0.61 <= b["agent_upper_97.5"] + 1e-12
+    # the per-sequence R^2 equals the pooled one by construction of the synthetic record
+    assert k1["per_sequence"]["agent_K"]["median"] == pytest.approx(0.61)
+
+
+def test_amendment_summary_refuses_a_tampered_per_sequence_list(ran_amendment):
+    acfg, rp, runner = ran_amendment
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["per_k"]["1"]["per_sequence"]["agent"]["K"][0] += 0.01
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="per-sequence K"):
+        summarize(acfg, runner=runner)
+
+
+def test_amendment_summary_refuses_when_the_prior_report_changed(ran_amendment, tmp_path):
+    acfg, rp, runner = ran_amendment
+    prior = tmp_path / "results" / "e8" / "report.json"
+    d = json.loads(prior.read_text(encoding="utf-8")); d["scope"] = "edited"
+    _write(prior, d)
+    with pytest.raises(ValueError, match="prior E8 report"):
+        summarize(acfg, runner=runner)

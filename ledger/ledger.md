@@ -1818,3 +1818,60 @@ verdict: H-E9 = HELD
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: 2be23eb054eaceb14c0c8016a015f075be82817f36189b94a684542582bee8ce
+
+### 0030 — 2026-09-04 — E8 amended before any rescoring: arm (b) over every agent sequence, per-sequence moments, a seeded bootstrap of the drop; descriptive; the H-E8 cell and τ_agent_K do not move
+
+**Why, and why now.** 0016 matched arm (b)'s protocol to arm (a)'s "exactly": the agent-text dumps were split
+by sequence with `holdout_frac` 0.2, and only the last ⌈0.2 × 50⌉ = 10 sequences (2,560 tokens at stride
+4) were scored. That match was the wrong instinct for arm (b): the k = 1 mapper was fit on the GENERIC
+calibration dumps (arm (a)'s training rows), never on agent text, so nothing in the agent dumps needs holding
+out and the split threw away 40 of 50 sequences. Track B (2026-09-01/02) tried to register this and stopped:
+the pinned `score_mapper.py` refused `--holdout-frac 1.0` (empty training mask) and wrote no per-sequence
+moments — upstream changes. They are made now (below), after the E9 verdict (0029) and before anything is
+rescored: `results/e8a/` holds no report at append and this entry's script refuses otherwise.
+
+**What is registered.** A rescoring of 0020's OWN tensors — the agent dumps at `results/e8/kv/agent`
+and the token file they were dumped from are reused and must match the fingerprints recorded in
+`results/e8/report.json` (sha256 `5c4e70a097c2`) byte for byte; nothing is resampled
+or re-dumped, and the generic dumps are the archived ones. For each k ∈ {1, 4, 8}:
+
+- arm (a), generic: the mapper's own held-out sequences, `holdout_frac` 0.2 — unchanged; scoring more of
+  its own calibration dumps would be in-sample and is not done;
+- arm (b), agent: `--holdout-frac 1.0` — every one of the 50 sequences (12,800 tokens), the mapper's
+  transfer measured on all the agent text 0016 sampled;
+- the drop (a − b) and its 0009 band word, **read descriptively**: the H-E8 cell was decided by 0020 under the
+  registered protocol and does not move here; this entry carries no `verdict:` line;
+- per-sequence R² for both arms from the per-token record (upstream `per_sequence_moments`: SSE and SST per
+  sequence per head, SST around the GLOBAL held-out mean, so the sums reproduce the pooled moments exactly and a
+  sequence's R² is its share of the same decomposition, not a re-centred fit); median (p10, p90) over sequences
+  with the pinned quantile convention (`e7_stats`);
+- a seeded percentile bootstrap over agent sequences (seed 30 + k, 2000 reps) of arm (b)'s pooled R² and of the
+  drop, 2.5% / 97.5%; reported, read by nothing;
+- the change from 0020's arm (b) figure at the same k, named as such.
+
+**What this does NOT touch.** τ_agent_K = 1 − 0020 arm (b) K R² (= 1 − 0.5629 = 0.4371) is 0025's registered
+alongside tolerance and stays as registered; the all-sequence figure is reported beside it, never substituted
+(0029 has already read τ_agent_K). τ_K, the E9 rule, band and cells are untouched. `results/e8/` is not
+rewritten — E9's calibration checks read it — and this amendment writes only under `results/e8a/`.
+
+**Upstream change (re-pin).** `scripts/score_mapper.py` accepts `--holdout-frac 1.0` when only scoring (train
+figures null; an empty held-out mask is still refused) and, with `--per-token`, writes `seq_idx`, `seq_ids`,
+`sse_seq_*`, `sst_seq_*` plus a `per_sequence` block whose sums it checks against the layer moments before
+writing; `kvt/pertoken.py::per_sequence_moments` carries the decomposition with a test that the sequence sums
+reproduce the layer moments exactly. Re-pin recorded in `config/e8a.toml` and `UPSTREAM.md` by the operator after
+committing upstream (the placeholder refuses by name); parent `d5786df` (the 0026 pin). E8's original pin
+`71df4504` is unchanged for `results/e8/`, whose gate now refuses by drift (three later re-pins touched its
+invoked paths) — a known state, recorded here, not repaired: 0020 stands on its own record.
+
+**Instrument and enforcement.** `config/e8a.toml` (separate results dir; `agent_holdout_frac`, `reuse_agent_dumps_from`,
+`[e8.amendment]`), `e8.reuse_agent_dumps` (fingerprint + token-file check before any scoring), `e8.required_entries`
+(the gate requires THIS entry beside 0009 and 0016), `summarize_e8` amendment figures (per-sequence recompute from
+the record, refused on disagreement with the report and with the re-scored json; bootstrap; the prior report's
+hash re-checked). Tests: reuse by fingerprint, refusal on a changed dump, gate entries, per-sequence recompute and
+bootstrap, refusal on a tampered per-sequence list and on a changed prior report.
+
+**Scope.** All of 0009's, 0016's and 0020's limits (off-policy text for Qwen; one pair; one direction; visible
+messages only). No hypothesis cell changes with this entry; no `verdict:` line. The figures enter by their own
+numbered entry from a passing `summarize_e8 --config config/e8a.toml`.
+
+prior-entries-sha256: fc7a391fc4a827e361340c286c336ca9cdbfe9613d1a66200be1a590029dc9d0

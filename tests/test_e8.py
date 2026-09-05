@@ -14,6 +14,24 @@ PAIR = "qwen3-0.6b-to-1.7b"
 ARCHIVED = {"1": {"K_r2_heldout_layer_mean": 0.6813557346883706, "V_r2_heldout_layer_mean": 0.5132943500944008},
             "4": {"K_r2_heldout_layer_mean": 0.5906939844474344, "V_r2_heldout_layer_mean": 0.33614564065248614}}
 AGENT = {"1": (0.60, 0.45), "4": (0.30, 0.10)}       # canned arm (b): k=1 drop 0.081 (UNRESOLVED), k=4 DEGRADES
+AGENT_ALL = {"1": (0.61, 0.44), "4": (0.31, 0.09)}   # canned arm (b) at --holdout-frac 1.0 (E8 amendment)
+N_SEQS, PER_SEQ, N_LAYERS, N_KV = 5, 4, 2, 2
+
+
+def per_seq_record(K: float, V: float, n_seqs: int, seed: int) -> dict:
+    """Synthetic per-sequence moments whose pooled per-head R^2 is exactly (K, V) on every head: sst_s drawn
+    positive, sse_s = (1 - r2) * sst_s. seq-level R^2 then equals the pooled one; a jitter on sse keeps the
+    sequences distinguishable while the layer-mean stays K/V (compensated within each sequence pair)."""
+    rng = np.random.default_rng(seed)
+    out = {}
+    for key, r2 in (("K", K), ("V", V)):
+        sst = rng.uniform(1.0, 2.0, size=(n_seqs, N_LAYERS, N_KV))
+        sse = (1.0 - r2) * sst
+        out[f"sst_seq_{key}"] = sst
+        out[f"sse_seq_{key}"] = sse
+    out["seq_ids"] = np.arange(n_seqs, dtype=np.int64)
+    out["seq_idx"] = np.repeat(np.arange(n_seqs), PER_SEQ).astype(np.int64)
+    return out
 
 
 def make_upstream(tmp_path, sha="a" * 40):
@@ -36,7 +54,7 @@ def make_upstream(tmp_path, sha="a" * 40):
     return up
 
 
-def fake_runner_factory(agent=AGENT, generic=ARCHIVED, calls=None):
+def fake_runner_factory(agent=AGENT, generic=ARCHIVED, calls=None, agent_all=AGENT_ALL):
     def runner(cmd, cwd, capture_output):
         if calls is not None:
             calls.append(cmd)
@@ -53,30 +71,47 @@ def fake_runner_factory(agent=AGENT, generic=ARCHIVED, calls=None):
         elif script.endswith("score_mapper.py"):
             from pathlib import Path
             k = opt["--mapper"].rsplit("k", 1)[-1]
-            src = generic if "data" in opt["--src"].replace("\\", "/").split("/") else None
-            if src is not None:
+            is_generic = "data" in opt["--src"].replace("\\", "/").split("/")
+            frac = float(opt.get("--holdout-frac", "0.2"))
+            if is_generic:
                 K, V = generic[k]["K_r2_heldout_layer_mean"], generic[k]["V_r2_heldout_layer_mean"]
             else:
-                K, V = agent[k]
+                K, V = (agent_all if frac >= 1.0 else agent)[k]
+            n_seqs = N_SEQS if frac >= 1.0 else max(1, int(np.ceil(frac * N_SEQS)))
+            rec = {"k": int(k), "K_r2_heldout_layer_mean": K, "V_r2_heldout_layer_mean": V,
+                   "K_r2_train_layer_mean": None if frac >= 1.0 else K, "V_r2_train_layer_mean": None if frac >= 1.0 else V,
+                   "holdout_frac": frac, "n_heldout_seqs": n_seqs, "n_heldout_tokens": n_seqs * PER_SEQ}
+            if "--per-token" in opt:
+                pt = Path(opt["--per-token"])
+                pt.parent.mkdir(parents=True, exist_ok=True)
+                arrays = per_seq_record(K, V, n_seqs, seed=int(k) * 7 + (0 if is_generic else 1))
+                np.savez(pt, **arrays)
+                rec["per_sequence"] = {"seq_ids": [int(i) for i in arrays["seq_ids"]],
+                                       "K_r2_layer_mean": [float(x) for x in (1 - arrays["sse_seq_K"] / arrays["sst_seq_K"]).mean((1, 2))],
+                                       "V_r2_layer_mean": [float(x) for x in (1 - arrays["sse_seq_V"] / arrays["sst_seq_V"]).mean((1, 2))]}
             out = Path(opt["--out"])
             out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(json.dumps({"k": int(k), "K_r2_heldout_layer_mean": K, "V_r2_heldout_layer_mean": V,
-                                       "K_r2_train_layer_mean": K, "V_r2_train_layer_mean": V}), encoding="utf-8")
+            out.write_text(json.dumps(rec), encoding="utf-8")
         else:
             raise AssertionError(f"unexpected upstream call {cmd}")
         return types.SimpleNamespace(returncode=0, stderr=b"")
     return runner
 
 
-def cfg_for(tmp_path, up, sha="a" * 40, report_k=(1, 4)):
-    cp = tmp_path / "e8.toml"
-    cp.write_text("# synthetic e8\n", encoding="utf-8")
-    return E8Config(pair=PAIR, results_dir=tmp_path / "results" / "e8", tokens_dir=tmp_path / "data" / "e8",
+def cfg_for(tmp_path, up, sha="a" * 40, report_k=(1, 4), amendment=False):
+    cp = tmp_path / ("e8a.toml" if amendment else "e8.toml")
+    cp.write_text("# synthetic e8a\n" if amendment else "# synthetic e8\n", encoding="utf-8")
+    extra = {}
+    if amendment:   # E8 amendment: reuse the prior run's agent dumps by fingerprint, score every agent sequence
+        extra = dict(agent_holdout_frac=1.0, reuse_agent_dumps_from=tmp_path / "results" / "e8" / "report.json",
+                     amendment={"entry": "0030", "bootstrap_seed": 30, "bootstrap_reps": 50})
+    return E8Config(pair=PAIR, results_dir=tmp_path / "results" / ("e8a" if amendment else "e8"),
+                    tokens_dir=tmp_path / "data" / "e8",
                     upstream_path=up, upstream_sha=sha, verdict_k=1, report_k=report_k,
                     generic_dumps=f"data/kv/{PAIR}", agent_dumps=tmp_path / "results" / "e8" / "kv" / "agent",
                     holdout_frac=0.2, stride=4,
                     text={"seed": 8, "n_seqs": 2, "seq_len": 4, "suites": ["tau2-bench", "swe-bench"], "window": "first"},
-                    band={"holds_max_drop": 0.05, "degrades_min_drop": 0.15}, config_path=cp)
+                    band={"holds_max_drop": 0.05, "degrades_min_drop": 0.15}, config_path=cp, **extra)
 
 
 @pytest.fixture
@@ -161,3 +196,40 @@ def test_run_refuses_missing_generic_dump(env, tmp_path):
     (cfg.upstream_path / "data" / "kv" / PAIR / "target" / "meta.json").unlink()
     with pytest.raises(RuntimeError, match="archived generic dump missing"):
         driver.run(cfg, e7, repo_root=tmp_path, runner=runner)
+
+
+def test_amendment_reuses_the_prior_dumps_by_fingerprint_and_records_per_sequence(env, tmp_path):
+    """E8 amendment (entry 0030): after a normal run, the amendment run re-dumps nothing, scores arm (b) with
+    --holdout-frac 1.0 and both arms with --per-token, records hold-out fractions, counts, per-sequence lists
+    and the per-token record hashes, and names the prior report it reused."""
+    cfg, e7, calls, runner = env
+    driver.run(cfg, e7, repo_root=tmp_path, runner=runner)
+    acfg = cfg_for(tmp_path, cfg.upstream_path, amendment=True)
+    calls.clear()
+    out = driver.run(acfg, e7, repo_root=tmp_path, runner=runner)
+    scripts = [c[1] for c in calls]
+    assert scripts.count("scripts/dump_kv.py") == 0 and scripts.count("scripts/score_mapper.py") == 4
+    fracs = {(c[c.index("--src") + 1].replace("\\", "/").split("/")[-2], c[c.index("--holdout-frac") + 1]) for c in calls}
+    assert ("agent", "1.0") in fracs and all("--per-token" in c for c in calls)
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    row = rep["per_k"]["1"]
+    assert row["holdout_frac"] == {"generic": 0.2, "agent": 1.0}
+    assert row["n_heldout_seqs"]["agent"] == N_SEQS and row["agent"] == {"K": 0.61, "V": 0.44}
+    assert len(row["per_sequence"]["agent"]["K"]) == N_SEQS and (tmp_path / "results" / "e8a" / row["per_token"]["agent"]["path"].split("results/e8a/")[-1]).exists()
+    assert rep["reused_agent_dumps_from"]["report"].endswith("results/e8/report.json")
+    assert "does not move here" in rep["verdict_bearing"]["note"] and rep["amendment"]["entry"] == "0030"
+
+
+def test_amendment_refuses_dumps_that_do_not_match_the_prior_report(env, tmp_path):
+    cfg, e7, calls, runner = env
+    driver.run(cfg, e7, repo_root=tmp_path, runner=runner)
+    (cfg.agent_dumps / "source" / "K.bin").write_bytes(b"tampered")
+    acfg = cfg_for(tmp_path, cfg.upstream_path, amendment=True)
+    with pytest.raises(RuntimeError, match="does not match the fingerprint recorded"):
+        driver.run(acfg, e7, repo_root=tmp_path, runner=runner)
+
+
+def test_amendment_gate_requires_its_own_entry(tmp_path):
+    acfg = cfg_for(tmp_path, tmp_path / "up", amendment=True)
+    assert driver.required_entries(acfg) == ("### 0009 ", "### 0016 ", "### 0030 ")
+    assert driver.required_entries(cfg_for(tmp_path, tmp_path / "up")) == ("### 0009 ", "### 0016 ")

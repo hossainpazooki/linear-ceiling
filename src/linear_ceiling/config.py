@@ -148,6 +148,11 @@ class E8Config:
     text: dict
     band: dict
     config_path: Path
+    # E8 amendment (ledger entry 0030): arm (b) may score EVERY agent sequence (the mapper was never fit
+    # on them); the agent dumps of the 0020 run are reused by fingerprint; per-sequence moments + bootstrap.
+    agent_holdout_frac: float | None = None      # None -> holdout_frac (the 0016 protocol)
+    reuse_agent_dumps_from: Path | None = None   # a prior E8 report.json whose recorded dumps/tokens are reused
+    amendment: dict | None = None                # {"entry": "0030", "bootstrap_seed": int, "bootstrap_reps": int}
 
 
 def load_e8_config(path: Path, repo_root: Path) -> E8Config:
@@ -164,13 +169,29 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
     if e8["mappers"]["verdict_k"] not in e8["mappers"]["report_k"]:
         raise ValueError("config/e8.toml: verdict_k must be one of report_k")
     root = Path(repo_root)
+    arms = e8["arms"]
+    agent_frac = float(arms["agent_holdout_frac"]) if "agent_holdout_frac" in arms else None
+    if agent_frac is not None and not (0.0 < agent_frac <= 1.0):
+        raise ValueError("config e8 [e8.arms] agent_holdout_frac must be in (0, 1]")
+    amendment = dict(e8["amendment"]) if "amendment" in e8 else None
+    if amendment is not None:
+        missing = [k for k in ("entry", "bootstrap_seed", "bootstrap_reps") if k not in amendment]
+        if missing:
+            raise ValueError(f"config e8 [e8.amendment] is missing {missing}")
+        if not (isinstance(amendment["entry"], str) and len(amendment["entry"]) == 4 and amendment["entry"].isdigit()):
+            raise ValueError("config e8 [e8.amendment] entry must be a four-digit ledger entry number as a string")
+        if int(amendment["bootstrap_reps"]) < 1:
+            raise ValueError("config e8 [e8.amendment] bootstrap_reps must be >= 1")
     return E8Config(
         pair=e8["pair"], results_dir=root / e8["results_dir"], tokens_dir=root / e8["tokens_dir"],
         upstream_path=(root / e8["upstream_path"]).resolve(), upstream_sha=str(e8["upstream_sha"]),
         verdict_k=int(e8["mappers"]["verdict_k"]), report_k=tuple(int(k) for k in e8["mappers"]["report_k"]),
-        generic_dumps=e8["arms"]["generic_dumps"], agent_dumps=root / e8["arms"]["agent_dumps"],
-        holdout_frac=float(e8["arms"]["holdout_frac"]), stride=int(e8["arms"]["stride"]),
+        generic_dumps=arms["generic_dumps"], agent_dumps=root / arms["agent_dumps"],
+        holdout_frac=float(arms["holdout_frac"]), stride=int(arms["stride"]),
         text=dict(e8["text"]), band=dict(e8["band"]), config_path=path,
+        agent_holdout_frac=agent_frac,
+        reuse_agent_dumps_from=(root / arms["reuse_agent_dumps_from"]) if "reuse_agent_dumps_from" in arms else None,
+        amendment=amendment,
     )
 
 

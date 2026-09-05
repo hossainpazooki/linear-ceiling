@@ -1,0 +1,58 @@
+
+
+
+---------- 2026-09-04 15:53:24 (0:00:00) ----------
+Files:   hashed 0/720 (0.0/48.2G) | pre-uploaded: 0/0 (0.0/48.2G) (+720 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 4 | get upload mode: 0 | pre-uploading: 0 | committing: 0 | waiting: 0
+---------------------------------------------------
+[K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 15:54:24 (0:01:00) ----------
+Files:   hashed 628/720 (44.4G/48.2G) | pre-uploaded: 0/403 (0.0/48.2G) (+304 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 3 | pre-uploading: 1 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 15:55:24 (0:02:00) ----------
+Files:   hashed 628/720 (44.4G/48.2G) | pre-uploaded: 0/403 (0.0/48.2G) (+304 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 3 | pre-uploading: 1 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 15:56:24 (0:03:00) ----------
+Files:   hashed 716/720 (48.1G/48.2G) | pre-uploaded: 0/403 (0.0/48.2G) (+304 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 3 | pre-uploading: 1 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 15:57:24 (0:04:00) ----------
+Files:   hashed 716/720 (48.1G/48.2G) | pre-uploaded: 0/403 (0.0/48.2G) (+304 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 3 | pre-uploading: 1 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 15:58:24 (0:05:00) ----------
+Files:   hashed 716/720 (48.1G/48.2G) | pre-uploaded: 0/403 (0.0/48.2G) (+304 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 3 | pre-uploading: 1 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 15:59:24 (0:06:00) ----------
+Files:   hashed 716/720 (48.1G/48.2G) | pre-uploaded: 0/403 (0.0/48.2G) (+304 unsure) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 3 | pre-uploading: 1 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 16:00:24 (0:07:00) ----------
+Files:   hashed 720/720 (48.2G/48.2G) | pre-uploaded: 0/696 (0.0/48.2G) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 0 | pre-uploading: 4 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 16:01:24 (0:08:00) ----------
+Files:   hashed 720/720 (48.2G/48.2G) | pre-uploaded: 0/696 (0.0/48.2G) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 0 | pre-uploading: 4 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 16:02:24 (0:09:00) ----------
+Files:   hashed 720/720 (48.2G/48.2G) | pre-uploaded: 0/696 (0.0/48.2G) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 0 | pre-uploading: 4 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             [K[F[K[F[K[F[K[F[K[F[K[F[K[F
+---------- 2026-09-04 16:03:25 (0:10:00) ----------
+Files:   hashed 720/720 (48.2G/48.2G) | pre-uploaded: 0/696 (0.0/48.2G) | committed: 0/720 (0.0/48.2G) | ignored: 0
+Workers: hashing: 0 | get upload mode: 0 | pre-uploading: 4 | committing: 0 | waiting: 0
+---------------------------------------------------
+                             

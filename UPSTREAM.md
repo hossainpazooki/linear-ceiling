@@ -1,7 +1,12 @@
 # Upstream instrument (read-only)
 
 - Repo: https://github.com/hossainpazooki/kv-transfer-replication
-- Pinned commit: `d5786df91f55629933067e3c4bb14f1288c4bef2` -- the commit that makes `kvt/models.py` load with the
+- Pinned commit: `223f469164734a5780110a5e2e906a2af3c36b1a` -- the commit that lets `scripts/score_mapper.py` accept
+  `--holdout-frac 1.0` when only scoring and write per-sequence moments into the `--per-token` record
+  (`kvt/pertoken.py::per_sequence_moments`); re-pin by ledger entry 0030 (the E8 amendment: arm (b) over
+  every agent sequence); the operator records the sha here and in `config/e8a.toml` after committing
+  upstream -- `e8.assert_ready` refuses the placeholder by name. Its parent is the 0026 pin:
+- `d5786df9` -- the commit that makes `kvt/models.py` load with the
   registered `sdpa_repeat_kv` attention (KV heads expanded by `repeat_kv`, never `enable_gqa`, so
   float32 SDPA takes the memory-efficient kernel instead of materializing the [heads, T, T] scores)
   and passes `logits_to_keep=1` in `kvt/data.py::dump_kv` (re-pin by ledger entry 0026 after the

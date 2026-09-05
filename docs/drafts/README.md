@@ -26,7 +26,9 @@ it refused and the retire step ran anyway (learnings entry). Rule from it: a dra
 from a pinned revision, never HEAD, and a retire step is chained to the append with `&&`. Entries 0013–0024 are appended and their scripts deleted
 (0023 pulled every figure from `results/e9/calibration/tau.json` via `summarize_e9 --calibrate-tau`;
 0024 from `results/e7/recon.json` via `summarize_e7 --overlap-null --cache-aware-ratio`, behind
-`e7.assert_ready`). The **H-E9 verdict** is 0029. Queued, unnumbered: the **E8 amendment** (`--holdout-frac 1.0` on
+`e7.assert_ready`). The **H-E9 verdict** is 0029. The **E8 amendment** is 0030 (registration, appended 2026-09-04 by `append_0030.py`
+from `config/e8a.toml` and the 0020 record) with its figures entry staged as `append_0031.py` (runs `summarize_e8
+--config config/e8a.toml` in-process; refuses until 0030 is committed, the re-pin recorded and the rescoring done). Formerly queued as the **E8 amendment** (`--holdout-frac 1.0` on
 `36d73b3`, per-sequence moments from the `--per-token` record, re-pin). **E-RL** (KV reuse across RL
 post-training checkpoints) is designed only — `docs/2026-09-02-e-rl-design.md` — and has no
 registration script; it takes a number when its script is staged, not before. The 0022 tokenizer
