@@ -23,6 +23,9 @@ def check_upstream(upstream: Path, pinned_sha: str, paths: tuple[str, ...], *, w
         raise RuntimeError(f"{who} REFUSED: upstream_sha {pinned_sha!r} is not a commit sha; the "
                            "registering entry's re-pin must be recorded before anything runs")
     upstream = Path(upstream)
+    if not upstream.is_dir():   # a renamed/missing checkout is a refusal, not a NotADirectoryError from git (2026-09-06)
+        raise RuntimeError(f"{who} REFUSED: upstream checkout {upstream} does not exist; UPSTREAM.md names the pinned "
+                           "repo and its local path (../kv-transfer-replication)")
     anc = subprocess.run(["git", "merge-base", "--is-ancestor", pinned_sha, "HEAD"], cwd=upstream,
                          capture_output=True)
     if anc.returncode != 0:
