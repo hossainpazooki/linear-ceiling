@@ -103,7 +103,7 @@ def score(cfg: E8Config, k: int, src: Path, tgt: Path, out: Path, runner=subproc
           holdout_frac: float | None = None, per_token: Path | None = None) -> dict:
     """One score_mapper call. `holdout_frac` defaults to the config's arm (a) fraction; the amendment
     passes arm (b)'s (1.0 = every agent sequence) and a `--per-token` path for the per-sequence record."""
-    mapper = cfg.upstream_path / "mappers" / cfg.pair / f"k{k}"
+    mapper = mapper_path(cfg, k)
     if not mapper.with_suffix(".safetensors").exists():
         raise RuntimeError(f"E8 REFUSED: no fitted mapper at {mapper} (upstream artifact, gitignored)")
     frac = cfg.holdout_frac if holdout_frac is None else holdout_frac
@@ -118,8 +118,30 @@ def score(cfg: E8Config, k: int, src: Path, tgt: Path, out: Path, runner=subproc
     return json.loads(Path(out).read_text(encoding="utf-8"))
 
 
+def mapper_path(cfg: E8Config, k: int) -> Path:
+    """`mappers/<pair>[/<tag>]/k<k>` without suffix -- the upstream fit_mapper.py layout (tagged when the
+    config names a mapper tag, entry 0033)."""
+    base = cfg.upstream_path / "mappers" / cfg.pair
+    return (base / cfg.mapper_tag if cfg.mapper_tag else base) / f"k{k}"
+
+
+def mapper_fingerprint(cfg: E8Config) -> dict:
+    """sha256 of the mapper artifacts (json + safetensors) for every reported k, so a report names the
+    mapper bytes it scored with and the summarizer can refuse a swapped artifact."""
+    out = {}
+    for k in cfg.report_k:
+        m = mapper_path(cfg, k)
+        files = {suf: m.with_suffix(suf) for suf in (".json", ".safetensors")}
+        for p in files.values():
+            if not p.exists():
+                raise RuntimeError(f"E8 REFUSED: mapper artifact {p} missing")
+        out[str(k)] = {suf.lstrip("."): sha256_file_bytes(p) for suf, p in files.items()}
+    return {"tag": cfg.mapper_tag, "files": out}
+
+
 def archived_r2(cfg: E8Config, k: int) -> dict:
-    p = cfg.upstream_path / "results" / "mapper" / cfg.pair / "r2.json"
+    base = cfg.upstream_path / "results" / "mapper" / cfg.pair
+    p = (base / cfg.mapper_tag if cfg.mapper_tag else base) / "r2.json"
     if not p.exists():
         raise RuntimeError(f"E8 REFUSED: archived {p} missing; arm (a) has nothing to cross-check against")
     d = json.loads(p.read_text(encoding="utf-8"))
@@ -186,6 +208,7 @@ def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks
                    if str(tokens_path.resolve()).startswith(str(Path(REPO_ROOT).resolve())) else str(tokens_path),
                    "sha256": sha256_file_bytes(tokens_path), "manifest_sha256": sha256_file_bytes(manifest)},
         "dumps": {arm: {which: dump_fingerprint(p) for which, p in d.items()} for arm, d in dumps.items()},
+        "mapper": mapper_fingerprint(cfg),
         "archived_crosscheck": checks,
         "verdict_k": cfg.verdict_k, "band": cfg.band, "per_k": per_k,
         "verdict_bearing": {"k": cfg.verdict_k, "outcome": per_k[str(cfg.verdict_k)]["band_outcome"], "note": note},

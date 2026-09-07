@@ -49,6 +49,12 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e8 --check --config config/e8a.toml   # E8 amendment gate (entry 0030): 0009 + 0016 + 0030 committed, the 0030 upstream re-pin, 0020's dumps by fingerprint
 .venv/Scripts/python.exe -m linear_ceiling.e8 --config config/e8a.toml           # CPU (~10 min): rescores 0020's agent dumps with --holdout-frac 1.0 + per-token records -> results/e8a/report.json; re-dumps nothing
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e8 --config config/e8a.toml # fail-closed: re-scores, per-sequence R^2 from the record, seeded bootstrap over agent sequences, change from 0020 -> results/e8a/summary.{md,json}
+.venv/Scripts/python.exe -m linear_ceiling.e8 --check --config config/e8c.toml   # entry 0033 gate: 0009 + 0016 + 0033 committed, the 0030 pin, the TAGGED n = 420 mapper present, 0031's dumps by fingerprint
+.venv/Scripts/python.exe -m linear_ceiling.e8 --config config/e8c.toml           # CPU: 0030's protocol with the n = 420 mapper (mappers/<pair>/n420) -> results/e8c/report.json (mapper bytes fingerprinted)
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e8 --config config/e8c.toml # fail-closed, as e8a; also refuses on swapped mapper bytes
+.venv/Scripts/python.exe -m linear_ceiling.e9_rescore check --config config/e9c.toml   # entry 0033 gate: 0019/0023/0025/0027/0029 + 0033, both configs committed, pin by ancestry, tagged mapper present
+.venv/Scripts/python.exe -m linear_ceiling.e9_rescore run                              # CPU: score_positions over the 8 kept handoffs' retained dumps + 0029's alignments with the n = 420 mapper -> results/e9c/
+.venv/Scripts/python.exe -m linear_ceiling.e9_rescore summarize                        # fail-closed: same-arm CONTROL vs 0028's recheck (refuses), cross f* under tau_K / tau_K' / ladder beside 0029's, bootstrap -> results/e9c/summary.{md,json}
 .venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + 0025 + 0026 + 0027 + config/e9.toml committed AND the 0026 upstream re-pin holds (and the mapper artifact is present)
 .venv/Scripts/python.exe -m linear_ceiling.e9 --align-only      # entry 0025: every alignment + results/e9/align/coverage.json (coverage, reasons, keep draw, block counts) before any prefill; CPU, no gate
 .venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained
@@ -84,7 +90,8 @@ quantile convention) · `e8_text` (0016 §4 sampling + Qwen tokenizer from the s
 pin check: ancestor + invoked-paths-unchanged + clean — a later experiment's re-pin is not an
 older experiment's drift) · `e9_align` (0019 handoff slices + difflib matched blocks +
 exclusions) · `e9` (gate + pre-batch controls + per-handoff dump/score/delete driver, checkpointed) ·
-`e9_pertoken` (entry 0023 arithmetic: centered delta in R²'s units, oracle f*(tau), seam distance
+`e9_rescore` (entry 0033: the kept-subset cross arm re-scored with a tagged mapper; the same-model arm is a refusing
+control against 0028's recheck; `E8Config.mapper_tag` is the E8 half) · `e9_pertoken` (entry 0023 arithmetic: centered delta in R²'s units, oracle f*(tau), seam distance
 b(t) + fixed bins, null pairing, band) · `summarize_e9` (alignments re-derived from raw traces;
 R² from recorded moments; per-token squares summed against the moments; keep-subset re-scored
 from fingerprinted tensors; tau recomputed from the archived mapper; controls checked; then f*,
@@ -118,7 +125,11 @@ gate requires 0019 + 0023 + 0025 + 0026 + 0027. Runbook `docs/2026-09-02-e9-gpu-
 handoffs) live under `results/e9/scratch/` at home only; the `[STRETCH]` partial-prefill experiment on them
 is registered and unrun. **E8 amendment (0030, registered 2026-09-04, descriptive):** arm (b) rescored over every agent
 sequence with per-sequence moments and a seeded bootstrap, on 0020's dumps by fingerprint, under `config/e8a.toml`
-and a separate `results/e8a/`; the H-E8 cell and τ_agent_K do not move; figures enter by their own entry. **E-RL** (KV reuse
+and a separate `results/e8a/`; the H-E8 cell and τ_agent_K do not move; figures enter by their own entry. **LCFM sprint (operator ruling 2026-09-06):** outline in `docs/paper/2026-09-06-lcfm-outline.md`
+(gap-map preface from `docs/2026-09-06-gap-map-revisited.md`; registered reading for H-E7a); staged drafts 0031 (E8 figures),
+0032 (E9 admitted to the 4-pager), 0033 (calibration-size sensitivity: k = 1/4/8 mapper refit upstream on the existing
+n = 420 dumps under tag `n420`, E8 arms via `config/e8c.toml`, E9 kept-subset cross arm via `config/e9c.toml`; descriptive),
+0034 (its figures). **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own

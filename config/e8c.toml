@@ -1,0 +1,51 @@
+# E8 calibration-size sensitivity (ledger entry 0033): the SAME protocol as entry 0030 (arm (b) over every agent
+# sequence, per-sequence moments, seeded bootstrap), scored with a k = 1/4/8 mapper refit UPSTREAM on the existing
+# n = 420 calibration dumps under the tag below (fit_mapper.py --tag n420 --dump-root data/kv/<pair>-n420, at the
+# pinned sha; no upstream code change, so no re-pin). Descriptive: the H-E8 cell (0020) and tau_agent_K (0025) do not
+# move; every figure is reported BESIDE the n = 50 record (0020 / 0031), never in place of it.
+# e8.assert_ready refuses until this file and ledger/ledger.md (with 0009, 0016 and 0033) are committed unmodified
+# AND the upstream checkout is at `upstream_sha` with a clean tree for the scripts E8 invokes. The agent dumps and
+# token file are 0020's, reused by fingerprint through 0031's report (results/e8a/report.json); nothing is re-dumped.
+
+[e8]
+pair = "qwen3-0.6b-to-1.7b"
+results_dir = "results/e8c"                     # separate from results/e8 (E9's tau checks) and results/e8a (0031)
+tokens_dir = "data/e8"                          # the 0020 token file lives here (gitignored)
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "223f469164734a5780110a5e2e906a2af3c36b1a"           # the 0030 pin; fit_mapper.py / score_mapper.py unchanged since
+
+[e8.mappers]
+verdict_k = 1                                   # the compared k (0016's verdict k); band words descriptive here
+report_k = [1, 4, 8]
+tag = "n420"                                    # mappers/<pair>/n420/k<k>.*, results/mapper/<pair>/n420/r2.json (upstream fit_mapper.py --tag)
+
+[e8.arms]
+generic_dumps = "data/kv/qwen3-0.6b-to-1.7b-n420"   # relative to upstream; the tagged mapper's OWN calibration dumps
+agent_dumps = "results/e8/kv/agent"             # 0020's agent dumps, reused; fingerprints checked against the prior report
+reuse_agent_dumps_from = "results/e8a/report.json"  # 0031's record: same dumps by fingerprint; the change is measured from ITS all-sequence figures
+holdout_frac = 0.2                              # arm (a): the tagged mapper's own held-out sequences (last ceil(0.2 * 420) = 84)
+agent_holdout_frac = 1.0                        # arm (b): every agent sequence, as 0030
+stride = 4
+
+[e8.text]                                       # 0016's sampling rule; recorded for the loader, NOT re-run (dumps reused)
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["tau2-bench", "swe-bench"]
+window = "first"
+
+[e8.band]                                       # 0009's band, read descriptively in this amendment
+holds_max_drop = 0.05
+degrades_min_drop = 0.15
+
+[e8.amendment]
+entry = "0033"
+bootstrap_seed = 33                             # seeded percentile bootstrap over agent sequences (seed + k per k)
+bootstrap_reps = 2000
+
+[e8.calibration]                                # the upstream fit this entry registers (read by the append script, not the driver)
+n_seqs = 420                                    # data/kv/<pair>-n420: 420 sequences, nested over the n = 50 draw (upstream ledger, 2026-08-24)
+fit = "scripts/fit_mapper.py --pair qwen3-0.6b-to-1.7b --k 1 4 8 --tag n420 --dump-root data/kv/qwen3-0.6b-to-1.7b-n420"
+lam = 0.01                                      # fit_mapper.py defaults, stated so the fit is reproducible from this file
+holdout_frac = 0.2
+space = "content"

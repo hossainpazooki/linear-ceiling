@@ -19,7 +19,7 @@ from pathlib import Path
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E8Config, load_e8_config
 from linear_ceiling.e7_stats import quantile
-from linear_ceiling.e8 import (UPSTREAM_PATHS, agent_holdout_frac, archived_r2, band_outcome, crosscheck,
+from linear_ceiling.e8 import (UPSTREAM_PATHS, agent_holdout_frac, archived_r2, band_outcome, crosscheck, mapper_fingerprint,
                                dump_fingerprint, score)
 from linear_ceiling.rng import make_rng
 from linear_ceiling.upstream_gate import check_upstream
@@ -72,6 +72,13 @@ def summarize(cfg: E8Config, runner=subprocess.run) -> str:
         for w, p in d.items():
             if dump_fingerprint(p) != (rep.get("dumps") or {}).get(arm, {}).get(w):
                 raise ValueError(f"{arm}/{w} dump does not match the fingerprint recorded at run time")
+    if "mapper" in rep or cfg.mapper_tag:   # entry 0033: the mapper bytes the run scored with are named and re-checked
+        try:
+            mine = mapper_fingerprint(cfg)
+        except RuntimeError as e:
+            raise ValueError(str(e)) from e
+        if rep.get("mapper") != mine:
+            raise ValueError("mapper artifacts (json/safetensors, or the tag) do not match the fingerprint recorded at run time")
 
     scratch = cfg.results_dir / "recheck"
     shutil.rmtree(scratch, ignore_errors=True)
@@ -198,6 +205,7 @@ def _amendment_figures(cfg: E8Config, k: int, rep: dict, g: dict, a: dict, gpt: 
         if sha256_file_bytes(prior_path) != prior_ref.get("sha256"):
             raise ValueError("the prior E8 report this amendment reuses dumps from has changed since the run")
         prior = json.loads(prior_path.read_text(encoding="utf-8"))["per_k"].get(str(k))
+        out["prior_report"] = prior_ref.get("report")   # which record the change is measured from (0020 for 0031; 0031's for 0034)
         if prior:
             out["prior_0016_protocol"] = {"agent": prior["agent"], "drop": prior["drop"], "band_outcome": prior["band_outcome"],
                                           "holdout_frac_agent": cfg.holdout_frac}

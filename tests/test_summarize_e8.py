@@ -136,3 +136,12 @@ def test_amendment_summary_refuses_when_the_prior_report_changed(ran_amendment, 
     _write(prior, d)
     with pytest.raises(ValueError, match="prior E8 report"):
         summarize(acfg, runner=runner)
+
+
+def test_refuses_swapped_mapper_bytes(ran):
+    """Entry 0033: the report names the mapper bytes it scored with; a changed artifact refuses."""
+    cfg, rp, runner = ran
+    assert json.loads(rp.read_text(encoding="utf-8"))["mapper"]["tag"] is None
+    (cfg.upstream_path / "mappers" / cfg.pair / "k1.safetensors").write_bytes(b"\x00\x00")
+    with pytest.raises(ValueError, match="mapper artifacts"):
+        summarize(cfg, runner=runner)

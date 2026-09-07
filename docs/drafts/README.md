@@ -13,7 +13,7 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state: **no drafts pending.** 0028 (the keep-subset re-score tolerance, post-run, pre-verdict) and
+Current state: **three drafts staged, in this order: `append_0031.py` (E8 amendment figures), `append_0032.py` (E9 admitted to the LCFM 4-pager, descriptive; operator ruling 2026-09-06), `append_0033.py` (registration of the calibration-size sensitivity: the k = 1 mapper refit upstream on the existing n = 420 dumps under a tag, E8 arms rescored under 0030's protocol into `results/e8c/`, the E9 cross arm re-scored on the kept subset; descriptive) and `append_0034.py` (its figures, from `summarize_e8 --config config/e8c.toml` and `e9_rescore summarize` in-process).** Numbers were allocated at staging (2026-09-06). 0028 (the keep-subset re-score tolerance, post-run, pre-verdict) and
 0029 (H-E9 verdict, `verdict: H-E9 = HELD`) were appended 2026-09-04 by `append_0028.py` / `append_0029.py`,
 each running `summarize_e9` in-process and pulling every figure from `results/e9/summary.json`; the scripts are
 deleted in the same commit set. Earlier: 0025 (the E9 pre-prefill amendment: the independent review's

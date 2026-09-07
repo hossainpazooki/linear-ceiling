@@ -98,7 +98,7 @@ def fake_runner_factory(agent=AGENT, generic=ARCHIVED, calls=None, agent_all=AGE
     return runner
 
 
-def cfg_for(tmp_path, up, sha="a" * 40, report_k=(1, 4), amendment=False):
+def cfg_for(tmp_path, up, sha="a" * 40, report_k=(1, 4), amendment=False, mapper_tag=None):
     cp = tmp_path / ("e8a.toml" if amendment else "e8.toml")
     cp.write_text("# synthetic e8a\n" if amendment else "# synthetic e8\n", encoding="utf-8")
     extra = {}
@@ -111,7 +111,20 @@ def cfg_for(tmp_path, up, sha="a" * 40, report_k=(1, 4), amendment=False):
                     generic_dumps=f"data/kv/{PAIR}", agent_dumps=tmp_path / "results" / "e8" / "kv" / "agent",
                     holdout_frac=0.2, stride=4,
                     text={"seed": 8, "n_seqs": 2, "seq_len": 4, "suites": ["tau2-bench", "swe-bench"], "window": "first"},
-                    band={"holds_max_drop": 0.05, "degrades_min_drop": 0.15}, config_path=cp, **extra)
+                    band={"holds_max_drop": 0.05, "degrades_min_drop": 0.15}, config_path=cp, mapper_tag=mapper_tag, **extra)
+
+
+def make_tagged_mapper(up, tag="n420", ks=("1", "4"), byte=b"\x01"):
+    """A second, tagged mapper set in the upstream layout fit_mapper.py --tag writes (entry 0033)."""
+    d = up / "mappers" / PAIR / tag
+    d.mkdir(parents=True, exist_ok=True)
+    for k in ks:
+        (d / f"k{k}.safetensors").write_bytes(byte)
+        (d / f"k{k}.json").write_text("{}", encoding="utf-8")
+    r = up / "results" / "mapper" / PAIR / tag
+    r.mkdir(parents=True, exist_ok=True)
+    (r / "r2.json").write_text(json.dumps({"k": ARCHIVED}), encoding="utf-8")
+    return d
 
 
 @pytest.fixture
@@ -233,3 +246,27 @@ def test_amendment_gate_requires_its_own_entry(tmp_path):
     acfg = cfg_for(tmp_path, tmp_path / "up", amendment=True)
     assert driver.required_entries(acfg) == ("### 0009 ", "### 0016 ", "### 0030 ")
     assert driver.required_entries(cfg_for(tmp_path, tmp_path / "up")) == ("### 0009 ", "### 0016 ")
+
+
+def test_mapper_tag_routes_paths_and_fingerprints_the_mapper(env, tmp_path):
+    """Entry 0033: a tagged mapper is scored from mappers/<pair>/<tag>/k<k>, cross-checked against
+    results/mapper/<pair>/<tag>/r2.json, and its bytes are fingerprinted into the report."""
+    cfg, e7, calls, runner = env
+    make_tagged_mapper(cfg.upstream_path)
+    tcfg = cfg_for(tmp_path, cfg.upstream_path, mapper_tag="n420")
+    out = driver.run(tcfg, e7, repo_root=tmp_path, runner=runner)
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    assert rep["mapper"]["tag"] == "n420" and set(rep["mapper"]["files"]) == {"1", "4"}
+    assert set(rep["mapper"]["files"]["1"]) == {"json", "safetensors"}
+    mapper_args = [c[c.index("--mapper") + 1].replace("\\", "/") for c in calls if c[1] == "scripts/score_mapper.py"]
+    assert mapper_args and all(f"/mappers/{PAIR}/n420/k" in m for m in mapper_args)
+    untagged = driver.run(cfg, e7, repo_root=tmp_path, runner=runner)
+    urep = json.loads(untagged.read_text(encoding="utf-8"))
+    assert urep["mapper"]["tag"] is None and urep["mapper"]["files"]["1"] != rep["mapper"]["files"]["1"]
+
+
+def test_mapper_tag_refuses_when_the_tagged_artifacts_are_missing(env, tmp_path):
+    cfg, e7, calls, runner = env
+    tcfg = cfg_for(tmp_path, cfg.upstream_path, mapper_tag="n420")
+    with pytest.raises(RuntimeError, match="mapper"):
+        driver.run(tcfg, e7, repo_root=tmp_path, runner=runner)

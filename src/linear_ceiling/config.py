@@ -153,6 +153,10 @@ class E8Config:
     agent_holdout_frac: float | None = None      # None -> holdout_frac (the 0016 protocol)
     reuse_agent_dumps_from: Path | None = None   # a prior E8 report.json whose recorded dumps/tokens are reused
     amendment: dict | None = None                # {"entry": "0030", "bootstrap_seed": int, "bootstrap_reps": int}
+    # Calibration-size sensitivity (ledger entry 0033): the mapper under an upstream tag
+    # (`mappers/<pair>/<tag>/k<k>`, `results/mapper/<pair>/<tag>/r2.json`, fit_mapper.py --tag); None = the
+    # untagged n = 50 artifacts of 0016/0020. The report fingerprints the mapper files it scored with.
+    mapper_tag: str | None = None
 
 
 def load_e8_config(path: Path, repo_root: Path) -> E8Config:
@@ -173,6 +177,9 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
     agent_frac = float(arms["agent_holdout_frac"]) if "agent_holdout_frac" in arms else None
     if agent_frac is not None and not (0.0 < agent_frac <= 1.0):
         raise ValueError("config e8 [e8.arms] agent_holdout_frac must be in (0, 1]")
+    tag = e8["mappers"].get("tag")
+    if tag is not None and (not isinstance(tag, str) or not tag or "/" in tag or "\\" in tag or tag in (".", "..")):
+        raise ValueError("config e8 [e8.mappers] tag must be a non-empty single path segment (upstream fit_mapper.py --tag)")
     amendment = dict(e8["amendment"]) if "amendment" in e8 else None
     if amendment is not None:
         missing = [k for k in ("entry", "bootstrap_seed", "bootstrap_reps") if k not in amendment]
@@ -191,7 +198,7 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
         text=dict(e8["text"]), band=dict(e8["band"]), config_path=path,
         agent_holdout_frac=agent_frac,
         reuse_agent_dumps_from=(root / arms["reuse_agent_dumps_from"]) if "reuse_agent_dumps_from" in arms else None,
-        amendment=amendment,
+        amendment=amendment, mapper_tag=tag,
     )
 
 
@@ -254,4 +261,47 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         mapper_k=int(e9["mapper"]["k"]), mapper_space=e9["mapper"]["space"],
         keep_seed=int(e9["keep"]["seed"]), keep_n=int(e9["keep"]["n"]),
         rule=dict(e9["rule"]), controls=dict(e9["controls"]), config_path=path,
+    )
+
+
+@dataclass(frozen=True)
+class E9RescoreConfig:
+    """Entry 0033: the E9 cross arm re-scored on the kept subset with a differently calibrated mapper.
+    Nothing is prefilled; the kept dumps of the prior run (0029) are the only tensors read."""
+    pair: str
+    results_dir: Path
+    prior_results_dir: Path      # the 0029 mirror: report.json, summary.json, align/, recheck/, kept dumps
+    e8_report: Path              # the E8 report scored with the SAME tagged mapper (results/e8c/report.json)
+    upstream_path: Path
+    upstream_sha: str
+    mapper_k: int
+    mapper_tag: str
+    amendment: dict              # {"entry", "bootstrap_seed", "bootstrap_reps"}
+    config_path: Path
+
+
+def load_e9_rescore_config(path: Path, repo_root: Path) -> E9RescoreConfig:
+    path = Path(path)
+    c = _read(path)["e9c"]
+    for section, keys in (("mapper", ("k", "tag")), ("amendment", ("entry", "bootstrap_seed", "bootstrap_reps"))):
+        missing = [k for k in keys if k not in c.get(section, {})]
+        if missing:
+            raise ValueError(f"config e9c [e9c.{section}] is missing {missing}")
+    for key in ("pair", "results_dir", "prior_results_dir", "e8_report", "upstream_path", "upstream_sha"):
+        if key not in c:
+            raise ValueError(f"config e9c is missing {key}")
+    tag = c["mapper"]["tag"]
+    if not isinstance(tag, str) or not tag or "/" in tag or "\\" in tag or tag in (".", ".."):
+        raise ValueError("config e9c [e9c.mapper] tag must be a non-empty single path segment (upstream fit_mapper.py --tag)")
+    am = dict(c["amendment"])
+    if not (isinstance(am["entry"], str) and len(am["entry"]) == 4 and am["entry"].isdigit()):
+        raise ValueError("config e9c [e9c.amendment] entry must be a four-digit ledger entry number as a string")
+    if not (isinstance(am["bootstrap_reps"], int) and am["bootstrap_reps"] >= 100 and isinstance(am["bootstrap_seed"], int)):
+        raise ValueError("config e9c [e9c.amendment] bootstrap_seed must be an int and bootstrap_reps an int >= 100")
+    root = Path(repo_root)
+    return E9RescoreConfig(
+        pair=c["pair"], results_dir=root / c["results_dir"], prior_results_dir=root / c["prior_results_dir"],
+        e8_report=root / c["e8_report"], upstream_path=(root / c["upstream_path"]).resolve(),
+        upstream_sha=str(c["upstream_sha"]), mapper_k=int(c["mapper"]["k"]), mapper_tag=tag,
+        amendment=am, config_path=path,
     )

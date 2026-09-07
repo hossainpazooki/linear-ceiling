@@ -1,0 +1,25 @@
+# E9 calibration-size sensitivity (ledger entry 0033): the CROSS arm of the 0029 run re-scored on the kept subset
+# (8 handoffs whose stride-1 dumps survive at home) with the k = 1 mapper refit upstream on n = 420 calibration
+# sequences (tag below; the same artifact config/e8c.toml scores with). Nothing is prefilled and no alignment moves:
+# same_src / same_tgt / cross_src are 0029's tensors by fingerprint and the pairs are 0029's alignments. The
+# same-model arm does not depend on the mapper, so its per-token squares must reproduce 0028's home re-score
+# within 0028's tolerance -- the built-in control; the summarizer refuses before any cross figure is read otherwise.
+# Descriptive: the H-E9 cell (0029) does not move; f* under tau_K (0023) and under the n = 420 mapper's own
+# tolerance are reported beside 0029's cross figure on the same 8 handoffs.
+
+[e9c]
+pair = "qwen3-0.6b-to-1.7b"
+results_dir = "results/e9c"
+prior_results_dir = "results/e9"                # 0029's mirror: report.json, summary.json, align/, recheck/, scratch/<kept>
+e8_report = "results/e8c/report.json"           # the tagged mapper's verified held-out figure (tau under the n = 420 mapper) comes from here
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "223f469164734a5780110a5e2e906a2af3c36b1a"   # the 0030 pin; score_positions.py unchanged since the 0026 pin
+
+[e9c.mapper]
+k = 1
+tag = "n420"
+
+[e9c.amendment]
+entry = "0033"
+bootstrap_seed = 33
+bootstrap_reps = 2000
