@@ -1875,3 +1875,82 @@ messages only). No hypothesis cell changes with this entry; no `verdict:` line. 
 numbered entry from a passing `summarize_e8 --config config/e8a.toml`.
 
 prior-entries-sha256: fc7a391fc4a827e361340c286c336ca9cdbfe9613d1a66200be1a590029dc9d0
+
+### 0031 — 2026-09-07 — E8 amendment ran `[BASELINE, DESCRIPTIVE]`: arm (b) over every agent sequence; the H-E8 cell does not move
+
+**Provenance.** Registered by 0030 before any rescoring; `config/e8a.toml` and this ledger committed unmodified;
+upstream at the 0030 re-pin `223f469`, clean for the invoked paths; 0020's agent dumps and token file
+reused byte for byte (fingerprints checked at run time and again by the summarizer); arm (a) cross-checked against
+the archived `r2.json` for every k. Every figure below is `summarize_e8 --config config/e8a.toml`'s: the scorer
+re-run on the fingerprinted dumps, per-sequence R² recomputed from the per-token record and checked against both
+the report and the re-scored json, the prior report's hash re-checked. Arm (a) keeps the mapper's own held-out
+fraction 0.2; arm (b) scores all 50 agent sequences (12,800 tokens) — 0020 had scored
+10 of them (2,560 tokens at the matched protocol).
+
+| k | agent seqs / tokens | arm (a) generic K / V | arm (b) agent, ALL K / V | 0020's arm (b) K / V | change K / V | drop K / V | drop 95% K | drop 95% V | band K / V (descriptive) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 (0016 verdict k) | 50 / 12,800 | 0.6814 / 0.5133 | **0.5708 / 0.3230** | 0.5629 / 0.3418 | +0.0079 / -0.0189 | +0.1106 / +0.1903 | [+0.1022, +0.1199] | [+0.1779, +0.2044] | UNRESOLVED / DEGRADES |
+| 4 | 50 / 12,800 | 0.5907 / 0.3361 | **0.3783 / -0.0982** | 0.3523 / -0.0796 | +0.0260 / -0.0186 | +0.2124 / +0.4344 | [+0.1980, +0.2281] | [+0.4087, +0.4633] | DEGRADES / DEGRADES |
+| 8 | 50 / 12,800 | 0.0984 / -0.6412 | **-0.5128 / -2.1456** | -0.6280 / -2.1380 | +0.1152 / -0.0075 | +0.6112 / +1.5044 | [+0.5749, +0.6493] | [+1.4156, +1.5989] | DEGRADES / DEGRADES |
+
+Bootstrap: seeded percentile over agent sequences (seed 30 + k, 2000 reps), 2.5% / 97.5% of the drop;
+reported, read by nothing. Band words are 0009's band applied to the all-sequence drop for orientation only.
+
+**Per-sequence R² (a share of the pooled decomposition, SST around the global held-out mean), median (p10, p90):**
+
+| k | agent K | agent V | generic K | generic V |
+|---|---|---|---|---|
+| 1 | 0.5671 (p10 0.5367, p90 0.6107) | 0.3224 (p10 0.2535, p90 0.3812) | 0.6835 (p10 0.6653, p90 0.7019) | 0.5096 (p10 0.4942, p90 0.5492) |
+| 4 | 0.3691 (p10 0.3287, p90 0.4362) | -0.1039 (p10 -0.2248, p90 -0.0093) | 0.5960 (p10 0.5683, p90 0.6229) | 0.3203 (p10 0.2937, p90 0.4100) |
+| 8 | -0.5132 (p10 -0.6455, p90 -0.3515) | -2.1621 (p10 -2.4954, p90 -1.8028) | 0.1074 (p10 0.0103, p90 0.1822) | -0.7107 (p10 -0.8031, p90 -0.3692) |
+
+**What changed and what did not.** Scoring every agent sequence instead of the last 10 moves arm (b) at
+k = 1 by +0.0079 (K) / -0.0189 (V); the drop at k = 1 is +0.1106 / +0.1903 with 95% bootstrap
+[+0.1022, +0.1199] / [+0.1779, +0.2044], read against 0009's band as UNRESOLVED / DEGRADES
+(0020, at the matched protocol: UNRESOLVED / DEGRADES). **The H-E8 cell was decided by 0020 under the registered 0016
+protocol and does not move here; this entry carries no `verdict:` line.** τ_agent_K stays 0025's registered
+value, 1 − 0.5629 = 0.4371; the all-sequence counterpart, 1 − 0.5708 = 0.4292, is reported here beside it
+and substituted for nothing (0029 has already read τ_agent_K). Per-sequence spread on the agent arm at k = 1:
+K 0.5671 (p10 0.5367, p90 0.6107), V 0.3224 (p10 0.2535, p90 0.3812) over 50 sequences.
+
+**Not established.** Anything beyond 0020's limits: off-policy text for Qwen, one pair, one direction, one mapper,
+visible messages only (0012); the agent windows are the 0016 sample, not new text; arm (a)'s figure is on the
+mapper's own 10 held-out generic sequences and its per-sequence spread is over that many.
+
+**Scope.** All of 0009's, 0016's, 0020's and 0030's limits. No hypothesis cell changes with this entry.
+
+prior-entries-sha256: e5763c565d4fae7e4775a5e7e97d9e724f85b2bf63ce9f0ab3551613c6a45129
+
+### 0032 — 2026-09-06 — E9 admitted to the LCFM 4-pager behind the summarizer gate; descriptive; the H-E9 cell does not move
+
+**Operator decision of 2026-09-06.** The LCFM short-paper sprint proceeds (deadline 2026-09-10 AoE; numbers-freeze
+gate EOD 2026-09-08 per entry 0006), and E9 joins the submission. Entry 0006's scope cap named "Lane A/B premise
+numbers and the taxonomy" as the core and allowed the transfer-fidelity leg "only if they clear the same gate";
+entry 0016(1) applied that allowance to E8. This entry applies it to E9 on the same terms and no wider:
+
+- **E9 figures enter the 4-pager only from `summarize_e9`**, fail-closed, from a run that passes every check it
+  carries (alignments re-derived from the raw traces; R² from recorded moments; per-token sums against the
+  moments; the 25 included handoffs' keep subset re-scored under 0028's tolerance; τ recomputed from the
+  archived mapper; controls checked). The submission cites 0029's figures as 0029 states them; nothing is
+  re-read, rounded up, or restated from a report.
+- **The reading is 0027's, verbatim in spirit:** H-E9 `HELD` is read on a floor — f*(τ) is an oracle lower bound
+  on the recompute fraction (oracle token selection, recompute in isolation) — and the cross-model arm's
+  descriptive outcome (beyond the DEGRADES edge) is named beside it in every place the same-model figure appears.
+  The 4-pager may not present the same-model result without the cross-model outcome in the same table or
+  sentence.
+- **Coverage travels with the number.** Every appearance of the verdict names the included set (25 of 68,
+  the shorter half of the corpus by |S|, entry 0025's comparison) — the claim is about that set.
+- **Space.** E9 is one paragraph, one table (controls, same-model and cross-model f*, bridge R²), and the
+  τ ladder in an appendix; Lane A/B premise numbers and the taxonomy remain the submission's core (0006, 0016).
+
+**Condition carried forward, not a ledger fact.** The co-author refutation of entries 0025–0029 (two leads:
+the τ-ladder sensitivity; the exactly-zero prefix-invariance control) is owed at the time of writing. If it has
+not been recorded by the numbers-freeze gate, the 4-pager's E9 section is cut to one sentence marked as
+ongoing work and the figures are withheld from the submission; this entry does not decide that outcome and a
+later entry records it either way.
+
+**What this does NOT touch.** No `verdict:` line; the H-E9 cell stays `HELD` as 0029 decided it; τ_K, the
+rule, the band, the keep subset, the kept dumps and `results/e9/` are unchanged; no experiment is registered
+and nothing runs under this entry.
+
+prior-entries-sha256: ce735dbb4c5218c2588db7feba8a28f3b68e8dc61bdeb341d09a34b24471897d
