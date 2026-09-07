@@ -42,9 +42,9 @@ across three suites** [0015, FROZEN], and found: switch headroom is immaterial o
 registered reading (**0.20% of input spend vs a 10% cutoff**) [0018, FROZEN]; compaction has
 **zero measurable events** where it could be seen and is unmeasurable elsewhere [0015,
 FROZEN]; a linear cross-model KV map fit on generic text **does not survive agent-text content
-shift** [0020, PENDING 0031]; and at 25 real re-rendered handoffs the **same-model** KV is
+shift** [0020, 0031, FROZEN]; and at 25 real re-rendered handoffs the **same-model** KV is
 inside the mapper's tolerance at every matched token while the cross-model arm is not [0029,
-PENDING 0032 + review]. The binding finding is a recording gap: public trace formats drop every
+0032; PENDING freeze run + review]. The binding finding is a recording gap: public trace formats drop every
 field cache economics needs.
 
 ## 1. Preface: three gaps, and what the record returned (≈ 0.6 page)
@@ -112,7 +112,7 @@ Two sentences. Zero events on the 800 trajectories that record per-request promp
 it. Lane B's dollar counterfactual withdrawn as material by construction [0021]; its
 descriptive count (23,365 tier boundaries over 2,904 trajectories) stays out of the 4-pager.
 
-### 3.4 H-E8 — the linear map does not survive content shift [0020; PENDING 0031]
+### 3.4 H-E8 — the linear map does not survive content shift [0020, 0031; FROZEN]
 
 - Setup, two lines: existing k = 1 content-space mapper (fit upstream on generic text, n = 50
   sequences × 256 tokens at stride 4), scored without refit on (a) its own held-out generic
@@ -121,13 +121,21 @@ descriptive count (23,365 tier boundaries over 2,904 trajectories) stays out of 
 - Table, k = 1 verdict-bearing (k = 4, 8 reported): arm (a) K / V 0.6814 / 0.5133; arm (b)
   0.5629 / 0.3418; drop +0.1185 / +0.1715; band UNRESOLVED / DEGRADES [0020].
 - Verdict: H-E8 NOT CONFIRMED (V fails, K in the dead band).
-- **Freeze status:** 0020's summarizer refuses under the current upstream pin (0030 records
-  this); the figures re-enter through entry 0031's rescoring of the same tensors under the live
-  pin, arm (b) over all 50 sequences with per-sequence spread and a seeded bootstrap. The
-  4-pager shows 0020's decided numbers and 0031's all-sequence numbers side by side, both from
-  `summarize_e8 --config config/e8a.toml`. Slot: `[0031 table here]`.
+- **Freeze status: FROZEN 2026-09-07.** 0020's summarizer refuses under the current upstream pin (0030
+  records this); entry 0031 (appended 2026-09-07) rescored the same tensors under the live pin, arm (b)
+  over all 50 sequences with per-sequence spread and a seeded bootstrap; `summarize_e8 --config
+  config/e8a.toml` ran clean 2026-09-07 (~10 min CPU). The 4-pager shows 0020's decided numbers and
+  0031's all-sequence numbers side by side, both from that summarizer:
 
-### 3.5 H-E9 — same-model KV survives a real re-render; the cross-model arm does not [0029; PENDING 0032 + co-author review]
+  | k = 1 | arm (a) generic K / V | arm (b) agent K / V | drop K / V | drop 95% K / V | band K / V |
+  |---|---|---|---|---|---|
+  | 0020 (last 10 agent seqs; decided) | 0.6814 / 0.5133 | 0.5629 / 0.3418 | +0.1185 / +0.1715 | — | UNRESOLVED / DEGRADES |
+  | 0031 (all 50 agent seqs; descriptive) | 0.6814 / 0.5133 | 0.5708 / 0.3230 | +0.1106 / +0.1903 | [+0.1022, +0.1199] / [+0.1779, +0.2044] | UNRESOLVED / DEGRADES |
+
+  Per-sequence agent K at k = 1: median 0.5671 (p10 0.5367, p90 0.6107) over 50 sequences [0031].
+  k = 4 and k = 8 reported only, in 0031's table.
+
+### 3.5 H-E9 — same-model KV survives a real re-render; the cross-model arm does not [0029, 0032; PENDING freeze run + co-author review]
 
 - Setup, three lines: 68 observed composio handoffs, 25 inside the 32,768-token cap (the
   shorter half by |S|; excluded compared on the record [0025]); receiver Qwen3-1.7B re-renders
@@ -146,7 +154,12 @@ descriptive count (23,365 tier boundaries over 2,904 trajectories) stays out of 
 - **Inclusion conditions:** entry 0032 admits E9 to the 4-pager on the same summarizer gate;
   the co-author refutation of 0025–0029 (two leads: τ-ladder sensitivity; the exactly-zero
   prefix control) lands before the freeze or the section is cut to one sentence marked
-  "ongoing". Slot: `[0032 status]`.
+  "ongoing". **Status 2026-09-07:** 0032 appended; the co-author refutation is not recorded. **The freeze run
+  REFUSED:** `summarize_e9` pins the upstream at `d5786df` (0026) and refuses because 0030's re-pin `223f469`
+  changed `scripts/score_mapper.py` and added `kvt/pertoken.py`, both on E9's invoked-path list; unrecorded until
+  the 2026-09-07 pick-up. Under 0032's own terms E9 does not enter the 4-pager until a `summarize_e9` run passes
+  clean. Operator ruling: run it with the upstream checked out at `d5786df` (detached; the gate compares HEAD),
+  or register a re-pin. The 0029 figures quoted above are the 09-04 run's, unchanged on disk.
 
 ## 4. The recording gap (≈ 0.4 page)
 
@@ -192,12 +205,12 @@ ladder [0029]. F. Corpus manifest canonical sha and the SWE-bench selection rule
 
 ## Freeze checklist (owner: whoever holds the pen; verify, do not trust)
 
-| figure set | summarizer | status 2026-09-06 |
+| figure set | summarizer | status 2026-09-07 |
 |---|---|---|
 | §3.1–3.3, §2 hidden prefix, §3.2 nulls | `summarize_e7`, `summarize_e7 --overlap-null --cache-aware-ratio` | FROZEN (ran clean 2026-09-06, 11 s) |
-| §3.4 | `summarize_e8 --config config/e8a.toml` after `e8 --config config/e8a.toml` → 0031 | PENDING: upstream path (`../kv-transfer-replication`) must resolve; then ≈ 10 min CPU |
-| §3.5 | `summarize_e9` (needs the mapper artifact at the upstream path) → 0032 | PENDING: path; entry 0032; co-author leads |
-| §5.1 | 0033's summarizer | PENDING: registration, upstream fit at n = 420, rescoring |
+| §3.4 | `summarize_e8 --config config/e8a.toml` after `e8 --config config/e8a.toml` → 0031 | FROZEN (path restored 2026-09-07; run + summarizer ran clean 2026-09-07; 0031 appended) |
+| §3.5 | `summarize_e9` → 0032 | REFUSED 2026-09-07 at upstream HEAD: E9 pin `d5786df` vs 0030's re-pin `223f469` (score_mapper.py, kvt/pertoken.py). 0032 appended. Needs: run at a detached checkout of the pin, or a re-pin entry; plus the co-author leads |
+| §5.1 | 0033's summarizer | BLOCKED (found at pick-up 2026-09-07): the n = 420 TARGET dump does not exist upstream — killed 2026-08-25 at 358/420, zero bytes (upstream learnings); `append_0033.py` refuses on it by design. Operator ruling needed: re-dump (~2 h CPU, minutes on a GPU) and amend 0033's "pre-existing" prose, or drop §5.1 from the freeze |
 
 ## Page budget
 
