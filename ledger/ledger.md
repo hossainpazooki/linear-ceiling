@@ -1954,3 +1954,63 @@ rule, the band, the keep subset, the kept dumps and `results/e9/` are unchanged;
 and nothing runs under this entry.
 
 prior-entries-sha256: ce735dbb4c5218c2588db7feba8a28f3b68e8dc61bdeb341d09a34b24471897d
+
+### 0033 — 2026-09-08 — Calibration-size sensitivity registered before any fit: the k = 1 mapper refit on n = 420 sequences, E8 arms and the E9 kept-subset cross arm re-scored; descriptive; no cell moves
+
+**Why, and why now.** Every transfer figure on the record (0020, 0029, 0031) reads through ONE mapper: the k = 1
+content-space map fit upstream on 50 calibration sequences (10,240 training tokens). The source paper calibrates on
+roughly 128K tokens, 12.5× more (upstream ledger, H2 probe), and the upstream's own curve hypotheses H-L1–L4 asked
+whether the collapse at larger k was calibration size; no run of them is on this record. An independent review
+(2026-09-06) named the mapper's provenance as the submission's first rejection risk. The n = 420 calibration dumps
+exist upstream (`data/kv/qwen3-0.6b-to-1.7b-n420`) with two provenances, stated because `meta.json` records neither platform nor thread
+count: the source half is the upstream's CPU dump of 2026-08-24 (`--threads 12`, nested over the n = 50 draw by the upstream's
+own check); the target half is the GPU dump of 2026-09-08 (H100 MIG 1g.20gb, fp32, `sdpa_repeat_kv`, torch 2.11.0+cu128,
+upstream at the pin below; `docs/2026-09-08-n420-target-dump-runbook.md`), because the 2026-08-25 CPU attempt was killed at
+358/420 with nothing written (upstream learnings 2026-08-25) and the config's "existing" comment was never an existence
+check (learnings 2026-09-07). The two target halves (CPU n = 50, GPU n = 420 on sequences 0–49) agree to at most one fp16
+ULP at every checked layer and kind (runbook §4, 21:17); the mapper's calibration therefore mixes a CPU source half with
+a GPU target half, and any figure this entry produces carries that. No mapper has been fit on them: this entry registers that fit and what is re-scored with it, before the fit runs —
+`mappers/qwen3-0.6b-to-1.7b/n420` is absent and both results directories are empty at append, and this
+script refuses otherwise.
+
+**What is registered.**
+
+- **The fit (upstream, no code change, no re-pin):** `scripts/fit_mapper.py --pair qwen3-0.6b-to-1.7b --k 1 4 8 --tag n420 --dump-root data/kv/qwen3-0.6b-to-1.7b-n420` at the pin
+  `223f46916473` (λ 0.01, hold-out 0.2, content space: `fit_mapper.py` defaults, stated); k ∈ {1, 4, 8}
+  fitted, k = 1 the compared one. Inputs bound by fingerprint at append: `meta.json` sha256 source `0afb6888a390` /
+  target `4645a2574308` (30 / 30 files per dump; n_seqs 420). The artifacts land where
+  `--tag` puts them and every downstream report fingerprints them (`mapper` block).
+- **E8 under `config/e8c.toml` → `results/e8c/`:** 0030's protocol exactly — arm (a) on the tagged mapper's OWN
+  held-out sequences (`holdout_frac` 0.2; the last ⌈0.2 × 420⌉ of the n = 420 dumps; in-sample otherwise),
+  arm (b) over every one of the 50 agent sequences (`--holdout-frac 1.0`), 0020's agent dumps and token
+  file reused by fingerprint through 0031's record (`results/e8a/report.json`, sha256 `e2e433fa8925`),
+  per-sequence moments, seeded bootstrap (seed 33 + k, 2000 reps), the change measured from
+  0031's all-sequence figures at the same k, and arm (a) cross-checked against the tagged `r2.json`.
+- **E9 cross arm under `config/e9c.toml` → `results/e9c/`:** `score_positions.py` re-run over the 8 kept
+  handoffs' retained stride-1 dumps (0025's seeded draw; fingerprints of 0029's record) and 0029's alignments, with
+  the tagged k = 1 mapper. Nothing is prefilled. **Control, refusing:** the same-model arm does not depend on the
+  mapper, so its per-token squares must reproduce 0028's home re-score within 0028's tolerance (sums 1e-5, squares
+  1e-2 relative) on every handoff, or no cross figure is read. Reported: cross-arm f*(τ_K = 0.3186) beside 0029's
+  cross figure on the same 8 handoffs (recomputed from 0028's record by the same arithmetic, not read from a
+  summary); f* under the tagged mapper's own tolerance τ_K′ = 1 − its verified arm (a) K R² (from `results/e8c/`);
+  f*(τ_agent_K = 0.4371); the τ ladder (0.1, 0.03); bridge R²; a seeded bootstrap of the median (seed
+  33, 2000 reps). Band words at 0023's edges are descriptive.
+
+**What this does NOT touch.** H-E8 (0020) and H-E9 (0029) stay as decided; τ_K, τ_V, τ_agent_K, the E9 rule, band,
+keep subset, and every existing results directory are unchanged; no `verdict:` line here or in the figures entry.
+The n = 420 figures are reported BESIDE the n = 50 record, never substituted; whichever way they fall, the decided
+cells were decided under the registered protocol. The kept subset is 8 of 25 included handoffs and the cross
+re-score is a claim about those 8.
+
+**Instrument and enforcement.** `E8Config.mapper_tag` (tagged mapper + tagged archived `r2.json`; `mapper` fingerprint
+in every E8 report, re-checked by `summarize_e8`); `linear_ceiling.e9_rescore` (`check` / `run` / `summarize`;
+gate = this entry + 0019/0023/0025/0027/0029 + both configs committed unmodified + the 0030 pin by ancestry with
+E9's invoked paths unchanged + the tagged artifact present; the same-arm control; τ_K′ taken from the E8 report
+scored with byte-identical mapper files). Tests: tagged paths and fingerprints, refusal on swapped mapper bytes, the
+control firing, refusal on a changed kept dump / prior report / foreign E8 report.
+
+**Scope.** 0009/0016/0020/0030's limits (off-policy text; one pair; one direction) and 0029's (one pair, 8 kept of
+25 included of 68 observed, floor not method). The figures enter by their own numbered entry from passing
+`summarize_e8 --config config/e8c.toml` and `e9_rescore summarize`.
+
+prior-entries-sha256: 9f16a83e3cb98ea26bc23d052638881ed15c6c14618aec4e58a51cd6607dc056
