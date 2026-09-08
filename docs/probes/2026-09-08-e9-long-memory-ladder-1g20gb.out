@@ -1,0 +1,16 @@
+{"slice_total_GiB": 19.62, "free_GiB": 19.48, "torch": "2.11.0+cu128"}
+{"model": "Qwen/Qwen3-1.7B", "attn": "sdpa_repeat_kv", "weights_GiB": 6.41}
+{"model": "Qwen/Qwen3-1.7B", "T": 4096, "peak_GiB": 7.73, "s": 1.8, "ok": true}
+{"model": "Qwen/Qwen3-1.7B", "T": 8192, "peak_GiB": 9.01, "s": 3.5, "ok": true}
+{"model": "Qwen/Qwen3-1.7B", "T": 16384, "peak_GiB": 11.58, "s": 8.0, "ok": true}
+{"model": "Qwen/Qwen3-1.7B", "T": 32768, "peak_GiB": 16.72, "s": 22.5, "ok": true}
+{"model": "Qwen/Qwen3-1.7B", "T": 40960, "ok": false, "oom": "CUDA out of memory", "peak_GiB": 18.04}
+{"model": "Qwen/Qwen3-0.6B", "attn": "sdpa_repeat_kv", "weights_GiB": 2.25}
+{"model": "Qwen/Qwen3-0.6B", "T": 4096, "peak_GiB": 3.33, "s": 0.7, "ok": true}
+{"model": "Qwen/Qwen3-0.6B", "T": 8192, "peak_GiB": 4.42, "s": 1.8, "ok": true}
+{"model": "Qwen/Qwen3-0.6B", "T": 16384, "peak_GiB": 6.58, "s": 5.0, "ok": true}
+{"model": "Qwen/Qwen3-0.6B", "T": 32768, "peak_GiB": 10.91, "s": 16.5, "ok": true}
+{"model": "Qwen/Qwen3-0.6B", "T": 40960, "peak_GiB": 13.07, "s": 24.6, "ok": true}
+{"model": "Qwen/Qwen3-0.6B", "T": 49152, "peak_GiB": 15.24, "s": 34.4, "ok": true}
+{"model": "Qwen/Qwen3-0.6B", "T": 65536, "ok": false, "oom": "CUDA out of memory", "peak_GiB": 18.07}
+PROBE_LONG_DONE

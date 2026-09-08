@@ -1,0 +1,6 @@
+tokens shape (420, 1024) int64
+model Qwen/Qwen3-1.7B attn sdpa_repeat_kv dtype torch.float32 dev cuda:0
+weights GiB 6.41
+peak GiB 6.98 | 2 seqs in 1.1 s
+est full run s 225
+PROBE_DONE
