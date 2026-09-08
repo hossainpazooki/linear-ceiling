@@ -12,7 +12,7 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 
 ## GPU runs
 `docs/gpu-experiment-protocol.md` (rules R1–R12) governs every GPU experiment; each run also gets a
-dated runbook (E9: `docs/2026-09-02-e9-gpu-runbook.md`). The short form: registered before requested
+dated runbook (E9: `docs/2026-09-02-e9-gpu-runbook.md`; the n = 420 target dump: `docs/2026-09-08-n420-target-dump-runbook.md`). The short form: registered before requested
 (no rule/τ/band/cap change once a score file exists); budget the attention backend, not the parameters
 (f32 + GQA takes the math kernel); every input the driver reads is in git, the manifest, or listed by
 sha in the runbook (gitignored mappers included); launch detached, rotate the log before any relaunch,
@@ -126,10 +126,12 @@ handoffs) live under `results/e9/scratch/` at home only; the `[STRETCH]` partial
 is registered and unrun. **E8 amendment (0030, registered 2026-09-04, descriptive):** arm (b) rescored over every agent
 sequence with per-sequence moments and a seeded bootstrap, on 0020's dumps by fingerprint, under `config/e8a.toml`
 and a separate `results/e8a/`; the H-E8 cell and τ_agent_K do not move; figures enter by their own entry. **LCFM sprint (operator ruling 2026-09-06):** outline in `docs/paper/2026-09-06-lcfm-outline.md`
-(gap-map preface from `docs/2026-09-06-gap-map-revisited.md`; registered reading for H-E7a); staged drafts 0031 (E8 figures),
-0032 (E9 admitted to the 4-pager), 0033 (calibration-size sensitivity: k = 1/4/8 mapper refit upstream on the existing
-n = 420 dumps under tag `n420`, E8 arms via `config/e8c.toml`, E9 kept-subset cross arm via `config/e9c.toml`; descriptive),
-0034 (its figures). **E-RL** (KV reuse
+(gap-map preface from `docs/2026-09-06-gap-map-revisited.md`; registered reading for H-E7a); 0031 (E8 figures) and
+0032 (E9 admitted to the 4-pager) appended 2026-09-07; 0033 (calibration-size sensitivity: k = 1/4/8 mapper refit upstream on
+the n = 420 dumps under tag `n420`, E8 arms via `config/e8c.toml`, E9 kept-subset cross arm via `config/e9c.toml`; descriptive)
+appended 2026-09-08 after the n = 420 TARGET half was dumped on an Algoverse H100 MIG 1g.20gb slice
+(`docs/2026-09-08-n420-target-dump-runbook.md`; the 2026-08-25 CPU attempt had died with nothing written, so the source half
+is CPU 08-24 and the target half GPU 09-08, stated in 0033); 0034 (its figures) staged. **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own

@@ -28,14 +28,12 @@ hash-chained. `ledger/ledger.md` is the authority on state.
 | H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on a floor; cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027) |
 | H-S1…H-S4 (pre-fit screen line) | `SHELVED` / H-S2 first clause `NOT CONFIRMED` | 0003–0006 |
 
-Descriptive amendments, no cell moves: 0030 (E8 arm (b) over every agent sequence; figures →
-0031, staged) · 0032 (E9 admitted to the 4-pager, staged) · 0033/0034 (calibration-size
-sensitivity: the k = 1 mapper refit on n = 420 sequences, E8 arms and the E9 kept-subset cross
-arm re-scored; staged, register before the fit).
+Descriptive amendments, no cell moves: 0030 (E8 arm (b) over every agent sequence; figures in
+0031) · 0032 (E9 admitted to the 4-pager) · 0033 (calibration-size sensitivity: the k = 1 mapper
+refit on n = 420 sequences, E8 arms and the E9 kept-subset cross arm re-scored; registered before
+the fit) · 0034 (its figures, staged).
 
-**Now:** the upstream checkout must live at `../kv-transfer-replication` (renamed on
-2026-09-06; every gate refuses until it is renamed back). Then, in order: 0031 run → 0032 and
-0033 appended → upstream fit under tag `n420` → E8c and E9c runs → 0034 → freeze → the 4-pager.
+**Now:** the upstream fit under tag `n420` → E8c and E9c runs → 0034 → freeze → the 4-pager.
 Newest brief: `docs/handoff/HANDOFF.md`.
 
 ## Setup

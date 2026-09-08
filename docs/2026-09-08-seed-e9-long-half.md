@@ -45,6 +45,7 @@ statistic, on the long half, under a receiver configuration that can reach those
 | Memory at max \|S\| 80,111 | in-forward KV fp32 **17.1 GiB** + 6.8 GiB fp32 weights, before activations → **a 3g.40gb slice or a full card, never 1g.20gb**; R2 measures the true peak at T = 80,111 on the pinned path | formula 28·2·8·128·4 B/token |
 | Transients | largest fp16 dump 8.6 GiB per side; a kept handoff ≈ up to 20 GiB (S 1.7B + S 0.6B + R 1.7B) | same formula |
 | Home disk | 384 GB free on `C:`; `results/e9/scratch` (8 kept native handoffs) = 45 GB present | `df -h`, `du -sh` |
+| **Measured 2026-09-08 on the 1g.20gb slice** (R2 ladder, pinned path, `logits_to_keep=1`) | 1.7B: 16.72 GiB at T = 32,768, **OOM at 40,960** (18.04 at the throw); 0.6B: 15.24 at 49,152, OOM at 65,536 → **D1(c) does not fit 1g.20gb either; every option needs 3g.40gb or a full card** | `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.out`; n420 runbook §4 21:27 |
 | Box versions (today's sitting) | torch 2.11.0+cu128 (the cu128 index tops out there; driver 570.148.08) · transformers 5.15.1 · numpy 2.5.2 · Python 3.12.6 | n420 runbook §R3 |
 
 ## 2. Decisions for the operator — rule before anything is built
