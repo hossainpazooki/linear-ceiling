@@ -87,6 +87,27 @@ H-E9 is the one positive cell, and its verdict word carries a narrow, registered
 | H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on a floor; cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027) |
 | H-S1…H-S4 (pre-fit screen line) | `SHELVED` / H-S2 first clause `NOT CONFIRMED` | 0003–0006 |
 
+**How the cells hold each other up.** H-E9 is the result; it does not stand alone, and the two
+cells beside it are not optional context.
+
+- **E7 supplies the event.** The 68 handoffs E9 scores are the switch points E7 found on the
+  public record (0015, 0018), and E7's finding that none of the 68 hands the receiver a
+  byte-identical prefix is what makes "re-rendered" an observed event rather than a construction
+  of the experiment. Without E7, E9 would be scoring a handoff nobody has seen. In the paper, E7
+  is therefore the corpus section: where the handoffs come from, what a real re-render looks
+  like, and why the headroom they carry is small (0018). It is not a second results section.
+- **E8 explains the contrast.** E9's cross-model arm sits beyond DEGRADES, and that number is
+  unexplained on its own. E8 is the explanation: the linear map was fit on generic text and does
+  not hold on agent text (0020, 0031), so pushing agent KV through it at a handoff fails for the
+  same reason it fails at rest. 0034 closes the obvious objection, since the failure survives an
+  eight-times-larger calibration and the cross arm stays beyond DEGRADES under the larger mapper.
+  Without E8, a reader could attribute the cross-arm number to the handoff; with it, the
+  attribution is to the map.
+
+So the paper's claim reads: at a real re-rendered agent handoff, same-model KV is reusable at
+zero recompute on an oracle floor, and a linear cross-model map is not. E7 makes the first
+clause about something real, E8 makes the second clause a finding rather than a number.
+
 A verdict cell is decided once, under the rule registered before its run, and only a numbered
 entry with a `verdict:` line can change it. Everything after 0029 is **descriptive**: a
 registration, an admission, or a measurement that stands beside a decided cell without
