@@ -51,6 +51,45 @@ trajectories under `traces/` (local, never committed; rebuilt from `config/e7-ma
 E8 and E9 invoke the pinned upstream (`UPSTREAM.md`) by subprocess and refuse if its pin does
 not hold. Commands per experiment: `CLAUDE.md`.
 
+## Backups (Hugging Face)
+
+`results/`, `data/` and `traces/` never enter git history, so the only off-machine copy of a
+GPU run's tensors is a **private Hugging Face dataset**, pushed from the verified home mirror
+after every sitting (protocol R8 in `docs/gpu-experiment-protocol.md`). Three rules bound it:
+
+- **Transport, not evidence.** A summarizer reads the local mirror only; nothing on the Hub is a
+  ledger figure, and a refusal at home is a finding, never something a re-download works around.
+- **Every file verified in both directions.** Each LFS file's `lfs.sha256` must equal the local
+  sha256; each non-LFS file is downloaded and hashed; every local file must be on the Hub and
+  vice versa. `tools/hf_verify_backup.py <repo_id> <local_root>` is that check and exits 0 only
+  when all of it holds.
+- **Tokens are scoped, expiring, and live only in the environment.** Write tokens for the pusher,
+  read tokens for collaborators; a token pasted anywhere is revoked. A private user-namespace
+  dataset cannot be shared per user, so a collaborator gets a read token.
+
+| dataset | holds | layout at the dataset root |
+|---|---|---|
+| `hossainpazooki/linear-ceiling-e9-2026-09-04` | the E9 record (entries 0026–0029): `report.json`, `align/`, `controls/`, `scores/`, `tokens/`, box logs, and the kept full dumps | `results/e9/` as in this repo, plus the fitted mapper `mappers/qwen3-0.6b-to-1.7b/k1.*` in the upstream's layout |
+| `hossainpazooki/linear-ceiling-n420-2026-09-08` | the n = 420 calibration pair behind entries 0033/0034, the tagged mapper and its `r2.json`, the sitting's box logs and sha manifests | the upstream's own layout: `data/kv/qwen3-0.6b-to-1.7b-n420/`, `mappers/qwen3-0.6b-to-1.7b/n420/`, `results/mapper/qwen3-0.6b-to-1.7b/n420/` |
+
+Restore, with a read token in `HF_TOKEN`:
+
+```bash
+# E9: results/ lands in this repo, the mapper in the upstream checkout
+hf download hossainpazooki/linear-ceiling-e9-2026-09-04 --repo-type dataset --local-dir /tmp/e9-restore
+cp -r /tmp/e9-restore/results/e9 results/ && cp -r /tmp/e9-restore/mappers ../kv-transfer-replication/
+python tools/hf_verify_backup.py hossainpazooki/linear-ceiling-e9-2026-09-04 /tmp/e9-restore
+
+# n = 420 pair: upstream layout, so it lands directly in the upstream checkout
+hf download hossainpazooki/linear-ceiling-n420-2026-09-08 --repo-type dataset --local-dir ../kv-transfer-replication
+python tools/hf_verify_backup.py hossainpazooki/linear-ceiling-n420-2026-09-08 ../kv-transfer-replication
+```
+
+After a restore the gates decide, not the download: `e9 --check`, `e8 --check --config config/e8c.toml`
+and `e9_rescore check --config config/e9c.toml` must print ready before any summarizer runs.
+Large pushes use `hf upload-large-folder --num-workers 1` on Windows (multi-worker uploads
+stall); the dataset card goes last.
+
 ## Docs map
 
 | path | role |
@@ -64,7 +103,9 @@ not hold. Commands per experiment: `CLAUDE.md`.
 | `docs/background.md` | program history and vocabulary |
 | `docs/2026-09-01-measurement-lane-evidence.md` | why the program re-scoped: paper deltas, pricing pins, venue facts |
 | `docs/2026-09-01-swe-bench-trace-recon.md` | trace formats and what they do and do not record |
-| `docs/2026-09-02-e9-gpu-runbook.md` · `docs/gpu-experiment-protocol.md` · `tools/jupyterhub/` | the E9 GPU day; standing rules R1–R12; the JupyterHub box driver |
+| `docs/2026-09-02-e9-gpu-runbook.md` · `docs/2026-09-08-n420-target-dump-runbook.md` · `docs/gpu-experiment-protocol.md` | the two GPU sittings; standing rules R1–R12 |
+| `tools/jupyterhub/` · `tools/hf_verify_backup.py` | the JupyterHub box driver and pull loop; the two-direction backup verifier |
+| `docs/2026-09-08-seed-e9-long-half.md` | seed for E9 on the long half of the handoffs, unregistered; needs a 3g.40gb slice or a full card |
 | `docs/2026-09-02-e-rl-design.md` | E-RL design, unregistered |
 | `docs/drafts/` | append scripts for entries not yet written; the README there is the only number allocator |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
