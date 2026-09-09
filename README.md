@@ -18,6 +18,15 @@ hash-chained. `ledger/ledger.md` is the authority on state.
 - **MLSys 2027 measurement paper** (anchor venue; due 2026-10-30). Same record, full length.
 - **E-RL** (KV reuse across RL post-training checkpoints): design only, unregistered.
 
+## Contents
+
+- [Where the program stands](#where-the-program-stands) — the arc from the shelved screen to the measurement program, and what the record reads as now
+- [What HELD means here](#what-held-means-here) — the one positive cell: its statistic, band, floor reading and scope
+- [Status](#status) — verdict table; how E7 and E8 hold up the E9 result; the descriptive entries 0030–0034
+- [Setup](#setup) — environment, suite and gates
+- [Backups (Hugging Face)](#backups-hugging-face) — the two private datasets, the rules that bound them, restore and verify
+- [Docs map](#docs-map) — where each living document lives and what it is for
+
 ## Where the program stands
 
 The program began as a pre-fit screen: could a cheap statistic predict how well a linear
