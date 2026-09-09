@@ -7,14 +7,25 @@ choice the operator rules on. Written for the session that drives the **next** G
 JupyterHub (`tools/jupyterhub/`); there is no agent on the box. Inherits `docs/gpu-experiment-protocol.md`
 R1–R12 without restating them.
 
-**Not this grant.** Today's grant (runbook `docs/2026-09-08-n420-target-dump-runbook.md`, another
-session) is one MIG **1g.20gb** slice of an H100, shuts down 2026-09-09 07:30 UTC, and is running the
-n = 420 target dump. The budget in §1 does not fit a 1g.20gb slice. This seed is for a grant requested
-after 0033/0034 are on the record and the §3 checklist is green.
+**Updated 2026-09-09.** Written during the 2026-09-08 sitting; revised after it closed. What changed:
+0033 and 0034 are on the record, so the ordering constraint in §3 is satisfied and a second, larger
+calibration mapper exists (D4); the 1g.20gb ladder was measured and no option fits that slice (§1); the
+box protocol gained R7 step 0 after a shared-login incident (§4); the HF backup verifier exists (§3, §4);
+and the paper was re-cut around E9 (below), which makes this experiment its first-named successor.
 
-**Not the 4-pager.** The LCFM numbers froze EOD 2026-09-08. This experiment is the successor the
-outline's Limitations names; its result goes to the camera-ready or the MLSys version, never into a
-frozen figure.
+**Not the last grant.** The 2026-09-08 grant (runbook `docs/2026-09-08-n420-target-dump-runbook.md`) was
+one MIG **1g.20gb** slice of an H100; it ran the n = 420 target dump and the registered fit, was released
+twice, and shut down 2026-09-09 07:30 UTC. The 1.7B forward OOMs at T = 40,960 on that profile, measured.
+This seed is for a grant that names the **3g.40gb** profile or a full card in the request. The previous
+request said a 20 GB slice suffices; for this experiment it does not, and the request must say so with
+the §3 item 5 probe's number.
+
+**The paper.** The LCFM numbers-freeze date passed with §3.5 unfrozen (ruling (b) still open), and on
+2026-09-09 the operator re-cut the 4-pager around E9: same-model KV at a real re-rendered handoff is
+reusable at zero recompute on an oracle floor, a linear cross-model map is not; E7 supplies the handoffs,
+E8 explains the cross arm. E9 is decided on the shorter half of the handoffs, so the paper's first
+limitation is length and this experiment is the successor it names. Its result goes to the camera-ready
+or the MLSys version, never into a figure the 4-pager already carries.
 
 ## 0. The question
 
@@ -23,7 +34,9 @@ which is the **shorter half by |S|** (0025). The 39 handoffs excluded for length
 |S| 34,974 to 357,623, median 52,141. A Long-Context workshop will ask whether same-model KV reuse at a
 re-rendered handoff still needs zero recompute when the re-rendered context is 35K–80K tokens. Nothing
 in the record answers it. This experiment runs E9's registered instrument, unchanged in rule and
-statistic, on the long half, under a receiver configuration that can reach those positions.
+statistic, on the long half, under a receiver configuration that can reach those positions. Since
+0034 there are two fitted cross-model mappers, the n = 50 one 0029 used and the n = 420 one, and the
+long half is the first place both can be read side by side on new tokens (D4).
 
 ## 1. Verified this session (2026-09-08)
 
@@ -46,7 +59,12 @@ statistic, on the long half, under a receiver configuration that can reach those
 | Transients | largest fp16 dump 8.6 GiB per side; a kept handoff ≈ up to 20 GiB (S 1.7B + S 0.6B + R 1.7B) | same formula |
 | Home disk | 384 GB free on `C:`; `results/e9/scratch` (8 kept native handoffs) = 45 GB present | `df -h`, `du -sh` |
 | **Measured 2026-09-08 on the 1g.20gb slice** (R2 ladder, pinned path, `logits_to_keep=1`) | 1.7B: 16.72 GiB at T = 32,768, **OOM at 40,960** (18.04 at the throw); 0.6B: 15.24 at 49,152, OOM at 65,536 → **D1(c) does not fit 1g.20gb either; every option needs 3g.40gb or a full card**. *Extrapolation, not a measurement:* the 0.6B ladder's slope is ≈ 283 KB/token (10.91 → 13.07 GiB over 8,192 tokens; KV alone is 229 KB/token); the 1.7B at T = 80,111 from its 32,768 point is then ≈ 16.7 + 12.5 ≈ **29 GiB**, inside a 3g.40gb slice with ~10 GB to spare, unproven until the §3 item 5 probe runs at that T | `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.out`; n420 runbook §4 21:27 |
-| Box versions (today's sitting) | torch 2.11.0+cu128 (the cu128 index tops out there; driver 570.148.08) · transformers 5.15.1 · numpy 2.5.2 · Python 3.12.6 | n420 runbook §R3 |
+| Box versions (2026-09-08 sitting) | torch 2.11.0+cu128 (the cu128 index tops out there; driver 570.148.08) · transformers 5.15.1 · numpy 2.5.2 · Python 3.12.6 | n420 runbook §R3 |
+| **0033 / 0034 on the record** (2026-09-09) | both appended, `ledger ok`; every 0034 figure recomputed from `results/e8c/summary.*` and `results/e9c/summary.json` at pick-up | `grep -n "^### 003[34]" ledger/ledger.md`; `-m linear_ceiling.ledger_check` |
+| **Second mapper exists** | `mappers/qwen3-0.6b-to-1.7b/n420/k1.safetensors` `b602eaf2e844…` (named by sha in both 0034 reports), fit on the box at pin `223f469`; backed up in `hossainpazooki/linear-ceiling-n420-2026-09-08` with the n = 420 pair, 89/89 verified both directions | n420 runbook §5–6; `tools/hf_verify_backup.py` |
+| 0034's cross arm, for D4 | on 0029's 8 kept handoffs the n = 420 mapper's median f*(τ_K) is 0.8106 vs 0.9352 for the n = 50 mapper: closer to the floor, still beyond DEGRADES | `results/e9c/summary.md` |
+| Protocol since 09-09 | R7 has a **step 0**: list `~` and `ps -u` before any deletion or stop; anything not ours aborts the release (the 00:40Z incident killed a co-author's audit on the shared login) | `docs/gpu-experiment-protocol.md`; learnings 2026-09-09 |
+| Upstream HEAD (2026-09-09) | still `4633718`; one untracked, unignored dir `results/mapper/qwen3-0.6b-to-1.7b/n420/` (the fit's `r2.json`), not on any invoked path | `git -C ../kv-transfer-replication status --short` |
 
 ## 2. Decisions for the operator — rule before anything is built
 
@@ -82,9 +100,15 @@ registered, and the entry says exactly that.
 different set from 0025's; numpy `choice` without replacement is not nested, state it). ≤ 60 GiB at
 home; one resumable `upload-large-folder`.
 
-**D4 — cross arm.** Include as 0029 did (descriptive; mapper k = 1 applied at receiver positions).
-Costs the 0.6B prefill on S (1.77M tokens), cheap beside the dumps. If wall time forces a cut, the
-cut is written into the registration entry **before** launch, never decided on the box.
+**D4 — cross arm, under both mappers.** *Recommended:* include the cross arm as 0029 did (descriptive;
+k = 1 applied at receiver positions) and score it under **both** fitted mappers, the n = 50 one 0029
+used and the n = 420 one from 0033/0034. The second costs no prefill: both mappers apply to the same
+0.6B dumps at scoring time, so the extra is CPU on the box and one more sha in the R3 table. The
+reading is registered now: the two arms are reported side by side, the n = 50 arm is the one
+comparable to 0029, and 0034 has already shown the n = 420 mapper lands closer to the floor without
+crossing DEGRADES on the included set. The 0.6B prefill on S (1.77M tokens) is the real cost of the
+arm; if wall time forces a cut, the cut is written into the registration entry **before** launch,
+never decided on the box.
 
 **D5 — exclusions.** The four empty-R and the four above 81,920 stay excluded and are counted by
 name in the entry (coverage 35/39 of the long half; 60/68 pooled, stated but never pooled for a
@@ -95,11 +119,15 @@ verdict).
 1. **Upstream** (`kv-transfer-replication`, its own commits; linear-ceiling never edits it):
    rope/model/dump_kv change per D1(a); tests: halt test vs HF `rotary_emb`; strip∘apply identity at
    scaled positions; the existing toy 48-token dump still passes at the native config (regression).
-   Commit; record the sha. **Ordering constraint (box session, 2026-09-08): this commit lands only
-   after entry 0034 is on the record.** `config/e8c.toml` and `config/e9c.toml` pin `223f469` and
-   their gates refuse when any invoked upstream path (`kvt/` included) differs from the pin; a YaRN
-   commit on upstream `main` before 0034 breaks the 0033 chain's gates. The upstream checkout stays at
-   `223f469` until `append_0034.py` has run and `ledger_check` is ok.
+   Commit; record the sha. **Ordering constraint, satisfied 2026-09-09:** the box session required
+   this commit to land only after entry 0034, because `config/e8c.toml` and `config/e9c.toml` pin
+   `223f469` and refuse when any invoked upstream path (`kvt/` included) differs. 0034 is on the record,
+   so the YaRN commit may now be the next change on upstream `main`. **Residual, to state in the
+   registration entry:** once it lands, upstream HEAD no longer equals `223f469`, and any re-run of the
+   0033-chain gates or summarizers (`e8 --check --config config/e8c.toml`, `e9_rescore check`) needs a
+   detached checkout at `223f469` with `main` restored after, the same shape as the §3.5 block (b).
+   This is the third pin in the upstream's history (`d5786df` for E9, `223f469` for the E8 family and
+   0033, the new one for E9-long); the entry names all three and which configs read which.
 2. **linear-ceiling:** `config/e9l.toml` — pair, a `[e9.rope]` block, `context_cap = 81920`,
    `results_dir = "results/e9l"`, its own scratch, `[e9.keep] n = 3, seed = 9`, `[e9.rule]` copied
    verbatim from `config/e9.toml`, τ_K / τ_V / τ_agent_K / `tau_ladder` copied, `upstream_sha` = the
@@ -119,7 +147,9 @@ verdict).
 6. **Runbook** `docs/<date>-e9l-gpu-runbook.md` inheriting R1–R12: the R3 table (upstream sha,
    config sha, mapper shas, box scripts by sha), N = 35 `[i/N]` lines the box must print (+3 bridge
    handoffs, §5), coverage the entry must state, the HF dataset name
-   `hossainpazooki/linear-ceiling-e9l-<date>`, and the version pins from §1.
+   `hossainpazooki/linear-ceiling-e9l-<date>` with `tools/hf_verify_backup.py <repo_id> <local_root>`
+   as the R8 check (exit 0 only when every file matches in both directions), the version pins from §1,
+   and the R3 row for the second mapper (`n420/k1.*`, sha from the n420 runbook §5).
 
 ## 4. Definition of done — the GPU sitting
 
@@ -129,8 +159,11 @@ verdict).
   then delete on the box (R5). Small records mirrored every round, re-pulled on size **or** mtime.
 - Bridge control dumps (§5) run first, before the first long handoff, so a socket drop late in the
   sitting cannot lose them.
-- Release R7 in order, stop at the first failure; backup R8 from the verified home mirror only;
-  token hygiene R9.
+- Release R7 in order, stop at the first failure, **step 0 first**: list `~` and `ps -u $(whoami)` and
+  compare against the runbook's own list of files and processes; anything not ours aborts the release
+  with nothing deleted and the server left up. The grant login is shared with a co-author whose E9
+  audit was killed on 2026-09-09 by a release that deleted before it listed. Backup R8 from the
+  verified home mirror only, checked by `tools/hf_verify_backup.py`; token hygiene R9.
 - At home: `summarize_e9 --config config/e9l.toml` is the only reader (R11); a refusal is pasted
   verbatim into the closing brief and investigated, never worked around. Verdict entry by its script.
 
@@ -165,9 +198,11 @@ file exists under `results/e9l/` at the commit that carries the entry.
 
 ## 7. Not in this seed
 
-The n = 420 target dump (today's sitting, another session). The §3.5 freeze ruling (block (b) of the
-2026-09-07 brief). The 4-pager. E-RL. The recorded-corpus experiment (`docs/2026-09-06-gap-map-revisited.md`
-open item; MLSys cycle). Any pooling of the long half with 0029's 25. Any edit to `results/e9/`.
+The n = 420 chain (done: 0033/0034 on the record, pair and mapper backed up). The §3.5 freeze ruling
+(block (b) of the 2026-09-07 brief, still open on 2026-09-09; it decides whether the 4-pager's E9 section
+is frozen, not anything here). The 4-pager itself. E-RL. The recorded-corpus experiment
+(`docs/2026-09-06-gap-map-revisited.md` open item; MLSys cycle). Any pooling of the long half with
+0029's 25. Any edit to `results/e9/`, `results/e8c/` or `results/e9c/`.
 
 ## 8. Reuse map
 
@@ -179,8 +214,14 @@ open item; MLSys cycle). Any pooling of the long half with 0029's 25. Any edit t
   recomputes from them in one script.
 - `results/e9/scratch/` — the 8 kept native handoffs for control 4.
 - `docs/2026-09-02-e9-gpu-runbook.md`, `docs/2026-09-08-n420-target-dump-runbook.md` — the two
-  runbook shapes; the second has today's box facts and the three new traps.
-- `tools/jupyterhub/jh.py`, `pull.py`, `README.md` — the driver and the pull loop.
+  runbook shapes; the second has the 09-08 box facts, the three new traps, the one-stream 32 MB-part
+  push pattern (`push_dumps.py`), the detached `fit.sh` launcher, and the §6 backup procedure.
+- `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.{py,out}` — the R2 ladder script; rerun it at
+  T = 80,111 on the granted profile for §3 item 5.
+- `tools/jupyterhub/jh.py`, `pull.py`, `README.md` — the driver and the pull loop;
+  `tools/hf_verify_backup.py` — the two-direction R8 check.
+- Upstream `mappers/qwen3-0.6b-to-1.7b/k1.*` (0029's mapper) and `mappers/qwen3-0.6b-to-1.7b/n420/k1.*`
+  (0034's), both gitignored, both in the HF backups; copy by sha before the gate runs (R3).
 - Upstream `kvt/rope.py`, `kvt/models.py`, `scripts/dump_kv.py`, `scripts/score_positions.py`.
 - Memory notes `jupyterhub-box-driving`, `relaunch-redirect-destroys-halt-logs`,
   `hf-upload-large-folder-windows-stall` (session memory, not in the repo).
