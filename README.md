@@ -18,6 +18,33 @@ hash-chained. `ledger/ledger.md` is the authority on state.
 - **MLSys 2027 measurement paper** (anchor venue; due 2026-10-30). Same record, full length.
 - **E-RL** (KV reuse across RL post-training checkpoints): design only, unregistered.
 
+## Where the program stands
+
+The program began as a pre-fit screen: could a cheap statistic predict how well a linear
+cross-model KV mapper would work before fitting one (H-S1 to H-S4)? The first gate returned SAME
+on every pair, the screen line was shelved, and the program re-scoped to a measurement question:
+what does the public agent-trace record actually evidence about cache economics? That question
+was answered on 2,904 public trajectories across three suites with a taxonomy of cache-invalidation
+events registered before any count was taken (E7). Two mechanism experiments then tested the
+linear-transfer story on real agent text rather than generic calibration text: whether a mapper
+fit on generic text survives agent content (E8), and whether a receiver's own KV survives a real
+re-rendered handoff (E9).
+
+The record now reads as follows. Mid-trajectory model switches are rare on public traces, come
+from one designed critic family, and the prefill they could recover is immaterial against what
+those trajectories spend. Compaction cannot be estimated, because the traces that could show it
+record none. A linear cross-model map fit on generic text does not hold its fidelity on agent
+text. Same-model KV at a re-rendered handoff needs no recompute at the mapper's tolerance, on an
+oracle floor. The binding finding underneath all four is a recording gap: public trace formats
+omit the fields any cache accounting needs, so every cost figure from them is a bound.
+
+Entries 0030 to 0034 then asked whether the two mechanism cells were artifacts of protocol
+choices, by re-running under the full agent set and under an eight-times-larger calibration. No
+cell moved. The near-term target is the LCFM short paper; its numbers are frozen except the E9
+section, whose summarizer run waits on one operator ruling. The MLSys paper is the anchor venue.
+Two successors are designed but unregistered: E9 on the long half of the handoffs, which needs a
+larger GPU slice, and a self-recorded corpus that carries the missing fields.
+
 ## What HELD means here
 
 H-E9 is the one positive cell, and its verdict word carries a narrow, registered meaning.
@@ -60,10 +87,25 @@ H-E9 is the one positive cell, and its verdict word carries a narrow, registered
 | H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on a floor; cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027) |
 | H-S1…H-S4 (pre-fit screen line) | `SHELVED` / H-S2 first clause `NOT CONFIRMED` | 0003–0006 |
 
-Descriptive amendments, no cell moves: 0030 (E8 arm (b) over every agent sequence; figures in
-0031) · 0032 (E9 admitted to the 4-pager) · 0033 (calibration-size sensitivity: the k = 1 mapper
-refit on n = 420 sequences, E8 arms and the E9 kept-subset cross arm re-scored; registered before
-the fit) · 0034 (its figures).
+A verdict cell is decided once, under the rule registered before its run, and only a numbered
+entry with a `verdict:` line can change it. Everything after 0029 is **descriptive**: a
+registration, an admission, or a measurement that stands beside a decided cell without
+re-deciding it. Descriptive does not mean minor. Two of these entries re-ran the mechanism
+experiments under different protocols to ask whether the cells were artifacts of the original
+choices, and one of them found a band word that moved under the larger calibration. The cell
+did not move, because the rule says it cannot; the paper says both.
+
+| entry | kind | what it did | effect on cells |
+|---|---|---|---|
+| 0030 | registration | E8 amended before any rescoring: arm (b) over every agent sequence instead of a held-out tail, per-sequence moments, a seeded bootstrap of the drop; upstream re-pinned | none |
+| 0031 | figures | the amended E8 run through its summarizer; same band words as 0020 at k = 1 | none |
+| 0032 | admission | E9 allowed into the LCFM 4-pager behind its summarizer gate, with the co-author refutation as a stated condition | none |
+| 0033 | registration | calibration-size sensitivity: the k = 1 mapper refit on n = 420 sequences (eight times 0009's), E8 arms and the E9 kept-subset cross arm to be re-scored; registered before the fit existed, provenance of both dump halves stated | none |
+| 0034 | figures | the n = 420 mapper's run through both summarizers. E8 at k = 1: K stays in the dead band, **V's drop falls to the DEGRADES edge and reads UNRESOLVED**, where the n = 50 mapper read DEGRADES. E9 cross arm: closer to the same-model floor than under the n = 50 mapper, still beyond DEGRADES | none; H-E8 was decided by 0020 under the registered protocol |
+
+The 0034 V result is the one a reader should carry: the E8 sentence "does not survive content
+shift" is calibration-sensitive on the V read-out and dead-band on K at both calibrations. The
+4-pager states the E8 result at its registered calibration and reports 0034 beside it.
 
 **Now:** freeze → the 4-pager.
 Newest brief: `docs/handoff/HANDOFF.md`.
