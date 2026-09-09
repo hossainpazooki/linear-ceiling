@@ -1,58 +1,71 @@
 # linear-ceiling
 
-Pre-registered, auditable experiments on cross-model KV-cache questions: what the public
-agent-trace record can evidence about cache economics, and whether a linear cross-model KV map
-survives real agent text and real re-rendered handoffs. Every rule is committed before its run;
-every number enters the ledger only through a fail-closed summarizer; entries are immutable and
-hash-chained. `ledger/ledger.md` is the authority on state.
+Can one AI model reuse work another model has already done?
+
+When a language model reads a prompt, it builds a **KV cache**: an internal record that saves it
+from processing the same text again. Reusing that cache could reduce latency and cost. This
+project tests when reuse is possible in real agent conversations, both when the same model
+continues the work and when a different model takes over.
+
+```mermaid
+flowchart LR
+    A[Agent conversation] --> B[Model builds a KV cache]
+    B --> C{Who continues?}
+    C -->|Same model| D[Rebuild the prompt<br/>and test the old cache]
+    C -->|Different model| E[Translate the cache<br/>with a linear map]
+    D --> F[Close match in the<br/>tested handoffs]
+    E --> G[Most of the cache still<br/>needs recomputation]
+```
+
+## What the experiments found
+
+- **Same-model reuse survived the tested handoffs.** For the 25 shorter handoffs that fit the
+  experiment's context limit, the old and rebuilt caches were within the registered tolerance.
+  This is an ideal lower bound, not a working cache-reuse system.
+- **A simple cross-model translation was not useful.** A linear map trained on generic text lost
+  accuracy on agent text. At the handoff, an ideal selector still needed to recompute a median of
+  92.86% of matched tokens. Entry 0029 records the result.
+- **Public traces cannot answer the whole cost question.** Model switches were rare in the 2,904
+  public trajectories studied, and the traces omit some information needed for full cache
+  accounting. The reported cost figures are bounds, not production estimates.
+
+The practical result is narrow: a cache-aware router should first ask whether the same model will
+continue. These experiments do not show that a linear map makes caches portable between models.
+
+## How the record stays auditable
+
+The repository treats each result like a registered experiment, not an editable report.
+
+1. The research rule and thresholds are committed before a run starts.
+2. A summarizer recalculates each reported number from the raw output and stops on a mismatch.
+3. The numbered ledger entries are hash-chained and checked in CI, so later edits fail the build.
+
+`ledger/ledger.md` is the source of truth for hypotheses, rules, results, and verdicts. A green test
+suite proves that the tools work. It does not prove a scientific claim.
+
+The original scope boundary remains fixed:
 
 > The screen predicts what a linear mapper can achieve; retention asymmetry beyond that
 > prediction is measured and attributed receiver-side, not explained.
 
-## Aims
+## Research direction
 
-- **LCFM @ NeurIPS 2026 short paper** (4 pages, deadline 2026-09-10 AoE; numbers freeze EOD
-  2026-09-08). Framed as an evaluation of what public agentic long-context traces can and cannot
-  show. Outline: `docs/paper/2026-09-06-lcfm-outline.md`; preface source:
-  `docs/2026-09-06-gap-map-revisited.md`.
-- **MLSys 2027 measurement paper** (anchor venue; due 2026-10-30). Same record, full length.
-- **E-RL** (KV reuse across RL post-training checkpoints): design only, unregistered.
+- **LCFM at NeurIPS 2026:** a four-page paper about what public agent traces can and cannot show.
+  The outline is in `docs/paper/2026-09-06-lcfm-outline.md`.
+- **MLSys 2027:** the longer measurement paper and main publication target.
+- **E-RL:** a future test of cache reuse between reinforcement-learning checkpoints. It is a
+  design only; no experiment is registered yet.
 
-## Contents
+The next proposed experiments cover longer handoffs and a new corpus that records the fields
+missing from public traces.
 
-- [Where the program stands](#where-the-program-stands) — the arc from the shelved screen to the measurement program, and what the record reads as now
-- [What HELD means here](#what-held-means-here) — the one positive cell: its statistic, band, floor reading and scope
-- [Status](#status) — verdict table; how E7 and E8 hold up the E9 result; the descriptive entries 0030–0034
-- [Setup](#setup) — environment, suite and gates
-- [Backups (Hugging Face)](#backups-hugging-face) — the two private datasets, the rules that bound them, restore and verify
-- [Docs map](#docs-map) — where each living document lives and what it is for
+## Read the technical record
 
-## Where the program stands
-
-The program began as a pre-fit screen: could a cheap statistic predict how well a linear
-cross-model KV mapper would work before fitting one (H-S1 to H-S4)? The first gate returned SAME
-on every pair, the screen line was shelved, and the program re-scoped to a measurement question:
-what does the public agent-trace record actually evidence about cache economics? That question
-was answered on 2,904 public trajectories across three suites with a taxonomy of cache-invalidation
-events registered before any count was taken (E7). Two mechanism experiments then tested the
-linear-transfer story on real agent text rather than generic calibration text: whether a mapper
-fit on generic text survives agent content (E8), and whether a receiver's own KV survives a real
-re-rendered handoff (E9).
-
-The record now reads as follows. Mid-trajectory model switches are rare on public traces, come
-from one designed critic family, and the prefill they could recover is immaterial against what
-those trajectories spend. Compaction cannot be estimated, because the traces that could show it
-record none. A linear cross-model map fit on generic text does not hold its fidelity on agent
-text. Same-model KV at a re-rendered handoff needs no recompute at the mapper's tolerance, on an
-oracle floor. The binding finding underneath all four is a recording gap: public trace formats
-omit the fields any cache accounting needs, so every cost figure from them is a bound.
-
-Entries 0030 to 0034 then asked whether the two mechanism cells were artifacts of protocol
-choices, by re-running under the full agent set and under an eight-times-larger calibration. No
-cell moved. The near-term target is the LCFM short paper; its numbers are frozen except the E9
-section, whose summarizer run waits on one operator ruling. The MLSys paper is the anchor venue.
-Two successors are designed but unregistered: E9 on the long half of the handoffs, which needs a
-larger GPU slice, and a self-recorded corpus that carries the missing fields.
+- [What `HELD` means](#what-held-means-here) explains the positive same-model result and its limits.
+- [Status](#status) connects the E7, E8, and E9 experiments to their ledger entries.
+- [Setup](#setup) runs the offline test suite and repository checks.
+- [Backups](#backups-hugging-face) documents how private GPU artifacts are stored and verified.
+- [Docs map](#docs-map) points to the ledger, paper outline, runbooks, and research history.
 
 ## What HELD means here
 
