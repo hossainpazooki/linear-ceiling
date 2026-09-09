@@ -62,6 +62,10 @@ its fingerprint re-verified at home from the raw bytes, not from the puller's lo
 hashes of every small record are diffed against the mirror by path.
 
 **R7 — Release checklist, in order, stop at the first failure.**
+0. The account is shared until proven otherwise (added 2026-09-09; learnings entry of that date). Before any deletion
+   or stop: `ls -la ~` and `ps -u $(whoami)`, and compare against the runbook's own list of files and processes. Anything
+   not ours — a directory, a notebook, a shell, a python — aborts the release: delete nothing, stop nothing, leave the
+   server up, tell the operator. A one-liner that deletes before it lists cannot honor "ours" in step 5.
 1. Mirror complete and re-verified (R6); print the mirror's `report.json` sha256.
 2. Box listing: no tensor directory remains under `results/<exp>/`; if one does, pull and verify it
    first, delete nothing unverified.
@@ -142,6 +146,6 @@ holds the trap list.
 | R2 | 0026 probe table; learnings 2026-09-04 f32 SDPA |
 | R3 | runbook §3b; gate commit `3ef9044` |
 | R4, R5 | 0027 "Box discipline"; runbook §5 |
-| R6, R7 | this session's release report (handoff 2026-09-05) |
+| R6, R7 | this session's release report (handoff 2026-09-05); step 0: the n = 420 runbook's 00:40Z incident (2026-09-09) |
 | R8, R9 | HF dataset at commit `a45e9ee8`; learnings 2026-09-04 upload, 2026-09-05 sharing |
 | R11 | 0028; learnings 2026-09-04 relative check |

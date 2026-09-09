@@ -138,3 +138,88 @@ Prior bound: 7.95 GiB at T = 4,096 on the same model path (entry 0026 probe tabl
   2026-09-08T21:21:08Z.** (7) box vs mirror: `dump.log` `c3501e9ce0d0c019…` and the manifest `201c3146cdd3656b…` identical on
   both sides. No run numbers here; the summarizers at home are where numbers are read.
 - Hub token revoked after release (R9); nothing of it was written inside a checkout or pasted.
+
+## 5. The fit, moved to the box (same sitting)
+
+- 21:18–21:45 the registered fit ran at home (upstream `.venv`, torch 2.13.0+cpu): k = 1 written at 21:21 (its log line
+  `K r2 heldout=0.732 | V heldout=0.590`, an upstream stdout line, not a ledger figure), then k = 4 swapped: the pinned
+  `build_features` materializes an n_train × p float32 matrix (≈ 11 GiB at k = 4, ≈ 22 GiB at k = 8) on top of the two
+  dumps, on a 31.7 GB machine (0 GB free, commit 50.2 / 51.5 GB, ~3,000 page-ins/s). The home process was stopped by the
+  operator at ≈ 21:53 (`taskkill //PID 26124 //F`). Its partial outputs (`mappers/<pair>/n420/k1.*`, 235 MB, written 21:21,
+  and an empty `results/mapper/<pair>/n420/`) were removed at 22:40 — NOT earlier as a first draft of this line said: the
+  removal had been chained to a process-kill command that the harness refused, so neither ran, and the home tag dir was
+  found still present when checked before the pull. Nothing had been scored from them, and the registration names the
+  command and the pin, not the machine.
+- 21:47 box re-entered (new 11 h token, note `lc-n420-fit-2026-09-08`; server restarted; `setup2.sh` again from a fresh
+  clone at `223f469`, venv + torch 2.11.0+cu128 + deps OK; its last step, the token file's sha, tripped because that file
+  is not needed and was not re-uploaded). Inputs pushed through `/api/contents` in 60 MB parts (`push_dumps.py`, ≈ 8–9 MB/s
+  per stream, two streams): both n = 420 halves, each file verified on the box against the HOME manifests
+  (`n420_source.sha256` made from the home bytes; `n420_target.sha256` = the R5 oracle), plus the two 6,400 B probe inputs
+  the fit reads (`results/probe/<pair>/r2_K_stripped_train.npy` `11e3f4a0…`, `r2_V_train.npy` `50f222fc…`, gitignored
+  upstream artifacts of 2026-08-23). `fit.sh` refuses unless pin, clean tree, both manifests 30/30 and an absent tag dir
+  all hold, then launches the exact registered command detached with an rc file.
+- 21:43–22:01 first push (two streams, 60 MB parts, 4 retries × 5 s): 5 files landed and verified, then BOTH streams got
+  `ConnectionResetError(10054)` from the box on every retry within the same 20 s and gave up. Server was healthy
+  (`api/status` 200, load ≈ 20 from other tenants). Stale parts removed.
+- 22:01–22:33 second push, one stream, 32 MB parts, `Connection: close`, 10 retries with 10 s + 10 s·attempt backoff:
+  all 60 files on the box, each reassembled with `cat` and sha256-verified against the home manifest
+  (`push2.log`: 60 × `sha OK`, 0 put errors, 13–17 MB/s per file). 24.7 GB total on the box.
+- 22:34 `fit.sh` invoked; its `sha256sum -c` over both halves outran the 40 s socket (my slip: a launcher that hashes
+  24 GB must itself be detached), so its stdout was lost; the kernel finished it regardless — effects checked below.
+- 22:27:52Z `fit.sh` pre-checks from its captured output: pin `223f469`, clean tree, probe inputs `11e3f4a0…` / `50f222fc…`,
+  `source: 30/30 OK`, `target: 30/30 OK`, tag dir absent; fit launched pid 3488284 — and died at import
+  (`ModuleNotFoundError: No module named 'kvt'`): the launcher omitted `export PYTHONPATH=$PWD` (home runs the upstream's
+  own venv with `kvt` installed; the box venv does not). `fit.log` rotated to `fit.<ts>.halt.log` (R4), relaunched with
+  the path set, same command, same guards (tag dir still absent).
+- 22:28:41Z–23:14Z **the fit on the box**, `EXIT=0`, 0 Tracebacks: k = 1 written 22:31, k = 4 22:42, k = 8 ≈ 23:13,
+  `wrote results/mapper/qwen3-0.6b-to-1.7b/n420/r2.json`. Peak ≈ 42 GB virtual / 32 GB resident, 50–57 cores. Upstream
+  stdout lines (NOT ledger figures; the summarizers recompute):
+  `k=1 … K r2 train=0.740 heldout=0.732 | V train=0.600 heldout=0.590` (identical to the home run's k = 1 line at
+  3 decimals, so the two platforms agree there), `k=4 … 0.789 / 0.760 | 0.672 / 0.625`, `k=8 … 0.818 / 0.764 | 0.718 / 0.633`.
+  Box-side manifest `~/fit_out.sha256` (k1/k4/k8 `.json` + `.safetensors` = 235 MB / 940 MB / 1.88 GB, `r2.json`
+  `efc8995d…`, `fit.log` `f929bb38…`, the halt log `bab46086…`) is the oracle for the pull.
+- 23:16–23:18 `pull_fit.py`: nine files home, each sha = box manifest, then an independent re-hash from raw bytes at home
+  (R6): 9/9 OK, 3,054,186,873 B. Landed in the upstream's own layout (`mappers/qwen3-0.6b-to-1.7b/n420/k{1,4,8}.*`,
+  `results/mapper/qwen3-0.6b-to-1.7b/n420/r2.json`), logs under the mirror's `box-logs-2026-09-08/` (`SHA256SUMS` refreshed,
+  15 entries). The home tag dir was verified EMPTY before landing (puller refuses otherwise).
+- 23:19 gates at home: `e8 --check --config config/e8c.toml` → `E8 gate: ready (entries 0009/0016/0033 committed; upstream
+  pinned and clean)`; `e9_rescore check --config config/e9c.toml` → `E9 rescore ready: mapper n420/k1, upstream 223f46916473,
+  entries 0019, 0023, 0025, 0027, 0029 + 0033`. Both runs launched at home (hidden processes, logs in session scratch).
+- 23:20 box: both dump halves, the fit outputs and the probe inputs deleted after the home re-verify; release sweep follows.
+- 23:18–(running) **home runs, memory note.** `e8 --config config/e8c.toml` and `e9_rescore run` launched together. e8c's
+  arm (a) scores the tagged mapper on its OWN calibration dumps, so the upstream scorer loads the full n = 420 pair
+  (≈ 24 GB committed; the n = 50 amendment's arm (a) needed 2.8 GB) on the 31.7 GB machine, beside the rescore's ≈ 3 GB:
+  0–0.8 GB free, commit 47 / 48 GB, paging, both advancing (scorer CPU 7 min at 23:35; rescore 2/8 handoffs scored). The
+  harness killed the home-side pollers twice for low memory; the runs themselves were not touched. If the scorer dies on
+  the commit limit, the rerun is sequential (rescore first), never a code or config change.
+- 23:52 `e9_rescore run` exited clean: `results/e9c/report.json` (amendment 0033, 8 kept handoffs scored, `scores/` 8 files,
+  `tokens/` 8), empty stderr. `e9_rescore summarize --config config/e9c.toml` launched standalone (fail-closed; any refusal
+  is pasted here verbatim, R11). e8c's scorer still running.
+- 23:57 `e9_rescore summarize` (standalone) REFUSED, verbatim: `E9 rescore REFUSED: C:\Users\hossa\dev\linear-ceiling\results\e8c\report.json
+  missing: the tagged mapper's held-out figure has not been recorded by E8`. Reading: an ordering dependency the config
+  encodes (e9c reads the mapper's held-out R² from e8c's record, not from `r2.json`), not a disagreement; it re-runs after
+  `e8 --config config/e8c.toml` and `summarize_e8` finish. Nothing loosened.
+- 23:55 `e8 --config config/e8c.toml` exited clean after ≈ 37 min under paging: `results/e8c/report.json` (amendment 0033,
+  upstream `223f469`, mapper tag `n420`), `r2/{generic,agent}_k{1,4,8}.json`, `per_token/`. `summarize_e8 --config
+  config/e8c.toml` launched standalone (fail-closed; re-scores from fingerprinted dumps, so the 24 GB pair loads again,
+  alone this time). Then `e9_rescore summarize`, then `append_0034.py`.
+- 00:38Z (09-09) `summarize_e8 --config config/e8c.toml` passed (≈ 42 min, re-scored from fingerprinted dumps, no refusal):
+  `results/e8c/summary.{md,json}`. Its band words are not copied here; 0034 reads them in-process. `e9_rescore summarize`
+  relaunched 00:39Z.
+- 00:39Z (09-09) `e9_rescore summarize` passed on the second run (`wrote results/e9c/summary.json`); `append_0034.py`
+  launched 00:41Z (re-runs both summarizers in-process by design).
+- 00:40:22Z–00:40:23Z **INCIDENT — second release hit another user of the same login.** The sweep one-liner ran its
+  deletions (`~/venv`, `~/.cache/pip`, `~/.cache/huggingface`, my clone) BEFORE its process listing, and the listing then
+  showed a `/bin/bash -l` and a python under `~/venv` that were not mine; the server stop that followed killed them. Found
+  at the same moment: `~/e9-audit-data` (8.9 GB: `align/ calibration/ controls/ mappers/ recheck/ scratch/ scores/ tokens/
+  report.json`, i.e. the E9 record pulled from the HF backup, last write 00:34:52Z), `~/kv-transfer-e9-audit`,
+  `~/linear-ceiling-audit`, `Untitled.ipynb`, `dump{1,2}_download.log`, `ledger_25_30.txt`, `rescore_*.txt` — a co-author's
+  E9 audit in progress on the shared grant account. Their data dir is intact; their process, the venv and the two caches
+  are what was lost. Server restarted 00:40:49Z by them; notebook saved again 00:41:04Z. Nothing on the box touched by me
+  after 00:40:23Z except read-only listings; my restore token revoked 00:43Z; server left running. Operator informed.
+  Learning: `docs/learnings/2026-09-09-a-shared-login-is-not-an-empty-box.md`.
+- 01:0xZ (09-09) at the operator's request, one more login with a 10-minute token to read `~/e9-audit-data/README.md` ONLY
+  (nothing else opened; both tokens revoked, 204 each): it is the dataset card of `hossainpazooki/linear-ceiling-e9-2026-09-04`
+  verbatim. So the other user downloaded the private E9 backup onto the box with a read token to that dataset, and the
+  working files beside it (`ledger_25_30.txt`, `rescore_*.txt`, `chosen_record.txt`, `cold1.*`) are a refutation of
+  0025–0029 in progress on the shared grant login.
