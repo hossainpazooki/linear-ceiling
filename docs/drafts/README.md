@@ -13,7 +13,7 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state (2026-09-09): **0034 appended** by `append_0034.py` (both summarizers in-process, both passed; script deleted in the
+Current state (2026-09-09, later): **`append_0035.py` STAGED** (E9-long registration: H-E9L row `unresolved`, cap 81,920 by YaRN, floor 32,768, the 35 newly included handoffs, controls incl. the configuration bridge and length profiles, the run order + stopping rule, the paper re-scope superseding 0032's space clause; refuses until `config/e9l.toml` carries the real upstream pin, the upstream HEAD is at it with the RoPE spec, and `results/e9l/` holds nothing but `align/coverage.json`). **`append_0036.py` STAGED** (E9-long figures + H-E9L verdict from an in-process `summarize_e9 --config config/e9l.toml`; `verdict: H-E9L = <CELL>` line; run facts as arguments `--box/--launched/--finished`, `--cutoff-reason` required on a partial close; the bridge reading leads the entry when it is SCALED RECEIVER ONLY; refuses until 0035 is on the ledger and the summary passes). Earlier: **0034 appended** by `append_0034.py` (both summarizers in-process, both passed; script deleted in the
 same commit set); **no drafts staged**. Earlier (2026-09-08): **0033 appended** by `append_0033.py` (prose amended first to state the two provenances of the n = 420
 dumps — source CPU 2026-08-24, target GPU 2026-09-08 per `docs/2026-09-08-n420-target-dump-runbook.md`; script deleted in the
 same commit set), the registered fit launched; **`append_0034.py` staged** (the figures entry: refuses until 0033 is committed
