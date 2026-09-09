@@ -45,7 +45,7 @@ statistic, on the long half, under a receiver configuration that can reach those
 | Memory at max \|S\| 80,111 | in-forward KV fp32 **17.1 GiB** + 6.8 GiB fp32 weights, before activations → **a 3g.40gb slice or a full card, never 1g.20gb**; R2 measures the true peak at T = 80,111 on the pinned path | formula 28·2·8·128·4 B/token |
 | Transients | largest fp16 dump 8.6 GiB per side; a kept handoff ≈ up to 20 GiB (S 1.7B + S 0.6B + R 1.7B) | same formula |
 | Home disk | 384 GB free on `C:`; `results/e9/scratch` (8 kept native handoffs) = 45 GB present | `df -h`, `du -sh` |
-| **Measured 2026-09-08 on the 1g.20gb slice** (R2 ladder, pinned path, `logits_to_keep=1`) | 1.7B: 16.72 GiB at T = 32,768, **OOM at 40,960** (18.04 at the throw); 0.6B: 15.24 at 49,152, OOM at 65,536 → **D1(c) does not fit 1g.20gb either; every option needs 3g.40gb or a full card** | `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.out`; n420 runbook §4 21:27 |
+| **Measured 2026-09-08 on the 1g.20gb slice** (R2 ladder, pinned path, `logits_to_keep=1`) | 1.7B: 16.72 GiB at T = 32,768, **OOM at 40,960** (18.04 at the throw); 0.6B: 15.24 at 49,152, OOM at 65,536 → **D1(c) does not fit 1g.20gb either; every option needs 3g.40gb or a full card**. *Extrapolation, not a measurement:* the 0.6B ladder's slope is ≈ 283 KB/token (10.91 → 13.07 GiB over 8,192 tokens; KV alone is 229 KB/token); the 1.7B at T = 80,111 from its 32,768 point is then ≈ 16.7 + 12.5 ≈ **29 GiB**, inside a 3g.40gb slice with ~10 GB to spare, unproven until the §3 item 5 probe runs at that T | `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.out`; n420 runbook §4 21:27 |
 | Box versions (today's sitting) | torch 2.11.0+cu128 (the cu128 index tops out there; driver 570.148.08) · transformers 5.15.1 · numpy 2.5.2 · Python 3.12.6 | n420 runbook §R3 |
 
 ## 2. Decisions for the operator — rule before anything is built
@@ -95,7 +95,11 @@ verdict).
 1. **Upstream** (`kv-transfer-replication`, its own commits; linear-ceiling never edits it):
    rope/model/dump_kv change per D1(a); tests: halt test vs HF `rotary_emb`; strip∘apply identity at
    scaled positions; the existing toy 48-token dump still passes at the native config (regression).
-   Commit; record the sha.
+   Commit; record the sha. **Ordering constraint (box session, 2026-09-08): this commit lands only
+   after entry 0034 is on the record.** `config/e8c.toml` and `config/e9c.toml` pin `223f469` and
+   their gates refuse when any invoked upstream path (`kvt/` included) differs from the pin; a YaRN
+   commit on upstream `main` before 0034 breaks the 0033 chain's gates. The upstream checkout stays at
+   `223f469` until `append_0034.py` has run and `ledger_check` is ok.
 2. **linear-ceiling:** `config/e9l.toml` — pair, a `[e9.rope]` block, `context_cap = 81920`,
    `results_dir = "results/e9l"`, its own scratch, `[e9.keep] n = 3, seed = 9`, `[e9.rule]` copied
    verbatim from `config/e9.toml`, τ_K / τ_V / τ_agent_K / `tau_ladder` copied, `upstream_sha` = the
