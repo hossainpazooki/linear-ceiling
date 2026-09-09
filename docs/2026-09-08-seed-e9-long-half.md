@@ -27,6 +27,22 @@ E8 explains the cross arm. E9 is decided on the shorter half of the handoffs, so
 limitation is length and this experiment is the successor it names. Its result goes to the camera-ready
 or the MLSys version, never into a figure the 4-pager already carries.
 
+> **Why a 3g.40gb slice, for the grant request.** The experiment re-renders 35 long agent handoffs
+> through Qwen3-1.7B in float32 and compares the receiver's KV at the new positions against its KV at
+> the original ones, the same instrument that decided H-E9 on the 25 short handoffs. The long handoffs
+> have sender prompts of 35K to 80K tokens, and the KV cache alone for one 80K-token forward is 17 GiB
+> in float32, beside 6.8 GiB of weights and the activations that grow with length. On the 1g.20gb slice
+> of 2026-09-08 the 1.7B forward was measured at 16.7 GiB at 32K tokens and out of memory at 40,960,
+> which is below the shortest long handoff; no configuration of this experiment fits 20 GB. On a
+> 3g.40gb slice the extrapolated peak at the longest handoff is about 29 GiB, leaving roughly 10 GiB of
+> headroom; a full card is not needed. Compute is not the constraint: the forwards are seconds even on
+> three of seven compute units, and the sitting is bounded by dump I/O and CPU scoring, estimated at
+> three to six hours for about four million prefill tokens. The 40 GB slice is what turns the
+> paper's stated limitation, that its one positive result covers only the shorter half of the
+> observed handoffs, into a measured answer on the longer half. The peak stated here is an
+> extrapolation from the 09-08 ladder and will be replaced by a measured value at T = 80,111 before
+> the request is sent.
+
 ## 0. The question
 
 H-E9 (0029, `HELD`) was decided on the 25 handoffs whose sender prompt fits Qwen3's 32,768-token cap,
