@@ -6,6 +6,56 @@ Each experiment still gets its own dated runbook; this page is what every runboo
 entries cited here are the authority where they overlap; this page adds the box, transport and backup
 discipline the ledger does not carry.
 
+## Quick reference — HF backups and tokens (team)
+
+The backup of a run is a private Hugging Face dataset laid out so `hf download` reconstructs the mirror with no
+translation (R8). Tokens never touch a file inside a checkout, a `--token` flag, shell history, or a chat (R9). The
+commands below are Git Bash / MINGW64 on Windows and plain bash on Linux; the interpreter is `.venv/Scripts/python.exe`
+on Windows and `.venv/bin/python` on Linux.
+
+**Token, once per role, per dataset.** In the Hub UI: Settings → Access Tokens → Create new → *Fine-grained*.
+Name `<exp>-backup-<role>-<holder>-exp-<yyyy-mm-dd>`; Repository permissions on the ONE dataset only; Write for the
+pusher, Read for a collaborator; expiry a week or less. Create the dataset first (New dataset, Private) so the token
+can name it. Then, in the shell you will run the commands from, and nowhere else:
+
+```bash
+read -s HF_TOKEN && export HF_TOKEN      # paste at the silent prompt: nothing lands in history or on disk
+# ... run the commands below in this same shell ...
+unset HF_TOKEN                           # then revoke the token in the UI; one that was pasted anywhere is revoked
+```
+
+**Push, in R8 order, from the verified home mirror only** (stage a copy in the upstream's own layout and re-hash it
+against the manifests first; never push from the box):
+
+```bash
+HF=.venv/Scripts/hf.exe; REPO=hossainpazooki/linear-ceiling-<exp>-<yyyy-mm-dd>; ST=<staging dir>
+cd "$ST"
+$HF upload "$REPO" <small-records-dir> <same path in repo> --repo-type dataset --quiet    # 1. small records first (manifests, logs, json)
+$HF upload-large-folder "$REPO" "$ST" --repo-type dataset --num-workers 1                 # 2. the tensors: ONE resumable run, ONE worker on Windows
+$HF upload "$REPO" README.md README.md --repo-type dataset --quiet                        # 3. the card last: it is the "complete" marker
+```
+
+Gotchas that cost real time: `upload-large-folder` takes the whole tree — do not pass `--include` patterns (`hf.exe`
+globs them itself and the extra matches become stray arguments); more than one worker wedges at 0 bytes on Windows
+(learnings 2026-09-04); rerunning the same command resumes.
+
+**Verify from the Hub's own hashes, never from the uploader's log:**
+
+```bash
+.venv/Scripts/python.exe tools/hf_verify_backup.py "$REPO" "$ST" --exclude README.md    # must end in: BACKUP VERIFIED
+```
+
+It compares every LFS file's `lfs.sha256` to the local sha256, downloads and hashes every non-LFS file, and checks
+both directions for missing files (the Hub's own `.gitattributes` is ignored). The dataset name and the card's
+revision go into the runbook and the handoff; the local mirror stays the summarizer's only input.
+
+**Collaborators:** a private user-namespace dataset cannot be shared per user (learnings 2026-09-05); give a read
+token, or move the dataset to an organization. A collaborator reconstructs a mirror with
+`hf download "$REPO" --repo-type dataset --local-dir <checkout>` and verifies it the same way.
+
+**Datasets on the record:** E9 `hossainpazooki/linear-ceiling-e9-2026-09-04` (card `a45e9ee8`); n = 420 calibration
+pair + `n420` mapper `hossainpazooki/linear-ceiling-n420-2026-09-08` (card `8675b719`).
+
 ## The shape of a GPU day
 
 A GPU run is a batch job that exists for one reason: to write `results/<exp>/` records that a CPU
