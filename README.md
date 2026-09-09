@@ -31,9 +31,9 @@ hash-chained. `ledger/ledger.md` is the authority on state.
 Descriptive amendments, no cell moves: 0030 (E8 arm (b) over every agent sequence; figures in
 0031) · 0032 (E9 admitted to the 4-pager) · 0033 (calibration-size sensitivity: the k = 1 mapper
 refit on n = 420 sequences, E8 arms and the E9 kept-subset cross arm re-scored; registered before
-the fit) · 0034 (its figures, staged).
+the fit) · 0034 (its figures).
 
-**Now:** the upstream fit under tag `n420` → E8c and E9c runs → 0034 → freeze → the 4-pager.
+**Now:** freeze → the 4-pager.
 Newest brief: `docs/handoff/HANDOFF.md`.
 
 ## Setup

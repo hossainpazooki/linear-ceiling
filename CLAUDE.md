@@ -131,7 +131,9 @@ and a separate `results/e8a/`; the H-E8 cell and τ_agent_K do not move; figures
 the n = 420 dumps under tag `n420`, E8 arms via `config/e8c.toml`, E9 kept-subset cross arm via `config/e9c.toml`; descriptive)
 appended 2026-09-08 after the n = 420 TARGET half was dumped on an Algoverse H100 MIG 1g.20gb slice
 (`docs/2026-09-08-n420-target-dump-runbook.md`; the 2026-08-25 CPU attempt had died with nothing written, so the source half
-is CPU 08-24 and the target half GPU 09-08, stated in 0033); 0034 (its figures) staged. **E-RL** (KV reuse
+is CPU 08-24 and the target half GPU 09-08, stated in 0033); the registered fit ran on the same box (home swapped at k = 4);
+0034 (its figures: e8c + e9c summarizers, both passed) appended 2026-09-09. The box release hit a co-author's audit on the
+shared login → protocol R7 step 0 + learnings 2026-09-09. **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own
