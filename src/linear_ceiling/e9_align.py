@@ -88,8 +88,11 @@ class Alignment:
     text_sha256: str          # sha256 over sender_text + "\x00" + receiver_text
 
 
-def align(h: Handoff, encode, context_cap: int) -> tuple[Alignment, np.ndarray | None, np.ndarray | None, np.ndarray | None]:
-    """(alignment record, sender ids, receiver ids, pairs) -- ids/pairs are None when excluded."""
+def align(h: Handoff, encode, context_cap: int, context_floor: int = 0) -> tuple[Alignment, np.ndarray | None, np.ndarray | None, np.ndarray | None]:
+    """(alignment record, sender ids, receiver ids, pairs) -- ids/pairs are None when excluded.
+
+    `context_floor` (E9-long, entry 0035): a handoff whose |S| AND |R| are both within the floor was
+    decided under the prior cap (0029) and is EXCLUDED here, counted with its own reason, never pooled."""
     s_ids, r_ids = encode(h.sender_text), encode(h.receiver_text)
     digest = hashlib.sha256((h.sender_text + "\x00" + h.receiver_text).encode("utf-8")).hexdigest()
     if not r_ids:
@@ -101,6 +104,10 @@ def align(h: Handoff, encode, context_cap: int) -> tuple[Alignment, np.ndarray |
     if too_long:
         rec = Alignment(h.handoff_id, len(s_ids), len(r_ids), 0, True,
                         f"{'/'.join(too_long)} exceeds context cap {context_cap}", digest)
+        return rec, None, None, None
+    if context_floor and max(len(s_ids), len(r_ids)) <= context_floor:
+        rec = Alignment(h.handoff_id, len(s_ids), len(r_ids), 0, True,
+                        f"S and R within context floor {context_floor} (decided under the prior cap)", digest)
         return rec, None, None, None
     pairs = matching_pairs(s_ids, r_ids)
     rec = Alignment(h.handoff_id, len(s_ids), len(r_ids), int(pairs.shape[0]), False, None, digest)
@@ -130,13 +137,15 @@ def coverage_comparison(records: list, headroom_rows: list, summary_fn) -> dict:
     32,768 cap selects on; decides nothing. Excluded handoffs whose R is empty have no |R| and no
     0018 row worth reading, and are counted separately."""
     by_id = {f"{r['traj_id']}#{r['switch_index']}": r for r in headroom_rows}
-    groups = {"included": [], "excluded_long": [], "excluded_empty_r": []}
+    groups = {"included": [], "excluded_long": [], "excluded_empty_r": [], "excluded_prior_cap": []}
     for rec in records:
         r = rec if isinstance(rec, dict) else asdict(rec)
         if not r["excluded"]:
             groups["included"].append(r)
         elif r["n_receiver"] == 0:
             groups["excluded_empty_r"].append(r)
+        elif "context floor" in (r.get("reason") or ""):     # E9-long (0035): decided under the prior cap
+            groups["excluded_prior_cap"].append(r)
         else:
             groups["excluded_long"].append(r)
     out = {"n": {k: len(v) for k, v in groups.items()}, "unmatched_0018_rows": 0}

@@ -220,6 +220,18 @@ class E9Config:
     rule: dict          # entry 0023: statistic, holds_max, degrades_min, tau_K, tau_V
     controls: dict      # entry 0023: null_seed, seam_bins
     config_path: Path
+    # ---- E9-long (registration entry 0035; config/e9l.toml). Every field below defaults to E9's own
+    # behaviour so config/e9.toml (whose sha is recorded in results/e9/report.json) is untouched.
+    context_floor: int = 0                       # handoffs with |S| AND |R| within the floor are EXCLUDED (decided under the prior cap)
+    rope: dict | None = None                     # HF rope_scaling applied to every dump of the run (None = the native RoPE)
+    required_entries: tuple = ()                 # ledger markers the gate requires; () = the driver's E9 default
+    order_by: str = "id"                         # run order of the included handoffs: "id" | "n_sender_asc"
+    allow_partial: bool = False                  # `e9 --close-partial` may close an unfinished run (prefix of the registered order)
+    bridge: dict | None = None                   # {"handoffs": [...], "reading_max_fstar": x}: native-vs-scaled receiver control
+    profiles: dict | None = None                 # {"s_len_edges": [...], "s_pos_edges": [...]}: descriptive length profiles
+
+
+_ROPE_KEYS = ("rope_type", "factor", "original_max_position_embeddings")
 
 
 def load_e9_config(path: Path, repo_root: Path) -> E9Config:
@@ -253,14 +265,57 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
     if not (isinstance(ctl["bootstrap_reps"], int) and ctl["bootstrap_reps"] >= 100 and isinstance(ctl["bootstrap_seed"], int)):
         raise ValueError("config/e9.toml [e9.controls] bootstrap_seed must be an int and bootstrap_reps an int >= 100 (entry 0025)")
     root = Path(repo_root)
+    # ---- E9-long fields (entry 0035), each validated only when present
+    cap = int(e9["handoffs"]["context_cap"])
+    floor = int(e9["handoffs"].get("context_floor", 0))
+    if not (0 <= floor < cap):
+        raise ValueError(f"{path.name} [e9.handoffs] context_floor must satisfy 0 <= floor < context_cap (entry 0035)")
+    rope = e9.get("rope")
+    if rope is not None:
+        rope = dict(rope)
+        missing = [k for k in _ROPE_KEYS if k not in rope]
+        if missing or float(rope["factor"]) <= 1.0 or int(rope["original_max_position_embeddings"]) <= 0:
+            raise ValueError(f"{path.name} [e9.rope] needs {_ROPE_KEYS} with factor > 1 (HF rope_scaling form; entry 0035)")
+        if cap > int(round(int(rope["original_max_position_embeddings"]) * float(rope["factor"]))):
+            raise ValueError(f"{path.name}: context_cap {cap} exceeds the scaled window "
+                             f"{rope['original_max_position_embeddings']} x {rope['factor']} (entry 0035)")
+    gate = e9.get("gate", {})
+    req = tuple(str(x) for x in gate.get("required_entries", ()))
+    if any(not (len(x) == 4 and x.isdigit()) for x in req):
+        raise ValueError(f"{path.name} [e9.gate] required_entries must be four-digit entry numbers")
+    order = e9.get("order", {})
+    order_by = str(order.get("by", "id"))
+    if order_by not in ("id", "n_sender_asc"):
+        raise ValueError(f"{path.name} [e9.order] by must be 'id' or 'n_sender_asc' (entry 0035)")
+    allow_partial = bool(order.get("allow_partial", False))
+    bridge = e9.get("bridge")
+    if bridge is not None:
+        bridge = dict(bridge)
+        hs = bridge.get("handoffs")
+        if not (isinstance(hs, list) and hs and all(isinstance(h, str) for h in hs) and len(set(hs)) == len(hs)):
+            raise ValueError(f"{path.name} [e9.bridge] handoffs must be a non-empty list of distinct handoff ids (entry 0035)")
+        if not (isinstance(bridge.get("reading_max_fstar"), (int, float)) and 0 < float(bridge["reading_max_fstar"]) < 1):
+            raise ValueError(f"{path.name} [e9.bridge] reading_max_fstar must be in (0, 1) (entry 0035)")
+        if rope is None:
+            raise ValueError(f"{path.name} [e9.bridge] needs [e9.rope]: the bridge compares the scaled receiver with the native one")
+    profiles = e9.get("profiles")
+    if profiles is not None:
+        profiles = dict(profiles)
+        for key, lo in (("s_len_edges", floor), ("s_pos_edges", -1)):
+            edges = profiles.get(key)
+            if (not isinstance(edges, list) or not edges or any(not isinstance(x, int) for x in edges)
+                    or any(a >= b for a, b in zip(edges, edges[1:])) or edges[0] < lo or edges[-1] >= cap):
+                raise ValueError(f"{path.name} [e9.profiles] {key} must be strictly increasing ints inside [{max(lo, 0)}, cap) (entry 0035)")
     return E9Config(
         pair=e9["pair"], results_dir=root / e9["results_dir"], scratch_dir=root / e9["scratch_dir"],
         upstream_path=(root / e9["upstream_path"]).resolve(), upstream_sha=str(e9["upstream_sha"]),
         suite=e9["handoffs"]["suite"], agent=e9["handoffs"]["agent"],
-        context_cap=int(e9["handoffs"]["context_cap"]), alignment_method=e9["alignment"]["method"],
+        context_cap=cap, alignment_method=e9["alignment"]["method"],
         mapper_k=int(e9["mapper"]["k"]), mapper_space=e9["mapper"]["space"],
         keep_seed=int(e9["keep"]["seed"]), keep_n=int(e9["keep"]["n"]),
         rule=dict(e9["rule"]), controls=dict(e9["controls"]), config_path=path,
+        context_floor=floor, rope=rope, required_entries=req, order_by=order_by, allow_partial=allow_partial,
+        bridge=bridge, profiles=profiles,
     )
 
 

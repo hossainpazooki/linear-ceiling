@@ -121,7 +121,7 @@ def test_0025_outputs_are_present_consistent_and_descriptive(ran):
     assert 0.0 <= fig["delta_null_equal_token_fraction"] <= 1.0
     assert fig["prefix_control"] == {"max_token_delta": 0.0, "tolerance": 1e-4, "n_positions": fig["prefix_control"]["n_positions"]}
     cc = fig["coverage_comparison"]
-    assert cc["n"] == {"included": 1, "excluded_long": 1, "excluded_empty_r": 0} and len(cc["e7_report_sha256"]) == 64
+    assert cc["n"] == {"included": 1, "excluded_long": 1, "excluded_empty_r": 0, "excluded_prior_cap": 0} and len(cc["e7_report_sha256"]) == 64
     assert cc["included"]["overlap_fraction_0018"]["n"] == 1 and cc["excluded_long"]["n_sender"]["median"] > 100
     for s in ("ALONGSIDE", "bootstrap of the median", "CAUSAL distance b^-(t)", "matched-block lengths",
               "equal token ids", "prefix-invariance control", "coverage (entry 0025)"):

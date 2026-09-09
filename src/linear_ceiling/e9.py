@@ -51,10 +51,29 @@ UPSTREAM_PATHS = ("scripts/dump_kv.py", "scripts/score_positions.py", "scripts/s
 _PENDING = "UPSTREAM_SHA_PENDING"
 
 
+def required_markers(cfg: E9Config) -> tuple:
+    """The ledger headings the gate requires: config/e9.toml's five (E9, unchanged), or the list a
+    later config carries in [e9.gate] (E9-long: entry 0035 and the rule entries it inherits)."""
+    if cfg.required_entries:
+        return tuple(f"### {n} " for n in cfg.required_entries)
+    return REQUIRED_ENTRIES
+
+
+def entry_list(cfg: E9Config) -> str:
+    return "/".join(m.strip("# ").strip() for m in required_markers(cfg))
+
+
+def rope_args(cfg: E9Config) -> list[str]:
+    """`--rope-scaling <json>` for every upstream dump of a scaled run (E9-long); nothing for E9."""
+    return ["--rope-scaling", json.dumps(cfg.rope, sort_keys=True)] if cfg.rope else []
+
+
 def assert_ready(cfg: E9Config, repo_root: Path) -> None:
+    cname = cfg.config_path.name
     if _PENDING in cfg.upstream_sha:
-        raise RuntimeError("E9 REFUSED: config/e9.toml still carries the pending upstream pin placeholder; "
-                           "commit the upstream change and record its sha (entry 0023 for --per-token; entry 0026 for the attention re-pin)")
+        raise RuntimeError(f"E9 REFUSED: config/{cname} still carries the pending upstream pin placeholder; "
+                           "commit the upstream change and record its sha (entry 0023 for --per-token; entry 0026 for the attention re-pin; "
+                           "entry 0035 for the RoPE spec)")
     mapper = cfg.upstream_path / "mappers" / cfg.pair / f"k{cfg.mapper_k}.safetensors"
     if not mapper.exists():   # gitignored E8 artifact; a fresh clone never has it (the 2026-09-04 box run died here after the first handoff's dumps)
         raise RuntimeError(f"E9 REFUSED: mapper artifact missing at {mapper}; copy mappers/{cfg.pair}/k{cfg.mapper_k}.json "
@@ -63,13 +82,13 @@ def assert_ready(cfg: E9Config, repo_root: Path) -> None:
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
-            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries 0019/0023/0025/0026/0027 and config/e9.toml "
+            raise RuntimeError(f"E9 REFUSED: {rel} is not committed as-is; entries {entry_list(cfg)} and config/{cname} "
                                "must be committed before any prefill")
     committed = subprocess.run(["git", "show", "HEAD:ledger/ledger.md"], cwd=repo_root,
                                capture_output=True, text=True, encoding="utf-8")
     if committed.returncode != 0:
         raise RuntimeError("E9 REFUSED: cannot read HEAD:ledger/ledger.md")
-    for marker in REQUIRED_ENTRIES:
+    for marker in required_markers(cfg):
         if marker not in committed.stdout:
             raise RuntimeError(f"E9 REFUSED: committed ledger has no entry {marker.strip('# ').strip()}")
     check_upstream(cfg.upstream_path, cfg.upstream_sha, UPSTREAM_PATHS, who="E9")
@@ -146,10 +165,54 @@ def dump_handoff(cfg: E9Config, hdir: Path, s_ids: np.ndarray, r_ids: np.ndarray
     for name, (tok, which) in dumps.items():
         run_upstream(cfg, ["scripts/dump_kv.py", "--pair", cfg.pair, "--which", which,
                            "--tokens", str(tok.resolve()), "--stride", "1",
-                           "--out", str((hdir / name).resolve())], runner)
+                           "--out", str((hdir / name).resolve()), *rope_args(cfg)], runner)
         if not (hdir / name / "meta.json").exists():
             raise RuntimeError(f"E9 REFUSED: dump did not produce {hdir / name}/meta.json")
     return dumps
+
+
+def run_bridge(cfg: E9Config, handoffs: list, enc, runner=subprocess.run) -> dict:
+    """E9-long control 4 (entry 0035): the SCALED receiver against the NATIVE one on the same tokens,
+    on the same box. For each registered bridge handoff (short ones from 0029's kept subset) the
+    receiver prefills S twice -- once with the native RoPE, once under [e9.rope] -- and the two dumps
+    are scored at pairs (p, p) over every sender position. Both dumps are kept and fingerprinted so the
+    summarizer re-scores them from tensors. The reading is fixed in config (`reading_max_fstar`) and
+    stated by the summarizer, never here. Runs BEFORE the first long handoff so a late failure cannot
+    lose it."""
+    if not cfg.bridge:
+        return {}
+    by_id = {h.handoff_id: h for h in handoffs}
+    out = {"reading_max_fstar": float(cfg.bridge["reading_max_fstar"]), "handoffs": {}}
+    bdir = cfg.results_dir / "bridge"
+    for hid in cfg.bridge["handoffs"]:
+        if hid not in by_id:
+            raise RuntimeError(f"E9 REFUSED: bridge handoff {hid} is not among the observed handoffs")
+        rec, s_ids, _, _ = align(by_id[hid], enc, cfg.context_cap)      # no floor: bridge handoffs sit below it by design
+        if rec.excluded:
+            raise RuntimeError(f"E9 REFUSED: bridge handoff {hid} is excluded at the cap ({rec.reason})")
+        stem = _stem(hid)
+        hdir = bdir / stem
+        hdir.mkdir(parents=True, exist_ok=True)
+        tok_s = hdir / "S.npy"
+        np.save(tok_s, s_ids.reshape(1, -1))
+        for name, extra in (("same_src", []), ("scaled", rope_args(cfg))):
+            run_upstream(cfg, ["scripts/dump_kv.py", "--pair", cfg.pair, "--which", "target",
+                               "--tokens", str(tok_s.resolve()), "--stride", "1",
+                               "--out", str((hdir / name).resolve()), *extra], runner)
+            if not (hdir / name / "meta.json").exists():
+                raise RuntimeError(f"E9 REFUSED: bridge dump did not produce {hdir / name}/meta.json")
+        n_s = int(s_ids.shape[0])
+        pairs_file = hdir / "identity_pairs.npz"
+        np.savez(pairs_file, pairs=np.stack([np.arange(n_s), np.arange(n_s)], 1).astype(np.int64))
+        brec = score_pairs(cfg, hdir, pairs_file, bdir / f"{stem}.json", bdir / f"{stem}.tokens.npz",
+                           cross=False, same_tgt="scaled", runner=runner)
+        brec.update({"handoff_id": hid, "n_sender": n_s, "pairs_file": pairs_file.name,
+                     "pairs_sha256": sha256_file_bytes(pairs_file),
+                     "kept_dumps": {name: dump_fingerprint(hdir / name) for name in ("same_src", "scaled")},
+                     "kept_dir": hdir.resolve().relative_to(cfg.results_dir.resolve()).as_posix()})
+        out["handoffs"][hid] = brec
+        print(f"[bridge] {hid}: native vs scaled receiver, same K R² {brec['same_K_r2_layer_mean']:.4f} over {n_s} positions")
+    return out
 
 
 def prefix_invariance_max_delta(score_json: Path, tokens_npz: Path, n_s: int) -> float:
@@ -191,7 +254,8 @@ def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, r_ids: 
     plus_dir, tok_p = hdir / "same_src_plus1", hdir / "S_plus1.npy"
     np.save(tok_p, np.concatenate([s_ids, r_ids[:1]]).reshape(1, -1))
     run_upstream(cfg, ["scripts/dump_kv.py", "--pair", cfg.pair, "--which", "target",
-                       "--tokens", str(tok_p.resolve()), "--stride", "1", "--out", str(plus_dir.resolve())], runner)
+                       "--tokens", str(tok_p.resolve()), "--stride", "1", "--out", str(plus_dir.resolve()),
+                       *rope_args(cfg)], runner)
     if not (plus_dir / "meta.json").exists():
         raise RuntimeError(f"E9 REFUSED: prefix-invariance dump did not produce {plus_dir}/meta.json")
     pre = score_pairs(cfg, hdir, id_pairs, cdir / "prefix.json", cdir / "prefix.tokens.npz",
@@ -251,7 +315,7 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
     align_dir = cfg.results_dir / "align"
     records, included, blocks = [], [], {}
     for h in load_handoffs(submission_dirs(e7, cfg), counter):
-        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap)
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor)
         write_alignment(align_dir, rec, s_ids, r_ids, pairs)
         records.append(asdict(rec))
         if not rec.excluded:
@@ -263,8 +327,10 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
                                     "tokens_in_blocks_ge_min": int((bl >= int(cfg.rule["min_block_len"])).sum())}
     included = sorted(included)
     out = {"config_sha256": sha256_text_file(cfg.config_path), "context_cap": cfg.context_cap,
+           "context_floor": cfg.context_floor, "rope": cfg.rope,
            "coverage": {"observed": len(records), "included": len(included), "excluded": len(records) - len(included)},
            "exclusion_reasons": sorted({r["reason"] for r in records if r["excluded"]}),
+           "run_order": run_order(records, included, cfg.order_by), "order_by": cfg.order_by,
            "keep_subset": keep_subset(included, cfg.keep_seed, cfg.keep_n),
            "min_block_len": int(cfg.rule["min_block_len"]), "blocks_per_handoff": blocks,
            "alignments": records}
@@ -274,8 +340,35 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
     return p
 
 
+def run_order(records: list, included: list[str], order_by: str) -> list[str]:
+    """The registered order the driver scores in (entry 0035 stopping rule): by id (E9), or by |S|
+    ascending with the id as tie-break (E9-long), so a run stopped at the cutoff has scored a PREFIX."""
+    if order_by == "id":
+        return sorted(included)
+    n_s = {(r["handoff_id"] if isinstance(r, dict) else r.handoff_id): (r["n_sender"] if isinstance(r, dict) else r.n_sender)
+           for r in records}
+    return sorted(included, key=lambda h: (n_s[h], h))
+
+
+def _resumable(report: dict, cfg: E9Config) -> dict:
+    """Entry 0035: a relaunch after a crash keeps the checkpoint's bridge, controls and every scored
+    handoff whose score and per-token files still match their recorded hashes; anything else is redone.
+    The checkpoint must be this config's and this pin's, and must not be complete."""
+    if report.get("complete"):
+        raise RuntimeError("E9 REFUSED: --resume on a complete report; nothing to resume (delete it to rerun)")
+    if report.get("config_sha256") != sha256_text_file(cfg.config_path) or report.get("upstream_sha") != cfg.upstream_sha:
+        raise RuntimeError("E9 REFUSED: --resume checkpoint was written under another config or pin")
+    kept = {}
+    for hid, rec in (report.get("scores") or {}).items():
+        sf, tf = cfg.results_dir / "scores" / rec["score_file"], cfg.results_dir / "tokens" / rec["tokens_file"]
+        if (sf.exists() and tf.exists() and sha256_file_bytes(sf) == rec["score_sha256"]
+                and sha256_file_bytes(tf) == rec["tokens_sha256"]):
+            kept[hid] = rec
+    return kept
+
+
 def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
-        encoder=None) -> Path:
+        encoder=None, resume: bool = False) -> Path:
     assert_ready(cfg, repo_root)
     src_id, _ = pair_models(cfg.pair)
     enc = encoder or qwen_encoder(snapshot(src_id))
@@ -284,28 +377,54 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
     align_dir = cfg.results_dir / "align"
     records, aligned = [], {}
     for h in handoffs:
-        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap)
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor)
         write_alignment(align_dir, rec, s_ids, r_ids, pairs)
         records.append(rec)
         if not rec.excluded:
             aligned[h.handoff_id] = (s_ids, r_ids, pairs)
     included = sorted(aligned)
+    order = run_order(records, included, cfg.order_by)
     keep = keep_subset(included, cfg.keep_seed, cfg.keep_n)
+    cfg.results_dir.mkdir(parents=True, exist_ok=True)
+    out = cfg.results_dir / "report.json"
+    prior_scores, prior = {}, None
+    if resume:
+        if not out.exists():
+            raise RuntimeError("E9 REFUSED: --resume without a checkpoint report")
+        prior = json.loads(out.read_text(encoding="utf-8"))
+        prior_scores = _resumable(prior, cfg)
+    elif out.exists() and not json.loads(out.read_text(encoding="utf-8")).get("complete"):
+        raise RuntimeError("E9 REFUSED: an unfinished report exists; relaunch with --resume to keep its scored handoffs, "
+                           "or delete it to start over (a rotated log first, R4)")
     report = {
         "config_sha256": sha256_text_file(cfg.config_path),   # newline-normalized: the box writes LF, home checks out CRLF
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
         "alignment_method": cfg.alignment_method, "context_cap": cfg.context_cap,
+        "context_floor": cfg.context_floor, "rope": cfg.rope,          # entry 0035 (E9: 0 and null)
         "coverage": {"observed": len(records), "included": len(included),
                      "excluded": len(records) - len(included)},
         "alignments": [asdict(r) for r in records],
-        "keep_subset": keep, "controls": None, "scores": {}, "complete": False,
+        "run_order": order, "order_by": cfg.order_by,
+        "keep_subset": keep, "bridge": None, "controls": None, "scores": {}, "complete": False,
+        "resumed_from": {"scored": sorted(prior_scores), "bridge": bool(prior and prior.get("bridge")),
+                         "controls": bool(prior and prior.get("controls"))} if resume else None,
         "note": "f*, medians and the H-E9 verdict travel only through summarize_e9 and a numbered entry",
     }
-    cfg.results_dir.mkdir(parents=True, exist_ok=True)
-    out = cfg.results_dir / "report.json"
-    for i, hid in enumerate(included):
+    if prior and prior.get("bridge"):
+        report["bridge"] = prior["bridge"]
+    elif cfg.bridge:
+        report["bridge"] = run_bridge(cfg, handoffs, enc, runner)
+        out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint: the bridge survives a later crash
+    if prior and prior.get("controls") and prior["controls"]["handoff_id"] == order[0] and order[0] in prior_scores:
+        report["controls"] = prior["controls"]
+    for i, hid in enumerate(order):
         stem = _stem(hid)
         s_ids, r_ids, pairs = aligned[hid]
+        if hid in prior_scores and (i > 0 or report["controls"] is not None):
+            report["scores"][hid] = prior_scores[hid]
+            out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+            print(f"[{i + 1}/{len(order)}] {hid}: kept from the checkpoint (score and per-token files match their hashes)")
+            continue
         t0 = time.time()
         rec, controls = score_handoff(cfg, stem, s_ids, r_ids, align_dir / f"{stem}.npz",
                                       keep=hid in keep, runner=runner,
@@ -315,10 +434,40 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
         report["scores"][hid] = rec
         report["scores"][hid]["seconds"] = time.time() - t0
         out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint per handoff
-        print(f"[{i + 1}/{len(included)}] {hid}: same K "
+        print(f"[{i + 1}/{len(order)}] {hid}: same K "
               f"{report['scores'][hid]['same_K_r2_layer_mean']:.4f} in {report['scores'][hid]['seconds']:.0f}s")
     report["complete"] = True
     out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    return out
+
+
+def close_partial(cfg: E9Config) -> Path:
+    """Entry 0035 stopping rule: close an unfinished run at the operator's cutoff. Allowed only when
+    the config registers it; the scored set must be a prefix of the registered run order (it is, by
+    construction, unless files were removed); the unscored handoffs are named in the report and the
+    verdict entry, and coverage travels with every number the summarizer states."""
+    if not cfg.allow_partial:
+        raise RuntimeError("E9 REFUSED: this config does not register a partial close ([e9.order] allow_partial)")
+    out = cfg.results_dir / "report.json"
+    if not out.exists():
+        raise RuntimeError("E9 REFUSED: no report to close")
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    if rep.get("complete"):
+        raise RuntimeError("E9 REFUSED: the report is already complete")
+    if rep.get("config_sha256") != sha256_text_file(cfg.config_path):
+        raise RuntimeError("E9 REFUSED: the report was written under another config")
+    order, scored = rep["run_order"], list(rep["scores"])
+    if scored != order[:len(scored)]:
+        raise RuntimeError("E9 REFUSED: the scored set is not a prefix of the registered run order")
+    if not scored:
+        raise RuntimeError("E9 REFUSED: nothing scored; there is no partial run to close")
+    if rep.get("controls") is None:
+        raise RuntimeError("E9 REFUSED: the controls never ran; a run without them cannot be closed")
+    rep["partial"] = {"closed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                      "n_scored": len(scored), "n_registered": len(order), "unscored": order[len(scored):]}
+    rep["complete"] = True
+    out.write_text(json.dumps(rep, indent=1), encoding="utf-8")
+    print(f"E9 partial close: {len(scored)} of {len(order)} scored; unscored named in report.json")
     return out
 
 
@@ -330,18 +479,27 @@ def main(argv=None) -> int:
     ap.add_argument("--align-only", action="store_true",
                     help="entry 0025: write every alignment (ids, pairs, records) and the coverage report under "
                          "results/e9/align before any prefill; CPU, no gate, no upstream, no dump")
+    ap.add_argument("--resume", action="store_true",
+                    help="entry 0035: relaunch after a crash keeping the checkpoint's bridge, controls and every scored "
+                         "handoff whose files match their recorded hashes; same config and pin required")
+    ap.add_argument("--close-partial", action="store_true",
+                    help="entry 0035 stopping rule: close an unfinished run at the cutoff (allowed only by config); the "
+                         "scored set must be a prefix of the registered run order; the unscored are named in the report")
     a = ap.parse_args(argv)
     cfg = load_e9_config(Path(a.config), REPO_ROOT)
     try:
         if a.check:
             assert_ready(cfg, REPO_ROOT)
-            print("E9 gate: ready (entries 0019, 0023, 0025, 0026 and 0027 committed; upstream pinned and clean)")
+            print(f"E9 gate: ready (entries {entry_list(cfg)} committed; upstream pinned and clean; config/{cfg.config_path.name})")
             return 0
         if a.align_only:
             out = align_only(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT))
             print(f"E9 alignments: {out}")
             return 0
-        out = run(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT), repo_root=REPO_ROOT)
+        if a.close_partial:
+            print(f"E9 report: {close_partial(cfg)}")
+            return 0
+        out = run(cfg, load_e7_config(Path(a.e7_config), REPO_ROOT), repo_root=REPO_ROOT, resume=a.resume)
         print(f"E9 report: {out}")
         return 0
     except RuntimeError as e:

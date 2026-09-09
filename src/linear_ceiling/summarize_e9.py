@@ -42,7 +42,7 @@ from linear_ceiling.config import E9Config, load_e7_config, load_e9_config
 from linear_ceiling.e7_stats import summary
 from linear_ceiling.e8_text import qwen_encoder
 from linear_ceiling.e9 import (UPSTREAM_PATHS, _stem, dump_fingerprint, keep_subset, prefix_invariance_max_delta,
-                               run_upstream, submission_dirs)
+                               run_order, run_upstream, submission_dirs)
 from linear_ceiling.e7_stats import quantile as _quantile
 from linear_ceiling.e9_align import coverage_comparison
 from linear_ceiling.e9_pertoken import (BLOCK_BIN_LABELS, block_bin, block_lengths, bootstrap_median_interval,
@@ -102,12 +102,12 @@ def _sst(body: dict, part: str, key: str) -> np.ndarray:
     return np.asarray([layer["sst"] for layer in body[part][key]], dtype=np.float64)       # [L, H]
 
 
-def _rescore_agreement(box: dict, home: dict, who: str) -> dict:
+def _rescore_agreement(box: dict, home: dict, who: str, arms=ARMS) -> dict:
     """Entry 0028: a kept dump re-scored at home against the box's per-token record. Per-head float64 sums
     of the squares must agree to _SUM_TOL; every individual float32 square to _RESCORE_RTOL relative (no
     absolute floor). Returns the agreement figures the ledger cites, per arm."""
     out = {}
-    for arm in ARMS + ("ref_K", "ref_V"):
+    for arm in tuple(arms) + ("ref_K", "ref_V"):
         if arm not in box or arm not in home:
             raise ValueError(f"{who}: re-score record lacks {arm}")
         a, b = np.asarray(box[arm], dtype=np.float64), np.asarray(home[arm], dtype=np.float64)
@@ -314,7 +314,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         raise ValueError(f"handoff set differs: recomputed {len(handoffs)}, recorded {len(recorded)}")
     included, pairs_of, n_recv, ids_of = [], {}, {}, {}
     for hid, h in sorted(handoffs.items()):
-        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap)
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor)     # floor: E9-long (0035); 0 for E9
         if asdict(rec) != recorded[hid]:
             raise ValueError(f"{hid}: alignment record does not re-derive from the raw trace")
         if not rec.excluded:
@@ -337,15 +337,34 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     coverage_cmp["e7_report_sha256"] = sha256_file_bytes(e7_report)
     if keep_subset(included, cfg.keep_seed, cfg.keep_n) != rep["keep_subset"]:
         raise ValueError("keep_subset does not re-derive from the seed and the included set")
-    if set(rep.get("scores") or {}) != set(included):
+    if rep.get("context_floor", 0) != cfg.context_floor or rep.get("rope") != cfg.rope:
+        raise ValueError("report's context_floor / rope differ from config (entry 0035)")
+    # entry 0035: the registered run order re-derives; a partial close covers a PREFIX of it and every figure
+    # below is a claim about the scored prefix, stated with "n scored of N registered" (coverage travels)
+    order = run_order(list(recorded.values()), included, cfg.order_by)
+    if rep.get("run_order", sorted(included)) != order or rep.get("order_by", "id") != cfg.order_by:
+        raise ValueError("report's run order does not re-derive from the alignments and [e9.order] (entry 0035)")
+    scored = list(rep.get("scores") or {})
+    partial = rep.get("partial")
+    if partial:
+        if not cfg.allow_partial:
+            raise ValueError("the report is a partial close but this config registers no partial close (entry 0035)")
+        if scored != order[:len(scored)] or not scored:
+            raise ValueError("partial close: the scored set is not a non-empty prefix of the registered run order")
+        if partial.get("unscored") != order[len(scored):] or int(partial.get("n_scored", -1)) != len(scored) \
+                or int(partial.get("n_registered", -1)) != len(order):
+            raise ValueError("partial close: the recorded unscored list / counts do not match the run order")
+    elif set(scored) != set(included):
         raise ValueError("scored handoff set differs from the included set")
+    cov["scored"], cov["registered"] = len(scored), len(order)
+    cov["unscored"] = order[len(scored):] if partial else []
 
     # 2. Every R² from moments; score + per-token files by hash; squares sum to moments;
     #    kept dumps by fingerprint + re-score (moments AND per-token).
     per_handoff, tokens_of, bodies = {}, {}, {}
     rescore_agreement = {}   # entry 0028: per kept handoff, the box-vs-home re-score agreement figures
     home_tokens, home_bodies = {}, {}   # entry 0028: the home re-score's per-token record, for the effect on delta and f*
-    for hid in included:
+    for hid in scored:
         rec = rep["scores"][hid]
         sf = cfg.results_dir / "scores" / rec["score_file"]
         if not sf.exists() or sha256_file_bytes(sf) != rec["score_sha256"]:
@@ -399,8 +418,10 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
 
     # 3. Controls (0023): identity exactly zero; null pairing re-derived from the seed.
     ctl = rep.get("controls")
-    if not ctl or ctl["handoff_id"] not in included:
+    if not ctl or ctl["handoff_id"] not in scored:
         raise ValueError("controls missing from the report, or run on a handoff that is not included")
+    if cfg.order_by != "id" and ctl["handoff_id"] != order[0]:
+        raise ValueError("controls did not run on the first handoff of the registered run order (entry 0035)")
     c_hid = ctl["handoff_id"]
     cdir = cfg.results_dir / "controls"
     for which in ("identity", "null"):
@@ -449,6 +470,79 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         d = centered_delta(null_tok[arm], _sst(null_body, part, key), len(want_null))
         delta_null[arm] = {"median_token_mean": float(np.median(token_mean(d))),
                            "median_per_layer": [float(x) for x in np.median(layer_mean(d), 0)]}
+    # 3b. Entry 0035 control 4, the configuration bridge: the scaled receiver against the native one on the
+    #     same tokens, same box. Files by hash, squares sum to moments, both dumps by fingerprint and re-scored
+    #     from tensors under 0028's tolerance; then f*(tau_K) native-vs-scaled per handoff, the median, and the
+    #     registered READING (stated here, never by the driver).
+    bridge = None
+    if cfg.bridge:
+        brep = rep.get("bridge")
+        if not brep or set(brep.get("handoffs") or {}) != set(cfg.bridge["handoffs"]) \
+                or float(brep.get("reading_max_fstar", -1)) != float(cfg.bridge["reading_max_fstar"]):
+            raise ValueError("bridge control missing from the report or not over the registered handoffs (entry 0035)")
+        bdir = cfg.results_dir / "bridge"
+        per = {}
+        for hid in cfg.bridge["handoffs"]:
+            b = brep["handoffs"][hid]
+            if hid not in handoffs or hid not in recorded or not recorded[hid]["excluded"] \
+                    or "context floor" not in (recorded[hid]["reason"] or ""):
+                raise ValueError(f"bridge handoff {hid} is not an observed handoff excluded by the floor")
+            hdir = cfg.results_dir / b["kept_dir"]
+            for f, sha in ((bdir / b["score_file"], b["score_sha256"]), (bdir / b["tokens_file"], b["tokens_sha256"]),
+                           (hdir / b["pairs_file"], b["pairs_sha256"])):
+                if not f.exists() or sha256_file_bytes(f) != sha:
+                    raise ValueError(f"bridge {hid}: {f.name} missing or off-hash")
+            n_b = int(b["n_sender"])
+            if n_b != recorded[hid]["n_sender"]:
+                raise ValueError(f"bridge {hid}: n_sender {n_b} != the alignment record's")
+            bp = np.load(hdir / b["pairs_file"])["pairs"]
+            if not np.array_equal(bp, np.stack([np.arange(n_b), np.arange(n_b)], 1)):
+                raise ValueError(f"bridge {hid}: pairs are not (p, p) over every sender position")
+            body = json.loads((bdir / b["score_file"]).read_text(encoding="utf-8"))
+            if int(body["n_pairs"]) != n_b:
+                raise ValueError(f"bridge {hid}: n_pairs != n_sender")
+            tok = _load_tokens(bdir / b["tokens_file"], b["tokens_sha256"], f"bridge {hid}")
+            _check_tokens(body, tok, n_b, f"bridge {hid}", arms=("same_K", "same_V"))
+            mine = _r2_from_moments(body["same"])
+            for key in ("K", "V"):
+                if not _close(mine[key], body[f"same_{key}_r2_layer_mean"]) or not _close(b[f"same_{key}_r2_layer_mean"], body[f"same_{key}_r2_layer_mean"]):
+                    raise ValueError(f"bridge {hid}: same {key} layer mean does not re-derive from the moments")
+            for name, fp in b["kept_dumps"].items():
+                if dump_fingerprint(hdir / name) != fp:
+                    raise ValueError(f"bridge {hid}: kept dump {name} does not match its fingerprint")
+            rdir = cfg.results_dir / "recheck" / "bridge"
+            rdir.mkdir(parents=True, exist_ok=True)
+            out, out_tok = rdir / f"{_stem(hid)}.json", rdir / f"{_stem(hid)}.tokens.npz"
+            try:
+                run_upstream(cfg, ["scripts/score_positions.py",
+                                   "--same-src", str((hdir / "same_src").resolve()),
+                                   "--same-tgt", str((hdir / "scaled").resolve()),
+                                   "--pairs", str((hdir / b["pairs_file"]).resolve()),
+                                   "--out", str(out.resolve()), "--per-token", str(out_tok.resolve())], runner)
+            except RuntimeError as e:
+                raise ValueError(str(e)) from e
+            re_body = json.loads(out.read_text(encoding="utf-8"))
+            for key in ("K", "V"):
+                if not _close(re_body[f"same_{key}_r2_layer_mean"], body[f"same_{key}_r2_layer_mean"]):
+                    raise ValueError(f"bridge {hid}: re-score from the kept tensors disagrees on {key}")
+            with np.load(out_tok) as z:
+                home_tok = {k: z[k] for k in z.files}
+            agree = _rescore_agreement(tok, home_tok, f"bridge {hid}", arms=("same_K", "same_V"))
+            row = {"n_sender": n_b, "r2_K": mine["K"], "r2_V": mine["V"], "rescore_agreement": agree}
+            for key in ("K", "V"):
+                d = token_mean(centered_delta(tok[f"same_{key}"], _sst(body, "same", key), n_b))
+                row[f"fstar_{key}"] = f_star(d, tau[key])
+                row[f"median_token_delta_{key}"] = float(np.median(d))
+                row[f"fstar_ladder_{key}"] = {_tau_key(t): f_star(d, t) for t in cfg.rule["tau_ladder"]}
+            per[hid] = row
+        med_k = float(np.median([r["fstar_K"] for r in per.values()]))
+        rmax = float(cfg.bridge["reading_max_fstar"])
+        bridge = {"per_handoff": per, "median_fstar_K": med_k, "median_fstar_V": float(np.median([r["fstar_V"] for r in per.values()])),
+                  "reading_max_fstar": rmax,
+                  "reading": ("SCALED RECEIVER ONLY: the receiver configuration alone exceeds the mapper's tolerance; H-E9L is a "
+                              "claim about the scaled receiver" if med_k > rmax else
+                              "CARRIED: the scaled receiver stays within the mapper's tolerance of the native one; tau_K carries"),
+                  "rope": cfg.rope}
 
     # 4. Per handoff: centered delta, f*(tau), cross/same ratio, own-norm diagnostic, seam, depth.
     fstar = {arm: {} for arm in ARMS}
@@ -466,7 +560,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     seam_tokens = {arm: [[] for _ in SEAM_BIN_LABELS] for arm in ("same_K", "same_V")}
     seam_per_handoff = {}
     depth_tokens = {arm: [] for arm in ARMS}
-    for hid in included:
+    dt_same_K = {}                                                            # entry 0035: for the length profiles
+    for hid in scored:
         tok, body, n = tokens_of[hid], bodies[hid], per_handoff[hid]["n_pairs"]
         dt = {}
         for arm in ARMS:
@@ -486,6 +581,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         for key in ("K", "V"):
             ratio[key][hid] = float(np.median(dt[f"cross_{key}"]) / np.median(dt[f"same_{key}"]))
             own_gt1[key][hid] = float((own_norm_delta(tok[f"same_{key}"], tok[f"ref_{key}"]).mean(1) > 1).mean())
+        dt_same_K[hid] = dt["same_K"]
         b = seam_distance(pairs_of[hid], n_recv[hid])
         bins = seam_bin(b)
         seam_per_handoff[hid] = {}
@@ -536,6 +632,28 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
             seam_pooled[arm].append({"bin": label, "n_tokens": int(len(allv)),
                                      "median": None if len(allv) == 0 else float(np.median(allv))})
     depth = {arm: [float(x) for x in np.median(np.concatenate(depth_tokens[arm], 0), 0)] for arm in ARMS}
+    # 4b. Entry 0035 control 5, the length profiles (descriptive): f*(tau_K) and median delta_K (i) by |S| bin over
+    #     handoffs, (ii) by matched-token position in S over pooled tokens. Bins from config, fixed before data.
+    profiles = None
+    if cfg.profiles:
+        profiles = {"s_len": [], "s_pos": [], "edges": dict(cfg.profiles)}
+        sl, sp = list(cfg.profiles["s_len_edges"]), list(cfg.profiles["s_pos_edges"])
+        for i in range(len(sl)):
+            lo, hi = sl[i], (sl[i + 1] - 1 if i + 1 < len(sl) else cfg.context_cap)
+            hs = [h for h in scored if (lo < recorded[h]["n_sender"] <= hi if i == 0 else lo <= recorded[h]["n_sender"] <= hi)]
+            pooled = np.concatenate([dt_same_K[h] for h in hs]) if hs else np.zeros(0)
+            profiles["s_len"].append({"bin": f"{lo + (1 if i == 0 else 0)}-{hi}", "n_handoffs": len(hs), "handoffs": hs,
+                                      "fstar_K": _stats(fstar["same_K"][h] for h in hs) if hs else None,
+                                      "n_tokens": int(len(pooled)),
+                                      "median_token_delta_K": None if len(pooled) == 0 else float(np.median(pooled))})
+        for i in range(len(sp)):
+            lo, hi = sp[i], (sp[i + 1] - 1 if i + 1 < len(sp) else cfg.context_cap)
+            sel = [dt_same_K[h][(pairs_of[h][:, 0] >= lo) & (pairs_of[h][:, 0] <= hi)] for h in scored]
+            pooled = np.concatenate(sel) if sel else np.zeros(0)
+            profiles["s_pos"].append({"bin": f"{lo}-{hi}", "n_tokens": int(len(pooled)),
+                                      "n_handoffs_with_tokens": int(sum(1 for s in sel if len(s))),
+                                      "fstar_K_pooled": None if len(pooled) == 0 else f_star(pooled, tau["K"]),
+                                      "median_token_delta_K": None if len(pooled) == 0 else float(np.median(pooled))})
 
     # 5. Verdict statistic, band, medians -- stated here for the first time.
     f_same_k = _stats(fstar["same_K"].values())
@@ -544,13 +662,16 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     boot = bootstrap_median_interval(fstar["same_K"].values(), make_rng(int(cfg.controls["bootstrap_seed"])),
                                      int(cfg.controls["bootstrap_reps"]), _quantile)
     boot["seed"] = int(cfg.controls["bootstrap_seed"])
-    same_k = _stats(per_handoff[h]["same"]["K"] for h in included)
-    same_v = _stats(per_handoff[h]["same"]["V"] for h in included)
-    cross_k = _stats(per_handoff[h]["cross"]["K"] for h in included)
-    cross_v = _stats(per_handoff[h]["cross"]["V"] for h in included)
-    matched = _stats(recorded[h]["n_matched"] / recorded[h]["n_receiver"] for h in included)
+    same_k = _stats(per_handoff[h]["same"]["K"] for h in scored)
+    same_v = _stats(per_handoff[h]["same"]["V"] for h in scored)
+    cross_k = _stats(per_handoff[h]["cross"]["K"] for h in scored)
+    cross_v = _stats(per_handoff[h]["cross"]["V"] for h in scored)
+    matched = _stats(recorded[h]["n_matched"] / recorded[h]["n_receiver"] for h in scored)
     figures = {
         "coverage": cov, "tau": tau, "rule": dict(cfg.rule), "band_outcome": outcome,
+        "context_cap": cfg.context_cap, "context_floor": cfg.context_floor, "rope": cfg.rope,     # entry 0035
+        "run_order": order, "order_by": cfg.order_by, "partial": partial,
+        "bridge": bridge, "length_profiles": profiles,
         "fstar": {arm: _stats(fstar[arm].values()) for arm in ARMS},
         "fstar_per_handoff": fstar,
         "tau_ladder": ladder,                                                     # entry 0025, descriptive
@@ -590,20 +711,46 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     def fmt(s, d=4):
         return f"{s['median']:.{d}f} (p10 {s['p10']:.{d}f}, p90 {s['p90']:.{d}f})"
 
+    def _fe(x, spec=".1e"):
+        return "n/a" if x is None else format(x, spec)
+
+    ra = figures["rescore_agreement"]
+
     seam_line = " · ".join(f"{r['bin']}: {'—' if r['median'] is None else f'{r['median']:.3f}'} (n={r['n_tokens']})"
                            for r in seam_pooled["same_K"])
+    long_lines = ""
+    if cfg.context_floor or partial or bridge or profiles:
+        long_lines += (f"\nE9-long (entry 0035): floor {cfg.context_floor} (handoffs decided under the prior cap excluded: "
+                       f"{coverage_cmp['n']['excluded_prior_cap']}); rope {json.dumps(cfg.rope, sort_keys=True)}; run order {cfg.order_by}; "
+                       f"**{cov['scored']} scored of {cov['registered']} registered**"
+                       + (f"; PARTIAL close {partial['closed_utc']}, unscored by id: {', '.join(cov['unscored'])}" if partial else "; complete") + "\n")
+        if bridge:
+            long_lines += (f"- configuration bridge (control 4): native vs scaled receiver, {len(bridge['per_handoff'])} handoffs, "
+                           f"f*(tau_K) per handoff K: " + ", ".join(f"{h.split('/')[-1]} {r['fstar_K']:.4f}" for h, r in bridge["per_handoff"].items())
+                           + f"; median K {bridge['median_fstar_K']:.4f} / V {bridge['median_fstar_V']:.4f} vs reading max {bridge['reading_max_fstar']} "
+                           f"-> **{bridge['reading']}**\n")
+        if profiles:
+            long_lines += ("- length profile (i) by |S| bin, f*(tau_K) same K median over handoffs: "
+                           + "; ".join(f"{r['bin']}: {'n/a' if r['fstar_K'] is None else format(r['fstar_K']['median'], '.4f')} (n={r['n_handoffs']})"
+                                       for r in profiles["s_len"]) + "\n"
+                           "- length profile (ii) by matched-token position in S, pooled f*(tau_K) same K / median delta_K: "
+                           + "; ".join(f"{r['bin']}: {'n/a' if r['fstar_K_pooled'] is None else format(r['fstar_K_pooled'], '.4f')} / "
+                                       f"{'n/a' if r['median_token_delta_K'] is None else format(r['median_token_delta_K'], '.3f')} (n={r['n_tokens']})"
+                                       for r in profiles["s_pos"]) + "\n")
     md = ("E9 summary -- alignments re-derived from raw traces; every R² recomputed from recorded "
           "moments; per-token squares summed against the moments; keep-subset re-scored from "
           "fingerprinted tensors; tau recomputed from the archived mapper; controls checked\n\n"
           f"pair {cfg.pair} | upstream {cfg.upstream_sha[:12]} | config {rep['config_sha256'][:12]} | "
           f"coverage: {cov['included']} included / {cov['excluded']} excluded (cap {cfg.context_cap}) "
-          f"of {cov['observed']} observed handoffs\n"
+          f"of {cov['observed']} observed handoffs\n" + long_lines +
           f"keep-subset re-score (entry 0028): {len(rescore_agreement)} kept handoffs; per-head sums within "
-          f"{figures['rescore_agreement']['max_rel_sum']:.1e} relative (tolerance {_SUM_TOL:.0e}); every square within "
-          f"{figures['rescore_agreement']['max_rel_square']:.1e} relative (tolerance {_RESCORE_RTOL:.0e}); "
-          f"bit-identical fraction >= {figures['rescore_agreement']['min_bit_identical_frac']:.3f}; effect on the statistic: "
-          f"max |delta_token diff| {figures['rescore_agreement']['max_abs_token_delta_diff']:.1e}, "
-          f"max |f*(tau) diff| {figures['rescore_agreement']['max_fstar_abs_diff']:.1e}\n\n"
+          f"{_fe(ra['max_rel_sum'])} relative (tolerance {_SUM_TOL:.0e}); every square within "
+          f"{_fe(ra['max_rel_square'])} relative (tolerance {_RESCORE_RTOL:.0e}); "
+          f"bit-identical fraction >= {_fe(ra['min_bit_identical_frac'], '.3f')}; effect on the statistic: "
+          f"max |delta_token diff| {_fe(ra['max_abs_token_delta_diff'])}, "
+          f"max |f*(tau) diff| {_fe(ra['max_fstar_abs_diff'])}"
+          + (" (NO kept handoff scored: the re-score check has nothing to read; stated, never a zero)" if not rescore_agreement else "")
+          + "\n\n"
           "Units: centered per-token deviation = the token's share of unexplained variance, in R²'s own "
           "units (token mean == 1 - R²); NOT a per-token percent error (0023).\n\n"
           f"- matched fraction |M|/|R| (a FLOOR; blocks method, entry 0019): {fmt(matched)}\n"

@@ -107,7 +107,7 @@ def test_coverage_comparison_groups_included_and_excluded_and_joins_0018_rows():
             {"traj_id": "s/a_traj", "switch_index": 2, "overlap_fraction": 0.7, "recoverable_fraction": 0.6},
             {"traj_id": "s/b_traj", "switch_index": 3, "overlap_fraction": 0.5, "recoverable_fraction": 0.4}]
     out = coverage_comparison(recs, rows, summary)
-    assert out["n"] == {"included": 2, "excluded_long": 1, "excluded_empty_r": 1} and out["unmatched_0018_rows"] == 0
+    assert out["n"] == {"included": 2, "excluded_long": 1, "excluded_empty_r": 1, "excluded_prior_cap": 0} and out["unmatched_0018_rows"] == 0
     assert out["included"]["n_sender"]["median"] == 150 and out["included"]["overlap_fraction_0018"]["median"] == pytest.approx(0.8)
     assert out["excluded_long"]["n_sender"]["median"] == 40000 and out["excluded_long"]["recoverable_fraction_0018"]["median"] == 0.4
     out2 = coverage_comparison(recs, rows[:1], summary)
