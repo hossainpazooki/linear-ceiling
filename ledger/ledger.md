@@ -38,6 +38,7 @@ cell changes.
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | UNESTIMABLE |
 | H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | NOT CONFIRMED |
 | H-E9 | (achievable fraction of the headroom upper bound at a re-rendered handoff) at a re-rendered handoff, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity. Rule (entry 0019, band approved 2026-09-01, frozen before any prefill): per-handoff E9-same pooled K R² (definition A5) at LCS-floor matched positions, median over included handoffs — HOLDS >= 0.70, DEGRADES <= 0.40, UNRESOLVED between; V reported alongside, verdict-bearing for nothing; handoffs over the 32,768-token cap excluded and counted. Row added with 0019's commit set completion — the entry says "registered in the table" and the row was initially missing (process slip, noted in the handoff; the entry text is immutable and unchanged). | E9 (band in entry 0019) | HELD |
+| H-E9L | (E9's claim on the long half) at a re-rendered handoff whose sender prompt exceeds the prior cap of 32,768 tokens, same-model KV agreement on content-matched tokens keeps its usefulness under a receiver extended to 81,920 positions by static YaRN. Rule verbatim from entry 0023: median over the newly included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.3186) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; decided on the 35 newly included handoffs only, never pooled with 0029's 25; read on a floor (0027) and, if the bridge control exceeds 0.15, as a claim about the scaled receiver only. Registered by entry 0035 before any prefill. | E9-long (entry 0035) | unresolved |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -2059,3 +2060,112 @@ Not established: anything about the excluded long handoffs; an achievable scheme
 **Scope.** All of 0033's. No `verdict:` line.
 
 prior-entries-sha256: 50c7d5027d891a1b99b93da68e823bb64d941bed501136d652b37218f07d290c
+
+### 0035 — 2026-09-09 — E9-long registered before any prefill: H-E9's instrument on the 35 handoffs above the prior cap, receiver scaled to 81,920 by YaRN; H-E9L added `unresolved`; the 4-pager re-scoped around E9 and E9-long (supersedes 0032's space clause)
+
+**Why, and why now.** H-E9 `HELD` (0029) is a claim about the 25 of 68 observed handoffs whose sender prompt fits
+Qwen3's 32,768-token cap — the shorter half by |S| (0025: included median 25,460 vs excluded 52,141). A long-context
+venue asks first whether the same result holds where the re-rendered context is 35K–80K tokens, and nothing on the
+record answers it. The seed (`docs/2026-09-08-seed-e9-long-half.md`) designed the experiment; the operator ruled
+D1(a)/D2/D3/D4/D5 on 2026-09-09 and, the same day, that the LCFM 4-pager is written from an overnight sitting on a
+rented single L40S (48 GB; no queue) rather than the Algoverse 3g.40gb queue. This entry registers the experiment,
+its controls, its stopping rule and its paper scope BEFORE the box is touched: `results/e9l/` holds no report, no
+score, no bridge and no control file at append, and this script refuses otherwise (R1). The only thing under
+`results/e9l/` is the instrument's own alignment pass (`e9 --align-only --config config/e9l.toml`,
+`align/coverage.json` sha256 `492d8f0db8d0`), from which every count below is read.
+
+**Hypothesis H-E9L (row added to the table, `unresolved`).** The statement is E9's on the long half; the rule is
+0023's verbatim (`[e9.rule]` copied byte-for-byte from `config/e9.toml`): per matched token the centered deviation in
+R²'s units between the receiver's own K at the sender position and at the re-rendered position; a token needs
+recompute when it exceeds τ_K = 0.3186 (the k = 1 mapper's held-out shortfall, 0023); the verdict statistic is the
+median over included handoffs of the oracle selective-recompute fraction f*(τ_K) on the K read-out; **HOLDS ≤
+0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between**. τ_V = 0.4867, τ_agent_K = 0.4371, the τ ladder (0.1, 0.03),
+the seam bins, the block floor (4) and the bootstrap (seed 25, 2000 reps) are 0025's, unchanged.
+f* stays an oracle LOWER BOUND read on a floor (0027).
+
+**The verdict set: the newly included handoffs, never pooled.** `context_cap = 81,920` (= 32,768 × 2.5, the knee of the
+cap ladder in the seed) and `context_floor = 32,768`: a handoff whose |S| and |R| both fit the floor was decided by
+0029 and is EXCLUDED here with its own reason (the 25 of 0029, never pooled; that cell is immutable). Coverage from
+the alignment pass: **68 observed · 35 included · 25 excluded as decided under the prior cap · 4 excluded
+above the cap · 4 excluded for an empty receiver prompt** (the last eight by name, in the seed's words: above
+81,920: `20241016_composio_swekit/astropy__astropy-13398_traj#290`; `20241016_composio_swekit/astropy__astropy-13398_traj#447`; `20241016_composio_swekit/astropy__astropy-14365_traj#298`; `20241025_composio_swekit/astropy__astropy-13453_traj#221` (|S| 185,793, 357,623, 172,327, 147,218); empty R: `20241016_composio_swekit/astropy__astropy-13398_traj#137`; `20241016_composio_swekit/astropy__astropy-13398_traj#294`; `20241016_composio_swekit/astropy__astropy-14365_traj#157`; `20241025_composio_swekit/astropy__astropy-13453_traj#106`). Included |S| runs 34,974 to 80,111; the
+prefill budget is 1,771,353 sender tokens (1.7B and 0.6B) + 427,729 receiver tokens = 3,970,435 tokens. H-E9L is a claim
+about these 35; coverage travels with every figure (0032's clause, kept).
+
+**The receiver configuration (D1(a)) and the upstream change.** Both models are loaded with static YaRN in the HF
+form `{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}` (window 81,920); Qwen's own
+recommendation is factor 4.0 for 131,072 and a smaller factor is the same mechanism. Under YaRN the model's rotary
+embedding changes the per-dimension inverse frequencies AND multiplies cos/sin by an attention factor
+(transformers 5.15.1 `Qwen3RotaryEmbedding.forward`; 0.1·ln 2.5 + 1 ≈ 1.0916), so the K a model writes is
+m·R_yarn(pos)·k_content and the upstream's plain-θ strip would leave a wrong rotation and a factor m in every
+content-space K. The upstream commit pinned below (`063f4023fdde`, successor of `4633718`) adds a RoPE spec
+(`kvt/rope.py::RopeSpec`) read from the model's OWN rotary embedding (`inv_freq` + `attention_scaling`, never a
+formula), written into every dump's `meta.json`, HALT-checked against the model at every position of the dump
+before any forward pass (atol 1e-5), and used by `KVDump` to strip (R^T/m); `load_model(model_id, rope_scaling=…)`
+and `dump_kv.py --rope-scaling`; archived dumps without the block strip exactly as before (tested: the tiny-model
+content key equals `k_norm(k_proj(x))` under YaRN to fp16 tolerance; the plain-θ strip is shown wrong; the halt
+fires on a dropped factor or plain frequencies; 153 upstream tests; independent refutation 2026-09-09: spec cos/sin bitwise equal to HF's over all 81,920 positions of the real Qwen3-0.6B config, divide-once residual 9.5e-7 vs ~0.5 for zero or two divisions, YaRN static under transformers' dynamic-update decorator, the archived n = 50 dump strips bit-identically). **Seam outside this entry's route, on the record:** the upstream's live-cache mapper path (`kvt/mapper.py::apply_mapper`, used by the perplexity/hellaswag evals and `compose_mapper.py`) still strips and re-applies with the plain θ; E9's scorer never calls it (content space via `KVDump`), and no eval under a scaled model may run until it takes the spec. **Stated risk:** static YaRN changes the KV of
+short contexts too, so this receiver is a different function from 0029's; control 4 measures how different and
+fixes how the verdict reads. The mapper is 0029's n = 50 k = 1 artifact by sha (D4 realized as: the driver scores
+the n = 50 mapper on every handoff, exactly 0029's shape; the n = 420 mapper of 0033/0034 is applied afterwards at
+home to the kept subset through `e9_rescore` under its own config, descriptive, by its own entry if run).
+
+**Run order, stopping rule, resume (unattended overnight sitting).** The driver scores the included handoffs in the
+REGISTERED order `n_sender_asc` (|S| ascending, ties by id; there are none): astropy__astropy-7671_traj#85 (34,974) first,
+django__django-11087_traj#152 (80,111) last. The controls run on the first handoff in that order. If the sitting must
+end before all 35 are scored, `e9 --close-partial --config config/e9l.toml` closes the run: it is allowed only by
+this config, it refuses unless the scored set is a PREFIX of the registered order, it stamps the close time and
+names every unscored handoff in `report.json`, and the verdict entry states the cell on the scored prefix with
+"n scored of 35 registered" beside every number. The cutoff is the operator's and is recorded, with the reason, in
+the verdict entry; it may not depend on any score. A relaunch after a crash uses `--resume`, which keeps only the
+bridge, the controls and the scored handoffs whose score and per-token files still match their recorded hashes
+under the same config sha and pin; a plain relaunch over an unfinished report is refused.
+
+**Keep subset (D3).** n = 3, seed 9, a fresh draw from the sorted newly-included ids (numpy `choice` without
+replacement is not nested with 0025's draw of 8): `20241016_composio_swekit/astropy__astropy-8872_traj#117`; `20241025_composio_swekit/django__django-10554_traj#112`; `20241025_composio_swekit/django__django-11087_traj#97`. Their three stride-1 dumps are retained,
+fingerprinted, pulled home and re-scored from tensors by the summarizer under 0028's tolerance.
+
+**Controls, registered (1–3 as 0023/0025; 4–5 new; 6 unchanged).** (1) Pipeline identity HALT (a dump scored against
+itself, every square exactly zero). (2) Prefix-invariance HALT on the first handoff in run order: S vs S + R's first
+token, max centered δ ≤ 1e-04. (3) δ_null: seeded derangement of sender positions (seed 23), the
+uninformative scale. **(4) Configuration bridge:** for the three SHORTEST of 0029's kept handoffs (`20241025_composio_swekit/django__django-10999_traj#64`; `20241025_composio_swekit/django__django-11066_traj#36`; `20241016_composio_swekit/astropy__astropy-14182_traj#68`;
+|S| 13,955, 14,269, 17,935) the receiver prefills S twice ON THE SAME BOX, once under the native RoPE and once under
+the scaling above, and the two dumps are scored at pairs (p, p) over every sender position; both dumps are kept and
+fingerprinted, the summarizer re-scores them from tensors and states the median native-vs-scaled f*(τ_K).
+**Reading fixed now:** if that median exceeds 0.15, the receiver configuration alone exceeds the mapper's
+tolerance and H-E9L is read as a claim about the SCALED receiver only, in the verdict entry's first paragraph. The
+bridge runs BEFORE the first long handoff and is checkpointed, so a late failure cannot lose it; it cannot gate the
+launch, it gates the reading. **(5) Length profiles (descriptive):** f*(τ_K) and median δ_K (i) by |S| bin
+(32,768, 49,999] / [50,000, 64,999] / [65,000, 81,920], and (ii) by matched-token position in S [0, 32,767] / [32,768, 49,151] / [49,152, 65,535] / [65,536, 81,920] — (ii) is
+the long-context figure: does agreement at a re-rendered position depend on how deep in the sender's context the
+token sat. (6) Seam profiles b(t) and b⁻(t) as 0025, same bins.
+
+**Gate and enforcement.** `e9 --check --config config/e9l.toml` refuses until entries 0019/0023/0025/0027/0035 are in the
+committed ledger, `config/e9l.toml` is committed unmodified, the upstream is at the pin with every invoked path
+clean, and the mapper artifact is present by sha; `summarize_e9 --config config/e9l.toml` (fail-closed, the only
+reader) re-derives every alignment from the raw traces with the floor, recomputes every figure, re-scores the kept
+and bridge dumps from tensors, checks the controls, states the bridge reading, the profiles and the band, and
+refuses on any disagreement. Tests: the floor, the scaling on every dump, the bridge first and recorded, the run
+order, resume, the partial close and its prefix rule, and that `config/e9.toml`'s behaviour is untouched.
+
+**Paper scope (operator ruling 2026-09-09; supersedes 0032's space clause).** The LCFM 4-pager is re-cut with long
+context central: E9 (0029) and E9-long are the results; E-RL (`docs/2026-09-02-e-rl-design.md`, designed and
+unregistered — stated as such, in those words) is the contrasting registered direction on the weights axis; E7 is
+the corpus paragraph; E8 is one sentence with its table in an appendix. 0032's clause "E9 is one paragraph, one table
+… Lane A/B premise numbers and the taxonomy remain the submission's core" is superseded by this paragraph. **Kept
+from 0032, unchanged:** E9 and E9-long figures enter the 4-pager only from a passing `summarize_e9` run (E9's at the
+detached `d5786df` checkout, 2026-09-09; E9-long's under `config/e9l.toml`); the same-model result never appears
+without the cross-model outcome in the same table or sentence; coverage travels with every number, and E9-long's
+reads "n of 35 newly included, the long half, never pooled with 0029's 25"; the co-author refutation of 0025–0029 is
+still owed and 0032's consequence for E9's figures stands as written — a later entry records it either way. E9-long's
+figures enter by their own numbered entry.
+
+**What this does NOT touch.** The H-E9 cell (0029), τ_K, τ_V, τ_agent_K, the rule, the band, the ladder, 0025's keep
+subset, `results/e9/`, `results/e8*/`, `results/e9c/` and `config/e9.toml` are unchanged (its sha is in 0029's
+report); no `verdict:` line here. The n = 420 arm is not run under this entry. Nothing here is a figure.
+
+**Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the long half of one corpus; a scaled
+receiver that is not the trained-range model of 0029 (control 4 says by how much); floor not method (0027); the
+four handoffs above 81,920 and the four with an empty receiver prompt stay excluded by name.
+
+prior-entries-sha256: f6a715fd94402eb419155a2afd2f14fcbb28e954a9e8ee1a16b07ffa920dd5da
