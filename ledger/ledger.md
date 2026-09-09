@@ -2014,3 +2014,48 @@ control firing, refusal on a changed kept dump / prior report / foreign E8 repor
 `summarize_e8 --config config/e8c.toml` and `e9_rescore summarize`.
 
 prior-entries-sha256: 9f16a83e3cb98ea26bc23d052638881ed15c6c14618aec4e58a51cd6607dc056
+
+### 0034 — 2026-09-08 — Calibration-size sensitivity ran `[BASELINE, DESCRIPTIVE]`: the n = 420 mapper on E8's arms and E9's kept-subset cross arm; no cell moves
+
+**Provenance.** Registered by 0033 before the fit existed; `config/e8c.toml`, `config/e9c.toml` and this ledger committed
+unmodified; upstream at `223f469`, clean for the invoked paths; the tagged mapper `mappers/qwen3-0.6b-to-1.7b/n420/k1` named by
+sha256 in both reports (safetensors `b602eaf2e844`); 0020's agent dumps and token file reused through 0031's
+record; 0029's kept dumps and alignments by fingerprint. Every figure below is a summarizer's: `summarize_e8 --config
+config/e8c.toml` (scorer re-run, per-sequence R² recomputed from the record, bootstrap, prior report re-hashed) and
+`e9_rescore summarize` (files by hash, squares summed to moments, the same-arm control, f* recomputed from both records).
+
+**E8 with the n = 420 mapper** (0030's protocol; the change is from 0031's all-sequence figures under the n = 50 mapper):
+
+| k | arm (a) generic K / V, n = 420 mapper | arm (b) agent ALL K / V, n = 420 mapper | 0031's arm (b) K / V, n = 50 mapper | change K / V | drop K / V | drop 95% K | drop 95% V | band K / V (descriptive) |
+|---|---|---|---|---|---|---|---|---|
+| 1 (compared k) | 0.7323 / 0.5895 | **0.6386 / 0.4437** | 0.5708 / 0.3230 | +0.0678 / +0.1207 | +0.0937 / +0.1459 | [+0.0865, +0.1016] | [+0.1357, +0.1562] | UNRESOLVED / UNRESOLVED |
+| 4 | 0.7595 / 0.6253 | **0.6547 / 0.4511** | 0.3783 / -0.0982 | +0.2764 / +0.5493 | +0.1048 / +0.1742 | [+0.0970, +0.1129] | [+0.1630, +0.1860] | UNRESOLVED / DEGRADES |
+| 8 | 0.7641 / 0.6329 | **0.6474 / 0.4331** | -0.5128 / -2.1456 | +1.1601 / +2.5787 | +0.1167 / +0.1998 | [+0.1092, +0.1248] | [+0.1885, +0.2119] | UNRESOLVED / DEGRADES |
+
+Per-sequence agent K at k = 1: median 0.6363 (p10 0.6110, p90 0.6717) over 50 sequences.
+
+**E9 cross arm on the 8 kept handoffs.** Same-arm control PASSED on every handoff (max relative square vs 0028's
+re-score: same_K 0.00e+00, same_V 0.00e+00; the tensors and alignments are 0029's). Tolerances:
+τ_K (0023) 0.3186; τ_K′ under the n = 420 mapper 0.2677 (1 − its verified arm (a) K R²); τ_agent_K 0.4371.
+
+- cross K f*(τ_K): **n = 420 mapper 0.8106 (p10 0.6494, p90 0.8498)** vs n = 50 mapper on the same handoffs 0.9352 (p10 0.8993, p90 0.9685);
+  bootstrap of the median (seed 33, 2000 reps; reported): [0.7368, 0.8433]; band word at 0023's edges, descriptive: DEGRADES.
+- cross K f*(τ_K′), the mapper read against its own tolerance: 0.9283 (p10 0.8794, p90 0.9608) (DEGRADES, descriptive).
+- cross K f*(τ_agent_K): 0.1121 (p10 0.0000, p90 0.3067) vs n = 50 mapper 0.6092 (p10 0.3825, p90 0.6850).
+- cross V f*(τ_V): 0.6771 (p10 0.5187, p90 0.7410) vs 0.9149 (p10 0.8830, p90 0.9684).
+- bridge R² (A5, head- and layer-averaged): cross K 0.5293 (p10 0.4996, p90 0.5652) vs 0.4377 (p10 0.4135, p90 0.4788); cross V 0.3338 (p10 0.3010, p90 0.3684) vs
+  0.1639 (p10 0.1256, p90 0.2030); same K (control) 0.8897 (p10 0.8101, p90 0.9341) vs 0.8897 (p10 0.8101, p90 0.9341).
+
+| τ (ladder) | cross K f*, n = 420 mapper | cross K f*, n = 50 mapper |
+|---|---|---|
+| 0.1 | 1.0000 (p10 1.0000, p90 1.0000) | 1.0000 (p10 1.0000, p90 1.0000) |
+| 0.03 | 1.0000 (p10 1.0000, p90 1.0000) | 1.0000 (p10 1.0000, p90 1.0000) |
+
+**What this establishes, narrowly.** Descriptive only: the decided cells (H-E8 0020, H-E9 0029) were decided under the
+registered protocol with the n = 50 mapper and do not move; the n = 420 figures stand beside them as the answer to
+"was it the calibration size" for this pair, this direction, 8 kept of 25 included handoffs, on a floor (0027).
+Not established: anything about the excluded long handoffs; an achievable scheme; the paper's own regime (~128K tokens).
+
+**Scope.** All of 0033's. No `verdict:` line.
+
+prior-entries-sha256: 50c7d5027d891a1b99b93da68e823bb64d941bed501136d652b37218f07d290c
