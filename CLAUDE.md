@@ -60,6 +60,12 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau   # 0023, before the GPU run: tau = 1 - archived k=1 held-out R^2 via upstream score_mapper --per-token; writes results/e9/calibration/tau.json (~1 min CPU)
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9          # fail-closed: alignments from raw traces, R^2 from moments, per-token sums to moments, keep subset re-scored under 0028's cross-platform tolerance (sums 1e-5, squares 1e-2), tau recomputed, controls checked -> f*(tau), seam/depth profiles, band
+.venv/Scripts/python.exe -m linear_ceiling.e9 --check --config config/e9l.toml        # E9-long gate (entry 0035): 0019/0023/0025/0027/0035 committed, config/e9l.toml committed, the RoPE-spec upstream pin, mapper by sha
+.venv/Scripts/python.exe -m linear_ceiling.e9 --align-only --config config/e9l.toml   # cap 81,920 / floor 32,768: the 35 newly included handoffs, run order, keep draw -> results/e9l/align/coverage.json (what 0035 cites)
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau --config config/e9l.toml   # tau recomputed under the e9l pin -> results/e9l/calibration/tau.json (needed before the e9l summary; ~2 min CPU)
+.venv/Scripts/python.exe -m linear_ceiling.e9 --config config/e9l.toml [--resume]    # GPU box: bridge control first (native vs YaRN receiver on 3 short handoffs), then the 35 by |S| ascending; every dump under --rope-scaling; --resume keeps hash-matching checkpoint work
+.venv/Scripts/python.exe -m linear_ceiling.e9 --close-partial --config config/e9l.toml   # entry 0035 stopping rule: close an unfinished run at the operator's cutoff; scored set must be a prefix of the registered order; unscored named
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --config config/e9l.toml     # fail-closed as above plus: floor re-derived, run order re-derived, partial prefix checked, bridge re-scored from tensors + its registered reading, length profiles (by |S| bin, by position in S)
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 

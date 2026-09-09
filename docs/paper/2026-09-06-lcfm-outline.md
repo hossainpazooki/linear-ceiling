@@ -1,5 +1,7 @@
 # LCFM 4-pager — outline
 
+> **2026-09-09, later:** superseded as the working outline by `docs/paper/2026-09-10-lcfm-outline-v2.md` under the paper-scope paragraph of entry 0035 (long context central; E9 + E9-long the results; E-RL the contrasting direction; 0032's space clause superseded, its gate/cross-arm/coverage/co-author conditions kept). This file is left as the record of the 09-06 frame.
+
 **Target:** Long-Context Foundation Models workshop @ NeurIPS 2026 (longcontextfm.github.io).
 Deadline 2026-09-10 23:59 AoE · short paper ≤ 4 pages excluding references and appendix ·
 double-blind · non-archival · concurrent submission permitted (venue facts checked at source
