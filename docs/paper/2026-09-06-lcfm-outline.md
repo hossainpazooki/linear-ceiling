@@ -135,7 +135,7 @@ descriptive count (23,365 tier boundaries over 2,904 trajectories) stays out of 
   Per-sequence agent K at k = 1: median 0.5671 (p10 0.5367, p90 0.6107) over 50 sequences [0031].
   k = 4 and k = 8 reported only, in 0031's table.
 
-### 3.5 H-E9 — same-model KV survives a real re-render; the cross-model arm does not [0029, 0032; PENDING freeze run + co-author review]
+### 3.5 H-E9 — same-model KV survives a real re-render; the cross-model arm does not [0029, 0032; freeze run PASSED 2026-09-09; PENDING co-author review]
 
 - Setup, three lines: 68 observed composio handoffs, 25 inside the 32,768-token cap (the
   shorter half by |S|; excluded compared on the record [0025]); receiver Qwen3-1.7B re-renders
@@ -160,6 +160,11 @@ descriptive count (23,365 tier boundaries over 2,904 trajectories) stays out of 
   the 2026-09-07 pick-up. Under 0032's own terms E9 does not enter the 4-pager until a `summarize_e9` run passes
   clean. Operator ruling: run it with the upstream checked out at `d5786df` (detached; the gate compares HEAD),
   or register a re-pin. The 0029 figures quoted above are the 09-04 run's, unchanged on disk.
+  **Status 2026-09-09:** operator ruled "detached"; `summarize_e9` ran clean at home with the upstream checked out at
+  `d5786df` (04:05–04:12Z; rule line `-> HOLDS`; keep subset recomputed from tensors under 0028's tolerance; upstream
+  restored to `main` after; runbook `docs/2026-09-08-n420-target-dump-runbook.md` §7). The figures above are those of
+  the passing run. The co-author refutation is still not recorded; the "one sentence marked ongoing" cut remains the
+  operator's call.
 
 ## 4. The recording gap (≈ 0.4 page)
 
@@ -173,9 +178,11 @@ fields) — one sentence each, no proposal beyond the list.
 ## 5. Limitations (≈ 0.3 page)
 
 1. **Calibration size.** The mapper was fit on 10,240 tokens; the source paper calibrates on
-   about 128K (12.5×). PENDING entry 0033: the k = 1 mapper refit on the existing n = 420
-   dumps, E8 arms and the E9 cross arm re-scored, reported beside the n = 50 record. If 0033's
-   figures are not frozen by 09-08, this limitation is stated as is.
+   about 128K (12.5×). Entries 0033 (registration, 2026-09-08) and 0034 (figures, appended
+   2026-09-08 local / 01:20Z 09-09; both summarizers clean) [FROZEN]: the k = 1/4/8 mapper refit on n = 420
+   sequences (the target half dumped on the Algoverse box 2026-09-08, the source half CPU 08-24), E8 arms and the
+   E9 kept-subset cross arm re-scored, reported beside the n = 50 record; descriptive, no cell moves. The figures
+   are 0034's (`results/e8c/summary.md`, `results/e9c/summary.md`).
 2. **One pair, one direction** (Qwen3-0.6B → 1.7B); off-policy text for Qwen [0009].
 3. **Public benchmark trajectories are single-model leaderboard runs by construction**; H-E7a
    decides what the public record evidences, not what production routers do (README scope

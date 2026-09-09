@@ -236,3 +236,14 @@ Prior bound: 7.95 GiB at T = 4,096 on the same model path (entry 0026 probe tabl
 - Verified by `tools/hf_verify_backup.py` (new, reusable): 61 LFS files `lfs.sha256` = local sha256, 28 non-LFS files
   downloaded and hashed, both directions checked — 89/89 OK. The one flagged file, `.gitattributes`, is the Hub's own;
   the verifier now ignores it by default. Nothing on the Hub is a ledger figure (summarizers read the local mirror).
+
+## 7. Ruling (b) executed — the E9 summarizer on a detached upstream, 2026-09-09
+
+- Operator ruled "detached" at ≈ 04:04Z. `cd ~/dev/kv-transfer-replication && git checkout d5786df` (tree clean apart from
+  the untracked, gitignored-by-intent `results/mapper/<pair>/n420/`), then `summarize_e9` at home 04:05:41Z–04:12:26Z: no
+  refusal; `results/e9/summary.{md,json}` rewritten from a passing run; the rule line reads `-> **HOLDS**`, the same
+  reading 0029 recorded; keep subset recomputed from tensors under 0028's tolerance. Log kept at
+  `results/e9/logs/summarize_e9.2026-09-09T0405Z.detached-d5786df.log` (mirror only). Then `git checkout main` restored
+  `4633718`; `e8 --check --config config/e8c.toml` ready again; `summarize_e9` at HEAD refuses again as before (the
+  refusal is the pin gap, not the data). No entry appended: nothing on the record changes; this is the run 0032 requires
+  for E9's admission to the 4-pager.
