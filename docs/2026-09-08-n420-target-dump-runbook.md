@@ -223,3 +223,16 @@ Prior bound: 7.95 GiB at T = 4,096 on the same model path (entry 0026 probe tabl
   verbatim. So the other user downloaded the private E9 backup onto the box with a read token to that dataset, and the
   working files beside it (`ledger_25_30.txt`, `rescore_*.txt`, `chosen_record.txt`, `cold1.*`) are a refutation of
   0025–0029 in progress on the shared grant login.
+
+## 6. Backup (R8), 2026-09-09
+
+- Private dataset `hossainpazooki/linear-ceiling-n420-2026-09-08`, upstream layout at the root (`data/kv/qwen3-0.6b-to-1.7b-n420/
+  {source,target,box-logs-2026-09-08,n420_*.sha256}`, `mappers/qwen3-0.6b-to-1.7b/n420/`, `results/mapper/qwen3-0.6b-to-1.7b/n420/`),
+  pushed by the operator from a staged copy of the verified home mirror (staging re-hashed: source 30/30, target 30/30, fit
+  outputs 7/7) with a scoped, expiring write token held only in the operator's shell (`read -s`). Order: small records
+  (`hf upload`), then one `upload-large-folder --num-workers 1` over the whole tree (89 files, 27.7 GB, 7 min 02 s), then
+  the card. Two false starts on my side: `--include` takes one pattern per flag and `hf.exe` globs the pattern itself,
+  so the large step now takes the tree with no patterns. Card revision `8675b719`.
+- Verified by `tools/hf_verify_backup.py` (new, reusable): 61 LFS files `lfs.sha256` = local sha256, 28 non-LFS files
+  downloaded and hashed, both directions checked — 89/89 OK. The one flagged file, `.gitattributes`, is the Hub's own;
+  the verifier now ignores it by default. Nothing on the Hub is a ledger figure (summarizers read the local mirror).
