@@ -18,6 +18,38 @@ hash-chained. `ledger/ledger.md` is the authority on state.
 - **MLSys 2027 measurement paper** (anchor venue; due 2026-10-30). Same record, full length.
 - **E-RL** (KV reuse across RL post-training checkpoints): design only, unregistered.
 
+## What HELD means here
+
+H-E9 is the one positive cell, and its verdict word carries a narrow, registered meaning.
+
+- **The claim.** At a real re-rendered handoff (the receiver rebuilds the prompt from the sender's
+  content), the receiver's own KV at the new positions agrees with its KV at the original positions
+  closely enough to be reused. Same model on both sides; this is not a cross-model claim.
+- **The statistic (0023).** Per matched token, the centered deviation between the two KV states in
+  the units of the mapper's R². A token "needs recompute" when its deviation exceeds τ_K, which is
+  set to the k = 1 cross-model mapper's own held-out shortfall on generic text: "no worse than the
+  mapper itself" is the tolerance. f* is the fraction of matched tokens an oracle would have to
+  recompute; the verdict is the median f* over included handoffs. HOLDS ≤ 0.15 (CacheBlend's
+  achieved recompute budget), DEGRADES ≥ 0.50, UNRESOLVED between. Band frozen before any prefill.
+- **The result (0029).** f* = 0 on every matched token of every included handoff: not one token
+  exceeds the tolerance. The τ ladder (0025) shows this is not vacuous, since a much tighter τ does
+  produce recompute. Identity, prefix-invariance and null controls passed.
+- **Read on a floor (0027).** f* assumes an oracle that knows which tokens deviate and recomputes
+  them in isolation. It is a lower bound on what any real scheme would recompute, not a scheme. HELD
+  says "no more than the mapper, on a floor"; it does not say a system achieves this.
+- **Scope.** One pair (Qwen3-0.6B → 1.7B, receiver 1.7B), one direction, one agent family, and the
+  25 of 68 observed handoffs whose sender prompt fits the 32,768-token cap, which is the shorter half
+  by length; the excluded 43 are counted and compared on length beside every E9 figure (0025). Nothing is claimed about handoffs longer
+  than the cap (`docs/2026-09-08-seed-e9-long-half.md` is the unregistered successor).
+- **The cross arm beside it, descriptive.** The same tokens pushed through the fitted cross-model
+  mapper sit beyond DEGRADES, and stay there under the larger-calibration mapper of 0034. For the
+  gap map's routing question this is the finding: what a cache-aware router needs to know at a
+  boundary is the binary "same model or not", not a transfer quantity.
+- **What HELD does not move.** H-E7a's headroom verdict (switches are rare and the recoverable
+  spend immaterial on the public record), H-E8 (the linear map fails on agent text), and the
+  recording-gap reading. HELD says same-model reuse across a re-render is free at the floor; it does
+  not say there is much of it to collect on public traces.
+
 ## Status
 
 | hypothesis | verdict | entries |
