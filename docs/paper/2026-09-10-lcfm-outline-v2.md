@@ -21,7 +21,9 @@ quoted. "Code and data released on acceptance" plus the corpus manifest's canoni
 1. **E9 (0029) stays in only if the co-author refutation of 0025–0029 is recorded** before submission; otherwise
    0032's consequence stands and §4 is one sentence marked ongoing. Status 2026-09-09: NOT recorded.
 2. **E9-long (0036) enters only from a passing `summarize_e9 --config config/e9l.toml`**, by its own entry, with
-   "n scored of 35 registered" beside every number. Status: registered (0035), run pending tonight.
+   "n scored of 35 registered" beside every number. **Status 2026-09-10: satisfied** — the run completed (35 of 35,
+   no partial close), the summarizer passed at home (the box session's 01:20Z run, re-verified by the builds
+   session), and 0036 is on the ledger: H-E9L `HELD`, bridge CARRIED.
 
 ---
 
@@ -41,8 +43,9 @@ how many cached tokens go stale — with one statistic, the oracle selective-rec
 tolerance set by a cross-model linear map's own shortfall. On the context axis we measure: at **25 real
 re-rendered SWE-bench handoffs up to 32K tokens** [0029, FROZEN, cond. 1] the same-model cache needs
 **zero recompute at every matched token on an oracle floor**, while a linear cross-model map through the same
-tokens does not [0029]; **at 35 handoffs of 35K–80K tokens under a YaRN-extended receiver [0036, PENDING run]
-the floor <reads …>**, with the deviation confined to within 16 tokens of a seam [0029]. On the weights axis we
+tokens does not [0029]; **at 35 handoffs of 35K–80K tokens under a YaRN-extended receiver the floor is again zero on every
+handoff [0036, FROZEN]**, while the residual deviation grows about threefold deep in the sender's context and the
+tolerance headroom shrinks [0036]. On the weights axis we
 register the measurement an async-RL engine's `clear_cache` flag needs and no engine has, and state what the
 context-axis result predicts for it.
 
@@ -66,7 +69,8 @@ context-axis result predicts for it.
   budget), DEGRADES ≥ 0.50. Registered before any prefill; hash-chained; every figure through a refusing
   summarizer (three lines, appendix D for the rest).
 - **Claim, stated once.** On the context axis, same-model reuse at a real re-render is free on an oracle floor
-  up to 32K [0029] and <at 35K–80K: PENDING 0036>; a linear cross-model map is not. On the weights axis the
+  up to 32K [0029] and at 35K–80K under a scaled receiver [0036]; a linear cross-model map is not, and gets
+  worse with length (cross f* 0.9286 → 0.9640). On the weights axis the
   same instrument is registered and unrun; the paper says which way the context result bets.
 
 ## 2. Corpus: real handoffs are long-context events (≈ 0.5 page; E7 compressed)
@@ -122,22 +126,43 @@ context-axis result predicts for it.
   kept handoffs) and stays beyond DEGRADES [0034, FROZEN]. Attribution is to the map, not the handoff.
 - Read on a floor [0027]: oracle selection, recompute in isolation; "no more than the mapper, on a floor".
 
-### 4.2 35K–80K: H-E9L [0036; PENDING tonight's run; registration 0035 FROZEN]
+### 4.2 35K–80K: H-E9L HELD, 35 of 35, bridge CARRIED [0036; FROZEN 2026-09-10; registration 0035]
 
-- Setup, three lines: the 35 handoffs excluded by the 32K cap and within 81,920 (|S| 34,974–80,111; prefill
-  3,970,435 tokens); receiver and source under static YaRN factor 2.5 (window 81,920) — an upstream RoPE-spec
-  change so content-space K strips exactly under the scaled rotation [0035]; same rule, τ, band, ladder,
-  controls as 4.1; run order |S| ascending with a registered stopping rule; verdict on the scored prefix, "n
-  scored of 35 registered", never pooled with 4.1's 25.
-- **Configuration bridge, first:** native vs YaRN receiver on the same tokens (three short handoffs, (p, p)):
-  median f*(τ_K) = <PENDING>; if > 0.15 the section's first sentence reads "a claim about the scaled receiver
-  only" [0035 control 4].
-- Table: same-model K (verdict), same V, cross K/V, bridge R²; τ ladder; bootstrap. <PENDING 0036>
-- **Length profiles (the section's reason to exist):** f*(τ_K) by |S| bin (35K–50K / 50K–65K / 65K–82K) and by
-  matched-token position in S (0–32K / 32K–49K / 49K–65K / 65K–82K) [0035 control 5; figures PENDING 0036].
-  The question the profile answers: does agreement at a re-rendered position depend on how deep in the
-  sender's context the token sat?
-- If the run is partial: the unscored handoffs by id and the operator's cutoff reason, one line [0036].
+- Setup, three lines: the 35 handoffs excluded by the 32K cap and within 81,920 (|S| 34,974–80,111, median
+  50,916; |R| median 11,462; prefill 3,970,435 tokens); receiver and source under static YaRN factor 2.5 (window
+  81,920) — an upstream RoPE-spec change so content-space K strips exactly under the scaled rotation [0035]; same
+  rule, τ, band, ladder, controls as 4.1; run order |S| ascending with a registered stopping rule (not needed:
+  complete, 80 min on one L40S); never pooled with 4.1's 25.
+- **Configuration bridge, first [0036 control 4]:** the same receiver prefilling the same tokens under the native
+  RoPE and under YaRN, scored at (p, p) on three short handoffs: median native-vs-scaled f*(τ_K) = **0.0000**
+  (all three), within the 0.15 reading line → **CARRIED**, τ_K carries. State the size honestly beside it: the
+  two configurations agree at bridge R² 0.8992 / 0.8821 / 0.8932 (median δ_K 0.071–0.089), so YaRN moves the
+  content key by about a tenth of its variance and no token by more than the tolerance.
+- Table (0032's clause: same-model never without the cross column):
+
+  | arm | median f*(τ_K) (p10, p90) | median f*(τ_V) | bridge R² K / V |
+  |---|---|---|---|
+  | same-model, K read-out (verdict) | **0.0000** (0.0000, 0.0000); bootstrap [0.0000, 0.0000] | 0.0000 | 0.8894 / 0.8779 |
+  | cross-model through the k = 1 map (descriptive) | 0.9640 (0.9043, 0.9904) | 0.9456 | 0.4214 / 0.1478 |
+
+  Controls: identity exactly zero; prefix invariance max δ 0.000e+00 over 34,974 positions; δ_null 2.015 / 1.975
+  [0036]. Matched fraction |M|/|R| median 0.9606 (p10 0.7735, p90 0.9873).
+- **What length changes (the section's reason to exist), all descriptive [0036]:**
+  - τ ladder: τ = 0.10 → 0.0119 (p90 0.3876); τ = 0.03 → **0.5255** (p90 0.9037). On the short half: 0.0000
+    (p90 0.1563) and 0.1433 (p90 0.5823) [0029]. The floor is still zero at the registered tolerance, with far less
+    headroom under it.
+  - Position in the sender context, pooled median δ_K (f*(τ_K) is 0.0000 in every bin): 0–32K: 0.038
+    (n = 284,094) · 32K–49K: 0.131 (n = 40,967) · 49K–65K: 0.162 (n = 43,643) · 65K–82K: 0.092 (n = 18,804).
+    Deviation at a re-rendered position rises three- to four-fold once the token sat beyond the native window,
+    then falls in the last bin (n = 4 handoffs reach it).
+  - By |S| bin, median δ_K 0.053 / 0.069 / 0.079 (n = 17 / 14 / 4 handoffs); f*(τ_K) 0.0000 in each.
+  - Seam profile b⁻(t), pooled median δ_K: 0: 0.260 · 1: 0.153 · 2–3: 0.089 · 4–7: 0.074 · 8–15: 0.086 · 16+:
+    **0.063** (n = 359,203), against 0.019 at 16+ on the short half [0029]. The perturbation is still seam-local in
+    shape; its far-from-seam floor is three times higher.
+- Cross arm: 0.9640 vs 0.9286 on the short half; cross V bridge R² 0.1478 vs 0.1722. The linear map degrades further
+  with length; attribution as in 4.1 (E8, App. A).
+- Read on a floor [0027], under the scaled receiver: HELD says the oracle recompute floor is zero at the mapper's
+  tolerance on these 35; the ladder and the position profile say how much of that tolerance the long half uses.
 
 ## 5. Weights axis, registered direction (≈ 0.6 page; E-RL, designed and unregistered — say so)
 
@@ -158,8 +183,9 @@ context-axis result predicts for it.
 
 ## 6. Limitations (≈ 0.3 page)
 
-1. **Length as selection variable.** 4.1 is the shorter half; 4.2 is the long half under a scaled receiver
-   that is a different function from the native one (the bridge says by how much) [0025, 0035].
+1. **Length and the receiver.** 4.1 is the shorter half on the native receiver; 4.2 is the long half on a
+   YaRN-scaled receiver, a different function from the native one by bridge R² ≈ 0.89 with no token over the
+   tolerance [0036]; the two cells are never pooled, and the four handoffs above 82K are unmeasured [0025, 0035].
 2. **One pair, one direction** (Qwen3-0.6B → 1.7B); one agent family; one alignment method [0009, 0029].
 3. **Floor, not method** [0027]. **Calibration size**: the E8 sentence is calibration-sensitive on V (0034:
    V's drop falls to the DEGRADES edge and reads UNRESOLVED under n = 420) [0034, FROZEN].
@@ -185,18 +211,17 @@ the SWE-bench selection rule [0024]. F. E-RL design tables (cells, sources, seal
 
 ## Freeze checklist (verify, do not trust)
 
-| figure set | summarizer | status 2026-09-09 22:30Z |
+| figure set | summarizer | status 2026-09-10 |
 |---|---|---|
 | §2 corpus numbers, hidden prefix, headroom | `summarize_e7` (+ `--overlap-null --cache-aware-ratio`) | FROZEN (ran clean 2026-09-06) |
 | §2 length table, cap ladder | 0025's coverage comparison (in `summarize_e9`); 0035's registration text | FROZEN |
 | §4.1 | `summarize_e9` at the detached `d5786df` upstream | FROZEN 2026-09-09 04:12Z; **cond. 1 open** |
 | §4.1 cross-arm explanation, App. A | `summarize_e8 --config config/e8a.toml`, `--config config/e8c.toml`, `e9_rescore summarize` | FROZEN (0031, 0034) |
-| §4.2 | `summarize_e9 --config config/e9l.toml` → `append_0036.py` | PENDING: 0035 append → box run → pull → summary → 0036 |
+| §4.2 | `summarize_e9 --config config/e9l.toml` → 0036 | FROZEN 2026-09-10: summarizer passed at home 01:20Z (9 min) and again on re-verification; 0036 appended, `ledger ok` |
 | §5 | none (no figure) | text only; verbs checked by `/honesty-check` before submission |
 
 ## Page budget
 
 §1 0.6 · §2 0.5 · §3 0.5 · §4 1.3 · §5 0.6 · §6 0.3 · title/abstract 0.2 = 4.0. If over: §5 to 0.4 by
 dropping statistic (B)'s paragraph to the appendix; §2 headroom sentence to a footnote; §4.1 controls to App. B.
-If §4.2 is cut (no passing summary by the writing cutoff): §4.1 grows by 0.4 with the seam profile as a figure,
-and §6.1 names E9-long as the registered successor with its entry number.
+§4.2 is in. If §4 runs over: the |S|-bin row and the seam profile of 4.2 go to App. B; the position profile stays.

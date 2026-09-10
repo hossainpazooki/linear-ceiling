@@ -22,7 +22,8 @@ server stopped and the effect probed); back the verified home mirror up to a pri
 (`results/<exp>/` at the root + upstream artifacts in upstream layout; every file checked by
 `lfs.sha256`), transport only — the summarizer reads the local mirror and a refusal is a finding.
 Tokens: scoped, expiring, env-only, revoked once pasted anywhere. `tools/jupyterhub/` drives a
-JupyterHub-only box (Algoverse) from home. E9's backup: `hossainpazooki/linear-ceiling-e9-2026-09-04`
+JupyterHub-only box (Algoverse) from home; `tools/ec2/` drives a rented EC2 GPU instance over ssh (E9-long,
+runbook `docs/2026-09-10-e9l-gpu-runbook.md`). E9's backup: `hossainpazooki/linear-ceiling-e9-2026-09-04`
 (private; kept dumps 48 GB + `mappers/qwen3-0.6b-to-1.7b/k1.*`).
 
 ## Commands
@@ -139,7 +140,7 @@ appended 2026-09-08 after the n = 420 TARGET half was dumped on an Algoverse H10
 (`docs/2026-09-08-n420-target-dump-runbook.md`; the 2026-08-25 CPU attempt had died with nothing written, so the source half
 is CPU 08-24 and the target half GPU 09-08, stated in 0033); the registered fit ran on the same box (home swapped at k = 4);
 0034 (its figures: e8c + e9c summarizers, both passed) appended 2026-09-09. The box release hit a co-author's audit on the
-shared login → protocol R7 step 0 + learnings 2026-09-09. **E-RL** (KV reuse
+shared login → protocol R7 step 0 + learnings 2026-09-09. **E9-long (0035 registered 2026-09-09; 0036 decided 2026-09-10): H-E9L `HELD`** — the same instrument on the 35 handoffs above the prior cap (|S| 34,974–80,111) under a YaRN-2.5 receiver (upstream RoPE-spec pin `063f402`, `config/e9l.toml`), run on a rented EC2 L40S (`tools/ec2/`, runbook `docs/2026-09-10-e9l-gpu-runbook.md`): median f*(τ_K) 0.0000 on every handoff, bootstrap [0, 0], bridge control CARRIED (scaled vs native receiver f* 0 ≤ 0.15, so τ_K carries), cross arm 0.9640 beyond DEGRADES; never pooled with 0029's 25; read on a floor (0027). Mirror + backup: `results/e9l/` at home, HF dataset `hossainpazooki/linear-ceiling-e9l-2026-09-10` (push pending the operator's token). **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own
