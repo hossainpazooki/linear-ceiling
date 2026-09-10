@@ -38,7 +38,7 @@ cell changes.
 | H-E7b | the compaction break-even distribution has substantial negative mass at current pricing (threshold: define before replay). | E7 | UNESTIMABLE |
 | H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | NOT CONFIRMED |
 | H-E9 | (achievable fraction of the headroom upper bound at a re-rendered handoff) at a re-rendered handoff, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity. Rule (entry 0019, band approved 2026-09-01, frozen before any prefill): per-handoff E9-same pooled K R² (definition A5) at LCS-floor matched positions, median over included handoffs — HOLDS >= 0.70, DEGRADES <= 0.40, UNRESOLVED between; V reported alongside, verdict-bearing for nothing; handoffs over the 32,768-token cap excluded and counted. Row added with 0019's commit set completion — the entry says "registered in the table" and the row was initially missing (process slip, noted in the handoff; the entry text is immutable and unchanged). | E9 (band in entry 0019) | HELD |
-| H-E9L | (E9's claim on the long half) at a re-rendered handoff whose sender prompt exceeds the prior cap of 32,768 tokens, same-model KV agreement on content-matched tokens keeps its usefulness under a receiver extended to 81,920 positions by static YaRN. Rule verbatim from entry 0023: median over the newly included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.3186) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; decided on the 35 newly included handoffs only, never pooled with 0029's 25; read on a floor (0027) and, if the bridge control exceeds 0.15, as a claim about the scaled receiver only. Registered by entry 0035 before any prefill. | E9-long (entry 0035) | unresolved |
+| H-E9L | (E9's claim on the long half) at a re-rendered handoff whose sender prompt exceeds the prior cap of 32,768 tokens, same-model KV agreement on content-matched tokens keeps its usefulness under a receiver extended to 81,920 positions by static YaRN. Rule verbatim from entry 0023: median over the newly included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.3186) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; decided on the 35 newly included handoffs only, never pooled with 0029's 25; read on a floor (0027) and, if the bridge control exceeds 0.15, as a claim about the scaled receiver only. Registered by entry 0035 before any prefill. | E9-long (entry 0035) | HELD |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -2169,3 +2169,62 @@ receiver that is not the trained-range model of 0029 (control 4 says by how much
 four handoffs above 81,920 and the four with an empty receiver prompt stay excluded by name.
 
 prior-entries-sha256: f6a715fd94402eb419155a2afd2f14fcbb28e954a9e8ee1a16b07ffa920dd5da
+
+### 0036 — 2026-09-10 — E9-long ran `[BASELINE]`; H-E9L HELD (35 scored of 35 registered)
+
+**Bridge reading (entry 0035 control 4): CARRIED.** Median native-vs-scaled f*(τ_K) = 0.0000 over 3 short handoffs, within the registered maximum 0.15; τ_K carries to the scaled receiver.
+
+**Setup, as registered (0035).** AWS EC2 g6e.4xlarge (1x NVIDIA L40S 48 GB), us-east-1d, i-0eafae594ebe8c291; linear-ceiling at the commit carrying 0035 and `config/e9l.toml`
+(gate: entries 0019/0023/0025/0027/0035), upstream pin `063f402` (the RoPE-spec commit). Pair qwen3-0.6b-to-1.7b;
+receiver Qwen3-1.7B and source Qwen3-0.6B both under `{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}`
+(window 81,920); the n = 50 k = 1 mapper of 0016/0020 for the cross arm. Launched 2026-09-09T23:53:12Z, finished 2026-09-10T01:13:09Z.
+Complete: 35 scored of 35 registered. Of 68 observed handoffs: 35 registered (|S| or |R| above the prior cap 32,768, both within
+81,920), 25 decided under 0029 and excluded here, 4 above the cap, 4 with an empty receiver prompt.
+Every figure below is `summarize_e9 --config config/e9l.toml`'s, from a run that passed all of its checks: alignments
+re-derived from the raw traces under the cap and floor; the run order re-derived; every R² recomputed from recorded
+moments; per-token squares summed against the moments; the 3 kept dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square within 4.2e-04 relative, max |f* diff| 0.0e+00); the bridge dumps re-scored from tensors; τ
+recomputed from the archived mapper; controls checked.
+
+**Controls (0023, 0025, 0035).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run order:
+max centered per-token δ 0.000e+00 over 34,974 positions (tolerance 1e-04). δ_null same K / V token-mean
+median 2.015 / 1.975; equal-token null pairs 0.0126. **Bridge (control 4), per handoff:** `django__django-10999_traj#64` (|S| 13,955) K 0.0000 / V 0.0000, median δ_K 0.071; `django__django-11066_traj#36` (|S| 14,269) K 0.0000 / V 0.0000, median δ_K 0.089; `astropy__astropy-14182_traj#68` (|S| 17,935) K 0.0000 / V 0.0000, median δ_K 0.080;
+median K 0.0000 / V 0.0000 against the reading maximum 0.15. Matched fraction |M|/|R| (a floor): 0.9606 (p10 0.7735, p90 0.9873).
+
+**The rule (0023, carried verbatim by 0035) and the figure it reads.** Per scored handoff, E9-same, K read-out:
+f*(τ_K) = the fraction of matched tokens whose centered per-token deviation exceeds τ_K = 0.3186; median over
+scored handoffs; HOLDS ≤ 0.15, DEGRADES ≥ 0.5, UNRESOLVED between.
+
+- **median f*(τ_K), E9-same K: 0.0000 (p10 0.0000, p90 0.0000)** over 35 handoffs (35 scored of 35 registered). Seeded bootstrap of the
+  median (seed 25, 2000 reps; reported, not read): [0.0000, 0.0000].
+- f*(τ_V = 0.4867), E9-same V (alongside): 0.0000 (p10 0.0000, p90 0.0000).
+- τ ladder (descriptive): τ = 0.1: same K 0.0119 (p10 0.0000, p90 0.3876) / V 0.0254 (p10 0.0000, p90 0.4289); τ = 0.03: same K 0.5255 (p10 0.0762, p90 0.9037) / V 0.5837 (p10 0.1829, p90 0.9071).
+- f*(τ_agent_K = 0.4371) (alongside): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.6651 (p10 0.4968, p90 0.8770).
+- f*(τ_K) over matched blocks of length ≥ 4: same K 0.0000 (p10 0.0000, p90 0.0000).
+- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: 0: 0.260 (n=4050) · 1: 0.153 (n=2956) · 2-3: 0.089 (n=4624) · 4-7: 0.074 (n=7224) · 8-15: 0.086 (n=9451) · 16+: 0.063 (n=359203).
+- **Length profiles (0035 control 5, descriptive).** (i) by |S| bin, median f*(τ_K) same K over handoffs: |S| 32769-49999: 0.0000 (p10 0.0000, p90 0.0000) (n = 17); |S| 50000-64999: 0.0000 (p10 0.0000, p90 0.0000) (n = 14); |S| 65000-81920: 0.0000 (p10 0.0000, p90 0.0000) (n = 4).
+  (ii) by matched-token position in S, pooled f*(τ_K) same K / median δ_K: positions 0-32767: 0.0000 / 0.038 (n = 284,094); positions 32768-49151: 0.0000 / 0.131 (n = 40,967); positions 49152-65535: 0.0000 / 0.162 (n = 43,643); positions 65536-81920: 0.0000 / 0.092 (n = 18,804).
+
+**Band outcome, against the rule as written: HOLDS** — on the scored prefix, 35 scored of 35 registered, never pooled with 0029's 25.
+Not one scored handoff has a single matched token whose centered deviation exceeds τ_K on the same-model arm.
+
+**Read on a floor (0027, bound to this cell).** f*(τ) is an oracle LOWER BOUND on the recompute fraction (oracle
+selection, recompute in isolation); this cell reads "no more than the mapper, on a floor", never that an achievable
+scheme reaches it.
+
+**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through the n = 50 k = 1 mapper: median f*(τ_K)
+= 0.9640 (p10 0.9043, p90 0.9904) and f*(τ_V) = 0.9456 (p10 0.9023, p90 0.9863); against the same edges the transfer arm sits beyond the DEGRADES edge.
+Cross/same median-δ ratio K / V: 8.2 (p10 3.5, p90 21.9) / 10.5 (p10 5.0, p90 26.3). Bridge R² (A5; decides nothing): same K 0.8894 (p10 0.7977, p90 0.9511),
+same V 0.8779 (p10 0.7727, p90 0.9313), cross K 0.4214 (p10 0.3525, p90 0.4578), cross V 0.1478 (p10 0.1079, p90 0.1758). The n = 420 mapper's arm on the kept subset is not
+in this entry (its own config and entry, if run).
+
+**What this establishes, stated narrowly.** On Qwen3-1.7B under YaRN factor 2.5 re-rendering 35 real SWE-bench
+composio handoffs whose sender prompt runs 32,769–81,920 tokens, with 0019's alignment and 0023's per-token rule, the
+same-model oracle recompute floor is as stated above. **Not established:** anything
+about the 0 unscored registered handoffs (none), the four above 81,920 or the four with an empty receiver prompt;
+any achievable recompute scheme; the trained-range receiver of 0029 at these lengths;
+one pair, one direction, one mapper, one alignment method; generation quality after reuse.
+
+verdict: H-E9L = HELD
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 055a140592979dd40bb2cbfcd106612aaeea2e6dc6f87514aab77212be7ce08c
