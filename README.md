@@ -21,7 +21,7 @@ flowchart LR
 
 - [What the experiments found](#what-the-experiments-found)
 - [How the record stays auditable](#how-the-record-stays-auditable)
-- [Where the data lives](#where-the-data-lives) — the three private Hugging Face datasets, including the long-context run
+- [Where the data lives](#where-the-data-lives) — the three public Hugging Face datasets, including the long-context run
 - [Where to go next](#where-to-go-next)
 - [Setup](#setup)
 
@@ -45,7 +45,10 @@ The practical result is narrow: a cache-aware router should first ask whether th
 continue. These experiments do not show that a linear map makes caches portable between models.
 
 The current objective, every decided cell with its entry, what the positive verdict does and does
-not mean, and what comes after the paper: `docs/status.md`.
+not mean, and what comes after the paper: `ledger/ledger.md` (the hypothesis table, then the
+entries its cells cite) and `docs/paper/2026-09-10-lcfm-outline-v2.md`. A consolidated
+`docs/status.md` is referenced in earlier drafts and has not been written; the archived form is
+`docs/archive/README-2026-09-09-status.md`.
 
 ## How the record stays auditable
 
@@ -65,7 +68,7 @@ The original scope boundary remains fixed:
 
 ## Where the data lives
 
-Raw model outputs never enter git history. Each GPU run's tensors are backed up to a private
+Raw model outputs never enter git history. Each GPU run's tensors are backed up to a
 Hugging Face dataset after the run is verified at home; the backup is transport, not evidence, and
 every file is checked in both directions before it counts.
 
@@ -75,14 +78,16 @@ every file is checked in both directions before it counts.
 | [`hossainpazooki/linear-ceiling-n420-2026-09-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-n420-2026-09-08) | the larger calibration set behind the cross-model map's sensitivity check (entries 0033–0034) |
 | [`hossainpazooki/linear-ceiling-e9l-2026-09-10`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10) | the long-context run on the 35 longer handoffs (entries 0035–0036) |
 
-The datasets are private; a collaborator gets a read token. Restore and verify recipes:
-`docs/status.md`, "Backups".
+All three datasets are public as of 2026-09-11 (`private: false`, `gated: false` from the Hub API);
+no read token is needed to fetch them. Protocol R8 still specifies a **private** dataset — that
+divergence is unreconciled and is the operator's to rule on. Restore and verify: R8 in
+`docs/gpu-experiment-protocol.md`, checked by `tools/hf_verify_backup.py <repo_id> <local_root>`.
 
 ## Where to go next
 
 | if you want to | read |
 |---|---|
-| see every hypothesis, rule, result and verdict | `ledger/ledger.md`, then `docs/status.md` |
+| see every hypothesis, rule, result and verdict | `ledger/ledger.md` — the table, then the entries its cells cite |
 | understand why the program asked these questions | `docs/gap-map.md` and `docs/2026-09-06-gap-map-revisited.md` |
 | read the paper being written from this record | `docs/paper/2026-09-10-lcfm-outline-v2.md` |
 | pick up the work | `docs/handoff/HANDOFF.md`, newest brief first |

@@ -21,10 +21,12 @@ per handoff; release by the seven-step checklist (mirror re-verified, box swept,
 server stopped and the effect probed); back the verified home mirror up to a private HF dataset
 (`results/<exp>/` at the root + upstream artifacts in upstream layout; every file checked by
 `lfs.sha256`), transport only — the summarizer reads the local mirror and a refusal is a finding.
+(Observed 2026-09-11: all three datasets read `private: false` on the Hub, which R8's "private"
+clause does not contemplate; unreconciled, the operator's to rule on. R8 is unchanged here.)
 Tokens: scoped, expiring, env-only, revoked once pasted anywhere. `tools/jupyterhub/` drives a
 JupyterHub-only box (Algoverse) from home; `tools/ec2/` drives a rented EC2 GPU instance over ssh (E9-long,
 runbook `docs/2026-09-10-e9l-gpu-runbook.md`). E9's backup: `hossainpazooki/linear-ceiling-e9-2026-09-04`
-(private; kept dumps 48 GB + `mappers/qwen3-0.6b-to-1.7b/k1.*`).
+(public as of 2026-09-11; kept dumps 48 GB + `mappers/qwen3-0.6b-to-1.7b/k1.*`).
 
 ## Commands
 ```
