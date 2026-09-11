@@ -84,8 +84,8 @@ every file is checked in both directions before it counts.
 | [`hossainpazooki/linear-ceiling-e9l-2026-09-10`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10) | the long-context run on the 35 longer handoffs (entries 0035–0036) |
 
 All three datasets are public as of 2026-09-11 (`private: false`, `gated: false` from the Hub API);
-no read token is needed to fetch them. Protocol R8 still specifies a **private** dataset — that
-divergence is unreconciled and is the operator's to rule on. Restore and verify: R8 in
+no read token is needed to fetch them. Protocol R8 allows public datasets (operator ruling,
+2026-09-11). Restore and verify: R8 in
 `docs/gpu-experiment-protocol.md`, checked by `tools/hf_verify_backup.py <repo_id> <local_root>`.
 
 ## Where to go next

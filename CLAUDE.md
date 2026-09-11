@@ -18,11 +18,12 @@ dated runbook (E9: `docs/2026-09-02-e9-gpu-runbook.md`; the n = 420 target dump:
 sha in the runbook (gitignored mappers included); launch detached, rotate the log before any relaunch,
 never `pkill -f` a self-matching pattern; pull → verify against `report.json` `kept_dumps` → delete,
 per handoff; release by the seven-step checklist (mirror re-verified, box swept, HF cache removed,
-server stopped and the effect probed); back the verified home mirror up to a private HF dataset
+server stopped and the effect probed); back the verified home mirror up to an HF dataset, public or private
 (`results/<exp>/` at the root + upstream artifacts in upstream layout; every file checked by
 `lfs.sha256`), transport only — the summarizer reads the local mirror and a refusal is a finding.
 (Observed 2026-09-11: all three datasets read `private: false` on the Hub, which R8's "private"
 clause does not contemplate; unreconciled, the operator's to rule on. R8 is unchanged here.)
+Ruled 2026-09-11 by the operator: public is fine, and R8 now says so.
 `tools/hf_backup.sh [--check|--verify-only] <repo_id> <staging_dir>` is that push: records, tree, card last; retries
 only the Hub's 128-commits/hour 429; refuses a missing dataset, a public one unless `ALLOW_PUBLIC=1`, a concurrent upload or summarizer, and a
 token without the `hf_` prefix; ends in `tools/hf_verify_backup.py`, whose exit is the script's. Run `--check` first.

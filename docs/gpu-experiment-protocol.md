@@ -8,14 +8,14 @@ discipline the ledger does not carry.
 
 ## Quick reference — HF backups and tokens (team)
 
-The backup of a run is a private Hugging Face dataset laid out so `hf download` reconstructs the mirror with no
+The backup of a run is a Hugging Face dataset, public or private (R8), laid out so `hf download` reconstructs the mirror with no
 translation (R8). Tokens never touch a file inside a checkout, a `--token` flag, shell history, or a chat (R9). The
 commands below are Git Bash / MINGW64 on Windows and plain bash on Linux; the interpreter is `.venv/Scripts/python.exe`
 on Windows and `.venv/bin/python` on Linux.
 
 **Token, once per role, per dataset.** In the Hub UI: Settings → Access Tokens → Create new → *Fine-grained*.
 Name `<exp>-backup-<role>-<holder>-exp-<yyyy-mm-dd>`; Repository permissions on the ONE dataset only; Write for the
-pusher, Read for a collaborator; expiry a week or less. Create the dataset first (New dataset, Private) so the token
+pusher, Read for a collaborator; expiry a week or less. Create the dataset first (New dataset; public or private, R8) so the token
 can name it. Then, in the shell you will run the commands from, and nowhere else:
 
 ```bash
@@ -56,8 +56,8 @@ It compares every LFS file's `lfs.sha256` to the local sha256, downloads and has
 both directions for missing files (the Hub's own `.gitattributes` is ignored). The dataset name and the card's
 revision go into the runbook and the handoff; the local mirror stays the summarizer's only input.
 
-**Collaborators:** a private user-namespace dataset cannot be shared per user (learnings 2026-09-05); give a read
-token, or move the dataset to an organization. A collaborator reconstructs a mirror with
+**Collaborators:** a public dataset needs no token to download. A private user-namespace dataset cannot be shared
+per user (learnings 2026-09-05); give a read token, or move the dataset to an organization. A collaborator reconstructs a mirror with
 `hf download "$REPO" --repo-type dataset --local-dir <checkout>` and verifies it the same way.
 
 **Datasets on the record:** E9 `hossainpazooki/linear-ceiling-e9-2026-09-04` (card `a45e9ee8`); n = 420 calibration
@@ -171,7 +171,7 @@ and refuses an incomplete report — and prints the report sha256 that step 1 of
    numbers are read.
 
 **R8 — Backup is transport, not evidence.** The verified home mirror of `results/<exp>/` is pushed to
-a private Hugging Face dataset laid out so `hf download --repo-type dataset --local-dir results/<exp>`
+a Hugging Face dataset laid out so `hf download --repo-type dataset --local-dir results/<exp>`
 reconstructs it with no translation, plus any gitignored upstream artifact the summarizer needs, in
 upstream's own layout under its own top-level directory (E9: `mappers/qwen3-0.6b-to-1.7b/k1.*`). Push
 only from the home mirror after verification, never from the box; small records first, kept dumps by
@@ -180,16 +180,23 @@ a single resumable `upload-large-folder` (one worker on Windows; learnings 2026-
 LFS file's `lfs.sha256` to the driver's fingerprint or the mirror's sha256; re-download and hash files
 without an LFS entry; re-upload on mismatch, delete nothing. Nothing on the Hub is a ledger figure; the
 summarizer reads the local mirror only. E9's dataset: `hossainpazooki/linear-ceiling-e9-2026-09-04`.
+**Public is fine** (operator ruling; added 2026-09-11). The datasets hold KV tensors of public models over public
+benchmark traces, so visibility is a storage choice: a public dataset downloads with no token and does not count
+against the private storage allowance. Public raises the cost of a wrong push, so two things hold either way. Push
+only from the staging tree: on 2026-09-10 an upload run from the repository root put 18,986 stray files, including
+`.venv` and gitignored `results/`, into E9-long's dataset, which on a public dataset is immediate publication. And
+sweep the staging tree's text files for credential shapes, with a planted positive control, before the first push,
+as E9-long did. Dataset names stay out of double-blind paper material: a public name identifies its owner.
 **A push is rate-limited by COMMITS, and backups compound in BYTES; both are budgeted before the sitting**
-(added 2026-09-10). What actually stopped E9-long's push was neither bytes nor scope: `429 … exceeded the rate
+(added 2026-09-10). What first stopped E9-long's push was neither bytes nor scope: `429 … exceeded the rate
 limit for repository commits (128 per hour)` at 247 of 724 files. A large mirror therefore needs several hourly
 windows, and `hf_xet` batches commits inside the Python API too, so calling `upload_folder` instead of the CLI is
-not a way around it; re-running the same command after the window resumes rather than restarts. Separately, and
-still unobserved, each run adds a private dataset of the order of its kept dumps: ~48 GB + 27.7 GB were already
-stored against a 100 GB free allowance when E9-long's 61.9 GB tree was staged, so a ceiling is plausible on a
-later attempt — the two prior figures are the repo's own and were never measured against the Hub. Read the plan
-and the used storage while the run is still being planned, and do not infer a storage failure from a stopped
-uploader: read the server's message. A finished upload command is not a finished backup — only the R8 verifier is.
+not a way around it; re-running the same command after the window resumes rather than restarts. Separately, the
+bytes limit did bite later that day: a private dataset counts against the account's private storage allowance, and
+E9-long's push stopped on `Private repository storage limit reached` at 482 of 724 files and again at 595, beside
+~48 GB + 27.7 GB of earlier private backups; it finished only after the dataset was made public (E9-long runbook
+section 6). Read the plan and the used storage while the run is still being planned, and do not infer either
+failure from a stopped uploader: read the server's message. A finished upload command is not a finished backup — only the R8 verifier is.
 **Never run a summarizer against a staging tree that is hardlinked and in flight** (added 2026-09-10): a
 hardlinked stage shares inodes with `results/<exp>/`, so a re-run rewrote 17 summary and recheck files under a
 live uploader. Copy the tree, or finish and verify the push first.
@@ -198,8 +205,9 @@ live uploader. Copy the tree, or finish and verify the push first.
 for the pusher, read-only tokens for collaborators, named `<exp>-backup-<role>-<holder>-exp-<date>`.
 A token lives in a process environment variable for the duration of the command, never in a `--token`
 flag (shell history), never in a file inside a checkout, never in a chat message or a transcript; one
-that has been pasted anywhere is revoked. A private user-namespace repo cannot be shared per user
-(learnings 2026-09-05): a collaborator gets a read token, or the repo moves to an organization.
+that has been pasted anywhere is revoked. A public dataset needs no read token. A private user-namespace repo
+cannot be shared per user (learnings 2026-09-05): a collaborator gets a read token, or the repo moves to an
+organization.
 
 **R10 — What goes where.**
 
