@@ -79,7 +79,7 @@ dumps each.
    (`setup.log`, `probe.log`, `e9l.log`, `e9l.*.halt.log`, `launches.log`) and hash; sensitive sweep (no HF
    token was ever on the box; check anyway); `rm -rf ~/.cache/huggingface`; `box.sh terminate` and read
    `terminated` back from `describe-instances`. Record the UTC time.
-9. **Backup (R8)** from the verified home mirror only: private dataset
+9. **Backup (R8)** from the verified home mirror only: private dataset (made public by the operator on 2026-09-10; §6)
    `hossainpazooki/linear-ceiling-e9l-2026-09-10`, `results/e9l/` at the root plus
    `mappers/qwen3-0.6b-to-1.7b/k1.*` in upstream layout; verified by `tools/hf_verify_backup.py`. Token hygiene R9.
 10. **Home:** `summarize_e9 --config config/e9l.toml` is the only reader (R11); a refusal is pasted verbatim into
@@ -184,3 +184,13 @@ at `.venv/bin/python`. Windows CRLF in a box script is a `bad interpreter`/`\r: 
   --finished 2026-09-10T01:13:09Z` (launch line in `launches.log`; finish = `e9l.rc` mtime). No cutoff: 35 of 35.
 - **R8 backup: NOT YET PUSHED** (needs the operator's scoped write token; the commands are in the closing brief). Dataset name
   `hossainpazooki/linear-ceiling-e9l-2026-09-10`.
+- **R8, 2026-09-10 (operator): the run's files stay local AND are backed up to the dataset above.** State at 16:50Z: the push is INCOMPLETE. 482 of the 724 staging files are on the Hub and match byte for byte; `tools/hf_backup.sh` stopped on `Private repository storage limit reached` at the tree step. The dataset also holds 18,986 stray repository files (incl. `.venv` and gitignored `results/`) from an upload run in the wrong directory; nothing credential-shaped was among them (swept, with positive controls). Removing them is `tools/hf_prune_backup.py` (dry run: 27 operations), and they keep counting against storage until the history is squashed. Nothing is to be deleted locally.
+- **R8 closed, 18:28:26Z: BACKUP VERIFIED.** Steps, all by the operator: the strays were already deleted from the
+  dataset (the prune found 0 left to remove). A second `tools/hf_backup.sh` run at 18:14Z stopped on the private storage limit
+  again, at 595 of 724. 18:20:30Z history squashed (`super_squash_history`), which removed the strays from history too.
+  The dataset was then made **PUBLIC**, and `ALLOW_PUBLIC=1 tools/hf_backup.sh` finished the tree and the card. Verifier: `lfs-compared 567,
+  downloaded+hashed 157, problems 0`. Re-checked independently without a token: 725 files at head (724 + `.gitattributes`),
+  61.94 GB, none missing or extra. All 529 `report.json` fingerprints match (476 by the Hub's `lfs.sha256`, 53 read back
+  and hashed), and a flipped hash does not match. Before the dataset went public, the 156 text files in the staging tree were
+  swept for credential shapes. The one match is `logs/box/release_sweep.sh`'s own pattern; a planted control matched 2 of 2.
+  The write token is to be revoked (R9).
