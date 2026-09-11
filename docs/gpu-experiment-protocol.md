@@ -20,6 +20,11 @@ can name it. Then, in the shell you will run the commands from, and nowhere else
 
 ```bash
 read -s HF_TOKEN && export HF_TOKEN      # paste at the silent prompt: nothing lands in history or on disk
+# ^ RUN THIS LINE ALONE and paste nothing after it (added 2026-09-10). `read` consumes the next line of standard
+#   input, so in a pasted block it eats the following command instead of the secret: the token is never set, the
+#   push runs unauthenticated, and the failure surfaces as a 401 out of `create_repo` that reads like a scope
+#   problem. `hf auth whoami` printing the username is the confirmation to require before the long command.
+hf auth whoami                           # must print `user: <you>`; `Not logged in` means the read above was eaten
 # ... run the commands below in this same shell ...
 unset HF_TOKEN                           # then revoke the token in the UI; one that was pasted anywhere is revoked
 ```
@@ -37,7 +42,9 @@ $HF upload "$REPO" README.md README.md --repo-type dataset --quiet              
 
 Gotchas that cost real time: `upload-large-folder` takes the whole tree — do not pass `--include` patterns (`hf.exe`
 globs them itself and the extra matches become stray arguments); more than one worker wedges at 0 bytes on Windows
-(learnings 2026-09-04); rerunning the same command resumes.
+(learnings 2026-09-04); rerunning the same command resumes. A tree of many files will not finish in one sitting:
+the repository accepts 128 commits per hour and the uploader commits in batches, so plan on re-running across
+several windows and let the R8 verifier, not the last command's exit, decide when it is done (added 2026-09-10).
 
 **Verify from the Hub's own hashes, never from the uploader's log:**
 
@@ -84,6 +91,12 @@ backend is known. In float32 with grouped-query heads, transformers' SDPA takes 
 materializes `[heads, T, T]` scores: 16 × 29,391² × 4 B = 51.49 GiB on the E9 handoff that OOMed a
 39.5 GiB slice (learnings 2026-09-04, entry 0026). Measure `torch.cuda.max_memory_allocated` at the
 real sequence length on the real path before requesting a card; state the measured peak in the request.
+**An extrapolated peak is a bound to be replaced, not a budget** (added 2026-09-10). E9-long's request carried
+29.2 GiB extrapolated from a slope measured on a smaller slice; the probe on the granted card measured
+**31.56 GiB** at T = 80,111, 8% higher. Re-run the probe on the granted card, under the run's own config —
+including any rope scaling — before the launch, and let that number, not the estimate, gate the sitting.
+Static YaRN cost no extra memory at equal T: 16.70 GiB at 32,768 scaled on an L40S against 16.72 GiB native
+on an H100 MIG slice, so the window extension is free and only the longer sequence is not.
 
 **R3 — Everything the run needs is either in git, in the manifest, or listed by sha in the runbook.**
 Traces come from the committed manifest (`e7_manifest fetch`). Gitignored artifacts the driver reads
@@ -96,7 +109,11 @@ Never `pkill -f <pattern>` from a shell whose own command line matches the patte
 relaunch, `mv <exp>.log "<exp>.$(date -u +%Y%m%dT%H%M%SZ).halt.log"` and pull it home first; a
 `> <exp>.log` redirect on relaunch is a silent delete of the halt log the verdict entry will cite
 (learnings 2026-09-04). Delete a refused attempt's transients and record the deletion with a listing
-(0027 does).
+(0027 does). **Run the driver unbuffered** (added 2026-09-10): CPython block-buffers stdout when it is a file,
+so a detached `python -m …` without `-u` writes nothing to the log until it exits. E9-long's log held no
+`[i/N]` line for 80 minutes while the run was healthy and checkpointing normally. Liveness and progress come
+from the checkpointed `report.json` and the `.rc` file the launcher writes, never from the log's length; a
+wait keyed on the log reads a working run as hung (learnings 2026-09-10).
 
 **R5 — Pull, verify, then delete; the driver's fingerprint is the oracle.** The driver writes a sha256
 per kept file into `report.json` under each score's `kept_dumps`. Per handoff, in this order: download
@@ -104,18 +121,27 @@ the kept `scratch/<stem>/`, verify every file against that fingerprint, and only
 box (0027). Small records (`report.json`, `align/`, `controls/`, `scores/`, `tokens/`, the log) are
 mirrored every round; a mirror must re-pull on size *or* modification-time change, since a same-size
 skip is blind to a rewritten binary of equal length (learnings 2026-09-04). `tools/jupyterhub/pull.py`
-is this loop for a JupyterHub-only box; `rsync`/tar-over-ssh in the runbook §5 is the ssh form.
+is this loop for a JupyterHub-only box; `tools/ec2/pull.py` is the same loop over ssh, streaming each kept
+directory with tar and deleting it on the box only after every fingerprint matches (added 2026-09-10).
 
 **R6 — Nothing may exist only on the box, and nothing leaves the box unverified.** Before release, the
 home mirror holds `report.json` with `complete: true`, every record directory, and every kept dump with
 its fingerprint re-verified at home from the raw bytes, not from the puller's log. Then the box-side
-hashes of every small record are diffed against the mirror by path.
+hashes of every small record are diffed against the mirror by path. `tools/ec2/verify_mirror.py <exp>` does the
+home half independently of the puller's own bookkeeping — it re-hashes every file `report.json` fingerprints
+and refuses an incomplete report — and prints the report sha256 that step 1 of R7 wants (added 2026-09-10).
 
 **R7 — Release checklist, in order, stop at the first failure.**
 0. The account is shared until proven otherwise (added 2026-09-09; learnings entry of that date). Before any deletion
    or stop: `ls -la ~` and `ps -u $(whoami)`, and compare against the runbook's own list of files and processes. Anything
    not ours — a directory, a notebook, a shell, a python — aborts the release: delete nothing, stop nothing, leave the
    server up, tell the operator. A one-liner that deletes before it lists cannot honor "ours" in step 5.
+   **On a rented single-tenant instance the rule stands and the allowlist changes** (added 2026-09-10): an
+   allowlist written for a shared hub login aborted three times on an AWS Deep Learning AMI — on the image's own
+   license files, `.aws`, `.gnupg`, `gds-nvidia-fs`, on artifacts our own tooling created (`.nv`, `.zshrc`), and
+   on the sweep's own redirected log. Classify by mtime against the instance launch time: anything older is
+   image baseline and is listed for the record, anything newer must be on the run's own list. Each abort is the
+   checklist working; resolve it by read-only inspection and never by loosening the abort.
 1. Mirror complete and re-verified (R6); print the mirror's `report.json` sha256.
 2. Box listing: no tensor directory remains under `results/<exp>/`; if one does, pull and verify it
    first, delete nothing unverified.
@@ -124,11 +150,22 @@ hashes of every small record are diffed against the mirror by path.
 4. Sensitive-data sweep: no `~/.cache/huggingface/token`, no `HF_TOKEN` or `hf_…` string in any
    history, rc file, script or log, no git credential store or `.netrc`, plain HTTPS remotes only.
    Then `rm -rf ~/.cache/huggingface`: model weights are someone else's disk quota until the wipe.
+   **Count matches; never read grep's exit status as the verdict** (added 2026-09-10). `grep -rl PATTERN <files> && hits=1`
+   is fail-open: one missing file in the list makes grep exit 2 even after it printed a match, so the sweep
+   reports zero hits with the match visible above it. Use `grep -rls … | awk 'END{print NR}'` and compare the
+   count. The E9-long sweep did exactly this, on a false positive, with no real secret on the box (learnings 2026-09-10).
 5. Stop every process of ours; `ps -u $(whoami)` shows only the hub's own server (and the kernel
    used to look, which is deleted next). GPU processes that belong to other users' slices are not ours.
 6. Stop the user server through the Hub API and verify the effect, not the response: the user record
    shows no server, the `/user/<u>/` route no longer answers 200, the Hub home page offers "Start My
    Server". Record the UTC time.
+   **On a rented instance the effect is termination, and the proof expires** (added 2026-09-10): terminate, wait,
+   and read the state back — not the API's acknowledgement — then record the UTC time, because the provider drops
+   terminated instances from its listing within hours and the read-back stops being reproducible. Afterwards the
+   durable form is the negative that persists: query by instance-id filter and require zero reservations, a check
+   whose positive control is a live instance returning one. Also confirm no unattached volume survived the
+   instance, and hold the termination until the summarizer has passed, so a refusal can still be re-scored on the
+   same platform.
 7. Report: box vs mirror report sha256 (must match), what step 3 pulled with sizes, what step 4 found,
    the stop response, the release time. No run numbers in the release report; the summarizer is where
    numbers are read.
@@ -143,6 +180,19 @@ a single resumable `upload-large-folder` (one worker on Windows; learnings 2026-
 LFS file's `lfs.sha256` to the driver's fingerprint or the mirror's sha256; re-download and hash files
 without an LFS entry; re-upload on mismatch, delete nothing. Nothing on the Hub is a ledger figure; the
 summarizer reads the local mirror only. E9's dataset: `hossainpazooki/linear-ceiling-e9-2026-09-04`.
+**A push is rate-limited by COMMITS, and backups compound in BYTES; both are budgeted before the sitting**
+(added 2026-09-10). What actually stopped E9-long's push was neither bytes nor scope: `429 … exceeded the rate
+limit for repository commits (128 per hour)` at 247 of 724 files. A large mirror therefore needs several hourly
+windows, and `hf_xet` batches commits inside the Python API too, so calling `upload_folder` instead of the CLI is
+not a way around it; re-running the same command after the window resumes rather than restarts. Separately, and
+still unobserved, each run adds a private dataset of the order of its kept dumps: ~48 GB + 27.7 GB were already
+stored against a 100 GB free allowance when E9-long's 61.9 GB tree was staged, so a ceiling is plausible on a
+later attempt — the two prior figures are the repo's own and were never measured against the Hub. Read the plan
+and the used storage while the run is still being planned, and do not infer a storage failure from a stopped
+uploader: read the server's message. A finished upload command is not a finished backup — only the R8 verifier is.
+**Never run a summarizer against a staging tree that is hardlinked and in flight** (added 2026-09-10): a
+hardlinked stage shares inodes with `results/<exp>/`, so a re-run rewrote 17 summary and recheck files under a
+live uploader. Copy the tree, or finish and verify the push first.
 
 **R9 — Token hygiene.** Hub tokens are fine-grained, scoped to the one repo, and expiring; write tokens
 for the pusher, read-only tokens for collaborators, named `<exp>-backup-<role>-<holder>-exp-<date>`.
@@ -173,7 +223,12 @@ or loosened afterwards without a new entry and a new measurement.
 **R12 — Everything is re-verifiable by someone who was not there.** The closing brief, the learnings
 entries and the probes under `docs/probes/` carry the commands and the outputs; a co-author's
 refutation of the run's entries is recomputation from the git repo plus the backup, and if that is not
-possible from a clean checkout, something is missing from R3 or R8.
+possible from a clean checkout, something is missing from R3 or R8. **Anchor every `re-verify:` line on something
+we control** (added 2026-09-10): a brief proved a box release with a provider query that returned the instance's
+`terminated` state, and three hours later the same command returned nothing, because the provider had forgotten
+the record. A line that cannot tell 'false' from 'no longer knowable' verifies nothing. Point at a committed
+file, a pulled log or a hash; where the fact really is a third party's state, use the form whose answer survives
+the record's expiry and can still be distinguished by a positive control.
 
 ## The box, concretely (Algoverse TLJH, JupyterHub only)
 
@@ -188,6 +243,18 @@ checkpoint is the only protection. PyPI `torch` is a cu130 build; a CUDA 12.8 dr
 `whl/cu128` index. `tools/jupyterhub/` holds the two scripts; the memory note `jupyterhub-box-driving`
 holds the trap list.
 
+## The box, concretely (a rented cloud instance, ssh)
+
+Added 2026-09-10 from the E9-long sitting. An hourly instance removes the transport traps of a hub-only grant —
+ssh, scp and tar streams replace a kernel websocket and base64 uploads, there is no 40 s command ceiling and no
+shared login — and replaces them with a meter and a delete. The instance bills until it is terminated, so arm a
+self-halt at setup and terminate through the release checklist, never by walking away; the root volume dies with
+the instance, so nothing may live only there. Pin the image by id, restrict ssh to the home address, and size the
+disk for the kept dumps plus the transients. Capacity is not quota: a launch can be refused in one availability
+zone and succeed in the next, so the launcher retries across zones. The stack pins stay the run's own, not the
+image's defaults. `tools/ec2/` holds the lifecycle, setup, probe, launcher, puller, mirror verifier and release
+sweep; the E9-long runbook is the worked example.
+
 ## Where the E9 instance of each rule lives
 
 | rule | E9 record |
@@ -199,3 +266,6 @@ holds the trap list.
 | R6, R7 | this session's release report (handoff 2026-09-05); step 0: the n = 420 runbook's 00:40Z incident (2026-09-09) |
 | R8, R9 | HF dataset at commit `a45e9ee8`; learnings 2026-09-04 upload, 2026-09-05 sharing |
 | R11 | 0028; learnings 2026-09-04 relative check |
+
+The E9-long sitting (2026-09-10) is the rented-instance instance of the same rules: entries 0035 and 0036,
+runbook `docs/2026-09-10-e9l-gpu-runbook.md` §§1–6, tooling `tools/ec2/`, and the 2026-09-10 learnings entries.
