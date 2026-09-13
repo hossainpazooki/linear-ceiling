@@ -47,6 +47,18 @@ def test_f_star_is_the_smallest_removed_fraction_and_zero_at_the_mean():
         f_star(d, -1.0)
 
 
+@pytest.mark.parametrize("invalid", [np.nan, np.inf, -np.inf, -0.1])
+def test_f_star_refuses_invalid_deviations(invalid):
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        f_star([invalid, 0.1], 0.3186)
+
+
+@pytest.mark.parametrize("invalid", [0.1, [[0.1], [0.2]]])
+def test_f_star_refuses_non_vector_deviations(invalid):
+    with pytest.raises(ValueError, match="one-dimensional"):
+        f_star(invalid, 0.3186)
+
+
 def test_band_outcome_edges():
     rule = {"holds_max": 0.15, "degrades_min": 0.50}
     assert band_outcome(0.15, rule) == "HOLDS" and band_outcome(0.0, rule) == "HOLDS"
