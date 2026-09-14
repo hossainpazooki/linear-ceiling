@@ -13,7 +13,9 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state (2026-09-13): **`append_0037.py` STAGED** (E9 scaled short cell registration: 0029's 25 handoffs under 0036's
+Current state (2026-09-13, later): **0037 APPENDED** 2026-09-13 (chain `f24f8df65f91`, `ledger ok`; script retired in the same
+change; the run itself is on a rented EC2 L40S, runbook `docs/2026-09-13-e9s-gpu-runbook.md`; its figures enter by their own
+entry, number allocated at staging). Earlier that day: **`append_0037.py` STAGED** (E9 scaled short cell registration: 0029's 25 handoffs under 0036's
 receiver configuration and pin, `config/e9s.toml`; descriptive, no hypothesis row, no verdict; the comparison reader is
 `linear_ceiling.e9_compare`; refuses until `results/e9s/align/coverage.json` reproduces 0029's included set, alignments and
 keep draw exactly, `results/e9s/` holds nothing else, and the upstream HEAD is at 0036's pin). **0037 is allocated here.** If

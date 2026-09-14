@@ -2228,3 +2228,81 @@ verdict: H-E9L = HELD
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: 055a140592979dd40bb2cbfcd106612aaeea2e6dc6f87514aab77212be7ce08c
+
+### 0037 — 2026-09-13 — E9 scaled short cell registered before any prefill: 0029's 25 handoffs under 0036's receiver configuration; descriptive, decides nothing
+
+**Why, and why now.** The 4-pager's two cells differ in receiver configuration as well as length: 0029 (H-E9, the 25
+handoffs within 32,768) was measured on the native receiver, 0036 (H-E9L, the 35 handoffs of 35K–80K) on a receiver
+scaled by static YaRN 2.5. 0036's configuration bridge (control 4) measured, on three short handoffs at pairs (p, p),
+that YaRN alone moves the content key by a median δ_K of 0.071–0.089 — the same order as the cross-cell difference in
+the far-from-seam floor (16+ bin: 0.019 in 0029, 0.063 in 0036) and a plausible part of the τ = 0.03 ladder's move
+(0.1433 → 0.5255). Every "what length changes" figure in the paper (outline v3 §5.2) is therefore length AND
+configuration. This entry registers, before any prefill, the run that removes the configuration from that comparison:
+0029's 25 handoffs, re-rendered under 0036's receiver, scored by 0029's instrument unchanged. `results/e9s/` holds
+no report and no score file at append; this script refuses otherwise (R1). The only thing under it is the
+instrument's own alignment pass (`e9 --align-only --config config/e9s.toml`, `align/coverage.json` sha256
+`c371185c7e06`), which reproduces 0029's coverage and keep draw exactly (checked by this script
+against `results/e9/report.json`: the same 25 included ids with the same `n_sender`/`n_receiver`/`n_matched` and
+text hashes, the same 43 excluded, the same eight kept).
+
+**What is measured, and what is not decided.** The instrument is 0023/0025/0027's verbatim (`[e9.rule]`, `[e9.controls]`,
+`[e9.alignment]`, `[e9.mapper]`, `[e9.keep]` byte-for-byte `config/e9.toml`): per matched token the centered deviation
+in R²'s units between the receiver's own K at the sender position and at the re-rendered position; f*(τ_K = 0.3186)
+as the oracle selective-recompute fraction defined on the MEAN of the remaining tokens (0023), read on a floor (0027);
+τ_V = 0.4867, τ_agent_K = 0.4371, the τ ladder (0.1, 0.03), the seam bins, the block floor (4), the
+bootstrap (seed 25, 2000 reps), the cross arm through 0029's n = 50 k = 1 mapper by sha. **No hypothesis row is
+added and no `verdict:` line will follow:** H-E9 (0029) and H-E9L (0036) are immutable; this run's band word, if
+stated, is descriptive. Cap 32,768, no floor, so the verdict set of 0029 is the whole included set: **68
+observed · 25 included · 43 excluded** (0029's reasons, unchanged). Prefill budget 578,338 sender tokens (1.7B and
+0.6B) + 166,967 receiver tokens = 1,323,643 tokens.
+
+**The receiver configuration.** Both models under static YaRN in the HF form `{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}`,
+exactly 0036's, on every dump of the run, at the upstream pin `063f4023fdde` (0035's RoPE-spec commit: the
+spec is read from the model's own rotary embedding, halt-checked at dump time, and stripped as R^T/m). The native
+run's pin `d5786df` is NOT usable here: its strip is plain-θ and would be wrong under YaRN (0035).
+
+**The registered reading (`linear_ceiling.e9_compare`, fail-closed; descriptive).** After a passing
+`summarize_e9 --config config/e9s.toml`, the comparison reads the native run (`results/e9/`) and the scaled run
+(`results/e9s/`) token by token: it refuses unless both are complete under their committed configs, cover the same
+25 handoffs, share every alignment array byte for byte, and every score and per-token record matches the hash its
+report recorded. It states, per handoff and in the median over handoffs, the paired difference of the mean δ_K
+(scaled − native; seeded bootstrap of the median, seed 37, 2000 reps), f*(τ) at τ_K and on the ladder under both
+receivers, the fraction of tokens over τ_K under both, the pooled per-token difference, and the seam profile b⁻(t)
+under both. Against `results/e9l/summary.json` it states the **configuration share**: (scaled − native) / (long −
+native) for the far-from-seam (16+) median δ_K and for each ladder τ's median f*. **Reading fixed now:** a share near
+1 says the receiver configuration accounts for the cross-cell difference and the paper's "what length changes"
+figures are re-stated as configuration effects; a share near 0 says the handoffs do and length is the remaining
+candidate; in between the paper reports both. None of these is a claim about length alone: the two cells are
+different handoffs. The one thing this run can change in the paper is which sentence follows each 0036 descriptive.
+
+**Run order, stopping rule, resume.** As 0035: `n_sender_asc` (|S| ascending, ties by id), controls on the first handoff
+in that order, `--close-partial` allowed only on a prefix of the registered order with every unscored handoff named,
+`--resume` after a crash. A partial close leaves the comparison undefined on the unscored handoffs, which
+`e9_compare` refuses; the entry recording the figures states "n scored of 25 registered".
+
+**Keep subset.** 0025's draw reproduced: seed 9, n 8 over the same sorted ids → the same eight handoffs
+(`20241016_composio_swekit/astropy__astropy-14182_traj#68`; `20241016_composio_swekit/astropy__astropy-7166_traj#88`; `20241016_composio_swekit/astropy__astropy-7606_traj#88`; `20241025_composio_swekit/astropy__astropy-14096_traj#80`; `20241025_composio_swekit/astropy__astropy-14365_traj#119`; `20241025_composio_swekit/astropy__astropy-14995_traj#74`; `20241025_composio_swekit/django__django-10999_traj#64`; `20241025_composio_swekit/django__django-11066_traj#36`). Their scaled stride-1 dumps are retained, fingerprinted, pulled home beside their native twins
+under `results/e9/scratch/`, and re-scored from tensors by the summarizer under 0028's tolerance. A (p, p)
+native-vs-scaled read on these eight at home, CPU only, is available and is not registered here.
+
+**Controls (1–3 as 0023/0025; 6 as 0025).** (1) Pipeline identity HALT. (2) Prefix-invariance HALT on the first handoff in
+run order, max centered δ ≤ 1e-04. (3) δ_null (seed 23). No configuration bridge (control 4) and no length
+profiles (control 5): the whole run is the bridge, over all 25 handoffs at the pairs the instrument actually reads.
+(6) Seam profiles b(t) and b⁻(t) as 0025, same bins.
+
+**Gate and enforcement.** `e9 --check --config config/e9s.toml` refuses until entries 0019/0023/0025/0027/0035/0037 are in the
+committed ledger, `config/e9s.toml` is committed unmodified, the upstream is at the pin with every invoked path clean,
+and the mapper artifact is present by sha; `summarize_e9 --config config/e9s.toml` is the only reader of the run's
+figures and `e9_compare` the only reader of the comparison; both refuse on any disagreement. Tests:
+`tests/test_e9_scaled_short.py` (the config is 0029's instrument under 0036's receiver; the comparison refuses on a
+different handoff set, a different pairing, an incomplete run, a report under another config, and an edited record).
+
+**What this does NOT touch.** The H-E9 and H-E9L cells, τ_K, τ_V, τ_agent_K, the rule, the band, the ladder, 0025's keep
+subset, `results/e9/`, `results/e9l/`, `results/e8*/`, `results/e9c/`, `config/e9.toml` and `config/e9l.toml`. The
+n = 420 arm is not run under this entry. Nothing here is a figure; the comparison's figures enter by their own
+numbered entry, and the paper only from that entry.
+
+**Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the short half of one corpus under a
+receiver that is not the trained-range model; floor not method (0027); generation quality after reuse not measured.
+
+prior-entries-sha256: f24f8df65f91e62ada4cd9097f0afe685ec76b944cfe2c5fc9da2b8050ddf2bc
