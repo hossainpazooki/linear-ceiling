@@ -163,7 +163,9 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
 - **Ladder beside the HOLDS:** τ = 0.10 → 0.0119 (p90 0.3876); τ = 0.03 → **0.5255** (p90 0.9037), against 0.0000 /
   0.1433 on the short half [0029]. Floor still zero at the registered tolerance; far less headroom under it. The
   per-token tail, same status as in 5.1 (**PENDING, NOT IN**): per-handoff mean δ_K 0.043–0.269 (the maximum sits
-  0.05 under τ_K); 30,711 of 387,508 matched tokens (7.9%) exceed τ_K, on all 35 handoffs (median 5.8%, max 34.1%);
+  0.05 under τ_K); 30,701 of 387,508 matched tokens (7.9%) exceed τ_K, on all 35 handoffs (median 5.8%, max 34.1%;
+  counted at the registered τ_K = 0.3186442653116294 — a typed 0.3186 over-counts by ten; the co-author's probe
+  `docs/probes/2026-09-11-e9l-record-recompute.py` reproduces the same count from the public backup);
   pooled p90 0.2856, p99 0.7600.
 - **The configuration confound, stated in the body:** 5.1 is the native receiver and 5.2 the YaRN receiver, and the
   bridge shows YaRN alone moves content keys by median δ_K 0.071–0.089 [0036] — the same order as the far-from-seam
