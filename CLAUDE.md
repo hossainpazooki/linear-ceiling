@@ -64,8 +64,9 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e9_rescore summarize                        # fail-closed: same-arm CONTROL vs 0028's recheck (refuses), cross f* under tau_K / tau_K' / ladder beside 0029's, bootstrap -> results/e9c/summary.{md,json}
 .venv/Scripts/python.exe -m linear_ceiling.e9 --check           # E9 gate: refuses until 0019 + 0023 + 0025 + 0026 + 0027 + config/e9.toml committed AND the 0026 upstream re-pin holds (and the mapper artifact is present)
 .venv/Scripts/python.exe -m linear_ceiling.e9 --align-only      # entry 0025: every alignment + results/e9/align/coverage.json (coverage, reasons, keep draw, block counts) before any prefill; CPU, no gate
-.venv/Scripts/python.exe -m linear_ceiling.e9 --align-only --config config/e9s.toml   # scaled short cell (staged 0037): must reproduce 0029's 25 + keep draw; the registration script checks it
+.venv/Scripts/python.exe -m linear_ceiling.e9 --align-only --config config/e9s.toml   # scaled short cell (0037): must reproduce 0029's 25 + keep draw; the registration script checked it
 .venv/Scripts/python.exe -m linear_ceiling.e9 --check --config config/e9s.toml        # gate: 0019/0023/0025/0027/0035/0037 committed, upstream at 0036's pin 063f402, mapper by sha
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau --config config/e9s.toml   # BEFORE the GPU run (0023): the gate does not check it and the summarizer refuses without it (learnings 2026-09-14)
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --config config/e9s.toml      # fail-closed, as e9l minus bridge/profiles; then:
 .venv/Scripts/python.exe -m linear_ceiling.e9_compare --native config/e9.toml --scaled config/e9s.toml --long results/e9l/summary.json   # paired native-vs-scaled per token + the configuration share -> results/e9s/compare.{json,md}; refuses on any seam
 .venv/Scripts/python.exe -m linear_ceiling.e9                   # GPU-scale: identity + null controls on the first handoff, then per handoff 3 stride-1 dumps + score_positions --per-token; checkpoints per handoff; keep-subset dumps retained

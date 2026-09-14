@@ -4,7 +4,7 @@
 # after this script's output is in the runbook. Usage: bash ~/release_sweep.sh  (prints; exit 0 = swept, ready to terminate)
 set -uo pipefail
 EXP=${EXP:-e9l}
-OURS_FILES="k1.json k1.safetensors traces.tar.gz setup.sh run.sh probe_e9l.py release_sweep.sh setup.log setup.rc probe.log probe.rc ${EXP}.log ${EXP}.rc launches.log manifest_check.out release.log e9l.records.sha256 PYTHON_PACKAGES_LICENSES THIRD_PARTY_SOURCE_CODE_URLS"
+OURS_FILES="k1.json k1.safetensors traces.tar.gz setup.sh run.sh probe_e9l.py release_sweep.sh setup.log setup.rc probe.log probe.rc ${EXP}.log ${EXP}.rc launches.log manifest_check.out release.log ${EXP}.records.sha256 PYTHON_PACKAGES_LICENSES THIRD_PARTY_SOURCE_CODE_URLS"
 echo "== step 0: $(date -u +%FT%TZ) who is here (single-tenant instance; anything not ours still aborts)"
 ls -la ~
 ps -u "$(whoami)" -o pid,etimes,cmd --no-headers | grep -v "sshd\|bash -c\|release_sweep\|ps -u\|grep" || true

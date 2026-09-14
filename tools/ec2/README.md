@@ -17,6 +17,7 @@ to find only us).
 | `pull.py` | home | R5/R6: mirror small records + box logs every two minutes; stream each kept directory home with tar-over-ssh, verify every fingerprint against `report.json`, only then delete it on the box; exits when complete and everything is home |
 
 ```bash
+.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau --config config/<exp>.toml   # HOME, before launch: the gate never checks results/<exp>/calibration/tau.json and the summarizer refuses without it (e9s, 2026-09-14)
 tools/ec2/box.sh up                                   # prints BOX=ubuntu@<ip>
 tools/ec2/box.sh put "$MAPPER/k1.json" k1.json && tools/ec2/box.sh put "$MAPPER/k1.safetensors" k1.safetensors
 tools/ec2/box.sh put traces.tar.gz traces.tar.gz      # tar -czf traces.tar.gz traces  from the linear-ceiling root
@@ -25,6 +26,7 @@ tools/ec2/box.sh ssh 'setsid nohup bash ~/setup.sh > ~/setup.log 2>&1 < /dev/nul
 tools/ec2/box.sh ssh '~/kv-transfer-replication/.venv/bin/python ~/probe_e9l.py > ~/probe.log 2>&1; tail -3 ~/probe.log'
 tools/ec2/box.sh ssh 'bash ~/run.sh'                  # or: bash ~/run.sh --resume
 BOX=ubuntu@<ip> .venv/Scripts/python.exe tools/ec2/pull.py e9l   # long-running; on Windows start it hidden
+tools/ec2/box.sh ssh 'LAUNCH_UTC="<box launch, UTC>" bash ~/release_sweep.sh > ~/release.log 2>&1; cat ~/release.log'   # R7 steps 0-5; pull release.log + <exp>.records.sha256 home by name (scp does not expand braces)
 tools/ec2/box.sh terminate                            # R7 step 6, after the release checklist
 ```
 
