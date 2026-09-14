@@ -28,6 +28,12 @@ BOX=ubuntu@<ip> .venv/Scripts/python.exe tools/ec2/pull.py e9l   # long-running;
 tools/ec2/box.sh terminate                            # R7 step 6, after the release checklist
 ```
 
+For another experiment set `EXP` (and for `setup.sh` also `LC_SHA`, the commit carrying its registration entry, and
+`HOME_COVERAGE_SHA12`, the LF-normalized sha of its `align/coverage.json` at home) in the environment of each box
+script, e.g. `setsid nohup env EXP=e9s LC_SHA=<sha> HOME_COVERAGE_SHA12=<sha12> bash ~/setup.sh > ~/setup.log …` and
+`EXP=e9s bash ~/run.sh`; at home `pull.py e9s`, `verify_mirror.py e9s`, and `LC_NAME=lc-e9s-<date> box.sh up`.
+Defaults reproduce the 09-10 E9-long sitting.
+
 Box scripts must be LF; `git config core.autocrlf` on a Windows clone can hand you CRLF copies, so `put` them
 after `sed -i 's/\r$//'` or from a `--eol=lf` checkout. The instance halts itself 24 h after setup (behaviour
 "stop": the volume and everything on it survive, compute billing ends); `sudo shutdown -c` cancels that.

@@ -18,10 +18,13 @@ sys.path.insert(0, str(Path.home() / "kv-transfer-replication"))
 from kvt.models import load_model  # noqa: E402
 from kvt.pairs import PAIRS  # noqa: E402
 
-cfg = tomllib.loads((Path.home() / "linear-ceiling" / "config" / "e9l.toml").read_text(encoding="utf-8"))["e9"]
+import os
+EXP = os.environ.get("EXP", "e9l")
+cfg = tomllib.loads((Path.home() / "linear-ceiling" / "config" / f"{EXP}.toml").read_text(encoding="utf-8"))["e9"]
 pair = PAIRS[cfg["pair"]]
 rope = dict(cfg["rope"])
-ladder = [int(x) for x in (sys.argv[1].split(",") if len(sys.argv) > 1 else "32768,65536,80111".split(","))]
+default_ladder = "32768,65536,80111" if int(cfg["handoffs"]["context_cap"]) > 32768 else "32768"
+ladder = [int(x) for x in (sys.argv[1].split(",") if len(sys.argv) > 1 else default_ladder.split(","))]
 free, total = torch.cuda.mem_get_info()
 print(json.dumps({"card": torch.cuda.get_device_name(0), "total_GiB": round(total / 2**30, 2),
                   "free_GiB": round(free / 2**30, 2), "torch": torch.__version__, "rope": rope}), flush=True)

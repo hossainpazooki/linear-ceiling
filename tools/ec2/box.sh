@@ -39,7 +39,7 @@ up)
     if ID=$(aws_ ec2 run-instances --image-id "$AMI" --instance-type "$TYPE" --key-name "$KEY" \
         --security-group-ids "$SG" --subnet-id "$SN" --block-device-mappings "$BDM" \
         --instance-initiated-shutdown-behavior stop \
-        --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$NAME},{Key=purpose,Value=e9l-sitting}]" \
+        --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$NAME},{Key=purpose,Value=gpu-sitting}]" \
         --query 'Instances[0].InstanceId' --output text 2>/tmp/lc-run-err); then break; fi
     cat /tmp/lc-run-err; ID=""
     grep -q "InsufficientInstanceCapacity\|Unsupported" /tmp/lc-run-err || exit 4

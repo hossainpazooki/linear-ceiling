@@ -5,11 +5,12 @@
 # Pins below are entry 0035's; the mapper and manifest shas are the R3 table of docs/2026-09-10-e9l-gpu-runbook.md.
 trap 'echo "EXIT=$?" > ~/setup.rc' EXIT
 set -euo pipefail
-LC_SHA=3f67e4e07c77a3d94c9e6a1ec93f1c91a5c37806          # linear-ceiling: 0035 on the ledger, e9l instrument, runbook commit's parent
+EXP=${EXP:-e9l}                                            # experiment name: config/$EXP.toml, results/$EXP/ (e9l = the 09-10 sitting)
+LC_SHA=${LC_SHA:-3f67e4e07c77a3d94c9e6a1ec93f1c91a5c37806}   # linear-ceiling commit to clone at: the one carrying the registration entry
 UP_SHA=063f4023fdde67dedbee01a92518ce7f83f6cf5d          # upstream: the RoPE-spec commit (config/e9l.toml upstream_sha)
 MAPPER_JSON_SHA=2fd05c333156607436af128ccd7a009f175f13138d27e4126588c24f515cc86e
 MAPPER_ST_SHA=cd6a8d939b36db901f50e13bae446aef833f5d2ea7276658f499e993e63607f2
-HOME_COVERAGE_SHA12=492d8f0db8d0                          # results/e9l/align/coverage.json at home (0035 cites it)
+HOME_COVERAGE_SHA12=${HOME_COVERAGE_SHA12:-492d8f0db8d0}   # results/$EXP/align/coverage.json at home as the entry cites it (home bytes; a CRLF home file hashes differently from the box LF copy: reported, not fatal)
 cd ~
 echo "== $(date -u +%FT%TZ) host"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
@@ -42,10 +43,10 @@ echo "== traces: the home tarball, checked against the committed manifest (both 
 [ -d ~/linear-ceiling/traces ] || tar -xzf ~/traces.tar.gz -C ~/linear-ceiling
 .venv/bin/python -m linear_ceiling.e7_manifest check | tail -1 | tee ~/manifest_check.out | grep -q "^manifest ok"
 echo "== gate"
-.venv/bin/python -m linear_ceiling.e9 --check --config config/e9l.toml
+.venv/bin/python -m linear_ceiling.e9 --check --config "config/$EXP.toml"
 echo "== alignment on the box (expected to reproduce home's coverage.json sha $HOME_COVERAGE_SHA12; a mismatch is reported, not fatal here)"
-.venv/bin/python -m linear_ceiling.e9 --align-only --config config/e9l.toml | tail -2
-sha256sum results/e9l/align/coverage.json
+.venv/bin/python -m linear_ceiling.e9 --align-only --config "config/$EXP.toml" | tail -2
+sha256sum "results/$EXP/align/coverage.json"
 echo "== versions"
 ~/kv-transfer-replication/.venv/bin/python -c "import torch,transformers,numpy;print('torch',torch.__version__,'cuda',torch.cuda.is_available(),torch.cuda.get_device_name(0));print('transformers',transformers.__version__,'numpy',numpy.__version__)"
 .venv/bin/python -c "import sys,torch,numpy;print('lc python',sys.version.split()[0],'torch',torch.__version__,'numpy',numpy.__version__)"
