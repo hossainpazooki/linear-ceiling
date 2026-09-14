@@ -77,7 +77,7 @@ long half is the first place both can be read side by side on new tokens (D4).
 | **Measured 2026-09-08 on the 1g.20gb slice** (R2 ladder, pinned path, `logits_to_keep=1`) | 1.7B: 16.72 GiB at T = 32,768, **OOM at 40,960** (18.04 at the throw); 0.6B: 15.24 at 49,152, OOM at 65,536 → **D1(c) does not fit 1g.20gb either; every option needs 3g.40gb or a full card**. *Extrapolation, not a measurement:* the 0.6B ladder's slope is ≈ 283 KB/token (10.91 → 13.07 GiB over 8,192 tokens; KV alone is 229 KB/token); the 1.7B at T = 80,111 from its 32,768 point is then ≈ 16.7 + 12.5 ≈ **29 GiB**, inside a 3g.40gb slice with ~10 GB to spare, unproven until the §3 item 5 probe runs at that T | `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.out`; n420 runbook §4 21:27 |
 | Box versions (2026-09-08 sitting) | torch 2.11.0+cu128 (the cu128 index tops out there; driver 570.148.08) · transformers 5.15.1 · numpy 2.5.2 · Python 3.12.6 | n420 runbook §R3 |
 | **0033 / 0034 on the record** (2026-09-09) | both appended, `ledger ok`; every 0034 figure recomputed from `results/e8c/summary.*` and `results/e9c/summary.json` at pick-up | `grep -n "^### 003[34]" ledger/ledger.md`; `-m linear_ceiling.ledger_check` |
-| **Second mapper exists** | `mappers/qwen3-0.6b-to-1.7b/n420/k1.safetensors` `b602eaf2e844…` (named by sha in both 0034 reports), fit on the box at pin `223f469`; backed up in `hossainpazooki/linear-ceiling-n420-2026-09-08` with the n = 420 pair, 89/89 verified both directions | n420 runbook §5–6; `tools/hf_verify_backup.py` |
+| **Second mapper exists** | `mappers/qwen3-0.6b-to-1.7b/n420/k1.safetensors` `b602eaf2e844…` (named by sha in both 0034 reports), fit on the box at pin `223f469`; backed up in `anon/linear-ceiling-n420-2026-09-08` with the n = 420 pair, 89/89 verified both directions | n420 runbook §5–6; `tools/hf_verify_backup.py` |
 | 0034's cross arm, for D4 | on 0029's 8 kept handoffs the n = 420 mapper's median f*(τ_K) is 0.8106 vs 0.9352 for the n = 50 mapper: closer to the floor, still beyond DEGRADES | `results/e9c/summary.md` |
 | Protocol since 09-09 | R7 has a **step 0**: list `~` and `ps -u` before any deletion or stop; anything not ours aborts the release (the 00:40Z incident killed a co-author's audit on the shared login) | `docs/gpu-experiment-protocol.md`; learnings 2026-09-09 |
 | Upstream HEAD (2026-09-09) | still `4633718`; one untracked, unignored dir `results/mapper/qwen3-0.6b-to-1.7b/n420/` (the fit's `r2.json`), not on any invoked path | `git -C ../kv-transfer-replication status --short` |
@@ -163,7 +163,7 @@ verdict).
 6. **Runbook** `docs/<date>-e9l-gpu-runbook.md` inheriting R1–R12: the R3 table (upstream sha,
    config sha, mapper shas, box scripts by sha), N = 35 `[i/N]` lines the box must print (+3 bridge
    handoffs, §5), coverage the entry must state, the HF dataset name
-   `hossainpazooki/linear-ceiling-e9l-<date>` with `tools/hf_verify_backup.py <repo_id> <local_root>`
+   `anon/linear-ceiling-e9l-<date>` with `tools/hf_verify_backup.py <repo_id> <local_root>`
    as the R8 check (exit 0 only when every file matches in both directions), the version pins from §1,
    and the R3 row for the second mapper (`n420/k1.*`, sha from the n420 runbook §5).
 

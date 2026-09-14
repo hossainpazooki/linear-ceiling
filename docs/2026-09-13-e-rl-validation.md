@@ -24,8 +24,8 @@ the mean is `0.3`, although one token exceeds the threshold.
 
 This distinction occurs in the archived data. I recomputed the same-model key
 deviations for `20241025_composio_swekit/django__django-10973_traj#78` from the
-[E9L token record](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10/blob/main/results/e9l/tokens/20241025_composio_swekit__django__django-10973_traj_sw78.tokens.npz)
-and its [score record](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10/blob/main/results/e9l/scores/20241025_composio_swekit__django__django-10973_traj_sw78.json).
+[E9L token record](https://huggingface.co/datasets/anon/linear-ceiling-e9l-2026-09-10/blob/main/results/e9l/tokens/20241025_composio_swekit__django__django-10973_traj_sw78.tokens.npz)
+and its [score record](https://huggingface.co/datasets/anon/linear-ceiling-e9l-2026-09-10/blob/main/results/e9l/scores/20241025_composio_swekit__django__django-10973_traj_sw78.json).
 Their SHA-256 hashes match the published report. Divide each token's squared
 error by its layer/head `SST / n`, then average over heads and layers:
 

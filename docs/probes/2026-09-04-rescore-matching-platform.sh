@@ -3,7 +3,7 @@
 # python 3.12, latest numpy) and compare per-token squares to the box record bit-for-bit.
 set -euo pipefail
 cd ~
-if [ ! -d kvt-wsl ]; then git clone -q /mnt/c/Users/hossa/dev/kv-transfer-replication kvt-wsl; fi
+if [ ! -d kvt-wsl ]; then git clone -q /mnt/c/Users/anon/dev/kv-transfer-replication kvt-wsl; fi
 cd kvt-wsl && git checkout -q d5786df91f55629933067e3c4bb14f1288c4bef2
 if [ ! -x ~/.local/bin/uv ]; then curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1; fi
 export PATH="$HOME/.local/bin:$PATH"
@@ -15,8 +15,8 @@ if true; then
 fi
 .venv/bin/python -c "import torch, numpy; print('wsl torch', torch.__version__, 'numpy', numpy.__version__)"
 mkdir -p mappers/qwen3-0.6b-to-1.7b
-cp /mnt/c/Users/hossa/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.json /mnt/c/Users/hossa/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.safetensors mappers/qwen3-0.6b-to-1.7b/
-R=/mnt/c/Users/hossa/dev/linear-ceiling/results/e9
+cp /mnt/c/Users/anon/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.json /mnt/c/Users/anon/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.safetensors mappers/qwen3-0.6b-to-1.7b/
+R=/mnt/c/Users/anon/dev/linear-ceiling/results/e9
 STEM=20241016_composio_swekit__astropy__astropy-14182_traj_sw68
 mkdir -p ~/wsl-recheck
 echo "== scoring $STEM $(date -u +%H:%M:%S)"

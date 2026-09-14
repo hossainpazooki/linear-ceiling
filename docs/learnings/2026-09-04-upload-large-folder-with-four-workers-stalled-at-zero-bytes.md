@@ -3,7 +3,7 @@
 kills: (nothing)
 ts: 2026-09-04T20:03:55Z
 commit: 0a19b56ee3bd4b45eca28f84a20cf6ded4dcd436
-session: algoverse-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
+session: grant-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
 status: verified
 fact: Backing the 720-file, 48.2 GB keep subset up to a private Xet dataset from the Windows home
 machine with `hf upload-large-folder ... --num-workers 4` (huggingface_hub 1.28.0, hf-xet 1.6.0)

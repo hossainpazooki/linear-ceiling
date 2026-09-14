@@ -175,20 +175,20 @@ after every sitting (protocol R8 in `docs/gpu-experiment-protocol.md`). Three ru
 
 | dataset | holds | layout at the dataset root |
 |---|---|---|
-| `hossainpazooki/linear-ceiling-e9-2026-09-04` | the E9 record (entries 0026–0029): `report.json`, `align/`, `controls/`, `scores/`, `tokens/`, box logs, and the kept full dumps | `results/e9/` as in this repo, plus the fitted mapper `mappers/qwen3-0.6b-to-1.7b/k1.*` in the upstream's layout |
-| `hossainpazooki/linear-ceiling-n420-2026-09-08` | the n = 420 calibration pair behind entries 0033/0034, the tagged mapper and its `r2.json`, the sitting's box logs and sha manifests | the upstream's own layout: `data/kv/qwen3-0.6b-to-1.7b-n420/`, `mappers/qwen3-0.6b-to-1.7b/n420/`, `results/mapper/qwen3-0.6b-to-1.7b/n420/` |
+| `anon/linear-ceiling-e9-2026-09-04` | the E9 record (entries 0026–0029): `report.json`, `align/`, `controls/`, `scores/`, `tokens/`, box logs, and the kept full dumps | `results/e9/` as in this repo, plus the fitted mapper `mappers/qwen3-0.6b-to-1.7b/k1.*` in the upstream's layout |
+| `anon/linear-ceiling-n420-2026-09-08` | the n = 420 calibration pair behind entries 0033/0034, the tagged mapper and its `r2.json`, the sitting's box logs and sha manifests | the upstream's own layout: `data/kv/qwen3-0.6b-to-1.7b-n420/`, `mappers/qwen3-0.6b-to-1.7b/n420/`, `results/mapper/qwen3-0.6b-to-1.7b/n420/` |
 
 Restore, with a read token in `HF_TOKEN`:
 
 ```bash
 # E9: results/ lands in this repo, the mapper in the upstream checkout
-hf download hossainpazooki/linear-ceiling-e9-2026-09-04 --repo-type dataset --local-dir /tmp/e9-restore
+hf download anon/linear-ceiling-e9-2026-09-04 --repo-type dataset --local-dir /tmp/e9-restore
 cp -r /tmp/e9-restore/results/e9 results/ && cp -r /tmp/e9-restore/mappers ../kv-transfer-replication/
-python tools/hf_verify_backup.py hossainpazooki/linear-ceiling-e9-2026-09-04 /tmp/e9-restore
+python tools/hf_verify_backup.py anon/linear-ceiling-e9-2026-09-04 /tmp/e9-restore
 
 # n = 420 pair: upstream layout, so it lands directly in the upstream checkout
-hf download hossainpazooki/linear-ceiling-n420-2026-09-08 --repo-type dataset --local-dir ../kv-transfer-replication
-python tools/hf_verify_backup.py hossainpazooki/linear-ceiling-n420-2026-09-08 ../kv-transfer-replication
+hf download anon/linear-ceiling-n420-2026-09-08 --repo-type dataset --local-dir ../kv-transfer-replication
+python tools/hf_verify_backup.py anon/linear-ceiling-n420-2026-09-08 ../kv-transfer-replication
 ```
 
 After a restore the gates decide, not the download: `e9 --check`, `e8 --check --config config/e8c.toml`

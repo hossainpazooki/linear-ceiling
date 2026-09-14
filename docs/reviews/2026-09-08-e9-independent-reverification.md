@@ -6,7 +6,7 @@
 ## Purpose
 
 An independent review checked whether the frozen upstream scoring path could
-reproduce archived E9 records in a clean Algoverse H100 environment. The review
+reproduce archived E9 records in a clea grant H100 environment. The review
 also assessed interpretation separately from computational reproduction.
 
 The scientific values and verdict remain governed by `results/e9/`, the

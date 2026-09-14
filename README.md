@@ -79,10 +79,10 @@ every file is checked in both directions before it counts.
 
 | dataset | what it holds |
 |---|---|
-| [`hossainpazooki/linear-ceiling-e9-2026-09-04`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04) | the same-model handoff experiment on the 25 shorter handoffs (entries 0026–0029) |
-| [`hossainpazooki/linear-ceiling-n420-2026-09-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-n420-2026-09-08) | the larger calibration set behind the cross-model map's sensitivity check (entries 0033–0034) |
-| [`hossainpazooki/linear-ceiling-e9l-2026-09-10`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10) | the long-context run on the 35 longer handoffs (entries 0035–0036) |
-| [`hossainpazooki/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9s-2026-09-13) | the 25 shorter handoffs re-run under the long run's scaled receiver (entries 0037–0038) |
+| [`anon/linear-ceiling-e9-2026-09-04`](https://huggingface.co/datasets/anon/linear-ceiling-e9-2026-09-04) | the same-model handoff experiment on the 25 shorter handoffs (entries 0026–0029) |
+| [`anon/linear-ceiling-n420-2026-09-08`](https://huggingface.co/datasets/anon/linear-ceiling-n420-2026-09-08) | the larger calibration set behind the cross-model map's sensitivity check (entries 0033–0034) |
+| [`anon/linear-ceiling-e9l-2026-09-10`](https://huggingface.co/datasets/anon/linear-ceiling-e9l-2026-09-10) | the long-context run on the 35 longer handoffs (entries 0035–0036) |
+| [`anon/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/anon/linear-ceiling-e9s-2026-09-13) | the 25 shorter handoffs re-run under the long run's scaled receiver (entries 0037–0038) |
 
 All four datasets are public (the first three as of 2026-09-11, the fourth created public on 2026-09-14; `private: false`, `gated: false` from the Hub API);
 no read token is needed to fetch them. Protocol R8 allows public datasets (operator ruling,
@@ -200,9 +200,9 @@ Tokens are scoped, expiring, environment-only, and revoked once pasted anywhere.
 
 | dataset | holds | layout at the root |
 |---|---|---|
-| `hossainpazooki/linear-ceiling-e9-2026-09-04` | the E9 record (0026–0029) and the kept full dumps | `results/e9/` plus the mapper in the upstream's layout |
-| `hossainpazooki/linear-ceiling-n420-2026-09-08` | the n = 420 calibration pair (0033/0034), tagged mapper, logs | the upstream's own layout |
-| E9-long's dataset | `hossainpazooki/linear-ceiling-e9l-2026-09-10` (pushed after the sitting; see the runbook) | `results/e9l/` plus the bridge dumps |
+| `anon/linear-ceiling-e9-2026-09-04` | the E9 record (0026–0029) and the kept full dumps | `results/e9/` plus the mapper in the upstream's layout |
+| `anon/linear-ceiling-n420-2026-09-08` | the n = 420 calibration pair (0033/0034), tagged mapper, logs | the upstream's own layout |
+| E9-long's dataset | `anon/linear-ceiling-e9l-2026-09-10` (pushed after the sitting; see the runbook) | `results/e9l/` plus the bridge dumps |
 
 Restore and verify recipes: `docs/archive/README-2026-09-09-status.md`, "Backups". After a
 restore the gates decide, not the download.

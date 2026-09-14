@@ -3,7 +3,7 @@
 2026-09-09 18:00Z (session `018fwd19`). Picks up `docs/2026-09-08-seed-e9-long-half.md` (written 09-08, revised 09-09
 at `4eafe40`). Newest commit at pick-up: `adb181f` = five doc-only commits after the seed; tree clean except an
 untracked `.claude/`. Upstream `kv-transfer-replication` on `main` at `4633718`, no YaRN commit. Deliverable: the
-answers for the Algoverse H100 request form, standing only on numbers recomputed this session, plus the premises
+answers for the grant H100 request form, standing only on numbers recomputed this session, plus the premises
 the operator must rule on before filing.
 
 ## State, as verified now
@@ -49,10 +49,10 @@ The form's own slot counts disagree (intro: 1 × 12 h, 1 × 24 h, 10 × 48 h; pi
 ## The form, answered
 
 Fields the repo cannot fill: team name as it appears in Slack, teammate emails, the AWS credit line. Prior grant
-logins were `rrhs-fe3a-xl` (09-04) and `rrhs-66f0` (09-08), so the team code is very likely `rrhs`. Mentor field:
+logins were `box-b` (09-04) and `box-a` (09-08), so the team code is very likely `<team-code>`. Mentor field:
 leave blank unless the mentor has been looped in since.
 
-- **Your email:** `hossain@pazooki.com`.
+- **Your email:** `anon@example.com`.
 - **What are you running:** Inference (closest of the four; see "Anything else").
 - **Why does this need an H100:**
 
@@ -96,6 +96,6 @@ The grant request and the submission are on separate clocks; neither waits on th
 ## Confirmed next
 
 1. **Operator:** rule on premises 1 and 3 (file now under an explicit R1 amendment, or build §3 first; AWS L40S or
-   the Algoverse queue). Then fill the three fields the repo cannot, and file.
+   the grant queue). Then fill the three fields the repo cannot, and file.
 2. **D1–D5** from the seed, then the §3 build order; the registration entry is 0035 if staged before anything else.
 3. The 4-pager is on its own clock (item 4 of the 09-09 closing brief).

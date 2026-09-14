@@ -3,7 +3,7 @@
 kills: (nothing)
 ts: 2026-09-04T18:24:54Z
 commit: 0a19b56ee3bd4b45eca28f84a20cf6ded4dcd436
-session: algoverse-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
+session: grant-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
 status: verified
 fact: The E9 puller's mirror() skipped any remote file whose size matched the local copy. The box
 regenerated results/e9/align/ at 16:42 UTC (e9 --align-only on the box), while the home copies dated

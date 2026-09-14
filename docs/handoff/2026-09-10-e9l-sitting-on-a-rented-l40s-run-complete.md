@@ -39,11 +39,11 @@ clean except the untracked `results/mapper/qwen3-0.6b-to-1.7b/n420/` (ours). LCF
   by HARDLINK (same NTFS volume; 723 files, 61,937,721,692 B; verified from raw bytes in place; card `README.md` written).
   Needs the operator's scoped write token; commands below.
 - **not started** — co-author refutation of 0025–0029 (paper condition 1); the n = 420 arm on the e9l kept subset (own config +
-  entry); the Algoverse request (moot for this run; optional for re-runs).
+  entry); the grant request (moot for this run; optional for re-runs).
 
 ## Locked decisions — premises checked
 
-- **Rented L40S instead of the Algoverse 3g.40gb queue** (operator, 2026-09-09; recorded in 0035). Premise held: the queue was
+- **Rented L40S instead of the grant 3g.40gb queue** (operator, 2026-09-09; recorded in 0035). Premise held: the queue was
   four days against a 42-hour deadline; the sitting cost ≈ $11 and the run fit with ~13 GiB to spare.
 - **Termination held until the summarizer passed** (this session). Reason: a refusal might have wanted a same-platform
   re-score; the hold cost < $1. Not needed: the summarizer passed on the first run.
@@ -74,9 +74,9 @@ in the account; harmless, deletable).
 ```bash
 cd ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10
 # Hub UI first: New dataset "linear-ceiling-e9l-2026-09-10", PRIVATE; then a fine-grained WRITE token scoped to it, named
-# e9l-backup-pusher-hossain-exp-2026-09-17
+# e9l-backup-pusher-anon-exp-2026-09-17
 read -s HF_TOKEN && export HF_TOKEN
-HF=~/dev/linear-ceiling/.venv/Scripts/hf.exe; REPO=hossainpazooki/linear-ceiling-e9l-2026-09-10
+HF=~/dev/linear-ceiling/.venv/Scripts/hf.exe; REPO=anon/linear-ceiling-e9l-2026-09-10
 $HF upload "$REPO" results/e9l/report.json results/e9l/report.json --repo-type dataset --quiet      # 1. small records first
 $HF upload "$REPO" results/e9l/logs results/e9l/logs --repo-type dataset --quiet
 $HF upload-large-folder "$REPO" . --repo-type dataset --num-workers 1                                 # 2. the tree: ONE resumable run, ONE worker

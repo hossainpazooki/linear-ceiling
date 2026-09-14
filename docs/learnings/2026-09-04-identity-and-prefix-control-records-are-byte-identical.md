@@ -3,7 +3,7 @@
 kills: (nothing)
 ts: 2026-09-04T18:23:37Z
 commit: 0a19b56ee3bd4b45eca28f84a20cf6ded4dcd436
-session: algoverse-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
+session: grant-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
 status: verified
 fact: On the box after the run, results/e9/controls/identity.tokens.npz and
 results/e9/controls/prefix.tokens.npz had the same sha256 (c7a45346...), and the mirror copies match.

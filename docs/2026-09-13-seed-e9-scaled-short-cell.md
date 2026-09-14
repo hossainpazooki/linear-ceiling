@@ -3,7 +3,7 @@
 **Date:** 2026-09-13 · **Status:** DONE 2026-09-14 — 0037 appended (`c360950`), run on a rented L40S (runbook
 `docs/2026-09-13-e9s-gpu-runbook.md`), figures in entry 0038; this seed is kept as written below, and
 nothing here is a ledger figure. Written by the builds-and-review session for the session that runs GPU sittings
-(`tools/ec2/` over ssh, or `tools/jupyterhub/` on the Algoverse hub). Every value under *verified* was read this
+(`tools/ec2/` over ssh, or `tools/jupyterhub/` on the grant hub). Every value under *verified* was read this
 session from the ledger, the summarizer outputs or the code, with the source beside it; every item under *proposed*
 is a choice the operator rules on. Inherits `docs/gpu-experiment-protocol.md` R1–R12 without restating them.
 Companion: `docs/2026-09-11-gpu-runs-after-the-pivot.md` (item 1) and outline v3 §5.2/§6.
@@ -53,7 +53,7 @@ cells. The n = 420 mapper is not run under this entry.
 
 **D3 — the box.** Either fits. (a) *Rented EC2 g6e.4xlarge (L40S 48 GB)* via `tools/ec2/`, proven on 09-10: no queue,
 the 09-10 scripts run unchanged with `e9s` for `e9l` in `run.sh`/`pull.py`/`setup.sh`, about 1 h of instance time
-(09-10 rate: ≈ $3/h compute + egress at ≈ $0.09/GB for the kept dumps). (b) *Algoverse hub, a 1g.20gb slice*: 16.70 GiB
+(09-10 rate: ≈ $3/h compute + egress at ≈ $0.09/GB for the kept dumps). (b) *grant hub, a 1g.20gb slice*: 16.70 GiB
 peak fits with ~3 GB to spare (E9 ran natively on exactly this footprint); `tools/jupyterhub/`; a shared login, so R7
 step 0 binds. *Recommended: (a) if no grant is active this week*; otherwise (b). The R2 probe at T = 32,768 runs on
 the chosen box before launch regardless (`tools/ec2/probe_e9l.py` prints it; the 09-10 numbers are from an L40S).
@@ -79,7 +79,7 @@ identity pairs, by its own entry. The entry says so.
    `mappers/qwen3-0.6b-to-1.7b/k1.{json,safetensors}` copied by sha (R3; the 09-04 launch died on exactly this).
 5. **Runbook** `docs/<date>-e9s-gpu-runbook.md` inheriting R1–R12 and the 09-10 runbook's shape: the R3 table (config
    sha, upstream sha, mapper shas, box scripts by sha), N = 25 `[i/25]` lines, the R2 probe row at T = 32,768, the HF
-   dataset name `hossainpazooki/linear-ceiling-e9s-<date>` (public is allowed since `d0b91db`; `ALLOW_PUBLIC=1`
+   dataset name `anon/linear-ceiling-e9s-<date>` (public is allowed since `d0b91db`; `ALLOW_PUBLIC=1`
    for `tools/hf_backup.sh`), and the version pins.
 
 ## 4. Definition of done — the sitting

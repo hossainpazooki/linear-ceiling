@@ -8,7 +8,7 @@ does not describe. Pick-up measures drift from `31a5f69` and from the HF dataset
 
 ## Current state
 
-- **built / verified** — Algoverse box released 2026-09-04 18:30:48 UTC. Before release: mirror
+- **built / verified** — grant box released 2026-09-04 18:30:48 UTC. Before release: mirror
   `results/e9/` complete (`report.json` `complete: true`, 25/68 scored), 8 kept dumps = 720 files
   re-hashed at home against `report.json` `kept_dumps` (0 mismatches), every box-side small record
   diffed by sha256 against the mirror (identical except 68 `align/*.npz`, arrays identical), box
@@ -16,12 +16,12 @@ does not describe. Pick-up measures drift from `31a5f69` and from the HF dataset
   DELETE → 204, user record `servers: {}`, `/user/…` route 302, hub home "Start My Server".
   re-verify: `sha256sum results/e9/report.json` prints `1b2153e31245eebb6d4a7f2709450ba84c2a29e30081fc98e9d304208cfeda29`
   (home mirror); the box itself is gone (grant expiry 04:20 UTC 09-05).
-- **built / verified** — HF backup: private dataset `hossainpazooki/linear-ceiling-e9-2026-09-04`,
+- **built / verified** — HF backup: private dataset `anon/linear-ceiling-e9-2026-09-04`,
   commit `a45e9ee8`, holding `results/e9/` at the repo root (919 files) plus
   `mappers/qwen3-0.6b-to-1.7b/k1.{json,safetensors}` (upstream layout). Every file verified:
   `lfs.sha256` vs fingerprint/mirror, non-LFS files re-downloaded and hashed; subset `hf download`
   round-trip 32/32 identical.
-  re-verify: with a read token in `$HF_TOKEN`, `.venv/Scripts/python.exe -c "from huggingface_hub import HfApi;i=HfApi().dataset_info('hossainpazooki/linear-ceiling-e9-2026-09-04',files_metadata=True);print(i.sha[:8],len(i.siblings),next(s.lfs.sha256[:8] for s in i.siblings if s.rfilename.endswith('k1.safetensors')))"`
+  re-verify: with a read token in `$HF_TOKEN`, `.venv/Scripts/python.exe -c "from huggingface_hub import HfApi;i=HfApi().dataset_info('anon/linear-ceiling-e9-2026-09-04',files_metadata=True);print(i.sha[:8],len(i.siblings),next(s.lfs.sha256[:8] for s in i.siblings if s.rfilename.endswith('k1.safetensors')))"`
   prints `a45e9ee8 923 cd6a8d93`.
 - **built** — box-side logs pulled and hashed into `results/e9/logs/box/` (e9.log, setup.log,
   setup2.log, probe.log, probe2.log, ipython_history.sqlite); the two refused attempts' halt logs
@@ -31,7 +31,7 @@ does not describe. Pick-up measures drift from `31a5f69` and from the HF dataset
 - **built** — co-author pickup brief, published as a private artifact
   (claude.ai/code/artifact/f548d982-26b4-4fe9-a791-c7b0bb983997): download commands, the refutation
   owed on 0025–0029 with two leads (τ-ladder sensitivity; the exactly-zero prefix control), his two
-  flags answered from 0029's figures. Shared only when Hossain shares it.
+  flags answered from 0029's figures. Shared only when the operator shares it.
 - **built (this commit set, untracked)** — `docs/gpu-experiment-protocol.md` (rules R1–R12),
   `tools/jupyterhub/{jh.py,pull.py,README.md}` (the box driver and puller, configured from env; the
   puller re-pulls on size or mtime change), five learnings entries dated 09-04/09-05,
@@ -52,7 +52,7 @@ does not describe. Pick-up measures drift from `31a5f69` and from the HF dataset
 - **The mapper artifact lives in the same dataset under upstream's own path, not under
   `results/e9/`.** Reason: `hf download --local-dir results/e9 --exclude "mappers/**"` keeps the
   mirror layout exact, and `--local-dir ../kv-transfer-replication --include "mappers/**"` drops
-  the artifact where `summarize_e9` and `--calibrate-tau` look. Decided by Hossain 09-04 evening.
+  the artifact where `summarize_e9` and `--calibrate-tau` look. Decided by the operator 09-04 evening.
 - **A collaborator gets a scoped read-only token, not the write token.** Reason: the write token
   was pasted in chat and can delete the backup; the Hub has no per-user sharing on a user
   namespace (learnings 2026-09-05). The write token used this session is to be revoked.
@@ -84,7 +84,7 @@ does not describe. Pick-up measures drift from `31a5f69` and from the HF dataset
 
 ## Open / next
 
-1. **Hossain:** revoke the write token used this session; mint the co-author's read token
+1. **Operator:** revoke the write token used this session; mint the co-author's read token
    (`e9-backup-read-<handle>-exp-<date>`); share the artifact from its menu.
 2. **Co-author:** the refutation of 0025–0029 per the artifact brief; first the τ-ladder lead and the
    prefix-control lead. Needs the HF download (both commands) and the repo at `31a5f69`.

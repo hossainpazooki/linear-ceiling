@@ -28,7 +28,7 @@
   re-verify: `grep -n "^### 0038 " ledger/ledger.md` → line 2310; `.venv/Scripts/python.exe -m linear_ceiling.ledger_check` → `ledger ok`.
 - **verified — R8 stage, NOT PUSHED.** `~/dev/hf-staging/linear-ceiling-e9s-2026-09-13/` = `results/e9s/` + mapper by hardlink +
   card; 980 = 980 files, 0 not hardlinked; mapper shas OK; credential sweep with a firing control: 0 hits; 49,478,265,328 B.
-  The dataset `hossainpazooki/linear-ceiling-e9s-2026-09-13` exists, public, empty (Hub API, 03:2xZ). Operator push below.
+  The dataset `anon/linear-ceiling-e9s-2026-09-13` exists, public, empty (Hub API, 03:2xZ). Operator push below.
 - **built — docs.** Runbook §6 through staging; learnings entry 2026-09-14 (the gate never checks the cell's τ calibration)
   + index row; `CLAUDE.md` and `tools/ec2/README.md` now name `--calibrate-tau` before launch; `tools/ec2/release_sweep.sh`
   allowlists `${EXP}.records.sha256` (was hard-coded `e9l`); drafts README, seed status line, README objective row.
@@ -65,7 +65,7 @@ hardlinked stage is uploading.
 ```bash
 read -s HF_TOKEN && export HF_TOKEN        # fine-grained WRITE token scoped to the dataset; nothing pasted after this line
 ~/dev/linear-ceiling/.venv/Scripts/hf.exe auth whoami
-ALLOW_PUBLIC=1 ~/dev/linear-ceiling/tools/hf_backup.sh hossainpazooki/linear-ceiling-e9s-2026-09-13 ~/dev/hf-staging/linear-ceiling-e9s-2026-09-13
+ALLOW_PUBLIC=1 ~/dev/linear-ceiling/tools/hf_backup.sh anon/linear-ceiling-e9s-2026-09-13 ~/dev/hf-staging/linear-ceiling-e9s-2026-09-13
 ```
 
 Exit 0 = verified by `tools/hf_verify_backup.py` in both directions; exit 75 = rate-limited, rerun the same line after the hour.

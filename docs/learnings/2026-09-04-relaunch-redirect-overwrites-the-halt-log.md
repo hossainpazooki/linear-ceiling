@@ -3,7 +3,7 @@
 kills: (nothing)
 ts: 2026-09-04T18:29:12Z
 commit: 0a19b56ee3bd4b45eca28f84a20cf6ded4dcd436
-session: algoverse-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
+session: grant-gpu-run-session (8a0fb97e-0020-43aa-a9b2-9ae67eec2fe3)
 status: verified
 fact: Both relaunch scripts on the E9 box (run2.sh at 17:14 UTC, run3.sh at 17:35 UTC) started the
 driver with `setsid nohup ... > e9.log 2>&1`, the exact form the runbook prescribes, so by the time

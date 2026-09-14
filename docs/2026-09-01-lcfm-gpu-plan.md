@@ -6,7 +6,7 @@ LCFM deadline 2026-09-10 AoE; numbers-freeze gate EOD 2026-09-08 (entry 0006). A
 unchanged: MLSys 2027. Design paragraphs below are the plan as written; where a registered
 entry refined one (alignment method, S/R slices), the entry wins and is noted.
 
-## The resource (Algoverse A100 portal, as described 2026-09-01)
+## The resource (grant A100 portal, as described 2026-09-01)
 
 | fact | consequence for this plan |
 |---|---|

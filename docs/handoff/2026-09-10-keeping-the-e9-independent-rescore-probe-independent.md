@@ -1,7 +1,7 @@
 # Handoff — keeping the E9 independent rescore probe independent
 
 2026-09-10 13:56Z (session `e9l-aws-run`, `01VDywUv8N146LzzLgRDTihm`). Newest commit this brief describes: **`bb85a28`** on
-**remote** `main`, the merge of PR #2 by `hossainpazooki` at 2026-09-10T13:48:07Z. **Local `main` is `50bc439` and does
+**remote** `main`, the merge of PR #2 by `anon` at 2026-09-10T13:48:07Z. **Local `main` is `50bc439` and does
 not contain it.** Local and remote have diverged on purpose: the operator prefers the mismatch for now and will explain
 it. Every file path below under `docs/probes/` or `docs/reviews/` exists on remote `main` only until the two are
 reconciled, which is the operator's call. This brief does not supersede the other 2026-09-10 briefs; it adds one topic.
@@ -22,7 +22,7 @@ states the boundary itself: the scientific values and the verdict stay governed 
 - **built / verified — the merge.** PR #2 is merged at `bb85a28`, with parents `700d830` and `d009f36`. It adds exactly two
   files and changes nothing else.
   re-verify: `gh pr view 2 --json state,mergeCommit --jq '"\(.state) \(.mergeCommit.oid)"'` -> `MERGED bb85a28d341e5b31951352b7744ce9666b9cb9bc`;
-  `gh api repos/hossainpazooki/linear-ceiling/commits/bb85a28 --jq '[.files[].filename]'` -> the two paths.
+  `gh api repos/anon/linear-ceiling/commits/bb85a28 --jq '[.files[].filename]'` -> the two paths.
 - **built / verified — the comparator shares no code with what it checks.** It imports only the standard library and
   numpy: `__future__`, `argparse`, `hashlib`, `json`, `pathlib`, `numpy`. It has its own hash function.
   re-verify: `grep -nE "^(import|from) " docs/probes/2026-09-08-e9-independent-rescore-compare.py` -> those six lines and no `linear_ceiling` or `kvt`.

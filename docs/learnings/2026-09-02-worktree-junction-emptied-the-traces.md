@@ -21,5 +21,5 @@ basis: `stat traces` -> `birth 2026-09-01 01:27:18 -0400 | mtime 2026-09-01 23:1
   empty; `git worktree list` at 264174e showed `~/dev/lc-track-b 6725488 [track-b]` and
   `.claude/worktrees/track-b-recon f48b536 locked`; at 13b8128 lc-track-b was absent and
   track-b-recon still present with 25 changed files; `grep -c junction
-  ~/.claude/projects/C--Users-hossa-dev/memory/linear-ceiling-track-b.md` -> 1.
+  ~/.claude/projects/C--Users-anon-dev/memory/linear-ceiling-track-b.md` -> 1.
 re-verify: stat -c '%y' "$HOME/dev/linear-ceiling/traces" | grep -c '2026-09-01 23:11:58'

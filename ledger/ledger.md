@@ -93,12 +93,12 @@ that the guard fires on the real tree (seal writer, 2026-08-26):
 
 ```
 SEAL VIOLATION: fitted mapper artifact(s) already exist for qwen3-0.6b-to-1.7b; a prediction written now would not be pre-fit:
-  C:/Users/hossa/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.safetensors
-  C:/Users/hossa/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k4.safetensors
-  C:/Users/hossa/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k8.safetensors
-  C:/Users/hossa/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/rope/k1.safetensors
-  C:/Users/hossa/dev/kv-transfer-replication/results/mapper/qwen3-0.6b-to-1.7b/r2.json
-  C:/Users/hossa/dev/kv-transfer-replication/results/mapper/qwen3-0.6b-to-1.7b/rope/r2.json
+  C:/Users/anon/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1.safetensors
+  C:/Users/anon/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k4.safetensors
+  C:/Users/anon/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k8.safetensors
+  C:/Users/anon/dev/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/rope/k1.safetensors
+  C:/Users/anon/dev/kv-transfer-replication/results/mapper/qwen3-0.6b-to-1.7b/r2.json
+  C:/Users/anon/dev/kv-transfer-replication/results/mapper/qwen3-0.6b-to-1.7b/rope/r2.json
 ```
 
 ### 0005 — 2026-08-26 — E7 registered; gap map committed; compute assumption amended
@@ -141,7 +141,7 @@ above stands as written; this note is the amendment.
 
 ### 0003 — 2026-08-26 — E0 operationalization C (vocabulary-paired screen) and the G1 decision rule
 
-Chosen by Hossain from the three candidates presented on 2026-08-26. Read-out for E0 is the rows of
+Chosen by the operator from the three candidates presented on 2026-08-26. Read-out for E0 is the rows of
 `k_proj` / `v_proj` scaled by the layer's `input_layernorm` gain (pre-`k_norm`; decision D4; the
 H-S1-on-K consequence is a W2 item, flagged, not resolved).
 
@@ -249,7 +249,7 @@ recomputation agrees with the screen's own computation to ~1e-3 at the smallest 
 
 ### 0006 — 2026-09-01 — Program re-scope: screen line closed, depth structure recorded, E7 promoted with thresholds
 
-**Operator decision (Hossain, 2026-09-01).** The screen-validation line (E1, E2, E3, E4, E5,
+**Operator decision (2026-09-01).** The screen-validation line (E1, E2, E3, E4, E5,
 E6 as validators of the screen) is CLOSED at end of W1, on opportunity-cost grounds: the
 niche's mechanism lane is crowded with top-track work while the measurement lane is open
 (evidence in docs/handoff and session records of 2026-08-31). The E0 verdict from entry 0004
@@ -409,7 +409,7 @@ says of the seal.
 and retrieval dates, the trace-metadata probe result behind the two-lane design, and the
 venue facts. A handoff brief for this re-scope is indexed in `docs/handoff/HANDOFF.md`.
 
-prior-entries-sha256: 0b180f2473877c0e7d7826e4c1eefacd7fc15a94d3f7ce82de1d7b93f598d92e
+prior-entries-sha256: e8abfd536fe7deda0591a720dba95190bfac7723cdd6c5993d98f3e8daf49ca9
 
 ### 0008 — 2026-09-01 — Day-2 gate PASSED; tokenizer question raised, NOT yet registered
 
@@ -466,7 +466,7 @@ difficulty is stated here so the decision is made in the open rather than defaul
 Until that entry exists, the E7 instrument may be run and its output inspected, but no
 figure it produces may enter a ledger entry, a paper, or a claim.
 
-prior-entries-sha256: 95977ca0bf9e413c493608cbb7579856b0da15a1a491f6ec505dc82a781654ab
+prior-entries-sha256: d2b8a2817cd60c7979143ff6147f3b592ff37fce5a02a866778a8893eec7370f
 
 ### 0009 — 2026-09-01 — Tokenizer registered (measured, not assumed); E8 transfer leg registered; 0006's half-registered clause resolved
 
@@ -555,7 +555,7 @@ belongs to the MLSys program only.
 premise numbers and the taxonomy. E8 appears in no LCFM submission. Entry 0006's
 numbers-freeze scope cap is otherwise unchanged.
 
-prior-entries-sha256: 19612bc72156fa045457c234efef450ea1c8dcf8c68594b8d72374c3c78390b3
+prior-entries-sha256: 9937ba7ee88e233547b4d7848c421b0cf35971add06077009cdf4f18acefac3e
 
 ### 0010 — 2026-09-01 — A real cross-model switch exists in public traces; Lane A detector breadth and the re-rendered-handoff headroom measure
 
@@ -620,7 +620,7 @@ This measure decides nothing on its own: H-E7a's verdict still comes from Lane A
 0006's 10% materiality cutoff, through the registered adapter and a fail-closed summarizer, and
 never from an ad-hoc probe. The probes reported in this entry are RECON that sized the finding.
 
-prior-entries-sha256: f1e6fc06604d9ffd689a926d9ee272b00de765c92b31a1004fe15c3e5750b9fd
+prior-entries-sha256: 1515e3611ce710286fba369b7cd22ada615a50fce5e96b9c9fc7f681d4e68ef4
 
 ### 0011 — 2026-09-01 — The trajectory unit, defined; coverage floor met on two suites
 
@@ -662,7 +662,7 @@ and rejected as a candidate suite -- 0 of its 22 submissions publish trajectorie
 Composio (the switching family, entry 0010) is 2 submissions of one system and is NOT counted
 toward the swe-bench agent floor above; it is the Lane A subject, not a coverage contributor.
 
-prior-entries-sha256: f6e512727a8842b416557077aa273e2c4157aa1f48d3bc4176374fb977b92ca5
+prior-entries-sha256: da16338e4ccb79b21a37a28cbd5c17adfeaafa474558bfdbfbc7d90139a847c2
 
 ### 0012 — 2026-09-01 — Public traces omit the cacheable prefix `[BASELINE]`; every trace-only cost figure is a lower bound
 
@@ -705,7 +705,7 @@ lower bounds without a measured gap.
 
 This entry decides no hypothesis. It constrains how every later figure must be stated.
 
-prior-entries-sha256: 51971a4ad1f56f75853d3f7e8e8c130abe4b495f60267cdb7f519d582e64f8a7
+prior-entries-sha256: 40bd62710b66ff06db7d37bbc4ce7e03326093505594a5ea97871ad452bd5cc5
 
 ### 0013 — 2026-09-01 — Headroom at observed handoffs `[BASELINE]`, through the fail-closed summarizer
 
@@ -758,7 +758,7 @@ trajectory set -- is not yet fixed by any entry (the measurable subset, the suit
 whole corpus give different answers by orders of magnitude). A successor entry fixes the
 denominator before the ratio is computed; this entry records the numerator's ingredients.
 
-prior-entries-sha256: 161b38359f50b631de6639e8f878c6489943bfd01338bf24e17cffa9f84c78c2
+prior-entries-sha256: 36a2591da38e6f7474e08d42e35c65db569ec29e614e44c649ef2cfafaa68199
 
 ### 0014 — 2026-09-01 — Invalidation taxonomy registered (event definitions and measurability, before any frequency); H-E7a denominator fixed
 
@@ -813,7 +813,7 @@ ratio, against the 10% cutoff, with Lane A alone (entry 0007).
 and the H-E7a ratio from the raw traces and refuses on any disagreement; replay must not begin
 until this entry is committed unmodified (`e7.assert_ready`, entry 0006).
 
-prior-entries-sha256: 5a2eaea7cc174b727cac9c8dcc0446091f650abc6f7df2bc8849a9f7408905b1
+prior-entries-sha256: 35310350ae98ed554384185b8cfacbbec06f98ef22f8c08750897c7bcdf77170
 
 ### 0015 — 2026-09-01 — Invalidation taxonomy frequencies `[BASELINE]`; H-E7a NOT CONFIRMED; H-E7b UNESTIMABLE
 
@@ -884,7 +884,7 @@ numbered entry; nothing is scheduled.
 untouched. Entry 0005's three E7 outputs are now all on the record: (i) the taxonomy above,
 (ii) headroom (0013), (iii) the break-even distribution, as UNESTIMABLE.
 
-prior-entries-sha256: 2899f4d32d7be320548bc2c7bb78b4cd8dd73ba6efe24f795b218f3900784505
+prior-entries-sha256: fdba63888f3063c433af036d1c15543e281807534543e31de00e6231b94ebdce
 
 ### 0016 — 2026-09-02 — E8 amended: admitted to LCFM behind the summarizer gate; dumps correction; verdict k = 1; text-sampling rule; upstream re-pin
 
@@ -937,7 +937,7 @@ refusing on disagreement beyond 1e-6), arm (b) held-out K and V R², and the dro
 The band outcome for k = 1 is stated by the summarizer as HOLDS / DEGRADES / UNRESOLVED
 against 0009's numbers; the VERDICT on H-E8 enters only by a successor entry.
 
-prior-entries-sha256: c2646932f5e5abf7235b72a1634f64df21ccb07de66eaeda0ae9389f4154e88b
+prior-entries-sha256: eee41e73dd99d66ecd799aa5e9fb0f30c2be7b4aa765bcb3305ff9d2264908ca
 
 ### 0017 — 2026-09-02 — Composio adapter read half the family wrong; the headroom measure's `paid` was not the receiver's prefill. Figures of 0013 and 0015's ratio `[SUPERSEDED]`; verdicts stand
 
@@ -986,7 +986,7 @@ band approved) becomes **0019**, and its handoff definition is request-level: `S
 the sender processed up to its last response, `R` = the receiver's request prompt. The learnings
 ledger carries the shape finding with a read-only re-verify line.
 
-prior-entries-sha256: 41982f56a4f9fbfc6dc7bb6e6c306c68b7bbe358668ca35d298f119dcc1e63f3
+prior-entries-sha256: ebbbad9429bf06ba37e53848793c224c0fb5477ef615ed0a5a6a7a23341ab049
 
 ### 0018 — 2026-09-02 — Corrected figures of 0013 and 0015's ratio `[BASELINE]`, through the fixed instrument
 
@@ -1022,7 +1022,7 @@ denominator per 0014): recoverable upper bound 496,798 / input spend
 
 This entry decides nothing new; it puts the corrected numbers where the superseded ones stood.
 
-prior-entries-sha256: 5942c0b61b7f5bd3a92c2e5d0d8eeb7ed8de47b45aa34a5108decf4687fcbcf0
+prior-entries-sha256: fdeed3d1b0985f3d589f38b80bd17180121d1cb3907d71077a7a4bb65aca4ec8
 
 ### 0019 — 2026-09-02 — E9 registered: the achievable fraction of the headroom upper bound at a re-rendered handoff (H-E9, band frozen)
 
@@ -1093,7 +1093,7 @@ any disagreement. What it cannot do on CPU is regenerate the deleted dumps: for 
 the moments are a GPU-run record, verified by the keep-subset, and the entry that states the
 verdict must say so. The seal is not involved: no mapper is fitted.
 
-prior-entries-sha256: 88bb14f51ffcbdd696a5c8886077a6ef0ce598505d8057359840403f0348cd81
+prior-entries-sha256: 019d2323624eff30d225bdeb4b77b553c4cbdd1e1726c06215b1b9da045c0c79
 
 ### 0020 — 2026-09-02 — E8 ran `[BASELINE]`; H-E8 NOT CONFIRMED
 
@@ -1130,7 +1130,7 @@ NOT a transfer at a real switch point; arm (b) text is visible-messages-only and
 hidden prefix the provider billed (0012). H-E8's verdict cell changes to `NOT CONFIRMED` with this
 entry.
 
-prior-entries-sha256: 65615f84d33ee898f5c585f470ff7faa7732e96de94a67e8b24ba00452b08d35
+prior-entries-sha256: f5fcbc163cabda26e3551dae4b8c9de17dedbd06934461f341d4e685c057f3d2
 
 ### 0021 — 2026-09-01 — Erratum: heading dates of 0016–0020; Lane B reported descriptive `[BASELINE]`, its dollar counterfactual WITHDRAWN
 
@@ -1178,7 +1178,7 @@ parts:
   independent evidentiary standing. No hypothesis cell changes: H-E7a was decided by Lane A
   alone (0007, 0015, 0018) and Lane B never had a hypothesis.
 
-prior-entries-sha256: 50d9bd4ffde65814712ff8b3a532f0e4f611e3e6220edeb53b419872f7f68209
+prior-entries-sha256: eee05b2e1c65c44ea41f19d256222ae34b0efadfe94e8c660d965d9d618d7ee9
 
 ### 0022 — 2026-09-01 — Entry 0009's SWE-bench calibration precondition was not met by 0013/0015/0018; the verdicts stand by bound and by measurement
 
@@ -1227,7 +1227,7 @@ true-encoder-is-public as a config change (bundled with the pending gpt-4.1 exac
 after which one replay supersedes the figures once, not piecemeal. Until then, no further
 SWE-bench token figure ships without citing this entry's sensitivity.
 
-prior-entries-sha256: e275cb5a4b45dc3a2bb3dcd69b1a9802347c39248a46ab0368799d36e2ea2d63
+prior-entries-sha256: 67b4a8d2683e3a8d770e959c8bc32223d458fc6a81f27a1da125c068e5ee0dd4
 
 ### 0023 — 2026-09-01 — E9 rule amended before any prefill: per-token deviation and oracle selective-recompute fraction replace pooled R² as the verdict statistic; controls and seam profile registered
 
@@ -1374,7 +1374,7 @@ off-policy text; one pair; one system; never a real mid-trajectory transfer), pl
 oracle lower bound (two reasons above) and the seam profile is descriptive; neither is a claim
 about what a deployed reuse scheme would achieve. No hypothesis cell changes with this entry.
 
-prior-entries-sha256: 50ee4f2b68fbbb6bb103443f3330f6156f982404f04df71c916d7eacbca2b800
+prior-entries-sha256: 59ad89f709c88c43b17d883192ded51c80eb14961a06d1d0fbf6ac0c5c2377b7
 
 ### 0024 — 2026-09-01 — Corpus manifest committed; SWE-bench selection rule recorded; overlap null controls and cache-aware H-E7a readings `[BASELINE]`; no verdict changes
 
@@ -1444,7 +1444,7 @@ No `verdict:` line: no cell changes. Figures: `summarize_e7 --overlap-null --cac
 (results/e7/recon.json), config sha256 d16cf4659aab, 188 trace files verified.
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
-prior-entries-sha256: 43879637a17e16e38afec2dd2134fef53fbc33020ab1288e02941b151708fbaa
+prior-entries-sha256: 21347ea2c3c874900e72fb336944df8e932db0eb7551c6e1a9611138dc2e014e
 
 ### 0025 — 2026-09-02 — E9 amended before any prefill: coverage registered; agent-text τ alongside; prefix-invariance control; causal seam distance; block lengths; bootstrap; τ ladder; keep-subset 3 → 8; no verdict changes
 
@@ -1553,11 +1553,11 @@ non-nesting of the keep draw pinned; malformed parameters refused.
 The 0018 rows above are E7 figures and name the corpus manifest they were measured against (0024).
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
-prior-entries-sha256: 8fb9531f556f91cd2090cffe7014956826e2453cbe49b406a7af6a077b115753
+prior-entries-sha256: 4655e2b37af8f960fd4dd8ed1aae40035cf8ddfa3751394cc586f373f0518ad8
 
 ### 0026 — 2026-09-04 — E9 upstream re-pin before any score: SDPA attention kernel and logits at dump time, after the first-handoff CUDA OOM; no rule, cap, dtype, τ or handoff-set change
 
-**What happened on the box.** Algoverse grant, one H100 80 GB **MIG 3g.40gb** slice (39.5 GiB, assigned by
+**What happened on the box.** A grant, one H100 80 GB **MIG 3g.40gb** slice (39.5 GiB, assigned by
 `CUDA_VISIBLE_DEVICES`, no other process), linear-ceiling `d965e22`, upstream `36d73b3` (the 0023 pin),
 torch 2.11.0+cu128, transformers 5.16.1. `e9 --check` printed ready; the driver refused at the FIRST
 included handoff (`astropy__astropy-13033_traj#80`, |S| = 29,391) inside the receiver's dump of `S`:
@@ -1622,7 +1622,7 @@ invoked path clean.
 **Scope.** All of 0019's, 0023's and 0025's limits. No hypothesis cell changes with this entry; no
 `verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
 
-prior-entries-sha256: 070daf0b6ba80a03fe0639235495b4d4186e95456855332a9098d4d3e4212c30
+prior-entries-sha256: 8a24f117fec6c275a4ceaf772a0532d4f3aa6932e11fd1c4fbdfb83d86384d48
 
 ### 0027 — 2026-09-04 — E9 amended before any score: cross-arm outcome named (descriptive); HOLDS bound to a floor; the 0026 kernel change stated as a bound; box discipline
 
@@ -1680,7 +1680,7 @@ itself matches (the 09-04 self-kill cost eight minutes of stale polling); per ha
 **Scope.** All of 0019's, 0023's, 0025's and 0026's limits. No hypothesis cell changes with this entry;
 no `verdict:` line. The verdict on H-E9 still enters only by its own numbered entry after the run.
 
-prior-entries-sha256: 8a0e344bd6ffdfeb9acec713f2017679d21d28f39a7f0781987a9900409aa15c
+prior-entries-sha256: ecd2dcae0f548e1cc5a898ba982613a2a016e3bf4c0ca5a282e1784116e7ba1f
 
 ### 0028 — 2026-09-04 — E9 summarizer enforcement: the keep-subset re-score tolerance registered for a cross-platform re-score; no rule, τ, band, score or handoff change
 
@@ -1750,11 +1750,11 @@ within a percent of the box's.
 entry; no `verdict:` line. The verdict on H-E9 enters only by its own numbered entry, from a summary that
 passes under this check.
 
-prior-entries-sha256: 3eef45b79417ef3270281c08bfeb7a177aaf4c95d5a6daa909ac8151d7de9a1f
+prior-entries-sha256: 913aea9daf87a67a7e16f151a24cfada519c6b99dd1b74a05de7b89d51f1f002
 
 ### 0029 — 2026-09-04 — E9 ran `[BASELINE]`; H-E9 HELD
 
-**Setup, as registered.** Algoverse grant, one H100 80 GB MIG 3g.40gb slice, JupyterHub only; linear-ceiling
+**Setup, as registered.** A grant, one H100 80 GB MIG 3g.40gb slice, JupyterHub only; linear-ceiling
 `0a19b56` (entries 0019, 0023, 0025, 0026, 0027 required by the gate and committed), upstream pin
 `d5786df` (entry 0026). Pair qwen3-0.6b-to-1.7b; receiver Qwen3-1.7B, source Qwen3-0.6B, the k = 1
 content-space mapper of 0016/0020 for the cross arm. Launched 17:35:32 UTC after two refused attempts (0027
@@ -1818,7 +1818,7 @@ direction, one mapper, one alignment method; and nothing about generation qualit
 verdict: H-E9 = HELD
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
-prior-entries-sha256: 2be23eb054eaceb14c0c8016a015f075be82817f36189b94a684542582bee8ce
+prior-entries-sha256: 4f532f11b42ab2217327313b2296bad389a05e3620eb5d90d61edaf7dc157fcc
 
 ### 0030 — 2026-09-04 — E8 amended before any rescoring: arm (b) over every agent sequence, per-sequence moments, a seeded bootstrap of the drop; descriptive; the H-E8 cell and τ_agent_K do not move
 
@@ -1875,7 +1875,7 @@ bootstrap, refusal on a tampered per-sequence list and on a changed prior report
 messages only). No hypothesis cell changes with this entry; no `verdict:` line. The figures enter by their own
 numbered entry from a passing `summarize_e8 --config config/e8a.toml`.
 
-prior-entries-sha256: fc7a391fc4a827e361340c286c336ca9cdbfe9613d1a66200be1a590029dc9d0
+prior-entries-sha256: 83f5581e45f42f105a2ecb70e820b7f8cd35bac32ad694a5e05b12d03c34f33e
 
 ### 0031 — 2026-09-07 — E8 amendment ran `[BASELINE, DESCRIPTIVE]`: arm (b) over every agent sequence; the H-E8 cell does not move
 
@@ -1920,7 +1920,7 @@ mapper's own 10 held-out generic sequences and its per-sequence spread is over t
 
 **Scope.** All of 0009's, 0016's, 0020's and 0030's limits. No hypothesis cell changes with this entry.
 
-prior-entries-sha256: e5763c565d4fae7e4775a5e7e97d9e724f85b2bf63ce9f0ab3551613c6a45129
+prior-entries-sha256: a168a3f744c4da45f2f455c5095aaf438c6e4b4b8a1e1c370c876557ae69fca8
 
 ### 0032 — 2026-09-06 — E9 admitted to the LCFM 4-pager behind the summarizer gate; descriptive; the H-E9 cell does not move
 
@@ -1954,7 +1954,7 @@ later entry records it either way.
 rule, the band, the keep subset, the kept dumps and `results/e9/` are unchanged; no experiment is registered
 and nothing runs under this entry.
 
-prior-entries-sha256: ce735dbb4c5218c2588db7feba8a28f3b68e8dc61bdeb341d09a34b24471897d
+prior-entries-sha256: ce666044bcacd088dbeaf1c1b15d230008c63ddc38871e9748f30445499c4459
 
 ### 0033 — 2026-09-08 — Calibration-size sensitivity registered before any fit: the k = 1 mapper refit on n = 420 sequences, E8 arms and the E9 kept-subset cross arm re-scored; descriptive; no cell moves
 
@@ -2014,7 +2014,7 @@ control firing, refusal on a changed kept dump / prior report / foreign E8 repor
 25 included of 68 observed, floor not method). The figures enter by their own numbered entry from passing
 `summarize_e8 --config config/e8c.toml` and `e9_rescore summarize`.
 
-prior-entries-sha256: 9f16a83e3cb98ea26bc23d052638881ed15c6c14618aec4e58a51cd6607dc056
+prior-entries-sha256: edc3287720ef8d87f0bc7ed32536578083ef30fd5a4f764017ba1a98feb03b60
 
 ### 0034 — 2026-09-08 — Calibration-size sensitivity ran `[BASELINE, DESCRIPTIVE]`: the n = 420 mapper on E8's arms and E9's kept-subset cross arm; no cell moves
 
@@ -2059,7 +2059,7 @@ Not established: anything about the excluded long handoffs; an achievable scheme
 
 **Scope.** All of 0033's. No `verdict:` line.
 
-prior-entries-sha256: 50c7d5027d891a1b99b93da68e823bb64d941bed501136d652b37218f07d290c
+prior-entries-sha256: 140a8cd8318973b5fa6eecaca6360469ef593470c61db791e249988ecd569f7e
 
 ### 0035 — 2026-09-09 — E9-long registered before any prefill: H-E9's instrument on the 35 handoffs above the prior cap, receiver scaled to 81,920 by YaRN; H-E9L added `unresolved`; the 4-pager re-scoped around E9 and E9-long (supersedes 0032's space clause)
 
@@ -2068,7 +2068,7 @@ Qwen3's 32,768-token cap — the shorter half by |S| (0025: included median 25,4
 venue asks first whether the same result holds where the re-rendered context is 35K–80K tokens, and nothing on the
 record answers it. The seed (`docs/2026-09-08-seed-e9-long-half.md`) designed the experiment; the operator ruled
 D1(a)/D2/D3/D4/D5 on 2026-09-09 and, the same day, that the LCFM 4-pager is written from an overnight sitting on a
-rented single L40S (48 GB; no queue) rather than the Algoverse 3g.40gb queue. This entry registers the experiment,
+rented single L40S (48 GB; no queue) rather than the grant 3g.40gb queue. This entry registers the experiment,
 its controls, its stopping rule and its paper scope BEFORE the box is touched: `results/e9l/` holds no report, no
 score, no bridge and no control file at append, and this script refuses otherwise (R1). The only thing under
 `results/e9l/` is the instrument's own alignment pass (`e9 --align-only --config config/e9l.toml`,
@@ -2168,7 +2168,7 @@ report); no `verdict:` line here. The n = 420 arm is not run under this entry. N
 receiver that is not the trained-range model of 0029 (control 4 says by how much); floor not method (0027); the
 four handoffs above 81,920 and the four with an empty receiver prompt stay excluded by name.
 
-prior-entries-sha256: f6a715fd94402eb419155a2afd2f14fcbb28e954a9e8ee1a16b07ffa920dd5da
+prior-entries-sha256: 79789c3bab3037d77a46b50ad9a369019af96e841241f072b0328cce7c70f7e0
 
 ### 0036 — 2026-09-10 — E9-long ran `[BASELINE]`; H-E9L HELD (35 scored of 35 registered)
 
@@ -2227,7 +2227,7 @@ one pair, one direction, one mapper, one alignment method; generation quality af
 verdict: H-E9L = HELD
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
-prior-entries-sha256: 055a140592979dd40bb2cbfcd106612aaeea2e6dc6f87514aab77212be7ce08c
+prior-entries-sha256: 9f78267fe49139b7e84ec5894ec2c778ec36280f5d08a67248e11309bf3047c6
 
 ### 0037 — 2026-09-13 — E9 scaled short cell registered before any prefill: 0029's 25 handoffs under 0036's receiver configuration; descriptive, decides nothing
 
@@ -2305,7 +2305,7 @@ numbered entry, and the paper only from that entry.
 **Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the short half of one corpus under a
 receiver that is not the trained-range model; floor not method (0027); generation quality after reuse not measured.
 
-prior-entries-sha256: f24f8df65f91e62ada4cd9097f0afe685ec76b944cfe2c5fc9da2b8050ddf2bc
+prior-entries-sha256: c84771a115f2170ccfa869e71d449a0eabbc84e02ca9918c5393d9c6b26dd88f
 
 ### 0038 — 2026-09-14 — E9 scaled short cell ran `[BASELINE, DESCRIPTIVE]`: 0029's 25 handoffs under 0036's receiver; the configuration share stated; no cell moves (25 scored of 25 registered)
 
@@ -2373,4 +2373,4 @@ one direction, one mapper, one alignment method; generation quality after reuse.
 
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
-prior-entries-sha256: c9128ee936cd7e8afefa0301ddf9f8306abbe4676de31480fe9db50c8d037a54
+prior-entries-sha256: b9cf4f296924f81ac6e0e14fb894dd8723aaafea04b67e14e4c690ab8c20b2fa

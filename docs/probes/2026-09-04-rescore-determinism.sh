@@ -5,7 +5,7 @@
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 cd ~/kvt-wsl
-R=/mnt/c/Users/hossa/dev/linear-ceiling/results/e9
+R=/mnt/c/Users/anon/dev/linear-ceiling/results/e9
 STEM=20241016_composio_swekit__astropy__astropy-14182_traj_sw68
 score() {  # $1 = out prefix, rest = env
   env "${@:2}" .venv/bin/python scripts/score_positions.py --same-src $R/scratch/$STEM/same_src --same-tgt $R/scratch/$STEM/same_tgt \

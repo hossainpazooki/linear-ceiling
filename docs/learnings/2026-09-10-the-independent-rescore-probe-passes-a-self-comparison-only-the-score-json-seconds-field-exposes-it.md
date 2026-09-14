@@ -16,14 +16,14 @@ upstream `score_positions.py` records the run's wall-clock `seconds` to full flo
 `mapper.path` of the machine it ran on, so a separate run cannot reproduce its bytes. Equal archive and cold score-JSON
 hashes therefore mean the same file was fed twice, whatever `passed` says; equal token hashes mean nothing either way.
 basis: the probe was fetched from remote main with
-  `gh api "repos/hossainpazooki/linear-ceiling/contents/docs/probes/2026-09-08-e9-independent-rescore-compare.py?ref=main"`
+  `gh api "repos/anon/linear-ceiling/contents/docs/probes/2026-09-08-e9-independent-rescore-compare.py?ref=main"`
   (sha256 `7acfe948ff4820f5…`; not present in local HEAD `50bc439`, which predates the merge) and run on handoff
   `20241025_composio_swekit__django__django-11066_traj_sw36` from `results/e9/`. Archive vs itself -> `exit=0`,
   `passed=True arrays_exact=6/6 score_sha_equal=True tokens_sha_equal=True`. Archive vs a copy of its tokens with
   `cross_K` element 0 moved by `np.nextafter` -> `exit=1`, `passed=False arrays_exact=5/6`. Score JSON top-level keys ->
   `['cross', 'cross_K_r2_layer_mean', 'cross_V_r2_layer_mean', 'mapper', 'n_pairs', 'per_token', 'same',
   'same_K_r2_layer_mean', 'same_V_r2_layer_mean', 'seconds']`, with `seconds = 18.858345985412598` and
-  `mapper = {'path': '/home/jupyter-rrhs-fe3a-xl/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1…`. The same
+  `mapper = {'path': '/home/jupyter-box-b/kv-transfer-replication/mappers/qwen3-0.6b-to-1.7b/k1…`. The same
   arrays passed to `np.savez` twice, 2.2 s apart -> `file sha equal: True (4d08f4efefa19aa4 vs 4d08f4efefa19aa4)`,
   numpy 2.5.2.
 re-verify: .venv/Scripts/python.exe docs/probes/2026-09-08-e9-independent-rescore-compare.py --archive-score results/e9/scores/20241025_composio_swekit__django__django-11066_traj_sw36.json --cold-score results/e9/scores/20241025_composio_swekit__django__django-11066_traj_sw36.json --archive-tokens results/e9/tokens/20241025_composio_swekit__django__django-11066_traj_sw36.tokens.npz --cold-tokens results/e9/tokens/20241025_composio_swekit__django__django-11066_traj_sw36.tokens.npz   # prints "passed": true and exits 0 on a self-comparison; needs merge bb85a28 in the local tree

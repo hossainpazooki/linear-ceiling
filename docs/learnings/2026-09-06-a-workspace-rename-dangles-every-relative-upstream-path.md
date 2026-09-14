@@ -21,7 +21,7 @@ before renaming, and rename only with every session closed.
 basis: `ls -d ~/dev/kv-transfer-replication` -> "No such file or directory" and `ls -d ~/dev/kv-transfer` present
   at 2026-09-06 16:53Z; `stat ~/dev` modify time 12:49:13.33 -0400 equal to the birth of `~/dev/traverse/`;
   `.venv/Lib/site-packages/__editable___kv_transfer_replication_0_0_1_finder.py` in the upstream venv maps
-  `kvt` to `C:\Users\hossa\dev\kv-transfer-replication\kvt`; upstream `pytest -q` -> `7 failed, 138 passed`, every
+  `kvt` to `C:\Users\anon\dev\kv-transfer-replication\kvt`; upstream `pytest -q` -> `7 failed, 138 passed`, every
   failure `No module named 'kvt'` from a `scripts/*.py --help` subprocess; `e8 --check --config config/e8a.toml`
   at 7ce63cf ended in `NotADirectoryError: [WinError 267]` from `upstream_gate.py` line 26; `mv kv-transfer
   kv-transfer-replication` -> `Permission denied`, tree intact on both sides afterwards (HEAD 223f469, 0/0).

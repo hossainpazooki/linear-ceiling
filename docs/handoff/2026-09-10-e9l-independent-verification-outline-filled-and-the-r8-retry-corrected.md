@@ -42,7 +42,7 @@ did, and corrects two claims that touch it. LCFM deadline 2026-09-11 11:59 UTC =
   free 100 GB tier is superseded by
   `2026-09-10-the-r8-push-died-on-a-commit-rate-limit-not-the-storage-tier`, which preserves its arithmetic as a
   separate, still-unverified risk for the next attempt.
-  re-verify (settles the backup's state; needs a read token in `$HF_TOKEN`): `.venv/Scripts/python.exe tools/hf_verify_backup.py hossainpazooki/linear-ceiling-e9l-2026-09-10 ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10 --exclude README.md`.
+  re-verify (settles the backup's state; needs a read token in `$HF_TOKEN`): `.venv/Scripts/python.exe tools/hf_verify_backup.py anon/linear-ceiling-e9l-2026-09-10 ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10 --exclude README.md`.
 - **in flight and NOT this session's — `README.md` modified, `docs/status.md` deleted.** The box session's brief
   attributes both to this session ("dev-47 … is unwinding its own `50bc439`"). That is incorrect on both halves:
   `50bc439` was authored by the operator's own identity at 23:35:13 −0400, and this session has made no edit to

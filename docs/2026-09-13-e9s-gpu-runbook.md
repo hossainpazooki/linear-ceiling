@@ -60,7 +60,7 @@ dumps: 0025's eight (three stride-1 dumps each, ≈ 45 GB pulled).
 8. **Release (R7)** in order, step 0 first (`EXP=e9s release_sweep.sh`), then `box.sh terminate` and the durable
    read-back (`--filters Name=instance-id … --query 'length(Reservations)'` → 0).
 9. **Backup (R8)** from the verified home mirror: `verify_mirror.py e9s`, stage by hardlink, `ALLOW_PUBLIC=1
-   tools/hf_backup.sh hossainpazooki/linear-ceiling-e9s-2026-09-13 <staging>`, then `tools/hf_verify_backup.py`.
+   tools/hf_backup.sh anon/linear-ceiling-e9s-2026-09-13 <staging>`, then `tools/hf_verify_backup.py`.
    Do not run a summarizer while the hardlinked stage is uploading. Tokens R9.
 10. **Home readers, in order:** `summarize_e9 --config config/e9s.toml` (≈ 9 min), then
     `e9_compare --native config/e9.toml --scaled config/e9s.toml --long results/e9l/summary.json`, then the figures entry
@@ -163,7 +163,7 @@ staging tree is live under the uploader. New here: `setup.sh` clones at `LC_SHA`
   (`xargs grep -l` exits 123 on zero hits under `pipefail`); re-run by hand with the pipe guarded: planted control fired (1),
   161 text files swept, **0 files with a credential-shaped string**; the one file outside the text extensions,
   `results/e9s/logs/pull.log.err`, swept separately (0). Stage 49,478,265,328 B. Ready for the operator's push
-  (`ALLOW_PUBLIC=1 tools/hf_backup.sh hossainpazooki/linear-ceiling-e9s-2026-09-13 <stage>`; the dataset exists, public, empty).
+  (`ALLOW_PUBLIC=1 tools/hf_backup.sh anon/linear-ceiling-e9s-2026-09-13 <stage>`; the dataset exists, public, empty).
 - 03:49:42–04:04:21 operator: **R8 push, `BACKUP VERIFIED`, exit 0** (Hub revision `a63e3c27`; 983 remote = 983 local files,
   821 compared by LFS sha256, 162 downloaded and hashed, 0 problems) (log `~/dev/hf-staging/logs/linear-ceiling-e9s-2026-09-13.20260914T034942Z.push.log`):
   records first, the tree (982 files, resumable), the card last, then `tools/hf_verify_backup.py` in both directions. The CLI's

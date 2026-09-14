@@ -1,4 +1,4 @@
-# n = 420 target dump runbook — Algoverse box, 2026-09-08 (one sitting)
+# n = 420 target dump runbook — grant box, 2026-09-08 (one sitting)
 
 Inherits `docs/gpu-experiment-protocol.md` (R1–R12). Produces the missing half of the upstream calibration
 dataset behind entry 0033 (`config/e8c.toml` `[e8.arms] generic_dumps`): `data/kv/qwen3-0.6b-to-1.7b-n420/target/`,
@@ -18,7 +18,7 @@ pin, the dump root and the fit. The operator's ruling (a) of the 2026-09-07 brie
 
 | input | where | identity |
 |---|---|---|
-| upstream code | `github.com/hossainpazooki/kv-transfer-replication` | `223f469164734a5780110a5e2e906a2af3c36b1a` (0030 pin; `config/e8c.toml` `upstream_sha`) |
+| upstream code | `github.com/anon/kv-transfer-replication` | `223f469164734a5780110a5e2e906a2af3c36b1a` (0030 pin; `config/e8c.toml` `upstream_sha`) |
 | token file | `data/tokens/qwen3-0.6b-to-1.7b_n420_len1024_seed0.npy` (upstream, gitignored) | sha256 `64343ab3365e345d1b7f3ea6c0cf46d24a7b7c1473530b1bc9458198c5ce61ca`, 3,440,768 B; uploaded, re-hashed on the box |
 | model | `Qwen/Qwen3-1.7B` from the Hub, float32, `sdpa_repeat_kv` (`kvt/models.py::load_model` at the pin) | |
 | source half (home, for the record) | `.../n420/source/` | 30 files, 12,332,988,482 B; `meta.json` sha `0afb6888…`, `layer00.npz` sha `8488ee18…` |
@@ -195,7 +195,7 @@ Prior bound: 7.95 GiB at T = 4,096 on the same model path (entry 0026 probe tabl
 - 23:52 `e9_rescore run` exited clean: `results/e9c/report.json` (amendment 0033, 8 kept handoffs scored, `scores/` 8 files,
   `tokens/` 8), empty stderr. `e9_rescore summarize --config config/e9c.toml` launched standalone (fail-closed; any refusal
   is pasted here verbatim, R11). e8c's scorer still running.
-- 23:57 `e9_rescore summarize` (standalone) REFUSED, verbatim: `E9 rescore REFUSED: C:\Users\hossa\dev\linear-ceiling\results\e8c\report.json
+- 23:57 `e9_rescore summarize` (standalone) REFUSED, verbatim: `E9 rescore REFUSED: C:\Users\anon\dev\linear-ceiling\results\e8c\report.json
   missing: the tagged mapper's held-out figure has not been recorded by E8`. Reading: an ordering dependency the config
   encodes (e9c reads the mapper's held-out R² from e8c's record, not from `r2.json`), not a disagreement; it re-runs after
   `e8 --config config/e8c.toml` and `summarize_e8` finish. Nothing loosened.
@@ -219,14 +219,14 @@ Prior bound: 7.95 GiB at T = 4,096 on the same model path (entry 0026 probe tabl
   after 00:40:23Z except read-only listings; my restore token revoked 00:43Z; server left running. Operator informed.
   Learning: `docs/learnings/2026-09-09-a-shared-login-is-not-an-empty-box.md`.
 - 01:0xZ (09-09) at the operator's request, one more login with a 10-minute token to read `~/e9-audit-data/README.md` ONLY
-  (nothing else opened; both tokens revoked, 204 each): it is the dataset card of `hossainpazooki/linear-ceiling-e9-2026-09-04`
+  (nothing else opened; both tokens revoked, 204 each): it is the dataset card of `anon/linear-ceiling-e9-2026-09-04`
   verbatim. So the other user downloaded the private E9 backup onto the box with a read token to that dataset, and the
   working files beside it (`ledger_25_30.txt`, `rescore_*.txt`, `chosen_record.txt`, `cold1.*`) are a refutation of
   0025–0029 in progress on the shared grant login.
 
 ## 6. Backup (R8), 2026-09-09
 
-- Private dataset `hossainpazooki/linear-ceiling-n420-2026-09-08`, upstream layout at the root (`data/kv/qwen3-0.6b-to-1.7b-n420/
+- Private dataset `anon/linear-ceiling-n420-2026-09-08`, upstream layout at the root (`data/kv/qwen3-0.6b-to-1.7b-n420/
   {source,target,box-logs-2026-09-08,n420_*.sha256}`, `mappers/qwen3-0.6b-to-1.7b/n420/`, `results/mapper/qwen3-0.6b-to-1.7b/n420/`),
   pushed by the operator from a staged copy of the verified home mirror (staging re-hashed: source 30/30, target 30/30, fit
   outputs 7/7) with a scoped, expiring write token held only in the operator's shell (`read -s`). Order: small records

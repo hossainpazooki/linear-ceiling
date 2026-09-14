@@ -8,11 +8,11 @@ them. The experiment is entry **0035** (registered before any prefill; `config/e
 `tools/jupyterhub/`). The previous runbooks are the shape: `docs/2026-09-02-e9-gpu-runbook.md` (E9, the
 instrument) and `docs/2026-09-08-n420-target-dump-runbook.md` (the box facts and traps of the last sitting).
 
-## 0. Why a rented card, not the Algoverse queue
+## 0. Why a rented card, not the grant queue
 
 The pick-up of 2026-09-09 18:00Z (`docs/handoff/2026-09-09-pickup-e9-long-grant-request.md`) measured that no
 E9-long option fits a 20 GB slice (1.7B fp32 OOM at T = 40,960 on 1g.20gb; every included |S| ≥ 34,974) and that
-the Algoverse 40 GB pool had a four-day queue against an LCFM deadline of 2026-09-11 11:59 UTC. The operator
+the grant 40 GB pool had a four-day queue against an LCFM deadline of 2026-09-11 11:59 UTC. The operator
 ruled AWS out of pocket (no credit on the account; G-instance quota verified at 768 vCPU on 2026-09-09). The 0035
 entry records the ruling as "an overnight sitting on a rented single L40S (48 GB; no queue)".
 
@@ -80,7 +80,7 @@ dumps each.
    token was ever on the box; check anyway); `rm -rf ~/.cache/huggingface`; `box.sh terminate` and read
    `terminated` back from `describe-instances`. Record the UTC time.
 9. **Backup (R8)** from the verified home mirror only: private dataset (made public by the operator on 2026-09-10; §6)
-   `hossainpazooki/linear-ceiling-e9l-2026-09-10`, `results/e9l/` at the root plus
+   `anon/linear-ceiling-e9l-2026-09-10`, `results/e9l/` at the root plus
    `mappers/qwen3-0.6b-to-1.7b/k1.*` in upstream layout; verified by `tools/hf_verify_backup.py`. Token hygiene R9.
 10. **Home:** `summarize_e9 --config config/e9l.toml` is the only reader (R11); a refusal is pasted verbatim into
     the closing brief. Then `append_0036.py --box "AWS EC2 g6e.4xlarge (1x L40S 48 GB), us-east-1, <instance id>"
@@ -183,7 +183,7 @@ at `.venv/bin/python`. Windows CRLF in a box script is a `bad interpreter`/`\r: 
 - **For 0036:** `--box "AWS EC2 g6e.4xlarge (1x NVIDIA L40S 48 GB), us-east-1d, i-0eafae594ebe8c291" --launched 2026-09-09T23:53:12Z
   --finished 2026-09-10T01:13:09Z` (launch line in `launches.log`; finish = `e9l.rc` mtime). No cutoff: 35 of 35.
 - **R8 backup: NOT YET PUSHED** (needs the operator's scoped write token; the commands are in the closing brief). Dataset name
-  `hossainpazooki/linear-ceiling-e9l-2026-09-10`.
+  `anon/linear-ceiling-e9l-2026-09-10`.
 - **R8, 2026-09-10 (operator): the run's files stay local AND are backed up to the dataset above.** State at 16:50Z: the push is INCOMPLETE. 482 of the 724 staging files are on the Hub and match byte for byte; `tools/hf_backup.sh` stopped on `Private repository storage limit reached` at the tree step. The dataset also holds 18,986 stray repository files (incl. `.venv` and gitignored `results/`) from an upload run in the wrong directory; nothing credential-shaped was among them (swept, with positive controls). Removing them is `tools/hf_prune_backup.py` (dry run: 27 operations), and they keep counting against storage until the history is squashed. Nothing is to be deleted locally.
 - **R8 closed, 18:28:26Z: BACKUP VERIFIED.** Steps, all by the operator: the strays were already deleted from the
   dataset (the prune found 0 left to remove). A second `tools/hf_backup.sh` run at 18:14Z stopped on the private storage limit

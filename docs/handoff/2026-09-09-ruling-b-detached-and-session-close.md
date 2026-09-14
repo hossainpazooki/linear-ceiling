@@ -4,7 +4,7 @@
 brief supersedes for "Open / next" only). Newest commit this brief describes: linear-ceiling `4eafe40` = origin/main as
 of 03:51Z, plus the uncommitted work in the commit block below. Upstream `kv-transfer-replication` on `main` at
 `4633718` = origin, tree clean except the untracked `results/mapper/qwen3-0.6b-to-1.7b/n420/` (ours, the fit's record).
-The Algoverse grant (`rrhs-66f0`) expires 2026-09-09 07:30Z; it is a shared login and we are off it.
+The grant (`box-a`) expires 2026-09-09 07:30Z; it is a shared login and we are off it.
 
 ## Current state
 
@@ -23,7 +23,7 @@ The Algoverse grant (`rrhs-66f0`) expires 2026-09-09 07:30Z; it is a shared logi
 - **built / verified — both entry-0033 gates ready on `main` after the restore.**
   re-verify: `.venv/Scripts/python.exe -m linear_ceiling.e8 --check --config config/e8c.toml` → `E8 gate: ready`;
   `.venv/Scripts/python.exe -m linear_ceiling.e9_rescore check --config config/e9c.toml` → `E9 rescore ready`.
-- **built / verified — R8 backup** `hossainpazooki/linear-ceiling-n420-2026-09-08` @ `8675b719`, 89 files / 27.7 GB,
+- **built / verified — R8 backup** `anon/linear-ceiling-n420-2026-09-08` @ `8675b719`, 89 files / 27.7 GB,
   89/89 verified from the Hub's `lfs.sha256` plus re-download of the 28 non-LFS files (operator's shell, scoped token,
   revoked).
   re-verify: with a read token in `$HF_TOKEN` and the mirror reconstructed, `tools/hf_verify_backup.py <repo> <dir> --exclude README.md` → `BACKUP VERIFIED`.
@@ -47,7 +47,7 @@ The Algoverse grant (`rrhs-66f0`) expires 2026-09-09 07:30Z; it is a shared logi
   and refuse on a detached older HEAD (verified: e8c gate ready again after the restore).
 - **Ruling (a) = re-dump** (taken by requesting the box on 09-08); premise held; the two halves' provenance is stated in 0033.
 - **0034's header date = the run date** (2026-09-08 local), precedent 0020/0029/0031.
-- **The Algoverse box is not touched again this grant.** Reason: it is a shared login with a co-author's audit on it;
+- **The grant box is not touched again this grant.** Reason: it is a shared login with a co-author's audit on it;
   protocol R7 step 0 (2026-09-09) says abort on anything foreign.
 
 ## Reuse map

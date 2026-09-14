@@ -118,7 +118,7 @@ verdict) from `summarize_e9` output only; then the LCFM decision and the MLSys d
 
 ## Open / next
 
-1. **Submit the A100 request** (human-only: `slack.algoverseairesearch.org/a100`; 1-day grant
+1. **Submit the A100 request** (human-only: `slack.<program>.org/a100`; 1-day grant
    suffices; countdown starts at approval). Then execute
    `docs/2026-09-02-e9-gpu-runbook.md` verbatim; the driver checkpoints per handoff and the
    keep-subset dumps MUST come off the box before expiry.

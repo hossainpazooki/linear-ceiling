@@ -1,4 +1,4 @@
-# E9 GPU runbook — Algoverse A100, one sitting
+# E9 GPU runbook — grant A100, one sitting
 
 (Filename misdated; authored 2026-09-01 — see entry 0021. Amended 2026-09-01 for entry 0023.)
 
@@ -26,8 +26,8 @@ handoff); keep subset (seed 9) = django-10880_traj#60, astropy-7166_traj#66, dja
 ## 1. Clone and pin
 
 ```bash
-git clone https://github.com/hossainpazooki/linear-ceiling.git
-git clone https://github.com/hossainpazooki/kv-transfer-replication.git
+git clone https://github.com/anon/linear-ceiling.git
+git clone https://github.com/anon/kv-transfer-replication.git
 cd kv-transfer-replication && git checkout "$(grep -oE 'upstream_sha = "[0-9a-f]{40}"' ../linear-ceiling/config/e9.toml | cut -d'"' -f2)" && cd ..
 ```
 
@@ -52,7 +52,7 @@ transformers 5.x and is not what the local env runs (torch 2.13). If the box has
 `python3.12 -m venv .venv && .venv/bin/pip install torch && .venv/bin/pip install -e .` (and
 `-e ".[dev]"` for linear-ceiling) is the same environment.
 
-**Amended 2026-09-04, on the box (Algoverse grant, JupyterHub only — no ssh/scp; driven over the Jupyter
+**Amended 2026-09-04, on the box (grant, JupyterHub only — no ssh/scp; driven over the Jupyter
 REST API + kernel websocket from home).** (i) PyPI `torch` 2.14.0 is a **cu130** build and the box driver is
 570.148.08 / CUDA 12.8, so `torch.cuda.is_available()` was False: install from the `cu128` index (2.11.0+cu128
 worked). (ii) The grant is an H100 80 GB **MIG 3g.40gb** slice (39.5 GiB), assigned by `CUDA_VISIBLE_DEVICES`;
@@ -196,7 +196,7 @@ registered (0019).
 **Paid fallback (added 2026-09-02).** The whole day is under 3 h on one exclusive A100 40 GB. Lambda
 on-demand lists a single A100 40 GB at $1.99/GPU-h and a single H100 80 GB PCIe at $3.29/GPU-h
 (pricing page fetched 2026-09-02; availability not checked) — i.e. ≈ $6–10 for the run. The plan
-doc's go/no-go (EOD 09-04) should therefore read: no Algoverse approval by then → rent, same
+doc's go/no-go (EOD 09-04) should therefore read: no grant approval by then → rent, same
 runbook, not "ship trace-only + E8". Any rented single-GPU box satisfies the exclusive-card
 requirement in §2 by construction; a 24 GB card (A10, L4, 4090) does NOT — see the memory
 arithmetic.

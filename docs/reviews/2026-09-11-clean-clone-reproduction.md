@@ -60,7 +60,7 @@ Neither emitted a figure, an empty result, or a zero.
 
 ## Recomputation from the published record
 
-The backup dataset `hossainpazooki/linear-ceiling-e9l-2026-09-10` is 57.7 GiB, of which
+The backup dataset `anon/linear-ceiling-e9l-2026-09-10` is 57.7 GiB, of which
 55.2 GiB is the retained tensors (`scratch/` 45.2, `bridge/` 10.0). The remaining 2.5 GiB
 — `report.json`, `scores/`, `tokens/`, `align/`, `controls/`, `calibration/`, `recheck/`,
 `logs/` — is enough to recompute every figure entry 0036's verdict reads, because the
@@ -166,7 +166,7 @@ centered deviation exceeds τ_K on the same-model arm: the receiver's KV at the 
 position agrees with its KV at the original position to within the mapper's own tolerance at
 every matched token, on every handoff." That is the same definitional error carried further.
 It concerns 0029's 25 short handoffs, whose records are in a different dataset
-(`hossainpazooki/linear-ceiling-e9-2026-09-04`) that was not downloaded here, so it is
+(`anon/linear-ceiling-e9-2026-09-04`) that was not downloaded here, so it is
 untested. 0029's own seam profile (pooled median δ 0.236 in bin 0, n = 2,278, against
 τ_K = 0.3186) makes the claim doubtful on its face, but that is an inference, not a
 measurement.
@@ -285,7 +285,7 @@ python3 -m venv .venv
 
 # the 2.5 GiB record subset, then the recomputation:
 .venv/bin/python -c 'from huggingface_hub import snapshot_download as d; \
-  d("hossainpazooki/linear-ceiling-e9l-2026-09-10", repo_type="dataset", \
+  d("anon/linear-ceiling-e9l-2026-09-10", repo_type="dataset", \
     local_dir="e9l-mirror", \
     ignore_patterns=["results/e9l/scratch/*","results/e9l/bridge/*"])'
 .venv/bin/python docs/probes/2026-09-11-e9l-record-recompute.py \

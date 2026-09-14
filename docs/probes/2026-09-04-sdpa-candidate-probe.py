@@ -6,7 +6,7 @@ import importlib.util, time, torch
 from transformers import AutoModelForCausalLM
 from transformers.integrations import sdpa_attention as _sa
 
-spec = importlib.util.spec_from_file_location("cand", "/home/jupyter-rrhs-fe3a-xl/probe/kvt_models_candidate.py")
+spec = importlib.util.spec_from_file_location("cand", "/home/jupyter-box-b/probe/kvt_models_candidate.py")
 cand = importlib.util.module_from_spec(spec); spec.loader.exec_module(cand)
 
 m_c = cand.load_model("Qwen/Qwen3-1.7B")

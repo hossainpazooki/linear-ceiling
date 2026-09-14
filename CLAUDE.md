@@ -28,8 +28,8 @@ Ruled 2026-09-11 by the operator: public is fine, and R8 now says so.
 only the Hub's 128-commits/hour 429; refuses a missing dataset, a public one unless `ALLOW_PUBLIC=1`, a concurrent upload or summarizer, and a
 token without the `hf_` prefix; ends in `tools/hf_verify_backup.py`, whose exit is the script's. Run `--check` first.
 Tokens: scoped, expiring, env-only, revoked once pasted anywhere. `tools/jupyterhub/` drives a
-JupyterHub-only box (Algoverse) from home; `tools/ec2/` drives a rented EC2 GPU instance over ssh (E9-long,
-runbook `docs/2026-09-10-e9l-gpu-runbook.md`). E9's backup: `hossainpazooki/linear-ceiling-e9-2026-09-04`
+JupyterHub-only box (grant) from home; `tools/ec2/` drives a rented EC2 GPU instance over ssh (E9-long,
+runbook `docs/2026-09-10-e9l-gpu-runbook.md`). E9's backup: `anon/linear-ceiling-e9-2026-09-04`
 (public as of 2026-09-11; kept dumps 48 GB + `mappers/qwen3-0.6b-to-1.7b/k1.*`).
 
 ## Commands
@@ -129,7 +129,7 @@ sensitivity in 0022 — 0005's kill condition applies; this is a claim about wha
 BENCHMARK traces evidence, Lane A being measurable on 60 of 2,904 trajectories from one
 designed critic stage, not about production workloads, which leave no public trace),
 **H-E7b `UNESTIMABLE`** (0015), **H-E8 `NOT CONFIRMED`** (0020: K UNRESOLVED
-/ V DEGRADES at the verdict k, neither read-out alone). **H-E9 `HELD`** (0029, 2026-09-04): E9 ran on an Algoverse H100 MIG 3g.40gb slice (JupyterHub only) at
+/ V DEGRADES at the verdict k, neither read-out alone). **H-E9 `HELD`** (0029, 2026-09-04): E9 ran on a grant H100 MIG 3g.40gb slice (JupyterHub only) at
 `0a19b56` / upstream `d5786df`; 25 of 68 handoffs scored (the shorter half by |S|); median f*(τ_K) on the
 same-model K arm is 0.0000 on every handoff (bootstrap [0, 0]) against HOLDS ≤ 0.15, read ON A FLOOR (0027:
 f* is an oracle lower bound, CacheBlend's 10–15% is achieved); the cross arm's named descriptive outcome
@@ -147,11 +147,11 @@ and a separate `results/e8a/`; the H-E8 cell and τ_agent_K do not move; figures
 (gap-map preface from `docs/2026-09-06-gap-map-revisited.md`; registered reading for H-E7a); 0031 (E8 figures) and
 0032 (E9 admitted to the 4-pager) appended 2026-09-07; 0033 (calibration-size sensitivity: k = 1/4/8 mapper refit upstream on
 the n = 420 dumps under tag `n420`, E8 arms via `config/e8c.toml`, E9 kept-subset cross arm via `config/e9c.toml`; descriptive)
-appended 2026-09-08 after the n = 420 TARGET half was dumped on an Algoverse H100 MIG 1g.20gb slice
+appended 2026-09-08 after the n = 420 TARGET half was dumped on a grant H100 MIG 1g.20gb slice
 (`docs/2026-09-08-n420-target-dump-runbook.md`; the 2026-08-25 CPU attempt had died with nothing written, so the source half
 is CPU 08-24 and the target half GPU 09-08, stated in 0033); the registered fit ran on the same box (home swapped at k = 4);
 0034 (its figures: e8c + e9c summarizers, both passed) appended 2026-09-09. The box release hit a co-author's audit on the
-shared login → protocol R7 step 0 + learnings 2026-09-09. **E9-long (0035 registered 2026-09-09; 0036 decided 2026-09-10): H-E9L `HELD`** — the same instrument on the 35 handoffs above the prior cap (|S| 34,974–80,111) under a YaRN-2.5 receiver (upstream RoPE-spec pin `063f402`, `config/e9l.toml`), run on a rented EC2 L40S (`tools/ec2/`, runbook `docs/2026-09-10-e9l-gpu-runbook.md`): median f*(τ_K) 0.0000 on every handoff, bootstrap [0, 0], bridge control CARRIED (scaled vs native receiver f* 0 ≤ 0.15, so τ_K carries), cross arm 0.9640 beyond DEGRADES; never pooled with 0029's 25; read on a floor (0027). Mirror + backup (operator, 2026-09-10: the files stay local AND are backed up): `results/e9l/` at home, and the HF dataset `hossainpazooki/linear-ceiling-e9l-2026-09-10`, BACKUP VERIFIED 18:28Z 2026-09-10 (724 files, 61.94 GB; all 529 `report.json` fingerprints match the Hub). The dataset is PUBLIC: the operator changed it after the free tier's 100 GB private limit stopped the push twice, and squashed its history first, so the stray files of a mis-directed upload are gone. **E-RL** (KV reuse
+shared login → protocol R7 step 0 + learnings 2026-09-09. **E9-long (0035 registered 2026-09-09; 0036 decided 2026-09-10): H-E9L `HELD`** — the same instrument on the 35 handoffs above the prior cap (|S| 34,974–80,111) under a YaRN-2.5 receiver (upstream RoPE-spec pin `063f402`, `config/e9l.toml`), run on a rented EC2 L40S (`tools/ec2/`, runbook `docs/2026-09-10-e9l-gpu-runbook.md`): median f*(τ_K) 0.0000 on every handoff, bootstrap [0, 0], bridge control CARRIED (scaled vs native receiver f* 0 ≤ 0.15, so τ_K carries), cross arm 0.9640 beyond DEGRADES; never pooled with 0029's 25; read on a floor (0027). Mirror + backup (operator, 2026-09-10: the files stay local AND are backed up): `results/e9l/` at home, and the HF dataset `anon/linear-ceiling-e9l-2026-09-10`, BACKUP VERIFIED 18:28Z 2026-09-10 (724 files, 61.94 GB; all 529 `report.json` fingerprints match the Hub). The dataset is PUBLIC: the operator changed it after the free tier's 100 GB private limit stopped the push twice, and squashed its history first, so the stray files of a mis-directed upload are gone. **E-RL** (KV reuse
 across RL post-training checkpoints: recompute cost vs stale-KV cost at a weight update, read for
 MLSys; 0023's f*(τ_K) plus a stale-vs-fresh importance-ratio / ESS statistic, τ unchanged) is
 DESIGN ONLY — `docs/2026-09-02-e-rl-design.md` — unregistered, unnumbered, no code; own

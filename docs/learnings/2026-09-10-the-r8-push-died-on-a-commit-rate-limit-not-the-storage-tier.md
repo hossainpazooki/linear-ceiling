@@ -8,7 +8,7 @@ status: verified
 fact: The superseded entry inferred, from an `hf.exe` that was no longer running and left no resume state,
 that the push had hit the free 100 GB private allowance and "would fail roughly 24 GB in". The server said
 otherwise, in the operator's terminal, in words: `429 Too Many Requests for url:
-https://huggingface.co/api/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10/commit/main. You have
+https://huggingface.co/api/datasets/anon/linear-ceiling-e9l-2026-09-10/commit/main. You have
 exceeded the rate limit for repository commits (128 per hour). You can retry this action in about 1 hour.`
 The push had committed 247 of 724 files at that point, so it was well past the small records, and the limit
 counts commits, not bytes. Two consequences. First, the first retry is the same command after the window
@@ -23,8 +23,8 @@ rather than a runnable line, exactly the shape
 `2026-09-10-a-re-verify-line-anchored-on-a-providers-transient-record-rots-within-hours` warns about.
 basis: the operator's terminal at 2026-09-10T03:47Z, quoted verbatim above, under the progress line
   `Committing  ██████░░░░░░░░░░░░░░  247 / 724`; the command was
-  `hf.exe upload hossainpazooki/linear-ceiling-e9l-2026-09-10 . --repo-type dataset` from
-  `~/dev/hf-staging/linear-ceiling-e9l-2026-09-10`, with `hf.exe auth whoami` printing `user: hossainpazooki`
+  `hf.exe upload anon/linear-ceiling-e9l-2026-09-10 . --repo-type dataset` from
+  `~/dev/hf-staging/linear-ceiling-e9l-2026-09-10`, with `hf.exe auth whoami` printing `user: anon`
   immediately before it. Staging size and the two prior figures are the superseded entry's own measurements,
   re-stated unchanged.
-re-verify: .venv/Scripts/python.exe tools/hf_verify_backup.py hossainpazooki/linear-ceiling-e9l-2026-09-10 ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10 --exclude README.md   # needs a read token in $HF_TOKEN; prints BACKUP VERIFIED, or the files still missing
+re-verify: .venv/Scripts/python.exe tools/hf_verify_backup.py anon/linear-ceiling-e9l-2026-09-10 ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10 --exclude README.md   # needs a read token in $HF_TOKEN; prints BACKUP VERIFIED, or the files still missing

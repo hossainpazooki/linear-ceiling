@@ -34,7 +34,7 @@ brief's "Open / next" item 1 only.
 - **Rename back, not re-path** — done by the operator; premise held.
 - **Calibration-size shape on "the existing n = 420 dumps"** — premise CONTRADICTED (target half never existed). Not
   relitigated here; the fit was not run and 0033's prose was not edited. Ruling needed: re-dump the target (~2 h CPU
-  detached, or minutes on the Algoverse GPU in fp32 with the pinned code, then a 12 GB pull) and amend 0033's
+  detached, or minutes on the grant GPU in fp32 with the pinned code, then a 12 GB pull) and amend 0033's
   "pre-existing" wording to state the two halves' provenance (source CPU 12 threads 08-24, target GPU/CPU 09-07;
   08-24 learning: fp16-ULP differences across thread counts), or drop §5.1 from the freeze.
 - **E9 in the 4-pager (0032)** — premise ("behind the summarizer gate") holds only if the gate can be run; it cannot at
@@ -70,4 +70,4 @@ lives in `config/e9.toml`. Double-blind rules.
    timeout; pull home; re-run the 08-24 nesting check on the new target; then `append_0033.py` (after its prose
    amendment) → fit → `e8 --config config/e8c.toml` → summarize → `e9_rescore run` → `summarize` → `append_0034.py`.
 4. Freeze EOD 2026-09-08; 4-pager; PI review. Co-author refutation of 0025–0029 still owed. `check-learnings` red on 7
-   pre-existing entries. The Algoverse GPU re-request is immediate this month (operator, 2026-09-07).
+   pre-existing entries. The grant GPU re-request is immediate this month (operator, 2026-09-07).

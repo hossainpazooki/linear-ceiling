@@ -19,9 +19,9 @@ echo "== uv"
 [ -x ~/.local/bin/uv ] || curl -LsSf https://astral.sh/uv/install.sh | sh > /dev/null
 export PATH=$HOME/.local/bin:$PATH; uv --version
 echo "== clones at the pins (detached)"
-[ -d ~/kv-transfer-replication/.git ] || git clone -q https://github.com/hossainpazooki/kv-transfer-replication.git
+[ -d ~/kv-transfer-replication/.git ] || git clone -q https://github.com/anon/kv-transfer-replication.git
 git -C ~/kv-transfer-replication fetch -q origin && git -C ~/kv-transfer-replication checkout -q --detach "$UP_SHA"
-[ -d ~/linear-ceiling/.git ] || git clone -q https://github.com/hossainpazooki/linear-ceiling.git
+[ -d ~/linear-ceiling/.git ] || git clone -q https://github.com/anon/linear-ceiling.git
 git -C ~/linear-ceiling fetch -q origin && git -C ~/linear-ceiling checkout -q --detach "$LC_SHA"
 git -C ~/kv-transfer-replication log --oneline -1; git -C ~/linear-ceiling log --oneline -1
 echo "== upstream env: python 3.12, torch 2.11.0+cu128 (the 09-04 / 09-08 stack), transformers 5.15.1, numpy 2.5.2"

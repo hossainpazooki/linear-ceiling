@@ -37,7 +37,7 @@ at `700d830` and immutable. This one supersedes that brief's **"Open / next" onl
   which `kills:` my entry; both stay on the record so the chain reads. **The first retry is the same command after the
   window clears, not a plan upgrade.** What remains genuinely unknown is only which files are on the Hub. Nothing is at
   risk either way: R8 is transport, the home mirror is the evidence.
-  re-verify (settles it, needs a read token in `$HF_TOKEN`): `.venv/Scripts/python.exe tools/hf_verify_backup.py hossainpazooki/linear-ceiling-e9l-2026-09-10 ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10 --exclude README.md`
+  re-verify (settles it, needs a read token in `$HF_TOKEN`): `.venv/Scripts/python.exe tools/hf_verify_backup.py anon/linear-ceiling-e9l-2026-09-10 ~/dev/hf-staging/linear-ceiling-e9l-2026-09-10 --exclude README.md`
   → `BACKUP VERIFIED`, or the list of files to re-upload.
 - **risk for a LATER attempt, not what stopped this one — the free storage tier.** The arithmetic stands as
   arithmetic and nothing more: staging is 61,937,723,784 B (~61.9 GB), and the repo documents ~48 GB (E9) plus
@@ -70,7 +70,7 @@ at `700d830` and immutable. This one supersedes that brief's **"Open / next" onl
   untracked learnings entry of its own (the hardlinked-staging-tree finding). `main` is ahead 1 and unpushed.
   re-verify: `git status --short` and `git status -sb | head -1` → `## main...origin/main [ahead 1]`.
 - **not started** — the co-author refutation of 0025–0029 (paper condition 1); the n = 420 mapper arm on the
-  E9-long kept subset (needs its own config and entry); the Algoverse request (moot for this run).
+  E9-long kept subset (needs its own config and entry); the grant request (moot for this run).
 
 ## Locked decisions
 
@@ -83,7 +83,7 @@ at `700d830` and immutable. This one supersedes that brief's **"Open / next" onl
   2026-09-10). Reason: the staging copies share inodes with `results/e9l/`, so a re-run rewrote 17 files under a
   live uploader. Independently corroborated here: `results/e9l/summary.json` has link count 2 and mtime Sep 9
   23:12. Treat as binding for the retry — copy the tree, or finish and verify the push first.
-- **Rented L40S over the Algoverse queue**, and **termination held until the summarizer passed** — both from the
+- **Rented L40S over the grant queue**, and **termination held until the summarizer passed** — both from the
   sitting brief, both closed and unchanged.
 
 ## Reuse map

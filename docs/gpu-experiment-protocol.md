@@ -33,7 +33,7 @@ unset HF_TOKEN                           # then revoke the token in the UI; one 
 against the manifests first; never push from the box):
 
 ```bash
-HF=.venv/Scripts/hf.exe; REPO=hossainpazooki/linear-ceiling-<exp>-<yyyy-mm-dd>; ST=<staging dir>
+HF=.venv/Scripts/hf.exe; REPO=anon/linear-ceiling-<exp>-<yyyy-mm-dd>; ST=<staging dir>
 cd "$ST"
 $HF upload "$REPO" <small-records-dir> <same path in repo> --repo-type dataset --quiet    # 1. small records first (manifests, logs, json)
 $HF upload-large-folder "$REPO" "$ST" --repo-type dataset --num-workers 1                 # 2. the tensors: ONE resumable run, ONE worker on Windows
@@ -60,8 +60,8 @@ revision go into the runbook and the handoff; the local mirror stays the summari
 per user (learnings 2026-09-05); give a read token, or move the dataset to an organization. A collaborator reconstructs a mirror with
 `hf download "$REPO" --repo-type dataset --local-dir <checkout>` and verifies it the same way.
 
-**Datasets on the record:** E9 `hossainpazooki/linear-ceiling-e9-2026-09-04` (card `a45e9ee8`); n = 420 calibration
-pair + `n420` mapper `hossainpazooki/linear-ceiling-n420-2026-09-08` (card `8675b719`).
+**Datasets on the record:** E9 `anon/linear-ceiling-e9-2026-09-04` (card `a45e9ee8`); n = 420 calibration
+pair + `n420` mapper `anon/linear-ceiling-n420-2026-09-08` (card `8675b719`).
 
 ## The shape of a GPU day
 
@@ -179,7 +179,7 @@ a single resumable `upload-large-folder` (one worker on Windows; learnings 2026-
 `complete: true` report last. After every push, `dataset_info(files_metadata=True)` and compare each
 LFS file's `lfs.sha256` to the driver's fingerprint or the mirror's sha256; re-download and hash files
 without an LFS entry; re-upload on mismatch, delete nothing. Nothing on the Hub is a ledger figure; the
-summarizer reads the local mirror only. E9's dataset: `hossainpazooki/linear-ceiling-e9-2026-09-04`.
+summarizer reads the local mirror only. E9's dataset: `anon/linear-ceiling-e9-2026-09-04`.
 **Public is fine** (operator ruling; added 2026-09-11). The datasets hold KV tensors of public models over public
 benchmark traces, so visibility is a storage choice: a public dataset downloads with no token and does not count
 against the private storage allowance. Public raises the cost of a wrong push, so two things hold either way. Push
@@ -238,7 +238,7 @@ the record. A line that cannot tell 'false' from 'no longer knowable' verifies n
 file, a pulled log or a hash; where the fact really is a third party's state, use the form whose answer survives
 the record's expiry and can still be distinguished by a positive control.
 
-## The box, concretely (Algoverse TLJH, JupyterHub only)
+## The box, concretely (TLJH, JupyterHub only)
 
 No ssh or scp. Everything goes over the Hub API: a browser login mints a token
 (`POST /hub/api/users/<u>/tokens`); commands run through a python3 kernel's websocket with the token

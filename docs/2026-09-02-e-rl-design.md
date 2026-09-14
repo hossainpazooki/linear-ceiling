@@ -10,7 +10,7 @@ marked *(pick-up 2026-09-02)* and its evidence is in §10.
 cost comparison — recompute cost vs stale-KV cost at a weight update — read for MLSys. The
 operator's ruling promotes the stale-vs-fresh importance ratio and its effective sample size from
 descriptive (Appendix A.3(b)) to verdict-bearing; per A.3(b)'s own rule the promotion is a named
-amendment: **author Hossain Pazooki, 2026-09-02.** The own run becomes primary and unconditional;
+amendment: **author: the operator, 2026-09-02.** The own run becomes primary and unconditional;
 OLMo becomes the descriptive far tail; the conditional gate is deleted.
 
 **Checked at pick-up** (`main` at `8b6cced`; suite 356 passed / 1 skipped; `ledger_check`, seal
@@ -288,7 +288,7 @@ items 1–4 are what make it falsifiable.
 ## 9. Verify
 
 ```
-git clone https://github.com/hossainpazooki/linear-ceiling && cd linear-ceiling
+git clone https://github.com/anon/linear-ceiling && cd linear-ceiling
 awk '/^### 0023/,/^### 0024/' ledger/ledger.md
 python -c "from huggingface_hub import list_repo_refs as r; print(sorted(b.name for b in r('allenai/OLMo-2-0425-1B-RLVR1').branches))"
 python -c "from huggingface_hub import HfApi; a=HfApi(); print({rev:[(s.rfilename,s.lfs.sha256[:12]) for s in a.model_info('allenai/OLMo-2-0425-1B-RLVR1',revision=rev,files_metadata=True).siblings if s.rfilename.endswith('.safetensors')] for rev in ('main','step_2600')})"

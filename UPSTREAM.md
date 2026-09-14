@@ -1,6 +1,6 @@
 # Upstream instrument (read-only)
 
-- Repo: https://github.com/hossainpazooki/kv-transfer-replication
+- Repo: https://github.com/anon/kv-transfer-replication
 - Pinned commit: `223f469164734a5780110a5e2e906a2af3c36b1a` -- the commit that lets `scripts/score_mapper.py` accept
   `--holdout-frac 1.0` when only scoring and write per-sequence moments into the `--per-token` record
   (`kvt/pertoken.py::per_sequence_moments`); re-pin by ledger entry 0030 (the E8 amendment: arm (b) over

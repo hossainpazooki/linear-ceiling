@@ -12,7 +12,7 @@ Descriptive: no hypothesis row, no verdict moves.
 - On-box memory probe matched 09-10: 1.7B 16.70 GiB, 0.6B 10.89 GiB at 32K.
 - Home mirror verified file by file (770/770).
 - Backup verified in both directions: public dataset
-  [`hossainpazooki/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9s-2026-09-13).
+  [`anon/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/anon/linear-ceiling-e9s-2026-09-13).
 
 **One process slip, stated in 0038.** The summarizer first refused: this cell had no τ calibration of its own. The runbook
 omitted the step and the pre-run gate does not check for it. It was run after the GPU run; it reads nothing from the run

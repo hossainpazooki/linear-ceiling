@@ -51,7 +51,7 @@ re-verify: `ls -d ~/dev/kv-transfer-replication/.git` exists; `cd ~/dev/kv-trans
   `scripts/fit_mapper.py --pair qwen3-0.6b-to-1.7b --k 1 4 8 --tag n420 --dump-root data/kv/qwen3-0.6b-to-1.7b-n420` at `223f469`
   (upstream's own venv; artifacts are gitignored there) → `e8 --config config/e8c.toml` → `summarize_e8 --config config/e8c.toml` →
   `e9_rescore run` → `e9_rescore summarize` → `append_0034.py` → retire 0031–0034 scripts, drafts README current-state line →
-  numbers-freeze EOD 2026-09-08 → 4-pager from the outline → PI review (arranged by the Algoverse Program Director).
+  numbers-freeze EOD 2026-09-08 → 4-pager from the outline → PI review (arranged by the program director).
 - **open, not this repo's** — Ritvik's refutation of 0025–0029 (two leads first: τ-ladder sensitivity; the exactly-zero prefix
   control); the write token used 09-04/05 to be revoked; a scoped read token for Ritvik; the author list for the anonymity check.
 

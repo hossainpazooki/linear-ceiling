@@ -6,7 +6,7 @@ commit: d965e2290371a6067df7f1232758fdf28b592333
 session: qwen-kv-cache-oom-debug (8e4ab089-ff2e-43bc-9d6a-4da8ea00ce04)
 status: verified (measured on the box; entry 0026 carries the table)
 fact: The 09-02 entry budgeted weights + KV + full-vocab logits (≈ 35 GB) and concluded an exclusive
-40 GB card fits. On the Algoverse H100 MIG 3g.40gb (39.5 GiB) the pinned run OOMed at the first
+40 GB card fits. On the grant H100 MIG 3g.40gb (39.5 GiB) the pinned run OOMed at the first
 included handoff (|S| = 29,391) with a 51.49 GiB request inside scaled_dot_product_attention:
 16 heads × 29,391² × 4 B, the float32 attention scores. transformers' sdpa integration passes
 enable_gqa=True whenever no mask is present; in float32 flash is ineligible and the memory-efficient

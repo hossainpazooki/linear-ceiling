@@ -182,7 +182,7 @@ fields) — one sentence each, no proposal beyond the list.
 1. **Calibration size.** The mapper was fit on 10,240 tokens; the source paper calibrates on
    about 128K (12.5×). Entries 0033 (registration, 2026-09-08) and 0034 (figures, appended
    2026-09-08 local / 01:20Z 09-09; both summarizers clean) [FROZEN]: the k = 1/4/8 mapper refit on n = 420
-   sequences (the target half dumped on the Algoverse box 2026-09-08, the source half CPU 08-24), E8 arms and the
+   sequences (the target half dumped on the grant box 2026-09-08, the source half CPU 08-24), E8 arms and the
    E9 kept-subset cross arm re-scored, reported beside the n = 50 record; descriptive, no cell moves. The figures
    are 0034's (`results/e8c/summary.md`, `results/e9c/summary.md`).
 2. **One pair, one direction** (Qwen3-0.6B → 1.7B); off-policy text for Qwen [0009].
