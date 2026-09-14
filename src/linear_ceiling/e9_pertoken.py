@@ -60,7 +60,12 @@ def f_star(delta_token: np.ndarray, tau: float) -> float:
     mean lands 1e-11 above tau does not cost a token). 0 when the full-set mean is already
     <= tau; 1 when no proper subset qualifies. An oracle LOWER BOUND on real selective recompute
     (0023: restored-exactly assumption; no error propagation through the reused KV)."""
-    d = np.sort(np.asarray(delta_token, dtype=np.float64))[::-1]
+    d = np.asarray(delta_token, dtype=np.float64)
+    if d.ndim != 1:
+        raise ValueError("f* needs a one-dimensional array of token deviations")
+    if not np.isfinite(d).all() or (d < 0).any():
+        raise ValueError("token deviations must be finite and non-negative")
+    d = np.sort(d)[::-1]
     n = len(d)
     if n == 0:
         raise ValueError("f* of an empty token set; refusing to invent a number")
