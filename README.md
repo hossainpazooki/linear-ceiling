@@ -130,6 +130,7 @@ and two structural events change one factor each.
 |---|---|---|---|
 | context | a re-rendered handoff: same tokens at new positions, new tokens at the seam | **E9** — 25 real SWE-bench handoffs up to 32K tokens | **HELD** on an oracle floor (0029); admitted to the paper (0032); freeze run passed 2026-09-09 |
 | context, long | the same event at 35K–80K tokens under a YaRN-extended receiver | **E9-long** — the 35 handoffs above the prior cap | **decided** — H-E9L `HELD` (0036, 2026-09-10): median f*(τ_K) 0.0000 on all 35, bridge CARRIED; run on a rented L40S, 80 min |
+| context, configuration | E9's 25 handoffs again, under E9-long's YaRN receiver, so the short and long cells differ only in handoffs | **E9 scaled short cell** — registered 0037 | **measured, descriptive** (0038, 2026-09-14): no hypothesis, no verdict; the receiver configuration alone reproduces a share of 0.43 of the short-to-long far-from-seam difference and 0.39 at τ = 0.03 on identical tokens |
 | weights | a policy update under an in-flight rollout in async RL | **E-RL** | **designed, unregistered** (`docs/2026-09-02-e-rl-design.md`); the paper's contrasting direction, no figure |
 
 One yardstick for both axes: per matched token, the centered deviation between two KV states in the

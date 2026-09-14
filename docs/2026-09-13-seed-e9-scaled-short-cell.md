@@ -1,6 +1,7 @@
 # Seed — E9 scaled short cell: 0029's 25 handoffs under 0036's receiver configuration
 
-**Date:** 2026-09-13 · **Status:** seed; registration script STAGED as `docs/drafts/append_0037.py`, not appended;
+**Date:** 2026-09-13 · **Status:** DONE 2026-09-14 — 0037 appended (`c360950`), run on a rented L40S (runbook
+`docs/2026-09-13-e9s-gpu-runbook.md`), figures in entry 0038; this seed is kept as written below, and
 nothing here is a ledger figure. Written by the builds-and-review session for the session that runs GPU sittings
 (`tools/ec2/` over ssh, or `tools/jupyterhub/` on the Algoverse hub). Every value under *verified* was read this
 session from the ledger, the summarizer outputs or the code, with the source beside it; every item under *proposed*
