@@ -82,8 +82,9 @@ every file is checked in both directions before it counts.
 | [`hossainpazooki/linear-ceiling-e9-2026-09-04`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9-2026-09-04) | the same-model handoff experiment on the 25 shorter handoffs (entries 0026–0029) |
 | [`hossainpazooki/linear-ceiling-n420-2026-09-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-n420-2026-09-08) | the larger calibration set behind the cross-model map's sensitivity check (entries 0033–0034) |
 | [`hossainpazooki/linear-ceiling-e9l-2026-09-10`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10) | the long-context run on the 35 longer handoffs (entries 0035–0036) |
+| [`hossainpazooki/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9s-2026-09-13) | the 25 shorter handoffs re-run under the long run's scaled receiver (entries 0037–0038) |
 
-All three datasets are public as of 2026-09-11 (`private: false`, `gated: false` from the Hub API);
+All four datasets are public (the first three as of 2026-09-11, the fourth created public on 2026-09-14; `private: false`, `gated: false` from the Hub API);
 no read token is needed to fetch them. Protocol R8 allows public datasets (operator ruling,
 2026-09-11). Restore and verify: R8 in
 `docs/gpu-experiment-protocol.md`, checked by `tools/hf_verify_backup.py <repo_id> <local_root>`.

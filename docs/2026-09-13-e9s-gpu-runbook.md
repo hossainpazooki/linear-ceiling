@@ -164,3 +164,8 @@ staging tree is live under the uploader. New here: `setup.sh` clones at `LC_SHA`
   161 text files swept, **0 files with a credential-shaped string**; the one file outside the text extensions,
   `results/e9s/logs/pull.log.err`, swept separately (0). Stage 49,478,265,328 B. Ready for the operator's push
   (`ALLOW_PUBLIC=1 tools/hf_backup.sh hossainpazooki/linear-ceiling-e9s-2026-09-13 <stage>`; the dataset exists, public, empty).
+- 03:49:42–04:04:21 operator: **R8 push, `BACKUP VERIFIED`, exit 0** (Hub revision `a63e3c27`; 983 remote = 983 local files,
+  821 compared by LFS sha256, 162 downloaded and hashed, 0 problems) (log `~/dev/hf-staging/logs/linear-ceiling-e9s-2026-09-13.20260914T034942Z.push.log`):
+  records first, the tree (982 files, resumable), the card last, then `tools/hf_verify_backup.py` in both directions. The CLI's
+  progress line sat at `817/821 uploaded … 500 committed` for minutes after the final commit (the 09-04 lagging-status trap); a
+  path-by-path diff of the stage against the Hub read 0 missing while the verifier was already running. README dataset table updated.
