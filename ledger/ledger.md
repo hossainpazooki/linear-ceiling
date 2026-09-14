@@ -2306,3 +2306,71 @@ numbered entry, and the paper only from that entry.
 receiver that is not the trained-range model; floor not method (0027); generation quality after reuse not measured.
 
 prior-entries-sha256: f24f8df65f91e62ada4cd9097f0afe685ec76b944cfe2c5fc9da2b8050ddf2bc
+
+### 0038 — 2026-09-14 — E9 scaled short cell ran `[BASELINE, DESCRIPTIVE]`: 0029's 25 handoffs under 0036's receiver; the configuration share stated; no cell moves (25 scored of 25 registered)
+
+**Setup, as registered (0037).** AWS EC2 g6e.4xlarge (1× NVIDIA L40S 48 GB), us-east-1c, i-03c1b238426ff218c; linear-ceiling at the commit carrying 0037 and `config/e9s.toml` (gate: entries
+0019/0023/0025/0027/0035/0037, printed ready from a fresh clone on the box), upstream pin `063f402` (0035's
+RoPE-spec commit). Pair qwen3-0.6b-to-1.7b; receiver Qwen3-1.7B and source Qwen3-0.6B both under
+`{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}` (window 32,768, no floor); the n = 50 k = 1 mapper of 0016/0020 for the cross
+arm. Launched 2026-09-14T02:26:08Z, finished 2026-09-14T02:56Z. Complete: 25 scored of 25 registered, in 0037's order; of 68 observed handoffs 25
+included and 43 excluded, 0029's sets exactly. Every figure in the next three paragraphs is
+`summarize_e9 --config config/e9s.toml`'s, from a run that passed all of its checks: alignments re-derived from the raw
+traces; the run order re-derived; every R² recomputed from recorded moments; per-token squares summed against the moments;
+the 8 kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square
+within 3.2e-04 relative, max |f* diff| 0.0e+00); τ recomputed from the archived mapper; controls checked.
+
+**Two departures from 0037's text, neither moving a figure.** (i) The cell's τ calibration
+(`summarize_e9 --calibrate-tau --config config/e9s.toml`) was written at home after the GPU run, not before it: the
+runbook omitted the step, `e9 --check` does not look for it, and the summarizer refused until it existed. The calibration
+reads only the upstream mapper, the archived generic dumps, the archived `r2.json` and E8's report — no artifact of this
+run — and gave τ_K, τ_V and τ_agent_K identical to E9-long's calibration at the same pin; the summarizer recomputed it and
+refused on any disagreement with config. (ii) 0037 says the eight scaled kept dumps are pulled home "beside their native
+twins under `results/e9/scratch/`"; they are under `results/e9s/scratch/` (this config's results directory), with the same
+directory names as the native twins in `results/e9/scratch/`.
+
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run order: max
+centered per-token δ 0.000e+00 over 8,213 positions (tolerance 1e-04). δ_null same K / V token-mean median
+2.021 / 1.988; equal-token null pairs 0.0106. Matched fraction |M|/|R| (a floor): 0.9344 (p10 0.8838, p90 0.9783).
+No bridge and no length profiles (0037: the whole run is the bridge).
+
+**The scaled cell under 0023's statistic (descriptive; the band word decides nothing here).** E9-same, K read-out, τ_K =
+0.3186: median f*(τ_K) 0.0000 (p10 0.0000, p90 0.0000) over 25 handoffs; seeded bootstrap of the median (seed 25,
+2000 reps) [0.0000, 0.0000]; against 0023's edges the band word would be HOLDS, stated
+descriptively. f*(τ) is 0023's MEAN-repair statistic: it is the fraction of tokens an oracle must recompute before the
+mean δ of the rest is at or below τ, not the fraction of tokens whose δ exceeds τ (that fraction is stated under both
+receivers in the next paragraph). f*(τ_V = 0.4867), E9-same V: 0.0000 (p10 0.0000, p90 0.0000). τ ladder: τ = 0.1: same K 0.0000 (p10 0.0000, p90 0.2200) / V 0.0033 (p10 0.0000, p90 0.2634); τ = 0.03: same K 0.2930 (p10 0.0919, p90 0.6653) / V 0.3988 (p10 0.1432, p90 0.6855).
+f*(τ_agent_K = 0.4371): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.6141 (p10 0.4800, p90 0.7559). Over matched blocks of length ≥
+4: same K 0.0000 (p10 0.0000, p90 0.0000). Seam profile b⁻(t), same K, pooled median δ by bin: 0: 0.265 (n=2278) · 1: 0.145 (n=1599) · 2-3: 0.093 (n=2571) · 4-7: 0.071 (n=4039) · 8-15: 0.075 (n=5480) · 16+: 0.038 (n=139290).
+Cross arm (the n = 50 k = 1 mapper): f*(τ_K) 0.9500 (p10 0.8957, p90 0.9782), f*(τ_V) 0.9215 (p10 0.8877, p90 0.9519), beyond the DEGRADES edge; cross/same
+median-δ ratio K / V 15.4 (p10 4.5, p90 23.9) / 17.7 (p10 5.5, p90 29.7); R² across the handoff (A5, the summarizer's "bridge R²", not control
+4; decides nothing) same K 0.9105 (p10 0.8266, p90 0.9463), cross K 0.4317 (p10 0.3833, p90 0.4527).
+
+**The registered reading (`e9_compare`, 0037).** Native run `results/e9/` (0029) against this run on identical tokens:
+25 handoffs, 155,257 matched tokens, every alignment array byte-identical, every score and per-token
+record on its reported hash. Per-handoff mean δ_K, median over handoffs: native 0.0682 →
+scaled 0.0895; paired (scaled − native) median 0.0165 (p10 0.0118, p90 0.0231),
+seeded bootstrap of the median (seed 37, 2000 reps) [0.0152, 0.0171].
+f*(τ) median over handoffs, native → scaled: τ = 0.3186: 0.0000 → 0.0000; τ = 0.1: 0.0000 → 0.0000; τ = 0.03: 0.1433 → 0.2930. Fraction of matched tokens with δ_K over τ_K, median over
+handoffs: native 0.0437 → scaled 0.0527. Pooled per-token (scaled − native):
+median 0.0115, p10 -0.0054, p90 0.0459, p99 0.2793. Seam profile b⁻(t),
+pooled median δ_K native → scaled: 0: 0.236 → 0.265 (n=2,278) · 1: 0.127 → 0.145 (n=1,599) · 2-3: 0.081 → 0.093 (n=2,571) · 4-7: 0.062 → 0.071 (n=4,039) · 8-15: 0.063 → 0.075 (n=5,480) · 16+: 0.019 → 0.038 (n=139,290).
+
+**The configuration share, against the long cell** (`results/e9l/summary.json`, 35 handoffs; (scaled − native) /
+(long − native)). Far-from-seam (16+) median δ_K: native 0.0195, scaled 0.0381, long
+0.0629 → share 0.4285. Ladder: τ = 0.1: native 0.0000, scaled 0.0000, long 0.0119 → share 0.0000 (both short-cell medians are 0, a floor, so this share is 0 by construction and does not measure how far the configuration moves f* at this τ); τ = 0.03: native 0.1433, scaled 0.2930, long 0.5255 → share 0.3916. 0037's reading, fixed before any prefill and quoted, not
+applied beyond it: "a share near 1 says the receiver configuration accounts for the cross-cell difference and the
+paper's 'what length changes' figures are re-stated as configuration effects; a share near 0 says the handoffs do and
+length is the remaining candidate; in between the paper reports both." No threshold for "near" was registered; the
+values above are the reading.
+
+**What this establishes, stated narrowly.** On 0029's 25 SWE-bench composio handoffs, with 0019's alignment and 0023's
+per-token statistic, how far YaRN factor 2.5 alone moves the receiver's own content key at the pairs the instrument
+reads, and what share of the 0029 → 0036 difference that movement reproduces on identical tokens. **Not established:**
+anything about length alone (the long cell is different handoffs); the H-E9 or H-E9L cell (unchanged); any achievable
+recompute scheme (a floor, 0027); the n = 420 arm; the (p, p) twin read of the kept eight (not registered); one pair,
+one direction, one mapper, one alignment method; generation quality after reuse.
+
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: c9128ee936cd7e8afefa0301ddf9f8306abbe4676de31480fe9db50c8d037a54

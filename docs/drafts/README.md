@@ -13,7 +13,14 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state (2026-09-13, later): **0037 APPENDED** 2026-09-13 (chain `f24f8df65f91`, `ledger ok`; script retired in the same
+Current state (2026-09-14, later): **0038 APPENDED** 2026-09-14 (chain `c9128ee936cd`, `ledger ok`; both readers passed
+in-process; script retired in the same change; **no drafts staged**). Earlier that day: **`append_0038.py` STAGED** (E9 scaled short cell figures: in-process `summarize_e9 --config
+config/e9s.toml` then `e9_compare --native config/e9.toml --scaled config/e9s.toml --long results/e9l/summary.json`; descriptive,
+no `verdict:` line, no row change; run facts as `--box/--launched/--finished`; refuses on a partial close, a refusing
+summarizer or comparison, or a bridge/profile block in the summary; states the two departures from 0037's text — τ calibration
+written after the run, kept dumps under `results/e9s/scratch/`). **0038 is allocated here**; origin's ledger ended at 0037 when it
+was staged. If the corrective f* entry (another session, 2026-09-11) lands first, this script and its `NUM` strings move to 0039.
+Do not run it while a hardlinked R8 stage of `results/e9s/` is uploading. Earlier (2026-09-13, later): **0037 APPENDED** 2026-09-13 (chain `f24f8df65f91`, `ledger ok`; script retired in the same
 change; the run itself is on a rented EC2 L40S, runbook `docs/2026-09-13-e9s-gpu-runbook.md`; its figures enter by their own
 entry, number allocated at staging). Earlier that day: **`append_0037.py` STAGED** (E9 scaled short cell registration: 0029's 25 handoffs under 0036's
 receiver configuration and pin, `config/e9s.toml`; descriptive, no hypothesis row, no verdict; the comparison reader is
