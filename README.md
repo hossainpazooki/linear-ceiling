@@ -17,8 +17,53 @@ flowchart LR
     E --> G[Most of the cache still<br/>needs recomputation]
 ```
 
+## Anonymized branch
+
+This branch (`lcfm_anon`) is the copy prepared for double-blind review. It differs from `main` in
+two ways, both listed below. No claim, figure, threshold, verdict, band, tolerance or procedure
+differs. Every number in the ledger and every line of analysis code is byte-identical to `main`.
+
+### 1. Names are censored
+
+Every personal, account and institutional identifier was replaced with a neutral placeholder. The
+substitutions are one-for-one, so the surrounding prose is otherwise untouched.
+
+| in `main` | on this branch |
+| --- | --- |
+| the author's GitHub and Hugging Face account | `anon` |
+| the operator's name | `the operator` |
+| the operator's email | `anon@example.com` |
+| local machine paths (`/Users/<name>`, `C:\Users\<name>`) | `/Users/anon`, `C:\Users\anon` |
+| the two shared-login GPU boxes | `box-a`, `box-b` |
+| the compute grant's program name | `grant` |
+
+**This costs the ledger its immutability proof, and you should know that before reading
+Appendix D.** Eleven of those lines sit inside registered entries (0002, 0003, 0006, 0026, 0029,
+0035). The ledger's `prior-entries-sha256` chain hashes entry text, so changing any byte
+invalidates it. All 32 chain lines were therefore recomputed. `ledger_check` passes here, but on
+this branch it proves the chain is internally consistent, not that no entry was edited after the
+fact. The authentic chain, and the CI block-diff that proves no entry text ever moved, live on
+`main` and can be produced after the review period.
+
+### 2. Twenty-four infrastructure-only files were removed
+
+The rule, applied per file: remove it only if no surviving file references it **and** it records a
+tooling fact that no claim, figure, threshold, verdict, procedure or provenance chain depends on.
+That covers 16 learnings about upload mechanics, virtual environments, wheel indexes, log
+buffering and shell quoting, plus 8 scratch probes that each state in their own docstring that
+they are not the pinned pipeline and write nothing under `results/`.
+
+Files the rule kept even though they look like infrastructure are kept because something load
+bearing cites them. The shared-login incident is cited by the n = 420 runbook; the backup
+rate-limit notes are cited by a handoff that carries the paper's open condition 1.
+
+Nothing was deleted to make the record look better. The refusals, the defects found in our own
+instruments and the incidents are all still here, and `docs/learnings/` and `docs/reviews/` are
+where to find them.
+
 ## Contents
 
+- [Anonymized branch](#anonymized-branch) — what this branch changes, and why
 - [What the experiments found](#what-the-experiments-found)
 - [How the record stays auditable](#how-the-record-stays-auditable)
 - [Where the data lives](#where-the-data-lives) — the three public Hugging Face datasets, including the long-context run
@@ -62,6 +107,8 @@ The repository treats each result like a registered experiment, not an editable 
 1. The research rule and thresholds are committed before a run starts.
 2. A summarizer recalculates each reported number from the raw output and stops on a mismatch.
 3. The numbered ledger entries are hash-chained and checked in CI, so later edits fail the build.
+   (On this anonymized branch the chain was recomputed after censoring names; see
+   [Anonymized branch](#anonymized-branch).)
 
 `ledger/ledger.md` is the source of truth for hypotheses, rules, results, and verdicts. A green test
 suite proves that the tools work. It does not prove a scientific claim.
