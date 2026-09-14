@@ -5,11 +5,11 @@
 record of the two-axis frame and is not edited. Every cell, table, verdict and scope line is v2's; what changes is
 the frame, the order, and where the ladder and the related work sit.
 
-**Target:** Long-Context Foundation Models workshop @ NeurIPS 2026. The deadline on record, **2026-09-11 11:59
-UTC**, had passed when this outline was written (21:30Z). Whether v2 was submitted at that deadline, or the deadline
-moved, is not recorded in the repo; this outline serves either a revision of a submitted v2 or a first submission,
-and the writing lead states which at the top of the draft. ≤ 4 pages excluding references and appendix;
-double-blind; non-archival; concurrent submission permitted. CFP hooks unchanged: "Long-context and long-horizon
+**Target:** Long-Context Foundation Models workshop @ NeurIPS 2026. Deadline **extended: 2026-09-13 23:59 AoE =
+2026-09-14 11:59 UTC** (CFP page read 2026-09-11 21:40Z: "Submission Deadline: September 10, 2026, 23:59 AOE
+Extended: September 13, 2026, 23:59 AOE"). ≤ 4 pages excluding references and appendix ("as many pages of references
+and appendix as you wish, but reviewers are not required to read the appendix"); double-blind; non-archival;
+concurrent submission permitted. CFP hooks unchanged: "Long-context and long-horizon
 agentic foundation models" and "Robust evaluation". No caching keyword in the CFP; under this frame the paper is an
 evaluation of non-prefix KV reuse at long-context agent boundaries, placed in the serving literature, not a serving
 paper.
@@ -49,8 +49,9 @@ published evaluation of it uses compositions built for the benchmark. We measure
 the residual after position correction — on real handoffs from public agent trajectories, as an **oracle recompute
 floor** at a tolerance set by a cross-model linear map's own shortfall. At **25 SWE-bench handoffs up to 32K
 tokens** [0029, FROZEN, cond. 1] and **35 handoffs of 35K–80K tokens under a YaRN-extended receiver** [0036, FROZEN]
-the floor is **zero on every handoff**: no matched token needs recompute at the tolerance, while a linear cross-model
-map through the same tokens sits past the degrade edge [0029, 0036]. Length leaves the floor at zero and spends most
+the floor is **zero on every handoff**: the mean deviation over matched tokens is already within the tolerance, so
+the oracle recomputes no token — individual tokens do exceed it — while a linear cross-model map through the same
+tokens sits past the degrade edge [0029, 0036]. Length leaves the floor at zero and spends most
 of the headroom under it [0029, 0036]. No downstream-quality number is claimed.
 
 ## 1. Non-prefix reuse at a handoff (≈ 0.6 page)
@@ -69,8 +70,9 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
 - **The quantity.** Receiver's own K for a shared token at its receiver position vs at its sender position, content
   space (rotary encoding removed; V unrotated) [0023]. The free step of every PIC method (rotating a cached key to
   its new position) is therefore already taken; what is measured is the residual selective recompute exists to
-  repair. f*(τ): the fraction of matched tokens whose centered deviation exceeds τ = the fraction an oracle would
-  recompute. τ_K = 0.3186, the k = 1 cross-model map's own held-out shortfall (1 − R²) [0016/0020, 0023]. HOLDS
+  repair. **f*(τ), defined as 0023 registers it:** sort matched tokens by deviation descending; f* is the smallest
+  fraction that, recomputed exactly, leaves the **mean** deviation of the remaining tokens at or below τ. It is a
+  mean-repair statistic: f* = 0 means the full-set mean is already within τ, **not** that every token is. τ_K = 0.3186, the k = 1 cross-model map's own held-out shortfall (1 − R²) [0016/0020, 0023]. HOLDS
   f* ≤ 0.15, anchored to the 10–15% of high-deviation tokens CacheBlend recomputes to recover full-prefill quality
   under non-prefix reuse [0023]; **DEGRADES f* ≥ 0.50 is the operator's stated judgment, not a citation [0023]** —
   say so, a PIC reviewer will ask. **f* is a floor** [0027]: oracle selection, recompute in isolation; CacheBlend's
@@ -79,8 +81,9 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
   tolerance and band registered before any prefill; every figure through a summarizer that refuses on disagreement
   [0023, 0028] (one sentence here; the rest in §4).
 - **The claim, stated once.** On 25 real SWE-bench handoffs, sender prompts **median 25K tokens (p10 14K, p90 30K)**
-  [0029], the same-model floor is zero: not one matched token of any handoff exceeds τ_K [0029, FROZEN, cond. 1].
-  On 35 further handoffs of 35K–80K tokens under a receiver extended by YaRN to 81,920, zero again on every handoff,
+  [0029], the same-model floor is zero on every handoff: the mean deviation over its matched tokens is within τ_K,
+  so the oracle recomputes nothing [0029, FROZEN, cond. 1]. **Never write "not one matched token exceeds τ_K"**: it is
+  false (see the corrections table; every handoff has tokens over τ_K). On 35 further handoffs of 35K–80K tokens under a receiver extended by YaRN to 81,920, zero again on every handoff,
   after a bridge control shows τ_K carries to the scaled receiver [0036, FROZEN]. **Beside the zero, the control that
   makes it a measurement:** prefix invariance max δ 0.000e+00 over 29,391 positions [0029] and over 34,974 [0036],
   pipeline identity exactly zero — the zero is not a pipeline identity. The residual is seam-local: pooled median δ
@@ -137,7 +140,11 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
 ### 5.1 Up to 32K: H-E9 HELD, on a floor [0029, 0032; FROZEN 2026-09-09; cond. 1]
 
 - v2's table unchanged (same-model 0.0000 (0.0000, 0.0000), bootstrap [0.0000, 0.0000]; cross 0.9286 (0.8579,
-  0.9607); bridge R² K 0.9318 / 0.4557). Not one matched token exceeds τ_K.
+  0.9607); bridge R² K 0.9318 / 0.4557). Read it as 0023 defines f*: the mean δ_K over matched tokens is within τ_K on
+  every handoff. **Beside it, the per-token tail** (recomputed from the raw token records 2026-09-11 with the
+  summarizer's own functions; **PENDING the corrective entry and a summarizer figure — NOT IN until then**): per-handoff
+  mean δ_K 0.028–0.221; 9,047 of 155,257 matched tokens (5.8%) exceed τ_K, on every one of the 25 handoffs
+  (per-handoff fraction median 4.4%, max 28.3%); pooled token p90 0.2305, p99 0.6736.
 - **Ladder beside the HOLDS (moved from an aside):** τ = 0.10 → 0.0000 (p90 0.1563); τ = 0.03 → 0.1433 (p90 0.5823)
   [0029].
 - Seam profile b⁻(t), pooled median δ_K: 0: 0.236 (n = 2,278) · 1: 0.127 · 2–3: 0.081 · 4–7: 0.062 · 8–15: 0.063 ·
@@ -154,7 +161,15 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
   / 0.8932 → CARRIED; same-model 0.0000, bootstrap [0.0000, 0.0000]; cross 0.9640 (0.9043, 0.9904); prefix
   invariance 0.000e+00 over 34,974; δ_null 2.015 / 1.975; |M|/|R| median 0.9606).
 - **Ladder beside the HOLDS:** τ = 0.10 → 0.0119 (p90 0.3876); τ = 0.03 → **0.5255** (p90 0.9037), against 0.0000 /
-  0.1433 on the short half [0029]. Floor still zero at the registered tolerance; far less headroom under it.
+  0.1433 on the short half [0029]. Floor still zero at the registered tolerance; far less headroom under it. The
+  per-token tail, same status as in 5.1 (**PENDING, NOT IN**): per-handoff mean δ_K 0.043–0.269 (the maximum sits
+  0.05 under τ_K); 30,711 of 387,508 matched tokens (7.9%) exceed τ_K, on all 35 handoffs (median 5.8%, max 34.1%);
+  pooled p90 0.2856, p99 0.7600.
+- **The configuration confound, stated in the body:** 5.1 is the native receiver and 5.2 the YaRN receiver, and the
+  bridge shows YaRN alone moves content keys by median δ_K 0.071–0.089 [0036] — the same order as the far-from-seam
+  floor difference (0.019 → 0.063). Every "what length changes" figure is therefore length *and* configuration until
+  the scaled short cell is measured (freeze checklist; `docs/2026-09-11-gpu-runs-after-the-pivot.md` item 1). If it
+  is not measured before submission, the text says so and makes no claim that length alone explains the difference.
 - Position in the sender context (f*(τ_K) 0.0000 in every bin): 0–32K 0.038 · 32K–49K 0.131 · 49K–65K 0.162 ·
   65K–82K 0.092 (n = 4 handoffs reach it) [0036]. Seam 16+: 0.063 (n = 359,203) vs 0.019 [0029]: seam-local in
   shape, far-from-seam floor three times higher.
@@ -166,8 +181,11 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
    deviation only, and generation quality after reuse is not established [0029, 0036]. The experiment that would
    turn the floor into an achieved figure is named in 0023 as `[STRETCH]` and is future work
    (`docs/2026-09-11-gpu-runs-after-the-pivot.md`).
-2. **The tolerance is a cross-model anchor.** τ_K is one map's held-out shortfall; the ladder is the sensitivity
-   [0029, 0036], and the DEGRADES edge is a stated judgment [0023].
+2. **The tolerance is a cross-model anchor, and f* repairs the mean.** τ_K is one map's held-out shortfall; the
+   ladder is the sensitivity [0029, 0036]; the DEGRADES edge is a stated judgment [0023]; and f* = 0 says the mean
+   deviation is within τ_K, while a per-token tail above τ_K exists on every handoff (figure pending its entry).
+2b. **Receiver configuration differs between the cells** (native vs YaRN), so cross-cell descriptive differences are
+   not attributable to length alone until the scaled short cell is measured.
 3. Length and the receiver (v2 §6.1). 4. One pair, one direction, one agent family, one alignment method (v2 §6.2).
 5. Floor, not method; calibration sensitivity on V under n = 420 (v2 §6.3). 6. The public record under-prices
 switches (v2 §6.4). 7. Co-author refutation of 0025–0029 owed (cond. 1), until recorded.
@@ -195,16 +213,19 @@ As v2 (A–F), with B carrying the full ladders and profiles for 5.1 and 5.2, an
 
 | seed text | finding | applied |
 |---|---|---|
-| "sender prompts run 14K–30K tokens" [0029] | 0029 records |S| median 25,460 (p10 14,269, p90 30,106); a bridge handoff from the same 25 has |S| = 13,955, so the minimum is below 14K | "median 25K (p10 14K, p90 30K)" |
+| "sender prompts run 14K–30K tokens" [0029] | 0029 records |S| median 25,460 (p10 14,269, p90 30,106); the shortest of the 25 has |S| = 8,213 and the longest 32,123 (alignment records, re-derived 2026-09-13), so 14K–30K is a p10–p90, not the range | "median 25K (p10 14K, p90 30K)"; the full span is 8K–32K |
 | "none … at prompts of the length measured here" [VERIFY] | seed §6 "Not done": no PIC paper's maximum context was read | clause dropped; checklist row |
 | "0.019 sixteen tokens out" | 0.019 / 0.063 are the **16+** bin medians | "sixteen or more tokens from the seam" |
 | "[CHECK] CacheBlend's achieved budget" | 0023 anchors HOLDS to CacheBlend's 10–15%; 0027 already states that figure is achieved and f* is a floor | 0027's wording used; the units lookup stays a checklist row |
 | KVCOMM "identifier not confirmed" | in the repo: `docs/2026-09-01-measurement-lane-evidence.md` gives 2510.12872 | cite after one arXiv check |
 | DEGRADES ≥ 0.50 cited beside 0.15 | 0023: "the operator's stated judgment, not a citation" | stated in §1 |
 | (not in the seed) the zero without its control | 0029/0036 prefix-invariance 0.000e+00 is what shows the zero is not a pipeline identity | placed beside the claim in §1 |
+| **"not one matched token of any handoff exceeds τ_K"** (seed §2, v2 §4.1, and this outline's first version) | **FALSE.** 0023 defines f*(τ) on the *mean* of the remaining tokens; f* = 0 means the full-set mean is ≤ τ_K. Recomputed 2026-09-11 from the raw token records with `e9_pertoken.centered_delta/token_mean/f_star` and the summarizer's `_sst`: 5.8% of matched tokens exceed τ_K on the short cell and 7.9% on the long, on every handoff; f* is exactly 0 on all 60 because every per-handoff mean (0.028–0.269) is under 0.3186. 0029's own "inside the tolerance at every matched token of every handoff" sentence over-states its statistic; a corrective entry is in flight from another session (2026-09-11). **This session's first review marked the sentence verified because it matched 0029's text; matching a ledger sentence is not verifying it against the registered definition.** | f* defined as registered in §1; abstract, §1, §5.1, §5.2, §6 rewritten; tail figures marked PENDING/NOT IN |
+| (not in the seed) the cells differ in receiver configuration | bridge δ_K 0.071–0.089 [0036] is the size of the cross-cell far-from-seam difference | stated in §5.2 and §6; scaled short cell is the one run worth registering |
 
 Verified as written: 0/68, 0.988, 60 of 2,904; content space per 0023 line 24–25; τ_K = 1 − 0.6814; f* a floor
-[0027]; seam and ladder figures; cross 0.9286 / 0.9640; "generation quality not established" in 0029 and 0036; mapper
+[0027]; seam and ladder figures; cross 0.9286 / 0.9640; f*(τ_K) exactly 0.0 on every handoff in both cells
+(`summary.json` `fstar_per_handoff`, 25/25 and 35/35); "generation quality not established" in 0029 and 0036; mapper
 on n = 50 [0016]; v2's uncited-attributions note; arXiv 2609.10266 = KVShareArena (Shi & Lou, 9 Sep 2026);
 2608.03893 = Heo et al., six pairs, 73–98% on four. Not checked: Heo's per-pair R² figures (need the full text).
 
@@ -220,6 +241,8 @@ on n = 50 [0016]; v2's uncited-attributions note; arXiv 2609.10266 = KVShareAren
 | §2 attributions | seed §6 table, provenance codes | cite-for-existence only at S/R; 2 identifiers confirmed |
 | §1 CacheBlend units / selection rule | one read of CacheBlend | **NOT DONE** — gates the HOLDS-anchor sentence's wording |
 | §1 "none at this length" | max evaluated context of CacheBlend, EPIC, KVShareArena | **NOT DONE** — clause stays out until done |
+| §5.1/5.2 per-token tail (fraction over τ_K, per-handoff mean δ_K) | needs a summarizer figure + the corrective entry (another session, in flight) | **PENDING — NOT IN** until both exist |
+| §5.2 scaled short cell (0029's 25 under YaRN 2.5) | new config + registration entry + `summarize_e9` + a like-for-like comparison | **NOT RUN**; registration is the operator's call against the 09-14 11:59Z deadline |
 | §7 | none (no figure) | text only; `/honesty-check` on verbs before submission |
 
 ## Page budget
@@ -232,4 +255,7 @@ seam profile to App. B (the position profile stays). §5.2 is in.
 
 1. Pivot (assumed here) or hybrid. 2. E-RL one sentence (assumed). 3. Of the three CHECK/VERIFY clauses: length
 clause dropped, CacheBlend clause rewritten from 0027, τ_K sentence kept. 4. Cond. 1 — the operator's ruling on
-whether the co-author's two-handoff re-verification discharges it; this outline treats it as open.
+whether the co-author's two-handoff re-verification discharges it; this outline treats it as open. 5. Whether to
+register and run the scaled short cell before the extended deadline (≈ 40 min of GPU on the E9 slice; the build is a
+config, an entry and a comparison summarizer), or submit with the configuration difference stated and no
+length-alone claim.

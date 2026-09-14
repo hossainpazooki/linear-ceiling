@@ -1,0 +1,80 @@
+# E9 scaled short cell -- 0029's 25 handoffs (cap 32,768, no floor) re-run under 0036's receiver configuration
+# (static YaRN 2.5 on both models), so the short cell and the long cell share a configuration and every
+# "what length changes" figure can be read net of it. Registration entry: see [e9.gate]. Descriptive: no
+# hypothesis row, no verdict; H-E9 (0029) and H-E9L (0036) are immutable. The rule, tau, band, ladder, controls,
+# alignment, mapper and keep draw are copied BYTE-FOR-BYTE from config/e9.toml, so the alignment pass must
+# reproduce 0029's coverage (25 included) and keep subset exactly -- the registration script refuses otherwise.
+# Seed: docs/2026-09-13-seed-e9-scaled-short-cell.md. Reader of the comparison: linear_ceiling.e9_compare.
+
+[e9]
+pair = "qwen3-0.6b-to-1.7b"          # receiver = target (1.7B), source = 0.6B; mapper k from [e9.mapper]
+results_dir = "results/e9s"
+scratch_dir = "results/e9s/scratch"  # per-handoff dumps, deleted after scoring unless kept
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "063f4023fdde67dedbee01a92518ce7f83f6cf5d"   # entry 0035: the RoPE-spec commit (0036's pin); never d5786df, whose strip is plain-theta
+
+[e9.gate]                            # entries the committed ledger must carry (the driver's REQUIRED_ENTRIES per config)
+required_entries = ["0019", "0023", "0025", "0027", "0035", "0037"]   # 0037 = this cell's registration (docs/drafts/append_0037.py)
+
+[e9.handoffs]
+suite = "swe-bench"
+agent = "composio_swekit"            # the only family with observed Lane A switches (entries 0010/0015)
+context_cap = 32768                  # 0029's cap: the SAME 25 handoffs; a handoff with |S| or |R| above it is EXCLUDED and counted
+context_floor = 0                    # no floor: this is the short cell itself, not a successor set
+
+[e9.rope]                            # 0036's receiver configuration, byte-for-byte config/e9l.toml; applied to every dump of this run
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
+
+[e9.order]                           # registered run order and stopping rule (0035's shape; a short sitting, but a crash-safe one)
+by = "n_sender_asc"                  # shortest sender first; ties by handoff id
+allow_partial = true                 # `e9 --close-partial` may close an unfinished run on a PREFIX of the registered order
+
+[e9.alignment]
+method = "difflib.SequenceMatcher(autojunk=False).get_matching_blocks over token ids"
+
+[e9.mapper]
+k = 1                                # the only non-collapsed held-out mapper (entry 0016); 0029's n = 50 artifact by sha
+space = "content"
+
+[e9.keep]                            # D1 of the seed: the SAME draw as 0025 (seed 9, n 8 over the same sorted included ids),
+seed = 9                             # so the 8 kept scaled dumps sit beside their native twins under results/e9/scratch/
+n = 8                                # (a (p, p) native-vs-scaled read on 8 handoffs at home, CPU only, if the operator wants it)
+
+[e9.rule]                            # entry 0023 (supersedes 0019's band clause): median over included
+                                     # handoffs of f*(tau_K) on the K read-out, centered per-head delta
+statistic = "median f*(tau_K) over included handoffs, E9-same, K"
+holds_max = 0.15                     # anchored to CacheBlend's 10-15% recompute of high-deviation tokens
+degrades_min = 0.50                  # the operator's stated judgment (0023), not a citation
+# tau per read-out = 1 - the archived k=1 held-out R^2 (per-head A5, head- and layer-averaged), written
+# by `summarize_e9 --calibrate-tau` into results/e9/calibration/tau.json and copied here; the
+# summarizer recomputes both and refuses on disagreement. V's tau serves only the alongside f*.
+tau_K = 0.3186442653116294
+tau_V = 0.4867056499055992
+# entry 0025, descriptive: f*(tau) is ALSO reported at each tau below, K and V, every arm, per handoff and
+# median, so a HOLDS says how far inside the registered tolerance identity sits. The cells and the band
+# are computed at tau_K above only; nothing on this ladder is verdict-bearing. Fixed before any prefill.
+tau_ladder = [0.10, 0.03]
+# entry 0025, alongside (review finding 2): tau_K above anchors to the k=1 mapper's held-out R^2 on GENERIC
+# text (0016 arm (a)); entry 0020 arm (b) measured the same mapper on AGENT text at K R^2 = 0.5629, so on the
+# distribution E9 actually reads, "no more than the mapper itself" is 1 - 0.5629. f* is reported at this tau
+# too, every arm; it is verdict-bearing for nothing. Recomputed by summarize_e9 from results/e8/report.json
+# (arm (b), k = 1) and refused on disagreement, like tau_K.
+tau_agent_K = 0.4371020133925453
+# entry 0025 (review finding 5): f*(tau_K) is ALSO reported over tokens whose matched block is at least this
+# long (blocks re-derived from the pairs), beside the block-length distribution; descriptive.
+min_block_len = 4
+
+[e9.controls]                        # registered, decide nothing (0023)
+null_seed = 23                       # delta_null: seeded derangement of sender positions on the first handoff
+seam_bins = [0, 1, 2, 4, 8, 16]      # b(t) bins 0 / 1 / 2-3 / 4-7 / 8-15 / 16+, fixed before data
+# entry 0025 (review finding 3): the 0023 identity control scores a dump against itself and cannot fail on
+# the box. Prefix invariance can: the receiver prefills S followed by R's first token, and rows 0..|S|-1
+# must equal the S dump up to kernel arithmetic (causal attention). HALTS if the max centered per-token
+# deviation (token mean, K or V) exceeds this -- three orders below tau_K, well above float32 noise.
+prefix_invariance_max_delta = 1e-4
+# entry 0025 (review finding 6): seeded percentile bootstrap of the median f*(tau_K) over included handoffs,
+# reported beside the point median the rule reads; lower/upper at 2.5 / 97.5 with e7_stats.quantile.
+bootstrap_seed = 25
+bootstrap_reps = 2000
