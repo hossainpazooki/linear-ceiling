@@ -253,8 +253,10 @@ Card >= 40 GB. Forecast ~2 h of card time; the probe and the E8 arms are CPU.
      `rope` block with `rope_type "llama3"`, its own `inv_freq`, and `check_max_abs` under `1e-5`. **The two dumps'
      `inv_freq` vectors differ — that is correct here** and is why every RoPE-identity assertion downstream is
      scoped per model role.
-   - `scripts/probe.py` (7,168 fits per kind, CPU, ~15-25 min).
-   - `scripts/fit_mapper.py --k 1 4 8 --lam 0.01 --holdout-frac 0.2 --space content`.
+   - `scripts/probe.py --pair llama3.2-3b-to-llama3.1-8b` (7,168 fits per kind, CPU).
+   - `scripts/fit_mapper.py --pair llama3.2-3b-to-llama3.1-8b --k 1 4 8 --lam 0.01 --holdout-frac 0.2 --space content`.
+     **`--pair` is required and was missing from this line**, which killed the 2026-09-18 sitting three
+     seconds into the fit, after the 95-minute probe had already succeeded.
      p/n = **0.10 / 0.40 / 0.80** at k = 1/4/8 — numerically identical to Qwen's, so entry 0016's k = 4 collapse is
      directly comparable and `Mapper.formula_params` is exact for this pair (the Table-12 parameter-count control
      is preserved, not forfeited).

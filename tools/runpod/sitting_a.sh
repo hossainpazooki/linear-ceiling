@@ -220,7 +220,11 @@ done
 step "probe (CPU, ~15-25 min)"
 "$UP_PY" scripts/probe.py --pair "$PAIR"
 step "fit k=1/4/8"
-"$UP_PY" scripts/fit_mapper.py --k 1 4 8 --lam 0.01 --holdout-frac 0.2 --space content
+# --pair is REQUIRED by fit_mapper's argparse. Its absence killed the 2026-09-18 sitting three
+# seconds into the fit, AFTER a 95-minute probe -- the runbook step this line was copied from omits
+# it too (now fixed there as well). Every upstream script invoked here takes --pair; check --help
+# before adding another.
+"$UP_PY" scripts/fit_mapper.py --pair "$PAIR" --k 1 4 8 --lam 0.01 --holdout-frac 0.2 --space content
 
 # ---------------------------------------------------------------- 9. E8 driver
 step "E8 driver, arms (a) and (b)"
