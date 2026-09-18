@@ -7,15 +7,16 @@ outcome maps to the ledger vocabulary (HOLDS -> HELD, DEGRADES -> NOT CONFIRMED,
 Run facts the summarizer cannot know come as arguments and are refused when missing:
 
   --box "<instance type, GPU, region, instance id>"   --launched <UTC>   --finished <UTC>
-  --tau-ceiling-applies {yes,no}   --tau-ceiling-note "<how entry 0039's registered tau_K ceiling reads here>"
+  [--tau-ceiling-applies {yes,no}] --tau-ceiling-note "<provenance note about entry 0039's ceiling>"
   --date <YYYY-MM-DD>   (defaults to --finished's date)
   --preview             (print, do not append)
 
-The tau ceiling is not optional and cannot be derived: entry 0039 registered, before the fit, a tau_K above
-which this cell is UNRESOLVED BY CONSTRUCTION (a mapper that transfers badly enough makes f*(tau_K)
-trivially small for everything, and a HOLDS read off it would mean nothing). Nothing in results/ records
-that decision, so the verdict cannot be written without stating how it reads. `--tau-ceiling-applies yes`
-forces the cell to `unresolved` whatever the band says, and the entry leads with the reason.
+The tau ceiling is not optional: entry 0039 registered, before the fit, that tau_K > 0.45 makes this
+cell UNRESOLVED BY CONSTRUCTION (a mapper that transfers badly enough makes f*(tau_K) trivially small
+for everything, and a HOLDS read off it would mean nothing). The script derives whether the ceiling
+applies from the summarizer's tau_K. `--tau-ceiling-applies`, when supplied, is an auditable assertion
+about that derived result and is refused on disagreement; it never selects the verdict. The required
+free-text note records provenance only and likewise cannot alter the verdict.
 
 Per entry 0041: coverage "n scored of N registered" travels with every number; nothing is pooled with
 entry 0029's handoffs; f* is read on a floor (0027). Runs `ledger_check` after appending. Delete once
@@ -36,12 +37,15 @@ from linear_ceiling.summarize_e9 import summarize
 NUM, PREV = "0042", "0041"
 FAMILY = f"{int(NUM) - 3:04d}"      # the family registration entry (0039 as staged); shifts with NUM
 E8FIG = f"{int(NUM) - 2:04d}"       # the E8 figures entry, which reported the fit this mapper came from
+TAU_K_CEILING = 0.45                 # entry 0039; asserted against the committed entry below
 ap = argparse.ArgumentParser()
 ap.add_argument("--box", required=True)
 ap.add_argument("--launched", required=True)
 ap.add_argument("--finished", required=True)
-ap.add_argument("--tau-ceiling-applies", required=True, choices=("yes", "no"))
-ap.add_argument("--tau-ceiling-note", required=True)
+ap.add_argument("--tau-ceiling-applies", choices=("yes", "no"), default=None,
+                help="optional assertion only; derived from summary tau_K > entry 0039's 0.45")
+ap.add_argument("--tau-ceiling-note", required=True,
+                help="provenance note only; cannot select whether the ceiling applies")
 ap.add_argument("--date", default=None)
 ap.add_argument("--preview", action="store_true")
 a = ap.parse_args()
@@ -51,6 +55,12 @@ assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.date), "--date must be YYYY-MM-DD (t
 LEDGER = REPO_ROOT / "ledger" / "ledger.md"
 text = LEDGER.read_text(encoding="utf-8").replace("\r\n", "\n")
 assert f"### {PREV} " in text and f"### {NUM} " not in text, f"ordering: {PREV} present, {NUM} absent"
+family_start = text.index(f"### {FAMILY} ")
+family_end = text.find("\n### ", family_start + 1)
+family_entry = text[family_start: family_end if family_end >= 0 else len(text)]
+assert re.search(r"\*\*τ_K ceiling\*\*.*?short cell is UNRESOLVED by\s+construction.*?\n0\.45\.",
+                 family_entry, re.S), \
+    f"entry {FAMILY} no longer registers the expected tau_K > {TAU_K_CEILING:g} ceiling"
 cfg = load_e9_config(REPO_ROOT / "config" / "e9f.toml", REPO_ROOT)
 e7 = load_e7_config(REPO_ROOT / "config" / "e7.toml", REPO_ROOT)
 manifest = manifest_sha256(manifest_path(e7))
@@ -66,7 +76,14 @@ assert not f.get("partial"), "config/e9f.toml does not allow a partial close; th
 
 BAND_TO_VERDICT = {"HOLDS": "HELD", "DEGRADES": "NOT CONFIRMED", "UNRESOLVED": "unresolved"}
 band_verdict = BAND_TO_VERDICT[f["band_outcome"]]
-ceiling = a.tau_ceiling_applies == "yes"
+tau = f["tau"]
+ceiling = float(tau["K"]) > TAU_K_CEILING
+if a.tau_ceiling_applies is not None:
+    asserted_ceiling = a.tau_ceiling_applies == "yes"
+    assert asserted_ceiling == ceiling, \
+        (f"--tau-ceiling-applies {a.tau_ceiling_applies} disagrees with the registered rule: "
+         f"tau_K {float(tau['K']):.6g} > {TAU_K_CEILING:g} is "
+         f"{'true' if ceiling else 'false'}; the operator assertion cannot select the verdict")
 VERDICT = "unresolved" if ceiling else band_verdict
 assert VERDICT in VERDICTS, f"{VERDICT!r} is not one of ledger_check.VERDICTS"
 
@@ -82,7 +99,7 @@ n_roles = len(rope["by_role"])
 
 sent = lambda t: t.strip().rstrip(".") + "."      # operator free text, punctuated once  # noqa: E731
 s = lambda d, nd=4: f"{d['median']:.{nd}f} (p10 {d['p10']:.{nd}f}, p90 {d['p90']:.{nd}f})"   # noqa: E731
-fs, cov, cc, tau = f["fstar"], f["coverage"], f["coverage_comparison"], f["tau"]
+fs, cov, cc = f["fstar"], f["coverage"], f["coverage_comparison"]
 boot, pre, ra = f["median_fstar_same_K_bootstrap"], f["prefix_control"], f["rescore_agreement"]
 ratio, br, lad = f["cross_over_same_median_delta"], f["bridge_r2"], f["fstar_ladder"]
 agent, rule = f["fstar_at_tau_agent"], f["rule"]
@@ -101,13 +118,15 @@ rescore_txt = (f"the {kept_scored} kept handoffs' stride-1 dumps fingerprint-ver
                f"{ra['max_fstar_abs_diff']:.1e})" if kept_scored else
                "NO kept handoff was scored, so the keep-subset re-score has nothing to read (stated, never a zero)")
 blocks = f["fstar_blocks_ge_min"]["same_K"]
-first = ((f"**UNRESOLVED BY CONSTRUCTION (entry {FAMILY}'s registered τ_K ceiling).** {sent(a.tau_ceiling_note)} τ_K for "
-          f"this pair is {tau['K']:.4f}. The band word below is computed and stated, but the cell is set to "
+first = ((f"**UNRESOLVED BY CONSTRUCTION (entry {FAMILY}'s registered τ_K ceiling).** τ_K for "
+          f"this pair is {tau['K']:.4f} > {TAU_K_CEILING:.2f}. Operator provenance note "
+          f"(non-verdict-bearing): {sent(a.tau_ceiling_note)} The band word below is computed and stated, but the cell is set to "
           f"`unresolved`: a recompute fraction read against a tolerance this loose does not distinguish a receiver "
           f"that agrees with itself from one that does not, and that reading was fixed before the fit, not after "
           f"this number was seen.\n\n") if ceiling else
-         (f"**The registered τ_K ceiling does not bite (entry {FAMILY}).** {sent(a.tau_ceiling_note)} τ_K = {tau['K']:.4f}, "
-          f"so the band below is read as the rule writes it.\n\n"))
+         (f"**The registered τ_K ceiling does not bite (entry {FAMILY}).** τ_K = {tau['K']:.4f} ≤ "
+          f"{TAU_K_CEILING:.2f}, so the band below is read as the rule writes it. Operator provenance note "
+          f"(non-verdict-bearing): {sent(a.tau_ceiling_note)}\n\n"))
 
 ENTRY = f"""### {NUM} — {a.date} — E9 short cell ran on the second model family `[BASELINE]`; H-E9F {VERDICT} ({COVER})
 

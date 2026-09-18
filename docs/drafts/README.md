@@ -67,8 +67,9 @@ calibration at REGISTRATION**, which `e9 --check` never does — the 2026-09-14 
 **`append_0042.py`** (the H-E9F verdict): `summarize_e9 --config config/e9f.toml` in-process, `verdict:
 H-E9F = <CELL>` from `ledger_check.VERDICTS` via the band word; run facts as `--box/--launched/--finished`;
 refuses a partial close (this config does not allow one) and a run whose dumps carry no RoPE spec. The
-τ_K ceiling 0039 registered is a required `--tau-ceiling-applies {yes,no}` + `--tau-ceiling-note`: nothing
-in `results/` records that decision, and `yes` forces the cell to `unresolved` whatever the band says.
+τ_K ceiling 0039 registered is derived mechanically from the summary (`tau_K > 0.45` forces the cell to
+`unresolved` whatever the band says). Optional `--tau-ceiling-applies {yes,no}` is an assertion that must
+agree with that derivation and cannot select the verdict; required `--tau-ceiling-note` records provenance only.
 **`append_0043.py`** (E9 long half registration at a NATIVE receiver; DESCRIPTIVE, no row): declares entry
 0035's D1(a), its configuration bridge and its scaled-receiver reading INAPPLICABLE, and states that the
 cell cannot move, support or refute H-E9L and is never pooled with 0036's handoffs; asserts the floor

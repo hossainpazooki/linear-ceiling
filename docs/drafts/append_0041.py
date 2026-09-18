@@ -5,7 +5,8 @@ k = 1 mapper.
 
 Ordering guard: 0040 present, 0041 absent, and no H-E9F row in the table yet. Nothing under this entry may
 exist yet: `results/e9f/` holds no report and no score file (R1). What MUST exist: `config/e9f.toml`
-CALIBRATED (the five tau-derived keys carry real numbers, so the file loads at all) and committed;
+CALIBRATED (the three pair-calibrated tau fields carry real numbers, so the file loads at all) and
+committed; the absolute tau ladder and prefix-invariance bound remain the literals entry 0039 registered;
 `results/e9f/calibration/tau.json` from `summarize_e9 --calibrate-tau --config config/e9f.toml
 --e8-report results/e8f/report.json`, agreeing with the config and with entry 0040's report -- this is
 checked HERE, at registration, because `e9 --check` never looks for it and a 2026-09-14 sitting ran 25
@@ -37,6 +38,7 @@ from linear_ceiling.pairs import pair_models
 NUM, PREV = "0041", "0040"
 FAMILY = f"{int(NUM) - 2:04d}"      # the family registration entry (0039 as staged); shifts with NUM
 TAU_TOL = 1e-9
+BOX_R2_TOL = 1e-6                    # registered cross-platform scorer tolerance (entry 0028)
 ap = argparse.ArgumentParser()
 ap.add_argument("--date", default=dt.date.today().isoformat())
 ap.add_argument("--preview", action="store_true")
@@ -55,15 +57,19 @@ src_id, tgt_id = pair_models(cfg.pair)
 assert cfg.pair == e8f.pair and cfg.upstream_sha == e8f.upstream_sha, "the E9 and E8 cells of one family share a pair and a pin"
 assert cfg.mapper_k == e8f.verdict_k, "the E9 mapper k must be the k E8 registered as verdict-bearing"
 
-# The instrument is 0023/0025/0027's, with EXACTLY the five tau-derived keys recalibrated on this pair.
-TAU_DERIVED = ("tau_K", "tau_V", "tau_agent_K", "tau_ladder")
+# The instrument is 0023/0025/0027's. Exactly three tau fields are recalibrated on this pair; entry
+# 0039 registered the ladder and prefix-invariance bound as absolute literals identical to E9's.
+PAIR_CALIBRATED = ("tau_K", "tau_V", "tau_agent_K")
 assert set(cfg.rule) == set(e9.rule) and set(cfg.controls) == set(e9.controls), "the rule/controls key sets must be E9's"
 for key, mine in cfg.rule.items():
-    if key not in TAU_DERIVED:
+    if key not in PAIR_CALIBRATED:
         assert mine == e9.rule[key], f"[e9.rule] {key} is {mine!r}, not config/e9.toml's {e9.rule[key]!r}"
 for key, mine in cfg.controls.items():
-    if key != "prefix_invariance_max_delta":
-        assert mine == e9.controls[key], f"[e9.controls] {key} is {mine!r}, not config/e9.toml's {e9.controls[key]!r}"
+    assert mine == e9.controls[key], f"[e9.controls] {key} is {mine!r}, not config/e9.toml's {e9.controls[key]!r}"
+assert cfg.rule["tau_ladder"] == e9.rule["tau_ladder"], \
+    "tau_ladder is not the absolute literal entry 0039 registered from config/e9.toml"
+assert cfg.controls["prefix_invariance_max_delta"] == e9.controls["prefix_invariance_max_delta"], \
+    "prefix_invariance_max_delta is not the absolute literal entry 0039 registered from config/e9.toml"
 assert list(cfg.controls["seam_bins"]) == list(SEAM_BIN_EDGES), "seam_bins differ from the registered edges (0023)"
 assert cfg.context_cap == e9.context_cap and cfg.context_floor == 0, "the short cell registers 0029's numeric cap and no floor"
 assert cfg.rope is None and cfg.bridge is None and cfg.profiles is None, "a natively long receiver registers no rope, no bridge"
@@ -76,12 +82,21 @@ assert cfg.e8_report is not None and Path(cfg.e8_report).resolve() == (e8f.resul
 e8_rep = json.loads(cfg.e8_report.read_text(encoding="utf-8"))
 assert e8_rep["pair"] == cfg.pair, "the registered E8 report is for another pair"
 kv = str(e8f.verdict_k)
-want = {"tau_K": 1.0 - float(e8_rep["per_k"][kv]["generic"]["K"]),
-        "tau_V": 1.0 - float(e8_rep["per_k"][kv]["generic"]["V"]),
-        "tau_agent_K": 1.0 - float(e8_rep["per_k"][kv]["agent"]["K"])}
-for key, v in want.items():
-    assert abs(float(cfg.rule[key]) - v) <= TAU_TOL * max(1.0, abs(v)), \
-        f"[e9.rule] {key} = {cfg.rule[key]} is not 1 - this pair's E8 figure ({v}); tau is never typed and never inherited"
+box_tau = {"tau_K": 1.0 - float(e8_rep["per_k"][kv]["generic"]["K"]),
+           "tau_V": 1.0 - float(e8_rep["per_k"][kv]["generic"]["V"]),
+           "tau_agent_K": 1.0 - float(e8_rep["per_k"][kv]["agent"]["K"])}
+# K/V in the E8 report were reduced on the GPU box. The config deliberately takes the HOME re-score
+# emitted by tools/emit_tau.py; entry 0028 permits cross-platform scorer jitter through 1e-6. The
+# calibration record below is another home re-score and must agree with the config at the tighter 1e-9.
+for key in ("tau_K", "tau_V"):
+    v = box_tau[key]
+    assert abs(float(cfg.rule[key]) - v) <= BOX_R2_TOL * max(1.0, abs(v)), \
+        (f"[e9.rule] {key} = {cfg.rule[key]} differs from the box E8 figure ({v}) beyond the registered "
+         f"cross-platform tolerance {BOX_R2_TOL:g}")
+# Arm (b) has no separate home re-score: tau_agent_K remains derived directly from the verified E8 report.
+v = box_tau["tau_agent_K"]
+assert abs(float(cfg.rule["tau_agent_K"]) - v) <= TAU_TOL * max(1.0, abs(v)), \
+    f"[e9.rule] tau_agent_K = {cfg.rule['tau_agent_K']} is not 1 - this pair's E8 arm (b) K figure ({v})"
 cal_path = cfg.results_dir / "calibration" / "tau.json"
 assert cal_path.exists(), ("run `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report "
                            f"{cfg.e8_report}` BEFORE registering: `e9 --check` never looks for it, and a run that "
@@ -128,6 +143,14 @@ assert prior.get("complete"), "results/e9/report.json is not a complete run"
 n_prior = prior["coverage"]["included"]
 
 if not a.preview:
+    # Registration claims both the calibrated config and its predecessor ledger state are committed.
+    # Check that claim BEFORE this script mutates the ledger; a later E9 gate refusing is too late.
+    for rel in (cfg.config_path.resolve().relative_to(REPO_ROOT.resolve()).as_posix(), "ledger/ledger.md"):
+        tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=REPO_ROOT,
+                                 capture_output=True)
+        clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=REPO_ROOT)
+        assert tracked.returncode == 0 and clean.returncode == 0, \
+            f"{rel} is not tracked and committed unmodified at HEAD; refusing to register over a working-tree state"
     assert _PENDING not in cfg.upstream_sha and re.fullmatch(r"[0-9a-f]{40}", cfg.upstream_sha), \
         "config/e9f.toml still carries the pending upstream pin placeholder"
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cfg.upstream_path, capture_output=True, text=True).stdout.strip()
@@ -183,9 +206,11 @@ from the archived mapper (`mappers/{cfg.pair}/k{cfg.mapper_k}`, json
 ({cal['archived_r2_sha256'][:12]}) and entry {PREV}'s E8 report
 ({cal['e8_report_sha256'][:12]}); τ_agent_K = 1 − that mapper's agent-arm R² (0025's alongside
 tolerance). `config.py` refuses any cell whose τ_K is outside (0, 1), whose ladder leaves (0, τ_K) or is
-not strictly decreasing, or whose τ_agent_K is outside (τ_K, 1) — so none of these five values could have
-been carried over from the Qwen cells, and none was. The summarizer recomputes all of them and refuses on
-any disagreement with this file. **No figure from this cell is ever pooled with a Qwen figure.**
+not strictly decreasing, or whose τ_agent_K is outside (τ_K, 1) — so none of the three calibrated
+tolerances could have been carried over from the Qwen cells, and none was. The ladder and prefix bound are
+instead the exact absolute literals entry {FAMILY} registered, deliberately identical across families.
+The summarizer recomputes the three calibrated tolerances and refuses on any disagreement with this file.
+**No figure from this cell is ever pooled with a Qwen figure.**
 
 **The verdict set, and why it is not 0029's.** `context_cap = {cfg.context_cap:,}` is the same NUMERIC
 threshold entry 0029 registered, and that is all it shares: it is a registered length threshold in this
@@ -219,8 +244,8 @@ a fresh draw from THIS cell's sorted included ids (numpy `choice` without replac
 fingerprinted, pulled home and re-scored from tensors by the summarizer under 0028's tolerance. Controls
 (1–3 as 0023/0025; 6 as 0025): (1) pipeline identity HALT (a dump scored against itself, every square
 exactly zero); (2) prefix-invariance HALT on the first handoff in run order, max centered δ ≤
-{float(cfg.controls['prefix_invariance_max_delta']):.0e} — this pair's own value, fixed by entry
-{FAMILY}'s pre-registered function of τ_K and NOT inherited from the Qwen cells; (3) δ_null,
+{float(cfg.controls['prefix_invariance_max_delta']):.0e} — entry {FAMILY}'s pre-registered absolute
+float32 kernel-noise bound, explicitly held identical across families and not derived from τ_K; (3) δ_null,
 seeded derangement of sender positions (seed {cfg.controls['null_seed']}); (6) seam profiles b(t) and
 b⁻(t), same bins. The cross arm runs through this pair's own k = {cfg.mapper_k} mapper by sha, and its
 outcome is descriptive and decides nothing (0027).

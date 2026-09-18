@@ -296,9 +296,10 @@ Card **80 GB**. The verdict-bearing cell.
    this cell registers no bridge — then `[i/N] <hid>: same K …` in the registered order. Record the launch time.
 7. **`pull.py e9f` at home** (R5): each kept handoff verified against `report.json`'s fingerprints, then deleted on
    the box; small records and box logs every round. At 12.4 GB per handoff this is what keeps the root from filling.
-8. **Cutoff:** `e9 --close-partial --config config/e9f.toml` only on an operator-stated reason that does not depend
-   on any score; the scored set must be a prefix of the registered order and `--cutoff-reason` is required in the
-   figures entry.
+8. **No cutoff for this cell.** `config/e9f.toml` does not register `[e9.order] allow_partial = true`, so
+   `e9 --close-partial --config config/e9f.toml` refuses. If the run is interrupted, resume it in the same
+   registered order until `report.json` is complete; if it cannot finish, H-E9F remains `unresolved` and entry
+   0042 is not appended. Only the descriptive long cell in §9 registers a partial close.
 9. **Release (§10), backup (§11), then at home `summarize_e9 --config config/e9f.toml`** — the only reader (R11).
    A refusal is pasted verbatim into the closing brief and investigated, never worked around. Then the figures
    entry's own script, in-process, reading every number from `results/e9f/summary.json`.

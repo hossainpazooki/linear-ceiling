@@ -36,7 +36,8 @@ from linear_ceiling.pairs import pair_models
 NUM, PREV = "0043", "0042"
 FAMILY = f"{int(NUM) - 4:04d}"      # the family registration entry (0039 as staged); shifts with NUM
 SHORT = f"{int(NUM) - 2:04d}"       # the short cell's registration entry (0041 as staged)
-TAU_TOL = 1e-9
+CONFIG_TAU_TOL = 1e-9                # config and home calibration are the registered authority
+BOX_TAU_TOL = 1e-6                   # the E8 box report may differ by registered cross-platform arithmetic
 ap = argparse.ArgumentParser()
 ap.add_argument("--date", default=dt.date.today().isoformat())
 ap.add_argument("--preview", action="store_true")
@@ -56,15 +57,15 @@ src_id, tgt_id = pair_models(cfg.pair)
 assert cfg.pair == short.pair == e8f.pair and cfg.upstream_sha == short.upstream_sha == e8f.upstream_sha, \
     "the three cells of one family share a pair and a pin"
 
-# The instrument is 0023/0025/0027's; only the five tau-derived keys are this pair's own.
-TAU_DERIVED = ("tau_K", "tau_V", "tau_agent_K", "tau_ladder")
+# The instrument is 0023/0025/0027's. Only the three calibrated tau fields are this pair's own;
+# the absolute ladder and prefix-invariance delta were registered as literals equal to config/e9.toml's.
+PAIR_CALIBRATED_TAU = ("tau_K", "tau_V", "tau_agent_K")
 assert set(cfg.rule) == set(e9.rule) and set(cfg.controls) == set(e9.controls), "the rule/controls key sets must be E9's"
 for key, mine in cfg.rule.items():
-    if key not in TAU_DERIVED:
+    if key not in PAIR_CALIBRATED_TAU:
         assert mine == e9.rule[key], f"[e9.rule] {key} is {mine!r}, not config/e9.toml's {e9.rule[key]!r}"
 for key, mine in cfg.controls.items():
-    if key != "prefix_invariance_max_delta":
-        assert mine == e9.controls[key], f"[e9.controls] {key} is {mine!r}, not config/e9.toml's {e9.controls[key]!r}"
+    assert mine == e9.controls[key], f"[e9.controls] {key} is {mine!r}, not config/e9.toml's {e9.controls[key]!r}"
 assert list(cfg.controls["seam_bins"]) == list(SEAM_BIN_EDGES), "seam_bins differ from the registered edges (0023)"
 for key in ("tau_K", "tau_V", "tau_agent_K"):
     assert float(cfg.rule[key]) == float(short.rule[key]), \
@@ -82,22 +83,33 @@ assert cfg.profiles and set(cfg.profiles) == {"s_len_edges", "s_pos_edges"}
 assert required_markers(cfg)[-1] == f"### {NUM} ", "config/e9fl.toml's [e9.gate] does not end at this entry"
 assert cfg.e8_report is not None and Path(cfg.e8_report).resolve() == (e8f.results_dir / "report.json").resolve()
 
-# tau, cross-checked against the E8 report and this cell's own calibration record.
+# Tau: the home calibration is authoritative for K/V. The box-written E8 report may differ within the
+# registered 1e-6 cross-platform tolerance; config and calibration must agree at 1e-9. Agent K comes
+# directly from E8 arm (b), rather than a home re-score, and must agree across all three records at 1e-9.
 e8_rep = json.loads(cfg.e8_report.read_text(encoding="utf-8"))
 assert e8_rep["pair"] == cfg.pair
 kv = str(e8f.verdict_k)
-for key, v in (("tau_K", 1.0 - float(e8_rep["per_k"][kv]["generic"]["K"])),
-               ("tau_V", 1.0 - float(e8_rep["per_k"][kv]["generic"]["V"])),
-               ("tau_agent_K", 1.0 - float(e8_rep["per_k"][kv]["agent"]["K"]))):
-    assert abs(float(cfg.rule[key]) - v) <= TAU_TOL * max(1.0, abs(v)), \
-        f"[e9.rule] {key} is not 1 - this pair's E8 figure; tau is never typed and never inherited"
+box_tau = {"K": 1.0 - float(e8_rep["per_k"][kv]["generic"]["K"]),
+           "V": 1.0 - float(e8_rep["per_k"][kv]["generic"]["V"]),
+           "agent_K": 1.0 - float(e8_rep["per_k"][kv]["agent"]["K"])}
 cal_path = cfg.results_dir / "calibration" / "tau.json"
 assert cal_path.exists(), ("run `summarize_e9 --calibrate-tau --config config/e9fl.toml --e8-report "
                            f"{cfg.e8_report}` BEFORE registering: `e9 --check` never looks for it (learnings 2026-09-14)")
 cal = json.loads(cal_path.read_text(encoding="utf-8"))
 assert cal["pair"] == cfg.pair and cal["e8_report_sha256"] == sha256_file_bytes(cfg.e8_report)
+assert cal["mapper"]["k"] == cfg.mapper_k and all(cal["generic_dumps_match_e8_fingerprints"].values()), \
+    "the calibration mapper or generic dumps do not match the E8 artifacts they claim to re-score"
 for key in ("K", "V"):
-    assert abs(cal["tau"][key] - float(cfg.rule[f"tau_{key}"])) <= TAU_TOL * max(1.0, abs(cal["tau"][key]))
+    home = float(cal["tau"][key])
+    assert abs(home - box_tau[key]) <= BOX_TAU_TOL * max(1.0, abs(home), abs(box_tau[key])), \
+        f"tau_{key}: home calibration and box E8 report differ beyond the registered 1e-6 tolerance"
+    assert abs(float(cfg.rule[f"tau_{key}"]) - home) <= CONFIG_TAU_TOL * max(1.0, abs(home)), \
+        f"tau_{key}: config/e9fl.toml and the authoritative home calibration disagree"
+agent = float(cal["tau"]["agent_K"])
+assert abs(agent - box_tau["agent_K"]) <= CONFIG_TAU_TOL * max(1.0, abs(agent), abs(box_tau["agent_K"])), \
+    "tau_agent_K: calibration and E8 arm (b) disagree"
+assert abs(float(cfg.rule["tau_agent_K"]) - agent) <= CONFIG_TAU_TOL * max(1.0, abs(agent)), \
+    "tau_agent_K: config/e9fl.toml and calibration disagree"
 
 # R1: nothing under this entry exists yet.
 assert not (cfg.results_dir / "report.json").exists(), f"{cfg.results_dir}/report.json exists: a run happened before registration; refusing"
@@ -113,8 +125,9 @@ recs = {r["handoff_id"]: r for r in cov["alignments"]}
 order = cov["run_order"]
 included = sorted(h for h, r in recs.items() if not r["excluded"])
 assert sorted(order) == included and len(order) == cov["coverage"]["included"] > 0
+expected_order = sorted(included, key=lambda h: (recs[h]["n_sender"], h))
+assert order == expected_order, "run order must be |S| ascending with ties broken by handoff id"
 ns = [recs[h]["n_sender"] for h in order]
-assert ns == sorted(ns) and len(set(ns)) == len(ns), "run order must be |S| ascending with no ties"
 keep = cov["keep_subset"]
 assert len(keep) == cfg.keep_n and set(keep) <= set(order)
 by_reason = {}
@@ -137,6 +150,18 @@ sum_s = sum(recs[h]["n_sender"] for h in order)
 sum_r = sum(recs[h]["n_receiver"] for h in order)
 
 if not a.preview:
+    # R1 is a statement about committed bytes, not merely files that happen to exist in the worktree.
+    # Require both the calibrated long config and the preceding ledger to be tracked and byte-identical
+    # to HEAD immediately before appending; preview remains useful while those commits are being staged.
+    for rel, path in (("config/e9fl.toml", cfg.config_path), ("ledger/ledger.md", LEDGER)):
+        tracked = subprocess.run(["git", "ls-files", "--error-unmatch", "--", rel], cwd=REPO_ROOT,
+                                 capture_output=True)
+        assert tracked.returncode == 0, f"{rel} is not tracked; registration requires committed inputs"
+        clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=REPO_ROOT)
+        assert clean.returncode == 0, f"{rel} differs from HEAD; commit it before registration"
+        committed = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=REPO_ROOT, capture_output=True)
+        assert committed.returncode == 0 and committed.stdout == path.read_bytes(), \
+            f"{rel} is not byte-identical to HEAD; commit the calibrated config and preceding ledger first"
     assert _PENDING not in cfg.upstream_sha and re.fullmatch(r"[0-9a-f]{40}", cfg.upstream_sha), \
         "config/e9fl.toml still carries the pending upstream pin placeholder"
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cfg.upstream_path, capture_output=True, text=True).stdout.strip()
@@ -221,14 +246,17 @@ budget is {sum_s:,} sender tokens (both models) + {sum_r:,} receiver tokens = {2
 **The instrument, unchanged.** 0023's rule verbatim, with τ this pair's own and IDENTICAL to the short
 cell's (one mapper, one calibration): τ_K = {tau_K:.4f} = 1 − {heldout['K_r2_layer_mean']:.4f}, the
 k = {cfg.mapper_k} mapper's held-out R² over {heldout['n_tokens']:,} tokens; τ_V = {tau_V:.4f}; τ_agent_K =
-{tau_agent:.4f}; the τ ladder ({ladder}); the seam bins; the block floor ({cfg.rule['min_block_len']}); the
-bootstrap (seed {cfg.controls['bootstrap_seed']}, {cfg.controls['bootstrap_reps']} reps). The band words
+{tau_agent:.4f}. The HOME calibration is authoritative for K/V: this config agrees with it at 1e-9 and
+the box-written E8 report agrees within the registered 1e-6 cross-platform tolerance; agent K agrees
+across config, calibration and E8 arm (b) at 1e-9. The τ ladder ({ladder}); the seam bins; the block floor
+({cfg.rule['min_block_len']}); the bootstrap (seed {cfg.controls['bootstrap_seed']},
+{cfg.controls['bootstrap_reps']} reps). The band words
 HOLDS ≤ {cfg.rule['holds_max']} / DEGRADES ≥ {cfg.rule['degrades_min']:.2f} are **computed and reported
 here and are verdict-bearing for nothing**: this cell has no row. f* stays an oracle LOWER BOUND read on a
 floor (0027).
 
 **Run order, stopping rule, resume.** The driver scores the included handoffs in the registered order
-`{cfg.order_by}` (|S| ascending, ties by id; there are none): `{order[0].split('/')[-1]}` ({ns[0]:,})
+`{cfg.order_by}` (|S| ascending, with any ties broken by id): `{order[0].split('/')[-1]}` ({ns[0]:,})
 first, `{order[-1].split('/')[-1]}` ({ns[-1]:,}) last. Controls run on the first handoff in that order.
 **This is the campaign's cuttable stage.** If the sitting must end before all {len(order)} are scored,
 `e9 --close-partial --config config/e9fl.toml` closes the run: allowed only by this config, refused unless
@@ -245,8 +273,9 @@ stride-1 dumps are retained, fingerprinted, pulled home and re-scored from tenso
 
 **Controls (1–3 as 0023/0025; 5 re-cut; 6 as 0025).** (1) Pipeline identity HALT. (2) Prefix-invariance
 HALT on the first handoff in run order, max centered δ ≤
-{float(cfg.controls['prefix_invariance_max_delta']):.0e} — this pair's own value, entry {FAMILY}'s
-pre-registered function of τ_K, never the Qwen cells'. (3) δ_null, seeded derangement (seed
+{float(cfg.controls['prefix_invariance_max_delta']):.0e} — entry {FAMILY}'s
+pre-registered absolute float32 kernel-noise bound, exactly `config/e9.toml`'s and never a function of
+τ_K. (3) δ_null, seeded derangement (seed
 {cfg.controls['null_seed']}). **(5) Length profiles (descriptive):** f*(τ_K) and median δ_K (i) by |S| bin
 {sl_bins}, and (ii) by matched-token position in S {sp_bins} — (ii) is the long-context figure, and its
 edges are re-cut at this family's OWN boundary (the point where its RoPE frequency rescaling begins),
