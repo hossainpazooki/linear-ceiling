@@ -218,7 +218,7 @@ done
 
 # ---------------------------------------------------------------- 8. probe + fit
 step "probe (CPU, ~15-25 min)"
-"$UP_PY" scripts/probe.py
+"$UP_PY" scripts/probe.py --pair "$PAIR"
 step "fit k=1/4/8"
 "$UP_PY" scripts/fit_mapper.py --k 1 4 8 --lam 0.01 --holdout-frac 0.2 --space content
 
