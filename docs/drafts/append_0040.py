@@ -117,8 +117,8 @@ ENTRY = f"""### {NUM} — {a.date} — E8 ran on the second model family `[BASEL
 
 **Provenance.** Registered by {PREV} before any fit; `config/e8f.toml` and this ledger committed
 unmodified; upstream at the pin `{cfg.upstream_sha[:7]}` (the one-line `PAIRS` entry on top of the
-RoPE-spec commit), clean for every invoked path; the pre-fit seal
-`ledger/predictions/{cfg.pair}.json` re-verified as sealed, committed and untouched AFTER the fit.
+RoPE-spec commit), clean for every invoked path; entry {PREV}'s no-seal ruling re-verified AFTER the fit:
+no `ledger/predictions/{cfg.pair}.*` sidecar exists, so no post-fit prediction is presented as pre-fit.
 {a.box}; launched {a.launched}, finished {a.finished}. Source {src_id}, receiver {tgt_id}. Every figure
 below is `summarize_e8 --config config/e8f.toml`'s, from a run that passed all of its checks: the upstream
 scorer re-run on the fingerprinted dumps, arm (a) cross-checked against the archived `r2.json` for every k
