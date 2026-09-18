@@ -222,16 +222,35 @@ cd "$WORK/linear-ceiling"
 step "package the pull set"
 OUT="$WORK/pull"; rm -rf "$OUT"; mkdir -p "$OUT"
 U="$WORK/kv-transfer-replication"
-copy() { [ -e "$1" ] && { mkdir -p "$OUT/$2"; cp -r "$1" "$OUT/$2/"; } || say "  MISSING (recorded): $1"; }
-copy "results/$EXP/report.json"          "lc/results/$EXP"
-copy "results/$EXP/kv/agent"             "lc/results/$EXP/kv"        # summarize_e8 re-fingerprints these
-copy "data/$EXP"                         "lc/data"                   # the agent token file + manifest
-copy "$U/data/kv/$PAIR"                  "up/data/kv"                # the generic dumps
-copy "$U/data/tokens/${PAIR}_n50_len1024_seed0.npy" "up/data/tokens"
-copy "$U/mappers/$PAIR"                  "up/mappers"                # k1/k4/k8 json+safetensors
-copy "$U/results/mapper/$PAIR"           "up/results/mapper"         # r2.json, the archived held-out R^2
-copy "$LOG"                              "logs"
-copy "$WORK/manifest_check.out"          "logs"
+# `need` REFUSES on a missing source; `want` only records one. The distinction matters because the
+# home verifier checks (a) an expected-path list and (b) every entry in MANIFEST.sha256 -- and the
+# manifest is generated FROM what was copied. So a required artifact that never got copied would be
+# absent from the manifest and would pass both checks silently. The only place that can be caught is
+# here, on the box, while the card is still up and it can be re-made.
+need() { [ -e "$1" ] || { say "REFUSED: required artifact missing on the box: $1"; exit 1; }
+         mkdir -p "$OUT/$2"; cp -r "$1" "$OUT/$2/"; }
+want() { [ -e "$1" ] && { mkdir -p "$OUT/$2"; cp -r "$1" "$OUT/$2/"; } || say "  absent (recorded): $1"; }
+need "results/$EXP/report.json"          "lc/results/$EXP"
+need "results/$EXP/kv/agent"             "lc/results/$EXP/kv"        # summarize_e8 re-fingerprints these
+need "data/$EXP"                         "lc/data"                   # the agent token file + manifest
+need "$U/data/kv/$PAIR"                  "up/data/kv"                # the generic dumps
+need "$U/data/tokens/${PAIR}_n50_len1024_seed0.npy" "up/data/tokens"
+need "$U/mappers/$PAIR"                  "up/mappers"                # k1/k4/k8 json+safetensors
+need "$U/results/mapper/$PAIR"           "up/results/mapper"         # r2.json, the archived held-out R^2
+need "$LOG"                              "logs"
+want "$WORK/manifest_check.out"          "logs"
+want "$U/results/probe"                  "up/results"                # probe outputs, if the fit wrote any
+
+# The mapper is THE product of this sitting and the one thing another card would have to be rented to
+# remake. Its file list is checked by name here, not left to "the directory exists".
+for k in 1 4 8; do
+  for ext in json safetensors; do
+    f="$OUT/up/mappers/$PAIR/k${k}.${ext}"
+    [ -s "$f" ] || { say "REFUSED: mapper artifact k${k}.${ext} missing or empty after packaging"; exit 1; }
+  done
+done
+say "  mapper k1/k4/k8 json+safetensors all present and non-empty"
+
 ( cd "$OUT" && find . -type f -exec sha256sum {} \; | sort -k2 > MANIFEST.sha256 )
 say "  $(wc -l < "$OUT/MANIFEST.sha256") files, $(du -sh "$OUT" | cut -f1)"
 say "  pull set at $OUT ; verify MANIFEST.sha256 at home BEFORE terminating"
