@@ -335,8 +335,16 @@ def cmd_up(a) -> int:
     if not pod:
         save_state({"campaign_start_balance": camp_start})
         raise SystemExit("rp REFUSED: RunPod returned no pod (no capacity at that filter). Nothing billed.")
-    save_state(pending | {"pod_id": pod["id"], "pending": False, "cost_per_hr_actual": pod["costPerHr"]})
-    print(f"\npod {pod['id']} created at ${pod['costPerHr']}/h; start balance ${bal:.4f}")
+    actual = float(pod["costPerHr"])
+    save_state(pending | {"pod_id": pod["id"], "pending": False, "cost_per_hr_actual": actual})
+    if actual > a.max_price:
+        # Stock and prices can move between the read-only quote and the mutation. The pre-create
+        # check only constrains the operator's quoted value; this check constrains the bill RunPod
+        # actually returned. Never leave a too-expensive pod running for a human to notice.
+        _terminate_until_gone(f"actual price ${actual}/h exceeds --max-price ${a.max_price}/h")
+        raise SystemExit(f"rp REFUSED: RunPod returned ${actual}/h; pod was terminated because it "
+                         f"exceeds --max-price ${a.max_price}/h")
+    print(f"\npod {pod['id']} created at ${actual}/h; start balance ${bal:.4f}")
     print("NEXT, in order: rp.py wait-ssh   ->   rp.py arm-deadman   ->   caffeinate -i rp.py watchdog ... &")
     return 0
 
