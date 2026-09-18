@@ -96,9 +96,16 @@ if [ "$REHEARSAL" = "1" ]; then
 else
   command -v uv >/dev/null 2>&1 || pip install --quiet uv
   ( cd linear-ceiling && uv venv --python 3.12 .venv >/dev/null \
-      && uv pip install --quiet -e ".[dev]" >/dev/null )
+      && uv pip install --quiet -e ".[dev]" >/dev/null \
+      && uv pip install --quiet --python .venv/bin/python \
+           --index-url https://download.pytorch.org/whl/cu128 "torch==2.11.0" >/dev/null \
+      && uv pip install --quiet --python .venv/bin/python "numpy==2.5.2" >/dev/null )
   ( cd kv-transfer-replication && uv venv --python 3.12 .venv >/dev/null \
-      && uv pip install --quiet -e . >/dev/null )
+      && uv pip install --quiet -e . >/dev/null \
+      && uv pip install --quiet --python .venv/bin/python \
+           --index-url https://download.pytorch.org/whl/cu128 "torch==2.11.0" >/dev/null \
+      && uv pip install --quiet --python .venv/bin/python \
+           "transformers==5.15.1" "numpy==2.5.2" >/dev/null )
   LC_PY="$WORK/linear-ceiling/.venv/bin/python"
   UP_PY="$WORK/kv-transfer-replication/.venv/bin/python"
 fi
