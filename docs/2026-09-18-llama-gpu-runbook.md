@@ -391,7 +391,7 @@ before the long command, `unset` and revoke after.
 | R8 backup | §11, **including the upstream inputs** |
 | R9 tokens | §11; and §6 means no token is ever on a box |
 | R10 what goes where | unchanged; the staged weight cache is "never on the box after release" |
-| R11 the summarizer is the only reader | `summarize_e8` / `summarize_e9`; a refusal is pasted verbatim and investigated. The Llama configs' five τ-derived keys refuse **fail-closed by type** until they are real: `load_e9_config` requires `tau_K` / `tau_V` / `tau_agent_K` to be numbers in (0, 1) and names the missing calibration when they are not, so an `UNRESOLVED::tau_K@<pair>::…` marker raises `ValueError` and the config does not load at all |
+| R11 the summarizer is the only reader | `summarize_e8` / `summarize_e9`; a refusal is pasted verbatim and investigated. The Llama configs' three pair-calibrated τ fields refuse **fail-closed by type** until they are real: `load_e9_config` requires `tau_K` / `tau_V` / `tau_agent_K` to be numbers in (0, 1) and names the missing calibration when they are not, so an `UNRESOLVED::tau_K@<pair>::…` marker raises `ValueError` and the config does not load at all. The absolute ladder `[0.10, 0.03]` and prefix delta `1e-4` were already literal, registered values; they were never unresolved markers |
 | R12 re-verifiable by someone who was not there | §12's log, the pulled logs, and the R8 datasets with the inputs in them |
 
 ## 13. Traps carried

@@ -25,9 +25,10 @@
 # results/e9fl/align/coverage.json and exists nowhere else; 0029's 25, 0036's 35 and 0029's 39 excluded
 # are Qwen-tokenizer facts and carry over to nothing.
 #
-# THIS FILE CANNOT LOAD, AND THAT IS THE POINT -- see the same paragraph in config/e9f.toml. The five
-# tau-derived keys are 1 - THIS pair's archived held-out R^2 and functions of it; the mapper has not been
-# fitted and cannot be fitted here. Each carries a refusing UNRESOLVED marker instead of a number.
+# THIS FILE CANNOT LOAD, AND THAT IS THE POINT -- see the same paragraph in config/e9f.toml. The three
+# pair-calibrated fields tau_K, tau_V and tau_agent_K depend on THIS pair's archived held-out R^2; the
+# mapper has not been fitted and cannot be fitted here, so each carries a refusing UNRESOLVED marker.
+# The absolute tau_ladder [0.10, 0.03] and prefix_invariance_max_delta 1e-4 are already registered literals.
 #
 # e9.assert_ready refuses until this file and ledger/ledger.md (with the entries in [e9.gate]) are
 # committed unmodified AND the upstream checkout is at `upstream_sha`, clean for every invoked path.
@@ -109,7 +110,7 @@ tau_V = "UNRESOLVED::tau_V@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/
 # entry 0025, descriptive: f*(tau) is ALSO reported at each tau below, K and V, every arm, per handoff and
 # median, so a HOLDS says how far inside the registered tolerance identity sits. The cells and the band
 # are computed at tau_K above only; nothing on this ladder is verdict-bearing. Fixed before any prefill.
-# tau-derived, hence unresolved: config.py refuses any rung outside (0, tau_K) or not strictly decreasing.
+# The absolute rungs were registered before the fit; config.py later re-validates them against tau_K.
 tau_ladder = [0.10, 0.03]                # ABSOLUTE, and identical to config/e9.toml (operator ruling
                                      # 2026-09-18). NOT a function of tau_K: the ladder is verdict-bearing
                                      # for nothing, so holding the rungs fixed across families is what makes
@@ -134,8 +135,8 @@ seam_bins = [0, 1, 2, 4, 8, 16]      # b(t) bins 0 / 1 / 2-3 / 4-7 / 8-15 / 16+,
 # entry 0025 (review finding 3): the 0023 identity control scores a dump against itself and cannot fail on
 # the box. Prefix invariance can: the receiver prefills S followed by R's first token, and rows 0..|S|-1
 # must equal the S dump up to kernel arithmetic (causal attention). HALTS if the max centered per-token
-# deviation (token mean, K or V) exceeds this. It is tau-derived -- three orders below tau_K by the function
-# the registering entry fixes -- so it is UNRESOLVED here and refuses rather than inheriting Qwen's 1e-4.
+# deviation (token mean, K or V) exceeds this. The absolute float32 kernel-noise bound was registered
+# before the fit; it is not tau-derived and was never an UNRESOLVED marker.
 prefix_invariance_max_delta = 1e-4   # ABSOLUTE, identical to config/e9.toml (operator ruling 2026-09-18).
                                      # NOT a function of tau_K: this is a FLOAT32 KERNEL-NOISE FLOOR -- the
                                      # receiver prefills S then R's first token and rows 0..|S|-1 must equal

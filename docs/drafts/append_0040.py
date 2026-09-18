@@ -11,8 +11,8 @@ and are refused when missing:
   --preview             (print, do not append)
 
 Why this entry states tau. tau is 1 - THIS pair's own held-out R^2, and `summarize_e9 --calibrate-tau`
-cannot produce it yet: `load_e9_config` refuses config/e9f.toml while its five tau-derived keys carry
-their UNRESOLVED markers, so the calibration cannot be reached through a config that will not load. The
+cannot produce it yet: `load_e9_config` refuses config/e9f.toml while its three pair-calibrated tau
+fields carry UNRESOLVED markers, so the calibration cannot be reached through a config that will not load. The
 quantity itself is not blocked -- it is 1 - arm (a)'s held-out R^2 at the verdict k, which the run this
 entry reports has just produced and the summarizer has just re-derived from the tensors. So this entry
 states it from the verified report; the registration entry that follows writes it into the two E9 configs;
@@ -154,7 +154,10 @@ they are not carried over from anything. `config/e9f.toml` and `config/e9fl.toml
 refusing `UNRESOLVED::` markers at this entry (checked by the script that appended it): the next entry
 writes these values in and `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report {rp_rel}`
 then recomputes them from the archived mapper independently and refuses on any disagreement. **A Qwen τ appears nowhere in
-this family's configs and never will.**
+this family's configs and never will.** **Correction to immutable entry 0039:** its prose said five
+τ-derived keys were unresolved. Only `tau_K`, `tau_V`, and `tau_agent_K` carried markers; `tau_ladder =
+[0.10, 0.03]` and `prefix_invariance_max_delta = 1e-4` were already literal, registered values. This
+correction changes no registered rule or value.
 
 **What this establishes, stated narrowly.** On {src_id} → {tgt_id}, a matched-KV cross-release pair, with
 a k = {cfg.verdict_k} linear KV mapper fit on {cfg.text['n_seqs']} generic calibration windows and scored
