@@ -38,7 +38,12 @@ upstream_path = "../kv-transfer-replication"   # the identical string every othe
 # The pin is commit P: the one-line kvt/pairs.py PAIRS entry, based on 063f4023 (the RoPE-spec commit) and
 # pushed to the remote tools/ec2/setup.sh clones from. It does not exist. e8.assert_ready's `re.fullmatch
 # (r"[0-9a-f]{40}", ...)` refuses on this value by name -- a fail-closed placeholder, never a plausible sha.
-upstream_sha = "UPSTREAM_SHA_PENDING::UNRESOLVED::upstream_sha@P::commit P (the kvt/pairs.py PAIRS entry on top of 063f4023) is neither written nor pushed"
+upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # commit P: the kvt/pairs.py PAIRS entry, parented on 063f4023 (the
+                                     # RoPE-spec commit -- required, because this pair's two sides carry
+                                     # different llama3 factors and a plain-theta strip is silently wrong).
+                                     # Lives on emersony99/kv-transfer-replication pending
+                                     # hossainpazooki/kv-transfer-replication#1, which asks for a merge
+                                     # without squash or rebase so this sha stays valid as the pin.
 scope_note = "off-policy text for Llama-3; cross-release pair (source 3.2, receiver 3.1); matched-KV (8 x 128 both sides); not a real switch point; visible messages only (0012)"
 
 [e8.gate]                            # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016), never replacing them

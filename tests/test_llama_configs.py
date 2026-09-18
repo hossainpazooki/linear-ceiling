@@ -2,12 +2,14 @@
 register, and -- mostly -- what they REFUSE.
 
 tau is 1 - THIS pair's archived held-out R^2. The Llama mapper has not been fitted and cannot be fitted
-here, so the three calibrated tolerances and the two pre-registered functions of them carry refusing
-UNRESOLVED markers instead of numbers, and both E9 configs fail to load at all. That is the point of the
-cell as staged, so it is pinned here key by key rather than left to a convention someone could tidy away
-by pasting the Qwen values in -- which would load, run, and produce a verdict calibrated against another
-pair's mapper. These tests must NOT assert `c.rule == e9.rule` the way tests/test_e9_long.py:52 does for
-the Qwen cells: five of those values belong to Qwen and must never appear here."""
+here, so the THREE calibrated tolerances carry refusing UNRESOLVED markers instead of numbers and both E9
+configs fail to load at all. That is the point of the cell as staged, so it is pinned here key by key
+rather than left to a convention someone could tidy away by pasting the Qwen values in -- which would
+load, run, and produce a verdict calibrated against another pair's mapper. These tests must NOT assert
+`c.rule == e9.rule` the way tests/test_e9_long.py:52 does for the Qwen cells: three of those values
+belong to Qwen and must never appear here. The other two formerly-"derived" keys (tau_ladder,
+prefix_invariance_max_delta) were registered ABSOLUTE and identical to Qwen's by the 2026-09-18 ruling,
+and are asserted EQUAL rather than asserted-to-be-markers."""
 import re
 import tomllib
 
@@ -85,11 +87,17 @@ def test_e8f_registers_the_second_family_and_carries_0016s_sampling_rule_unchang
     assert e8.scope_note is None and c.scope_note != e8_driver.DEFAULT_SCOPE
 
 
-def test_e8f_refuses_until_the_upstream_pin_is_recorded():
+def test_e8f_carries_a_real_pin_and_still_refuses_one_that_does_not_hold():
+    """Commit P is recorded (2026-09-18), so the placeholder refusal no longer applies -- but the pin
+    must still be ENFORCED, which is the property that actually matters. Asserting against a
+    well-formed sha that is not in the checkout keeps this independent of which commit the single
+    local clone happens to be detached at."""
     c = load_e8_config(REPO_ROOT / "config" / "e8f.toml", REPO_ROOT)
-    assert not re.fullmatch(r"[0-9a-f]{40}", c.upstream_sha) and "UNRESOLVED::" in c.upstream_sha
-    with pytest.raises(RuntimeError, match="upstream_sha is not a commit sha"):
-        e8_driver.assert_ready(c, REPO_ROOT)
+    assert re.fullmatch(r"[0-9a-f]{40}", c.upstream_sha), "commit P's sha must be recorded in full"
+    assert "UNRESOLVED" not in c.upstream_sha
+    bogus = c.__class__(**{**c.__dict__, "upstream_sha": "0" * 40})
+    with pytest.raises(RuntimeError, match="REFUSED"):
+        e8_driver.assert_ready(bogus, REPO_ROOT)
 
 
 # ---- the refusals that keep E9-Llama from running before the E8 fit -------------------------------------
@@ -203,11 +211,14 @@ def test_the_resolved_config_loads_as_a_native_llama_cell(tmp_path, name, cap, f
 
 
 @pytest.mark.parametrize("name", E9_NAMES)
-def test_the_resolved_config_still_refuses_at_the_gate_on_the_pending_pin(tmp_path, name):
+def test_the_resolved_config_carries_a_real_pin_that_is_still_enforced(tmp_path, name):
+    """Same as the E8 twin: the pin is recorded now, so what must be proven is that a pin which does
+    not hold still refuses -- a recorded sha nobody checks would be worse than a placeholder."""
     c = _resolved_cfg(tmp_path, name)
-    assert "UNRESOLVED::" in c.upstream_sha
-    with pytest.raises(RuntimeError, match="pending upstream pin placeholder"):
-        e9_driver.assert_ready(c, REPO_ROOT)
+    assert re.fullmatch(r"[0-9a-f]{40}", c.upstream_sha) and "UNRESOLVED" not in c.upstream_sha
+    bogus = c.__class__(**{**c.__dict__, "upstream_sha": "0" * 40})
+    with pytest.raises(RuntimeError, match="REFUSED"):
+        e9_driver.assert_ready(bogus, REPO_ROOT)
 
 
 def test_the_qwen_configs_are_untouched():

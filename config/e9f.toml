@@ -35,7 +35,12 @@ upstream_path = "../kv-transfer-replication"   # ONE clone, moved per cell with 
 # Commit P: the one-line kvt/pairs.py PAIRS entry, based on 063f4023 (the RoPE-spec commit, whose KVDump strips
 # with each dump's OWN recorded RopeSpec) and pushed to the remote tools/ec2/setup.sh clones from. It does not
 # exist. e9.assert_ready refuses on this placeholder by name -- never a plausible-looking sha.
-upstream_sha = "UPSTREAM_SHA_PENDING::UNRESOLVED::upstream_sha@P::commit P (the kvt/pairs.py PAIRS entry on top of 063f4023) is neither written nor pushed"
+upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # commit P: the kvt/pairs.py PAIRS entry, parented on 063f4023 (the
+                                     # RoPE-spec commit -- required, because this pair's two sides carry
+                                     # different llama3 factors and a plain-theta strip is silently wrong).
+                                     # Lives on emersony99/kv-transfer-replication pending
+                                     # hossainpazooki/kv-transfer-replication#1, which asks for a merge
+                                     # without squash or rebase so this sha stays valid as the pin.
 # tau is 1 - the held-out R^2 of THIS pair's mapper, so the calibration must read THIS pair's E8 report.
 # Left unset, summarize_e9 defaults to results/e8/report.json -- the Qwen report -- and would silently
 # calibrate a Llama cell against a Qwen mapper.

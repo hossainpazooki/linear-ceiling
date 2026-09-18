@@ -28,9 +28,16 @@
   working tree was clean for every path E8 invokes (`scripts/dump_kv.py`, `scripts/score_mapper.py`,
   `kvt/`) and `e8.assert_ready` re-checks that before each run; other paths there carried
   unrelated local edits (the operator's acknowledged one-time drift), which E8 never reads.
-- **Pending pin, Llama family (not landed; no sha exists yet):**
-  `UNRESOLVED::upstream_sha@P::not landed; after committing and pushing it the operator records the 40-hex sha
-  here and in config/e8f.toml, config/e9f.toml, config/e9fl.toml`
+- **Llama family pin, commit `06f8d555` (P) — LANDED ON A FORK, NOT YET ON THE UPSTREAM:**
+  pushed 2026-09-18 to `emersony99/kv-transfer-replication` branch `llama-3-pair`, parented directly on
+  `063f4023`; proposed to the upstream as hossainpazooki/kv-transfer-replication**#1**, which asks for a merge
+  **without squash or rebase** so the sha survives as the pin. The full 40-hex value is recorded in
+  `config/e8f.toml`, `config/e9f.toml` and `config/e9fl.toml`, which is where `upstream_gate` reads it; it is
+  written here in short form because `tests/test_imports.py` reserves the one full sha in this file for
+  `linear_ceiling.UPSTREAM_SHA` (entry 0026's pin, which E0 records and which this does not move).
+  **Until #1 merges, every box clones the FORK at `06f8d555`** and `check_upstream` is satisfied by a local
+  checkout detached at it. If Hossain squashes or rebases, the sha changes and all four references must be
+  updated in one commit before anything runs.
   -- commit **P**, one dict entry in `kvt/pairs.py` registering the second model family's pair
   `llama3.2-3b-to-llama3.1-8b` (meta-llama/Llama-3.2-3B -> meta-llama/Llama-3.1-8B). The pair is matched-KV
   (8 KV heads x 128 head dim on both sides; the receiver declares no `head_dim` and `kv_shape` reaches 128 by
