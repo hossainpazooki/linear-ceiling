@@ -237,3 +237,44 @@ pulled only once their size is unchanged across two consecutive polls, so a part
 *(Note for whoever writes the next home-side tool: macOS ships bash 3.2, which has no `declare -A`. The
 first version of the puller used an associative array and exited the first time it touched a mapper
 path — i.e. exactly when it became load-bearing.)*
+
+## The home watchdog died for ~5 minutes while a pod was billing — 2026-09-18 ~18:12Z
+
+**What happened.** The home-side spend watchdog exited on a transient API error, leaving the rented
+pod running with no home-side ceiling for roughly five minutes. Its last line:
+
+```
+rp REFUSED: RunPod API unreachable ([SSL: UNEXPECTED_EOF_WHILE_READING] ...)
+```
+
+**Root cause — a regression introduced by the fix for an earlier bug.** `gql()` reports *every* API
+failure by raising `SystemExit("rp REFUSED: ...")`. `SystemExit` derives from `BaseException`, **not**
+from `Exception`. So:
+
+| version | catches | misses | consequence |
+|---|---|---|---|
+| original | `except SystemExit` | TimeoutError, RemoteDisconnected, JSONDecodeError | dies on an ordinary network error |
+| the "fix" | `except Exception` | **every `SystemExit` from `gql`** | dies on a transient SSL EOF — what happened |
+| correct | `except (Exception, SystemExit)` | — | keeps polling, keeps retrying |
+
+Neither single clause is correct. The first fix traded one hole for another, and the second hole was
+worse because `gql` raises `SystemExit` on the *common* failure path.
+
+**Why it mattered more than it looks.** The same `except` guards `_terminate_until_gone()`, the retry
+loop whose entire job is to keep trying until the pod is gone. A `SystemExit` there would have ended
+the loop *while a pod was still billing* — the precise failure the loop exists to prevent.
+
+**Fixed** in `tools/runpod/rp.py` (all three sites) with `tests/test_runpod_watchdog.py`, which was
+verified to FAIL against the buggy version and pass against the fix — two of its three tests fail if
+either single-clause form is restored.
+
+**Interim mitigation while the pod was live:** the watchdog was restarted inside a shell retry wrapper
+(`until rp.py watchdog ...; do sleep 10; done`), which relaunches on any non-zero exit and stops on
+exit 0 (nothing billing). That wrapper is worth keeping for sitting B regardless of the fix: it covers
+crashes the process cannot catch itself.
+
+**For sitting B, which costs more per hour:** treat the home watchdog as a component that WILL die and
+must be supervised, not as a process that is assumed to stay up. Two independent layers (the wrapper
+plus the on-pod dead man) are the minimum, and the on-pod dead man did **not** arm on this sitting —
+`runpodctl get pod` failed with the pod-scoped credentials — so for sitting A the home side was the
+*only* net, which is exactly why its five-minute absence is worth recording.
