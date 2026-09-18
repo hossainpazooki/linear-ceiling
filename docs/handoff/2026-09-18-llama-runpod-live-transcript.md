@@ -54,9 +54,10 @@ post-A registration and tooling blockers below are closed.
 - Both generic dumps completed: source 23 s, target 48 s. Both record `rope_type=llama3` and
   `check_max_abs=5.960464477539063e-08` (< `1e-5`).
 - Probe has three sequential readouts: `K_rope`, `K_stripped`, `V`, each 7,168 ridge fits. `K_rope`
-  completed at `2026-09-18T16:44:00Z`; `K_stripped` is currently running. The process PID at this
+  completed at `2026-09-18T16:44:00Z`; `K_stripped` completed at `2026-09-18T17:17:29Z`; `V` is
+  currently running. The process PID at this
   writing is 4550. Do not interrupt while it remains healthy.
-- Last observed spend at this writing: about `$0.70`; account balance about `$10.55`.
+- Last observed spend at this writing: `$0.7429`; account balance `$10.5069`.
 
 Monitor without dumping the large progress log:
 
@@ -83,6 +84,9 @@ Monitor without dumping the large progress log:
   `~/.cache/linear-ceiling/sitting-a-pull/pull/up/data/kv/llama3.2-3b-to-llama3.1-8b` (2.9 GiB on disk).
   The eventual box-written manifest remains authoritative; this pre-copy only lets final rsync resume.
 - `/tmp/lc_sittingA_verified` must remain absent until `pull_verify_a.py` completes successfully.
+- The retained failed-attempt log and launcher copy were pulled to
+  `~/.cache/linear-ceiling/sitting-a-pull/preflight-logs/`; both local files match the pod at SHA-256
+  `aa99046ec257b08d42a3388d562ae37f4de6fd9d94fa5ce410398f93a836bbad`.
 
 ## Sitting A failures already diagnosed and fixed
 
@@ -173,4 +177,3 @@ Never paste either credential into commands, logs, this transcript, or git. The 
 were supplied in chat and should be revoked after the campaign. The HF token has already served its only
 Sitting-A purpose. Credential sweeps must search for actual `hf_...` token shapes and token files, not the
 literal variable name `HF_TOKEN` that intentionally appears in checked-in scripts.
-
