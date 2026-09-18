@@ -36,7 +36,7 @@ GPU here, and `traces/` is unrestored. What each asserts and refuses on:
 round-trips through `pairs.pair_name`/`pair_models`; that `config/e8f.toml` carries 0009's band and 0016's
 sampling rule byte-for-byte, its own directories and its own `scope_note`, and a `[e8.gate]` that EXTENDS
 0009/0016 and ends at its own number; R1 — no `results/e8f/report.json`, no agent dumps, no token draw;
-that the pre-fit seal for the pair verifies (`sealed_pre_fit`, empty `prior_artifacts`) and that NO mapper
+that entry 0039's operator ruling is enforced by the absence of any prediction sidecar and that NO mapper
 for the pair exists in any configured artifact root; that a PASSING `tools/preflight_pair.py` record over
 the two GATED snapshots says the pair is matched-KV and shares its `get_vocab()` map (every shape figure in
 the entry is read from that record, cited by sha, and nothing about either checkpoint is typed); that
@@ -44,11 +44,11 @@ the entry is read from that record, cited by sha, and nothing about either check
 the pin is a real sha, checked out, clean, registering the pair in `kvt/pairs.py`, and a DESCENDANT of the
 commit `config/e9l.toml` pins. **New convention, used by two of the six:** operator DECISIONS the repo
 cannot derive are required arguments quoted verbatim into the entry, exactly as run facts are —
-`--tau-ladder-rule`, `--prefix-delta-rule` and `--tau-ceiling` here, so the three functions of tau_K are
-fixed before tau_K exists.
+`--tau-ladder-rule`, `--prefix-delta-rule` and `--tau-ceiling` here, so the two absolute constants and the
+ceiling decision are fixed before tau_K exists.
 **`append_0040.py`** (E8 figures; DESCRIPTIVE, no `verdict:` line, H-E8 does not move): runs
 `summarize_e8 --config config/e8f.toml` IN-PROCESS and reads every number from the report it just verified;
-re-verifies the seal AFTER the fit; refuses unless the two E9 configs are still uncalibrated. It STATES
+re-verifies the no-seal ruling AFTER the fit; refuses unless the two E9 configs are still uncalibrated. It STATES
 this pair's tau_K/tau_V/tau_agent_K, because `summarize_e9 --calibrate-tau` cannot reach them yet
 (`load_e9_config` refuses a config whose tau keys are markers, so the calibration cannot be run through a
 config that will not load); the quantity itself is 1 − arm (a)/(b)'s held-out R² at the verdict k, which
@@ -58,8 +58,9 @@ pre-registered contingency is what resolves it, never an edit made after the sco
 **`append_0041.py`** (E9 short cell registration; the ONLY verdict-bearing cell of the campaign, ONE new
 row **H-E9F** `unresolved` spliced after the H-E9L row — the id matches `ledger_check._ROW`, which
 `H-E9-llama` silently would not): asserts `[e9.rule]`/`[e9.controls]` are `config/e9.toml`'s key by key
-EXCEPT the five tau-derived ones; that those five are this pair's own, cross-checked against entry 0040's
-E8 report AND against `results/e9f/calibration/tau.json`; that the cell registers no rope and no bridge;
+EXCEPT the three pair-calibrated tau values plus the pre-registered absolute ladder and prefix-delta
+constants; that the three tau values are this pair's own, cross-checked against entry 0040's E8 report
+AND against `results/e9f/calibration/tau.json`; that the cell registers no rope and no bridge;
 R1; and that `align/coverage.json` was written under this exact config sha. **It checks the tau
 calibration at REGISTRATION**, which `e9 --check` never does — the 2026-09-14 sitting printed ready, ran
 25 of 25 and was refused at home for exactly that gap.

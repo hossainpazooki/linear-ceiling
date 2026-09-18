@@ -157,7 +157,7 @@ def main() -> int:
               f"tool will not choose one. Pass --ladder / --prefix-delta with the values the registering "
               f"entry fixes, or leave the markers in place. The config refuses either way.", file=sys.stderr)
         return 3
-    print("\nAll five tau-derived keys emitted. The summarizer is still the authority: run "
+    print("\nAll three tau values and both pre-registered absolute constants emitted. The summarizer is still the authority: run "
           "`summarize_e9 --calibrate-tau` after typing them in, and believe it over this file.")
     return 0
 
