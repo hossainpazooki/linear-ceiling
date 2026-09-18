@@ -2374,3 +2374,139 @@ one direction, one mapper, one alignment method; generation quality after reuse.
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: c9128ee936cd7e8afefa0301ddf9f8306abbe4676de31480fe9db50c8d037a54
+
+### 0039 — 2026-09-18 — A second model family registered before any fit: the matched-KV pair meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B, the upstream re-pin that registers it, the amended seal requirement, and E8 on the new pair; descriptive, no hypothesis row
+
+**Why, and why now.** Every result on this ledger is one pair: Qwen3-0.6B → 1.7B. H-E8 `NOT CONFIRMED`
+(0020), H-E9 `HELD` (0029) and H-E9L `HELD` (0036) are claims about that pair, and the honest reading of
+all three has always been "one pair, one direction, one mapper". A second family is the cheapest thing
+that can turn a single-pair observation into a statement with any generality, and it is the first
+question a reviewer asks. This entry registers the family — the pair, the upstream change that makes the
+instrument accept it, the amended seal requirement, and E8 on it — BEFORE any mapper is fitted and before the calibration
+text is drawn. It decides nothing: **no hypothesis row is added, no `verdict:` line follows, and the
+H-E8 cell does not move.** The one verdict-bearing cell of this campaign is the E9 short cell, registered
+by its own later entry with its own row.
+
+**The pair, and the fact the whole design rests on.** `llama3.2-3b-to-llama3.1-8b` = meta-llama/Llama-3.2-3B (source) → meta-llama/Llama-3.1-8B
+(receiver/target). Cross-release inside one family, so the name carries BOTH sides: the upstream's
+same-release short form names only the TARGET's size, which here would assert a Llama-3.2-8B — a model
+that does not exist. The string keys the mapper directory, the dumps, the token file and every report,
+so a name that misidentifies the receiver is
+not recoverable. **The pair is matched-KV**, which is what makes the upstream delta one line:
+both sides carry 8 KV heads and a per-head dim of 128, so `check_matched_kv` passes unrelaxed, the
+paper's Sec. 2.1 premise holds, and `Mapper.formula_params` is exact for this pair (the Appendix-D /
+Table-12 parameter-count control is preserved, not forfeited). Read from the two GATED `meta-llama`
+snapshots by `tools/preflight_pair.py`, record sha256 `e99c29a75d0b` (2026-09-18T13:14:29Z),
+20/20 checks passed, and cited by nothing else —
+no mirror, no re-upload, no remembered value ({sourceRepo: meta-llama/Llama-3.2-3B, filePath: config.json, sha256:
+35f063e9f381} and {sourceRepo: meta-llama/Llama-3.1-8B, filePath: config.json, sha256:
+54acfad3cffe}): Llama-3.2-3B: 28 layers, hidden 3072, 24 attention heads, 8 KV heads, head_dim 128 (declared), vocab 128,256, max_position_embeddings 131,072, rope_theta 500000, rope_scaling {"factor": 32.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}, tie_word_embeddings True, 229,376 KV bytes/token (fp32, all layers, K and V) · Llama-3.1-8B: 32 layers, hidden 4096, 32 attention heads, 8 KV heads, head_dim 128 (DERIVED as hidden_size // num_attention_heads; the config declares none), vocab 128,256, max_position_embeddings 131,072, rope_theta 500000, rope_scaling {"factor": 8.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}, tie_word_embeddings False, 262,144 KV bytes/token (fp32, all layers, K and V).
+
+**The shared-vocabulary gate, which could still kill this.** `scripts/prepare_tokens.py` refuses unless
+the two tokenizers' `get_vocab()` maps are equal, and `weights.assert_shared_vocab` is the home-side half
+of the same check. Both sides ship the 128,256-entry Llama-3 BPE, but added and special
+tokens are part of that map. The preflight record's check "shared vocab: get_vocab() maps" passed —
+128256 entries, identical mapping — and that is the evidence; had it failed there would be no E8 corpus for this pair
+and the family decision would reopen rather than be worked around.
+
+**The two sides carry DIFFERENT RoPE, and that is safe here for a stated reason.** Source
+rope_scaling {"factor": 32.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}; receiver {"factor": 8.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}. The two
+build different inverse-frequency vectors. That is not a matched-KV problem (`check_matched_kv` reads
+`n_kv` and `d_h` only) and not a content-space problem — PROVIDED the pin strips with each dump's OWN
+recorded `RopeSpec`, read off the loaded model's `rotary_emb.inv_freq` and halt-checked at every dumped
+position. That machinery is entry 0035's commit `063f4023fdde`, and this entry requires the pin to be a
+DESCENDANT of it (checked by this script). Under an older base the strip is plain-θ, which is silently
+wrong for `rope_type "llama3"` on both sides. Consequence carried forward to every cell of this family:
+any "the recorded RoPE is identical across the run" control is scoped **per model role** — receiver dumps
+against receiver dumps, source dumps against source dumps — because a cross-role equality assert would
+refuse every CORRECT run of this pair.
+
+**The upstream change, and what it is not.** Pin `06f8d5559257`, base 063f4023fdde: **one entry in
+`kvt/pairs.py`'s `PAIRS`**, so `dump_kv`, `fit_mapper`, `probe`, `score_mapper` and `score_positions`
+accept the pair by name. No dataclass change, no signature change, no relaxation of any check, no new
+flag. An earlier design for this campaign assumed unmatched head dims and specified a rectangular
+mapper, a registry flag, a `check_kv_heads`, a `formula_params` signature change and a τ ceiling
+justified by the conditioning of that map; **the pair is matched-KV, so every one of those is dropped**
+and nothing about the estimator is extended. `linear-ceiling` never writes upstream: the change is landed
+by the operator from `docs/2026-09-18-llama-upstream-patch-spec.md` and pushed before any box is rented
+(`tools/ec2/setup.sh` clones by sha). **Known limitation, recorded rather than fixed:**
+`kvt/mapper.py::apply_mapper` still strips and re-applies with the plain θ it records, so it is wrong for
+any `rope_type != "default"` and therefore for this pair; it is OFF the E8/E9 path (the scorers work in
+content space through `KVDump`), so `eval_hellaswag.py` and `compose_mapper.py` must not be run on this
+pair without a fix. Keeping the diff at one dict entry is worth more than pre-emptively fixing a path
+nobody here calls. **While the single upstream checkout sits at this pin the Qwen cells refuse at their
+gates** — existing practice, not a regression: re-summarizing a Qwen cell means
+`git -C kv-transfer-replication checkout --detach <that cell's pin>` first. There is ONE clone.
+
+**The seal (invariant 1), AMENDED for this entry — operator ruling, 2026-09-18.** This registration
+carries **no sealed prediction**, and the requirement is amended rather than satisfied. Invariant 1
+exists for the SCREEN's pre-fit predictions: a prediction that can be sealed before a fit must be.
+The screen line is `SHELVED` (H-S1/S3/S4, entries 0003–0006) and `screen.py` has no entry point that
+produces a payload, so there is no screen prediction about this pair to seal. The alternatives were
+considered and rejected in the open: sealing a *null* or procedural payload would satisfy the check
+while asserting nothing, which is precisely the failure this ledger is built to prevent; and inventing
+a pre-fit R² to seal would put a number on the record that no instrument produced. The amendment is
+narrow — it applies to a **descriptive second-family registration that adds no hypothesis row**, and
+it does not touch invariant 1 for any cell that does carry a screen prediction.
+
+What survives the amendment is the clause that actually carries the evidential weight: **no fitted
+mapper for this pair exists in ANY configured artifact root at append** (this script re-checks all
+four and refuses otherwise), and this script additionally refuses if a sealed prediction for the pair
+has appeared since the ruling. "Registered before any fit" therefore remains a checkable claim about
+the world, not an assertion of good faith.
+
+**E8 on the new pair (`config/e8f.toml`, `results/e8f/`).** 0009's instrument and 0016's amendment,
+unchanged: mapper fit on generic calibration text, scored on agent-trace text, arm (a) generic vs arm (b)
+agent, held-out pooled R² (definition A5), band HOLDS ≤ 0.05 drop /
+DEGRADES ≥ 0.15 drop; verdict k = 1 fixed here at registration
+(not chosen after the sweep), reported at k = 1, 4, 8; `[e8.text]` seed
+8, n = 50, len = 1024, suites tau2-bench, swe-bench, window
+"first"; holdout 0.2, stride 4. **The sampling RULE is 0016's
+byte-for-byte; the DRAW is not** — it is re-made under the Llama-3 BPE and is a different
+50 windows, not a reuse of `results/e8/`'s. Parameter count per read-out is
+p = k · n_kv · d_h = 1,024k against n_train = 10,240, so **p/n is k = 1: 0.10 / k = 4: 0.40 / k = 8: 0.80** — numerically
+identical to the Qwen arm's, because the two pairs happen to share 8 KV heads and head_dim 128. The
+k-sweep collapse entry 0016 reports is therefore directly comparable here at the same p/n, and there is no
+p/n caveat to state. **Descriptive: every figure produced
+under this config is stated for the Llama pair alone and is never pooled with a Qwen figure; H-E8's cell
+was decided by 0020 and does not move.** Scope recorded in the report: "off-policy text for Llama-3; cross-release pair (source 3.2, receiver 3.1); matched-KV (8 x 128 both sides); not a real switch point; visible messages only (0012)".
+
+**BOS carry-over, stated rather than changed.** The existing instrument tokenizes with
+`add_special_tokens=False` in both the generic-calibration and agent-text paths, and that rule carries
+over unchanged. Llama-3's `<|begin_of_text|>` is therefore absent and the first content token takes the
+attention-sink role. This is self-consistent across the two E8 arms and preserves comparability with the
+registered instrument; it is not a claim that the token layout matches a normal chat/inference request.
+
+**Three decisions fixed now, before any number exists.** The E9 cells of this family calibrate τ from
+THIS pair's own mapper, and three values that follow from τ_K must be fixed before τ_K is seen or they
+are not registered at all. (1) **τ ladder** (`[e9.rule] tau_ladder`, descriptive, verdict-bearing for
+nothing): ABSOLUTE [0.10, 0.03], identical to config/e9.toml; not a function of tau_K (operator ruling 2026-09-18). (2) **Prefix-invariance tolerance**
+(`[e9.controls] prefix_invariance_max_delta`, a HALT): ABSOLUTE 1e-4, identical to config/e9.toml; a float32 kernel-noise floor (operator ruling 2026-09-18). It must NOT inherit the
+Qwen cells' value. (3) **τ_K ceiling** — the τ_K above which the short cell is UNRESOLVED by
+construction, because a mapper that transfers badly enough makes f*(τ_K) trivially small for everything:
+0.45. All five tau-derived keys in `config/e9f.toml` and `config/e9fl.toml` carry refusing
+`UNRESOLVED::` markers at append (this script checks it), so neither cell can load, let alone run, until
+the calibration exists — a Qwen τ pasted in would load and produce a verdict calibrated against the wrong
+pair's mapper, which is the failure the markers exist to make impossible.
+
+**Gate and enforcement.** `e8 --check --config config/e8f.toml` refuses until entries 0009/0016/0039 are in the
+committed ledger, `config/e8f.toml` is committed unmodified, and the upstream is at the pin with every
+invoked path clean; `[e8.gate]` EXTENDS the driver's 0009/0016 premise entries and cannot weaken them.
+`summarize_e8 --config config/e8f.toml` is the only reader of the run's figures: it re-runs the upstream
+scorer on the fingerprinted dumps, cross-checks arm (a) against the archived `r2.json` for every k, and
+refuses on any disagreement. Tests: `tests/test_pairs.py` (the pair name round-trips and the Qwen names
+are byte-identical), `tests/test_llama_configs.py` (the three configs; the five tau keys refuse
+individually), `tools/preflight_pair.py` (the gate on the two gated checkpoints).
+
+**What this does NOT touch.** The H-E8, H-E9 and H-E9L cells; τ_K, τ_V, τ_agent_K, the rule, the band,
+the ladder and the keep subsets of the Qwen cells; `results/e8*/`, `results/e9*/`; `config/e8.toml`,
+`config/e8a.toml`, `config/e8c.toml`, `config/e9.toml`, `config/e9l.toml`, `config/e9s.toml`,
+`config/e9c.toml` and `config/seal.toml` (unchanged: `_resolve` expands only the literal `${upstream}`,
+and the four existing artifact roots already cover the new pair under one clone). No figure appears in
+this entry: E8's enter by their own numbered entry, and the paper only from that entry.
+
+**Scope.** One new pair, one direction, one agent family, off-policy text for Llama-3, visible messages
+only (0012); a cross-release pair whose two sides carry different llama3 RoPE factors; a registration,
+not a result. The matched-KV premise rests on the preflight record cited above and on nothing else.
+
+prior-entries-sha256: 0c8bc66ba38a207ba5d01b8cc98a4f318f26aac4b089af78b4affdfb4393d725
