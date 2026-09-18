@@ -6,6 +6,22 @@ taken over to the pod being proven gone. Written to be read by someone who was n
 **Status: sitting A is COMPLETE. Artifacts are home and verified. The pod is terminated and proven
 gone. No ledger entry has been appended for its figures — that is entry 0040 and it is not written.**
 
+> **Status at pause, 2026-09-18 ~18:50Z.** Nothing is billing (pods [], $0/h, balance $9.81).
+> The home re-score **PASSED**: `summarize_e8 --config config/e8f.toml` exited 0 on the pinned stack,
+> recomputing every R² by re-running the upstream scorer on the fingerprinted dumps, and it agrees
+> with the box to the digit — so §8's figures are **confirmed, no longer preliminary**. At the
+> verdict-bearing k = 1: generic K 0.7139 / V 0.4711, agent K 0.7311 / V 0.4599, drop
+> K **−0.0172** / V +0.0111, band **K HOLDS / V HOLDS**. (The drop is NEGATIVE: this pair's mapper
+> fits agent text *better* than the generic text it was fitted on. The summarizer states plainly that
+> the H-E8 verdict is not made here and enters only by a numbered entry.)
+> **One must-fix before entry 0040 is previewed, let alone appended:** `docs/drafts/append_0040.py`'s
+> τ-ordering passage calls the ordering "registered" and cites "entry 0039's pre-registered
+> contingency". **Both are false** — see §8; 0039 registers contingencies for the τ ladder, the
+> prefix-invariance tolerance and the τ_K ceiling, and for nothing else. An appended entry is
+> immutable, so that sentence must be rewritten to state only what the ledger says before any preview
+> is shown. The rewrite was drafted but **not yet applied**; the draft on disk still contains the
+> false text. Nothing is on the ledger, so nothing false has been recorded.
+
 ---
 
 ## 1. What exists now, and where
