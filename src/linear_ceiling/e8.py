@@ -1,10 +1,11 @@
 """E8 driver and its gate -- transfer under the agent-trace distribution shift (entries 0009, 0016).
 
 `assert_ready` refuses (before any text is read or any dump written) unless: ledger/ledger.md
-and config/e8.toml are committed unmodified; the COMMITTED ledger carries entries 0009 and
-0016; the upstream checkout's HEAD equals `upstream_sha` from config and its tree is clean for
-every path E8 invokes. The upstream is called by subprocess in its own environment -- this
-module never imports kvt (UPSTREAM.md).
+and the config are committed unmodified; the COMMITTED ledger carries entries 0009 and 0016
+(and any further entry the config's [e8.gate] adds -- see `required_entries`); the upstream
+checkout's HEAD equals `upstream_sha` from config and its tree is clean for every path E8
+invokes. The upstream is called by subprocess in its own environment -- this module never
+imports kvt (UPSTREAM.md).
 
 The run: sample + tokenize agent text (0016 §4) -> dump source and target KV over it with the
 upstream's `dump_kv.py` (same stride as arm (a)) -> score every reported mapper on BOTH arms
@@ -27,11 +28,25 @@ from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import WeightReader, assert_shared_vocab, snapshot
 
 REQUIRED_ENTRIES = ("### 0009 ", "### 0016 ")
+# What a report records as its "scope" when the config states none ([e8] scope_note). This is the
+# 0009/0016 setting's own scope: keeping it as the DEFAULT is what leaves results/e8/report.json --
+# whose sha256 entry 0030 records, and which the amendment arm re-reads -- byte-identical, while a
+# config for another pair states its own scope rather than inheriting a sentence that names Qwen.
+DEFAULT_SCOPE = "off-policy text for Qwen; single pair; not a real switch point; visible messages only (0012)"
 
 
 def required_entries(cfg: E8Config) -> tuple[str, ...]:
-    """0009 + 0016 always; an amendment run also requires its own registering entry (e.g. 0030)."""
-    return REQUIRED_ENTRIES + ((f"### {cfg.amendment['entry']} ",) if cfg.amendment else ())
+    """0009 + 0016 ALWAYS, plus whatever [e8.gate] required_entries names (a second model family's
+    registration entry, config/e8f.toml), plus an amendment run's own registering entry (e.g. 0030).
+
+    ADDITIVE, never replacing: 0009 and 0016 are the premise every E8 arm is read against, so a config
+    that listed its own short set would silently weaken the gate rather than extend it. A marker already
+    in REQUIRED_ENTRIES is dropped, order preserved, so naming 0016 in [e8.gate] is a no-op instead of a
+    doubled entry in the --check line.
+    """
+    extra = (tuple(f"### {n} " for n in cfg.gate)
+             + ((f"### {cfg.amendment['entry']} ",) if cfg.amendment else ()))
+    return REQUIRED_ENTRIES + tuple(dict.fromkeys(m for m in extra if m not in REQUIRED_ENTRIES))
 
 
 def agent_holdout_frac(cfg: E8Config) -> float:
@@ -56,8 +71,8 @@ def assert_ready(cfg: E8Config, repo_root: Path) -> None:
         tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel], cwd=repo_root, capture_output=True)
         clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=repo_root)
         if tracked.returncode != 0 or clean.returncode != 0:
-            raise RuntimeError(f"E8 REFUSED: {rel} is not committed as-is; entry 0016 and config/e8.toml "
-                               "must be committed before any text is read")
+            raise RuntimeError(f"E8 REFUSED: {rel} is not committed as-is; entry 0016 and the config "
+                               "this run reads must be committed before any text is read")
     committed = subprocess.run(["git", "show", "HEAD:ledger/ledger.md"], cwd=repo_root,
                                capture_output=True, text=True, encoding="utf-8")
     if committed.returncode != 0:
@@ -212,7 +227,8 @@ def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks
         "archived_crosscheck": checks,
         "verdict_k": cfg.verdict_k, "band": cfg.band, "per_k": per_k,
         "verdict_bearing": {"k": cfg.verdict_k, "outcome": per_k[str(cfg.verdict_k)]["band_outcome"], "note": note},
-        "scope": "off-policy text for Qwen; single pair; not a real switch point; visible messages only (0012)",
+        # The config's own statement of what the run covers, or the 0009/0016 literal when it states none.
+        "scope": cfg.scope_note or DEFAULT_SCOPE,
         **({"amendment": dict(cfg.amendment), "reused_agent_dumps_from": prior_ref} if cfg.amendment else {}),
     }
 

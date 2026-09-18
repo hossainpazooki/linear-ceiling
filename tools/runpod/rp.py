@@ -1,0 +1,498 @@
+"""RunPod box driver with hard cost guardrails — the `tools/ec2/box.sh` roles on a container host.
+
+  balance | price | up | wait-ssh | arm-deadman | status | ssh | put | pull | terminate | spend | watchdog
+
+WHAT CONTAINERS CHANGE. `tools/ec2/` drives a VM; a RunPod pod is a container on someone else's host,
+reached over SSH/TCP. Four box-discipline rules change, and each is a way to lose money or evidence:
+
+  1. `sudo shutdown -h` DOES NOT STOP BILLING. tools/ec2/setup.sh arms `sudo shutdown -h +1440` as its
+     24 h safety net (EC2 shutdown behaviour = stop). In a container that either fails or kills PID 1
+     and the POD KEEPS BILLING. Every self-destruct here goes through RunPod instead.
+  2. STOP IS NOT TERMINATE. A stopped pod keeps billing for its disk. There is deliberately no `stop`.
+  3. CONTAINER DISK IS EPHEMERAL, which makes R5 (pull -> verify -> delete) load-bearing rather than
+     tidy: an unpulled dump is GONE, not paused. It is also why the dead man is a pure TTL backstop
+     (below) and never fires on job completion.
+  4. NO INSTANCE METADATA. §12's "instance id, region, IP" become pod id, machine id and the mapped
+     SSH host/port, read back from the API by `status` (R7 step 6's read-back discipline).
+
+WHO ENDS THE SITTING, AND WHY IT IS THE HOME SIDE. The on-pod dead man is a PURE TTL BACKSTOP. It
+never watches for job completion, because "job finished -> terminate" races the pull: the results
+live on ephemeral disk, so a pod that helpfully removes itself the moment the fit ends destroys the
+only copy of the artifacts the sitting exists to produce. The normal path is: job finishes -> home
+pulls -> home VERIFIES sha256 -> home terminates. The dead man only catches the case where home
+never came back, and the home watchdog catches the case where the dead man did not arm.
+
+COST GUARDRAILS (refusals, not advice):
+  * Spend is `max(balance_delta, elapsed x rate)`; the PESSIMISTIC figure drives every guardrail. A
+    lagging `clientBalance` otherwise reads as $0.00 on a pod that has burned for an hour.
+  * The cap is CAMPAIGN-WIDE, not per-pod: `campaign_start_balance` is written once, on the first
+    ever `up`, and never overwritten, so a second sitting cannot re-baseline its way past the budget.
+  * `watchdog` enforces the account ceiling AND this sitting's (--sitting-max, --ttl); tighter wins.
+  * `terminate` without --pod only ever touches pods named `linear-ceiling-*`.
+  * Nothing here creates a network volume.
+
+THE KEY. From ~/.config/linear-ceiling/runpod_api_key (0600) or $RUNPOD_API_KEY: never printed, never
+written to the state file, never passed on a command line, NEVER uploaded to the pod. RunPod account
+keys are account-scoped, so a key on rented hardware could terminate anything on the account. The
+dead man therefore uses `runpodctl`, which RunPod preinstalls and which authenticates with the pod's
+OWN credentials; if that is unavailable it REFUSES TO ARM and says so loudly rather than pretending.
+(A PUBLIC key is not a secret and is passed in the create env — that is how these images authorize SSH.)
+"""
+import argparse
+import json
+import os
+import subprocess
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+API = "https://api.runpod.io/graphql"
+KEY_FILE = Path.home() / ".config" / "linear-ceiling" / "runpod_api_key"
+STATE = Path.home() / ".config" / "linear-ceiling" / "runpod_state.json"
+KNOWN_HOSTS = Path.home() / ".config" / "linear-ceiling" / "runpod_known_hosts"
+NAME_PREFIX = "linear-ceiling-"
+SSH_KEY = Path.home() / ".ssh" / "id_rsa"
+
+# A first-connect host-key prompt would hang a non-interactive flow while the meter runs, and an
+# agentless key means -i must be explicit. Campaign-local known_hosts keeps churn out of ~/.ssh.
+SSH_OPTS = ["-o", "StrictHostKeyChecking=accept-new", "-o", f"UserKnownHostsFile={KNOWN_HOSTS}",
+            "-o", "ConnectTimeout=15", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=4",
+            "-o", "BatchMode=yes", "-i", str(SSH_KEY)]
+
+
+def key() -> str:
+    k = os.environ.get("RUNPOD_API_KEY") or (KEY_FILE.read_text().strip() if KEY_FILE.exists() else "")
+    if not k:
+        raise SystemExit(f"rp REFUSED: no API key ($RUNPOD_API_KEY or {KEY_FILE})")
+    return k
+
+
+def gql(query: str, variables: dict | None = None, *, timeout: int = 60) -> dict:
+    body = json.dumps({"query": query, "variables": variables or {}}).encode()
+    # A User-Agent is not optional: RunPod's edge answers urllib's default with a bare 403, which
+    # reads exactly like a bad key.
+    req = urllib.request.Request(API, data=body, method="POST", headers={
+        "Authorization": f"Bearer {key()}", "Content-Type": "application/json",
+        "User-Agent": "linear-ceiling-rp/1 (+tools/runpod/rp.py)"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            out = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise SystemExit(f"rp REFUSED: RunPod API HTTP {e.code} ({e.reason})") from e
+    except urllib.error.URLError as e:
+        raise SystemExit(f"rp REFUSED: RunPod API unreachable ({e.reason})") from e
+    if out.get("errors"):
+        raise SystemExit(f"rp REFUSED: RunPod API error: {out['errors'][0].get('message')}")
+    return out["data"]
+
+
+def balance() -> float:
+    return float(gql("query{myself{clientBalance}}")["myself"]["clientBalance"])
+
+
+def pods() -> list:
+    return gql("query{myself{pods{id name desiredStatus costPerHr machineId "
+               "runtime{uptimeInSeconds ports{ip isIpPublic privatePort publicPort}}}}}")["myself"]["pods"]
+
+
+def load_state() -> dict:
+    return json.loads(STATE.read_text()) if STATE.exists() else {}
+
+
+def save_state(s: dict) -> None:
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    STATE.write_text(json.dumps(s, indent=2, sort_keys=True) + "\n")
+    STATE.chmod(0o600)
+
+
+def spend_now(state: dict) -> tuple[float, float, float]:
+    """(sitting_spend, campaign_spend, balance). Both floored by elapsed x rate.
+
+    The balance delta is the honest measure; the elapsed floor covers a lagging `clientBalance`. The
+    guardrails trigger on whichever says MORE money is gone: over-reporting can only end a sitting
+    early, under-reporting is how a $10 cap becomes a $10 bill. Once a sitting is terminated the
+    elapsed floor is FROZEN at the recorded figure, or `spend` would keep climbing forever."""
+    b = balance()
+    if state.get("terminated_spend") is not None and not state.get("pod_id"):
+        sit = float(state["terminated_spend"])
+    else:
+        delta = float(state.get("balance_at_start", b)) - b
+        rate = max(float(state.get("price") or 0.0), float(state.get("cost_per_hr_actual") or 0.0))
+        elapsed = 0.0
+        if state.get("created_epoch") and rate:
+            elapsed = max(0.0, (time.time() - float(state["created_epoch"])) / 3600.0) * rate
+        sit = max(delta, elapsed)
+    camp_start = float(state.get("campaign_start_balance", state.get("balance_at_start", b)))
+    camp = max(camp_start - b, sit)
+    return (round(sit, 4), round(camp, 4), b)
+
+
+# ---------------------------------------------------------------- read-only
+
+def cmd_balance(a) -> int:
+    print(f"clientBalance ${balance():.4f}")
+    return 0
+
+
+def cmd_price(a) -> int:
+    d = gql("query($mem:Int,$vcpu:Int){gpuTypes{id displayName memoryInGb communityCloud "
+            "lowestPrice(input:{gpuCount:1,minMemoryInGb:$mem,minVcpuCount:$vcpu}){"
+            "uninterruptablePrice minimumBidPrice stockStatus}}}",
+            {"mem": a.min_ram, "vcpu": a.min_vcpu})
+    rows = [g for g in d["gpuTypes"] if g["communityCloud"] and g["memoryInGb"]
+            and g["memoryInGb"] >= a.min_gb and (g["lowestPrice"] or {}).get("uninterruptablePrice")]
+    rows.sort(key=lambda g: g["lowestPrice"]["uninterruptablePrice"])
+    print(f"(filtered for host RAM >= {a.min_ram} GB, vCPU >= {a.min_vcpu}, GPU >= {a.min_gb} GB)")
+    print(f"{'gpu id':<30}{'name':<20}{'GB':>4}{'$/h':>7}  stock")
+    for g in rows[: a.limit]:
+        p = g["lowestPrice"]
+        print(f"{g['id'][:29]:<30}{g['displayName'][:19]:<20}{g['memoryInGb']:>4}"
+              f"{p['uninterruptablePrice']:>7}  {p['stockStatus']}")
+    if not rows:
+        print("  (nothing meets that filter — loosen it or the sitting has no adequate host)")
+    return 0
+
+
+def cmd_status(a) -> int:
+    st = load_state()
+    ps = pods()
+    sit, camp, bal = spend_now(st)
+    print(f"balance ${bal:.4f}   sitting ${sit:.4f}   campaign ${camp:.4f}   pods {len(ps)}")
+    for p in ps:
+        rt = p.get("runtime") or {}
+        print(f"  {p['id']}  {p['name']}  {p['desiredStatus']}  ${p['costPerHr']}/h  "
+              f"machine {p.get('machineId')}  up {(rt.get('uptimeInSeconds') or 0) // 60} min")
+        ip, port = _ports(p)
+        if ip:
+            print(f"    ssh: ssh {' '.join(SSH_OPTS)} -p {port} root@{ip}")
+    if not ps:
+        print("  (none — nothing is billing)")
+    return 0
+
+
+def cmd_spend(a) -> int:
+    sit, camp, bal = spend_now(load_state())
+    print(f"sitting ${sit:.4f}   campaign ${camp:.4f}   balance ${bal:.4f}")
+    return 0
+
+
+# ---------------------------------------------------------------- lifecycle
+
+DEAD_MAN = r"""#!/usr/bin/env bash
+# On-pod dead man: a PURE TTL BACKSTOP. It does NOT watch for job completion -- container disk is
+# ephemeral, so terminating when the job ends would race the home side's pull and destroy the only
+# copy of the artifacts. Normal shutdown is: home pulls -> home verifies sha256 -> home terminates.
+# This exists only for the case where home never came back.
+#
+# `shutdown`/`halt` do not stop billing in a container. Termination goes through RunPod, using the
+# POD-SCOPED credentials RunPod preinstalls -- never an account key. If no such path exists it
+# REFUSES TO ARM, so nothing can believe it is protected when it is not.
+set -u
+TTL_MIN="${TTL_MIN:-210}"
+POD="${RUNPOD_POD_ID:-}"
+
+if ! command -v runpodctl >/dev/null 2>&1 || [ -z "$POD" ]; then
+  echo "dead-man: REFUSING to arm -- runpodctl absent or RUNPOD_POD_ID unset." >&2
+  echo "dead-man: the home watchdog is the ONLY net for this sitting." >&2
+  exit 1
+fi
+echo "dead-man: armed via runpodctl, TTL ${TTL_MIN}m, pod ${POD}"
+sleep $((TTL_MIN * 60))
+echo "dead-man: TTL ${TTL_MIN}m reached, terminating $POD"
+runpodctl remove pod "$POD"
+"""
+
+
+def _ports(p: dict) -> tuple[str | None, str | None]:
+    for prt in ((p.get("runtime") or {}).get("ports") or []):
+        if prt.get("privatePort") == 22 and prt.get("isIpPublic"):
+            return prt["ip"], str(prt["publicPort"])
+    return None, None
+
+
+def cmd_up(a) -> int:
+    pub = Path(a.pubkey).expanduser()
+    if not pub.exists():
+        raise SystemExit(f"rp REFUSED: {pub} not found. RunPod images authorize SSH from the PUBLIC_KEY "
+                         "env var and this account has no pubKey set, so without it the pod boots, "
+                         "bills, and nobody can log in.")
+    pubkey = pub.read_text().strip()
+    st = load_state()
+    bal = balance()
+    camp_start = float(st.get("campaign_start_balance", bal))
+    camp_spent = round(camp_start - bal, 4)
+    projected = a.price * a.hours
+    print(f"== plan\n  gpu            {a.gpu}\n  price          ${a.price}/h\n  hours          {a.hours}\n"
+          f"  container GB   {a.disk}\n  host RAM >=    {a.min_ram} GB, vCPU >= {a.min_vcpu}\n"
+          f"  projected      ${projected:.2f}\n  campaign spent ${camp_spent:.2f}\n"
+          f"  campaign total ${camp_spent + projected:.2f}  vs cap ${a.cap:.2f}\n"
+          f"  pubkey         {pub}")
+    # The cap is CAMPAIGN-wide. Checking only this pod's projection lets sitting B re-baseline past
+    # the budget that sitting A already spent a third of.
+    if camp_spent + projected > a.cap:
+        raise SystemExit(f"rp REFUSED: campaign ${camp_spent:.2f} + projected ${projected:.2f} "
+                         f"exceeds cap ${a.cap:.2f}")
+    if bal < projected:
+        raise SystemExit(f"rp REFUSED: balance ${bal:.4f} below projected ${projected:.2f}")
+    if st.get("pod_id"):
+        raise SystemExit(f"rp REFUSED: state names pod {st['pod_id']}; terminate it first")
+    live = [p for p in pods() if p["name"].startswith(NAME_PREFIX)]
+    if live:
+        raise SystemExit(f"rp REFUSED: the API already lists {live[0]['name']} ({live[0]['id']}). "
+                         "A pod exists that this state file does not know about — adopt or terminate it first.")
+    if a.dry_run:
+        print("\n-- DRY RUN: nothing created, nothing billed. The mutation that WOULD run:")
+        print(json.dumps(_create_input(a, "<PUBLIC_KEY from " + str(pub) + ">"), indent=2))
+        return 0
+    if not a.yes:
+        raise SystemExit("rp REFUSED: creating a pod bills real money; pass --yes to confirm")
+
+    # Write the record BEFORE the mutation. If the create succeeds server-side but the response is
+    # lost, a pod bills with no local record: the watchdog has no created_epoch (TTL never fires) and
+    # balance_at_start defaults to the current balance (spend reads ~0). This makes that unrecoverable
+    # case recoverable.
+    pending = {"pod_id": None, "pending": True, "balance_at_start": bal,
+               "campaign_start_balance": camp_start, "created_epoch": time.time(), "price": a.price,
+               "cap": a.cap, "gpu": a.gpu, "name": a.name,
+               "created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    save_state(pending)
+    try:
+        d = gql("""mutation($in:PodFindAndDeployOnDemandInput){podFindAndDeployOnDemand(input:$in){
+                     id imageName machineId costPerHr}}""", {"in": _create_input(a, pubkey)})
+        pod = d["podFindAndDeployOnDemand"]
+    except SystemExit:
+        adopted = [p for p in pods() if p["name"].startswith(NAME_PREFIX)]
+        if adopted:
+            save_state(pending | {"pod_id": adopted[0]["id"], "pending": False,
+                                  "cost_per_hr_actual": adopted[0]["costPerHr"]})
+            print(f"\nrp: the create call failed BUT pod {adopted[0]['id']} exists and was adopted "
+                  f"into state. IT IS BILLING. Run `rp.py status`, then terminate or continue.")
+            return 1
+        save_state({"campaign_start_balance": camp_start})
+        raise
+    if not pod:
+        save_state({"campaign_start_balance": camp_start})
+        raise SystemExit("rp REFUSED: RunPod returned no pod (no capacity at that filter). Nothing billed.")
+    save_state(pending | {"pod_id": pod["id"], "pending": False, "cost_per_hr_actual": pod["costPerHr"]})
+    print(f"\npod {pod['id']} created at ${pod['costPerHr']}/h; start balance ${bal:.4f}")
+    print("NEXT, in order: rp.py wait-ssh   ->   rp.py arm-deadman   ->   caffeinate -i rp.py watchdog ... &")
+    return 0
+
+
+def _create_input(a, pubkey: str) -> dict:
+    return {"cloudType": "COMMUNITY", "gpuCount": 1, "gpuTypeId": a.gpu, "name": a.name,
+            "imageName": a.image, "containerDiskInGb": a.disk, "volumeInGb": 0,
+            "minMemoryInGb": a.min_ram, "minVcpuCount": a.min_vcpu,
+            "ports": "22/tcp", "startSsh": True, "supportPublicIp": True,
+            "env": [{"key": "PUBLIC_KEY", "value": pubkey}]}
+
+
+def cmd_wait_ssh(a) -> int:
+    """Poll until SSH answers; TERMINATE if it never does. A pod nobody can log into is pure burn."""
+    KNOWN_HOSTS.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.time() + a.timeout * 60
+    while time.time() < deadline:
+        ps = [p for p in pods() if p["name"].startswith(NAME_PREFIX)]
+        if not ps:
+            print("wait-ssh: no pod; nothing to wait for")
+            return 1
+        ip, port = _ports(ps[0])
+        if ip:
+            r = subprocess.run(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}", "true"],
+                               capture_output=True, timeout=40)
+            if r.returncode == 0:
+                print(f"wait-ssh: OK — root@{ip} -p {port}")
+                return 0
+            print(f"  not yet ({(r.stderr or b'').decode().strip()[:80]})", flush=True)
+        else:
+            print("  waiting for a public SSH port", flush=True)
+        time.sleep(a.every)
+    print(f"wait-ssh: SSH never came up within {a.timeout} min — TERMINATING rather than burning")
+    return cmd_terminate(argparse.Namespace(pod=None))
+
+
+def cmd_arm_deadman(a) -> int:
+    ip, port = _ssh_target()
+    local = Path("/tmp/lc_deadman.sh")
+    local.write_text(DEAD_MAN)
+    if subprocess.call(["scp", *SSH_OPTS, "-P", port, str(local), f"root@{ip}:/workspace/deadman.sh"]):
+        raise SystemExit("rp REFUSED: could not upload the dead man")
+    subprocess.call(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}",
+                     f"chmod +x /workspace/deadman.sh && TTL_MIN={a.ttl_min} setsid nohup "
+                     "/workspace/deadman.sh > /workspace/deadman.log 2>&1 < /dev/null & sleep 3"])
+    out = subprocess.run(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}", "cat /workspace/deadman.log"],
+                         capture_output=True, text=True).stdout
+    print(out.strip() or "(no output)")
+    if "armed via runpodctl" in out:
+        print(f"arm-deadman: ARMED (TTL {a.ttl_min} min, pure backstop; home still pulls then terminates)")
+        return 0
+    print("arm-deadman: NOT ARMED — runpodctl/pod-scoped credentials unavailable on this pod.\n"
+          "             The home watchdog is now the ONLY net. Keep it running under caffeinate.")
+    return 2
+
+
+def cmd_terminate(a) -> int:
+    st = load_state()
+    pid = a.pod or st.get("pod_id")
+    live = pods()
+    if pid:
+        targets = [pid]
+    else:
+        # NEVER "every pod on the account". Without an explicit --pod this only touches our own.
+        targets = [p["id"] for p in live if p["name"].startswith(NAME_PREFIX)]
+        if not targets:
+            print(f"no {NAME_PREFIX}* pod is running; nothing to terminate")
+            return 0
+    for t in targets:
+        gql("mutation($in:PodTerminateInput){podTerminate(input:$in)}", {"in": {"podId": t}})
+        print(f"terminate sent: {t}")
+    for _ in range(12):                              # R7 step 6: prove it, never assume it
+        time.sleep(5)
+        still = [p["id"] for p in pods()]
+        if not any(t in still for t in targets):
+            sit, camp, bal = spend_now(st)
+            save_state({k: v for k, v in st.items() if k not in ("pod_id", "created_epoch")}
+                       | {"terminated_spend": sit, "pod_id": None})
+            print(f"PROVEN GONE. sitting ${sit:.4f}, campaign ${camp:.4f}, balance ${bal:.4f}")
+            return 0
+    raise SystemExit("rp REFUSED to claim success: pod still listed after 60 s — CHECK THE CONSOLE, "
+                     "it is still billing")
+
+
+def cmd_watchdog(a) -> int:
+    """Home-side net, independent of the pod. Run under `caffeinate -i` so a sleeping Mac cannot
+    silently remove it:
+      caffeinate -i .venv/bin/python tools/runpod/rp.py watchdog --sitting-max 1.50 --ttl 3.5 &"""
+    st = load_state()
+    limit = min(a.kill, a.sitting_max) if a.sitting_max else a.kill
+    print(f"watchdog: sitting kill ${limit:.2f}, account kill ${a.kill:.2f}, TTL {a.ttl}h, "
+          f"poll {a.every}s. Ctrl-C stops the NET, not the pod.")
+    warned, unreachable = False, 0
+    while True:
+        try:
+            sit, camp, bal = spend_now(st)
+            ps = [p for p in pods() if p["name"].startswith(NAME_PREFIX)]
+            unreachable = 0
+        except SystemExit as e:
+            # An unreachable API is exactly when a runaway pod goes unwatched, so never exit here.
+            unreachable += 1
+            print(f"  watchdog: API unreachable ({e}); retry {unreachable}", flush=True)
+            if unreachable * a.every >= a.unreachable_terminate_after * 60:
+                print("  watchdog: unreachable too long — attempting terminate every pass", flush=True)
+                try:
+                    return cmd_terminate(argparse.Namespace(pod=None))
+                except SystemExit:
+                    pass
+            time.sleep(a.every)
+            continue
+        hours = (time.time() - float(st.get("created_epoch", time.time()))) / 3600.0
+        print(f"  sitting ${sit:.4f} campaign ${camp:.4f} balance ${bal:.4f} pods {len(ps)} "
+              f"up {hours:.2f}h", flush=True)
+        if not ps:
+            print("watchdog: nothing billing; exiting")
+            return 0
+        if sit >= limit or camp >= a.kill:
+            print(f"watchdog: sitting ${sit:.4f} / campaign ${camp:.4f} hit a ceiling — TERMINATING")
+            return cmd_terminate(argparse.Namespace(pod=None))
+        if a.ttl and hours >= a.ttl:
+            print(f"watchdog: TTL {hours:.2f}h >= {a.ttl}h — TERMINATING")
+            return cmd_terminate(argparse.Namespace(pod=None))
+        if sit >= a.warn and not warned:
+            print(f"watchdog: WARNING sitting ${sit:.4f} >= ${a.warn:.2f}")
+            warned = True
+        time.sleep(a.every)
+
+
+# ---------------------------------------------------------------- transport
+
+def _ssh_target() -> tuple[str, str]:
+    for p in pods():
+        if p["name"].startswith(NAME_PREFIX):
+            ip, port = _ports(p)
+            if ip:
+                KNOWN_HOSTS.parent.mkdir(parents=True, exist_ok=True)
+                return ip, port
+    raise SystemExit("rp REFUSED: no public SSH port on a linear-ceiling pod (still starting?)")
+
+
+def cmd_ssh(a) -> int:
+    ip, port = _ssh_target()
+    return subprocess.call(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}", *a.rest])
+
+
+def cmd_put(a) -> int:
+    ip, port = _ssh_target()
+    return subprocess.call(["scp", *SSH_OPTS, "-P", port, *a.paths, f"root@{ip}:{a.dest}"])
+
+
+def cmd_pull(a) -> int:
+    """rsync if the image has it, else tar-over-ssh — never assume a tool the image may not ship."""
+    ip, port = _ssh_target()
+    has_rsync = subprocess.run(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}",
+                                "command -v rsync"], capture_output=True).returncode == 0
+    if has_rsync and not a.force_tar:
+        return subprocess.call(["rsync", "-avP", "-e", f"ssh {' '.join(SSH_OPTS)} -p {port}",
+                                f"root@{ip}:{a.remote}", a.local])
+    print("pull: rsync unavailable on the pod; falling back to tar-over-ssh")
+    Path(a.local).mkdir(parents=True, exist_ok=True)
+    p1 = subprocess.Popen(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}",
+                           f"tar -czf - -C $(dirname {a.remote}) $(basename {a.remote})"],
+                          stdout=subprocess.PIPE)
+    return subprocess.call(["tar", "-xzf", "-", "-C", a.local], stdin=p1.stdout)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("balance").set_defaults(fn=cmd_balance)
+    sub.add_parser("status").set_defaults(fn=cmd_status)
+    sub.add_parser("spend").set_defaults(fn=cmd_spend)
+
+    p = sub.add_parser("price")
+    p.add_argument("--min-gb", type=int, default=40); p.add_argument("--min-ram", type=int, default=48)
+    p.add_argument("--min-vcpu", type=int, default=8); p.add_argument("--limit", type=int, default=12)
+    p.set_defaults(fn=cmd_price)
+
+    p = sub.add_parser("up", help="create a pod (bills money; --dry-run first, --yes required)")
+    p.add_argument("--gpu", required=True); p.add_argument("--price", type=float, required=True)
+    p.add_argument("--hours", type=float, required=True)
+    p.add_argument("--disk", type=int, default=120, help="container disk GB (ephemeral; no volume)")
+    # 48 GB, measured not guessed: kvt/models.load_model calls from_pretrained(dtype=float32) with NO
+    # device_map and only then .to(device), so the whole fp32 model materialises in host RAM first --
+    # 29.91 GiB for Llama-3.1-8B (32 x 4096 x ... verified from the gated config). 48 leaves ~18 GiB of
+    # headroom; 32 would be marginal. It is also the highest floor that still admits the RTX A6000 at
+    # $0.33/h (56 drops it to the $0.74 RTX 6000 Ada), so this number is worth $0.41/h -- do not raise
+    # it casually, and do not lower it below 48 to chase stock.
+    p.add_argument("--min-ram", type=int, default=48, help="pod RAM floor in GB; fp32 8B loads to host first (~30 GiB)")
+    p.add_argument("--min-vcpu", type=int, default=8)
+    p.add_argument("--image", default="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04")
+    p.add_argument("--name", default=f"{NAME_PREFIX}sitting-a")
+    p.add_argument("--pubkey", default=str(Path.home() / ".ssh" / "id_rsa.pub"))
+    p.add_argument("--cap", type=float, default=10.0, help="CAMPAIGN-wide cap, not per-pod")
+    p.add_argument("--dry-run", action="store_true"); p.add_argument("--yes", action="store_true")
+    p.set_defaults(fn=cmd_up)
+
+    p = sub.add_parser("wait-ssh"); p.add_argument("--timeout", type=float, default=6.0)
+    p.add_argument("--every", type=int, default=15); p.set_defaults(fn=cmd_wait_ssh)
+    p = sub.add_parser("arm-deadman"); p.add_argument("--ttl-min", type=int, default=210)
+    p.set_defaults(fn=cmd_arm_deadman)
+    p = sub.add_parser("terminate"); p.add_argument("--pod"); p.set_defaults(fn=cmd_terminate)
+
+    p = sub.add_parser("watchdog")
+    p.add_argument("--warn", type=float, default=7.0); p.add_argument("--kill", type=float, default=9.0)
+    p.add_argument("--sitting-max", type=float, default=None); p.add_argument("--ttl", type=float, default=None)
+    p.add_argument("--unreachable-terminate-after", type=float, default=10.0)
+    p.add_argument("--every", type=int, default=60); p.set_defaults(fn=cmd_watchdog)
+
+    p = sub.add_parser("ssh"); p.add_argument("rest", nargs="*"); p.set_defaults(fn=cmd_ssh)
+    p = sub.add_parser("put"); p.add_argument("paths", nargs="+"); p.add_argument("--dest", default="/workspace/")
+    p.set_defaults(fn=cmd_put)
+    p = sub.add_parser("pull"); p.add_argument("remote"); p.add_argument("local")
+    p.add_argument("--force-tar", action="store_true"); p.set_defaults(fn=cmd_pull)
+    a = ap.parse_args()
+    return a.fn(a)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -13,7 +13,75 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state (2026-09-14, later): **0038 APPENDED** 2026-09-14 (chain `c9128ee936cd`, `ledger ok`; both readers passed
+Current state (2026-09-18): **six drafts staged, in this staging order: `append_0039.py`, `append_0040.py`,
+`append_0041.py`, `append_0042.py`, `append_0043.py`, `append_0044.py`** — the second model family
+(`llama3.2-3b-to-llama3.1-8b`, source meta-llama/Llama-3.2-3B, receiver meta-llama/Llama-3.1-8B, a
+MATCHED-KV pair: 8 KV heads x head_dim 128 on both sides, so the upstream delta is one `PAIRS` entry and
+nothing about the estimator is extended). **0039–0044 are allocated here, at staging, in staging order**;
+the committed ledger ended at **0038** and no entry had been appended since 2026-09-14 when they were
+written. **Contingency, one commit:** if the corrective f* entry (another session, 2026-09-11) lands first
+it takes 0039 and **all six move up by one together** — every `NUM`/`PREV` string, `[e8.gate]
+required_entries` in `config/e8f.toml`, and `[e9.gate] required_entries` in `config/e9f.toml` and
+`config/e9fl.toml` — and that commit must precede `e8 --check` / `e9 --check`, which verify each config is
+committed unmodified. Nothing else is entangled: the scripts derive their sibling entry numbers from their
+own `NUM` (`FAMILY`, `SHORT`, `E8FIG`), so renumbering is a string edit, not a rewrite. They are a chain —
+each refuses unless its predecessor's heading is already on the ledger — so they cannot run out of order,
+and each runs `ledger_check` after appending and exits with its return code; delete each in the same commit
+as its append, chained with `&&` (the 0025 lesson). On this checkout the interpreter is `.venv/bin/python`,
+not the `.venv/Scripts/python.exe` of the convention line above. **None of the six can run today** and each
+says so by refusing: the upstream commit P (the one-line `kvt/pairs.py` `PAIRS` entry on top of the
+RoPE-spec commit `063f402`) is neither written nor pushed, both `meta-llama` repos are gated, there is no
+GPU here, and `traces/` is unrestored. What each asserts and refuses on:
+**`append_0039.py`** (family registration; DESCRIPTIVE, no row, no `verdict:` line): asserts the pair
+round-trips through `pairs.pair_name`/`pair_models`; that `config/e8f.toml` carries 0009's band and 0016's
+sampling rule byte-for-byte, its own directories and its own `scope_note`, and a `[e8.gate]` that EXTENDS
+0009/0016 and ends at its own number; R1 — no `results/e8f/report.json`, no agent dumps, no token draw;
+that the pre-fit seal for the pair verifies (`sealed_pre_fit`, empty `prior_artifacts`) and that NO mapper
+for the pair exists in any configured artifact root; that a PASSING `tools/preflight_pair.py` record over
+the two GATED snapshots says the pair is matched-KV and shares its `get_vocab()` map (every shape figure in
+the entry is read from that record, cited by sha, and nothing about either checkpoint is typed); that
+`config/e9f.toml` and `config/e9fl.toml` still carry their refusing `UNRESOLVED::` tau markers; and that
+the pin is a real sha, checked out, clean, registering the pair in `kvt/pairs.py`, and a DESCENDANT of the
+commit `config/e9l.toml` pins. **New convention, used by two of the six:** operator DECISIONS the repo
+cannot derive are required arguments quoted verbatim into the entry, exactly as run facts are —
+`--tau-ladder-rule`, `--prefix-delta-rule` and `--tau-ceiling` here, so the three functions of tau_K are
+fixed before tau_K exists.
+**`append_0040.py`** (E8 figures; DESCRIPTIVE, no `verdict:` line, H-E8 does not move): runs
+`summarize_e8 --config config/e8f.toml` IN-PROCESS and reads every number from the report it just verified;
+re-verifies the seal AFTER the fit; refuses unless the two E9 configs are still uncalibrated. It STATES
+this pair's tau_K/tau_V/tau_agent_K, because `summarize_e9 --calibrate-tau` cannot reach them yet
+(`load_e9_config` refuses a config whose tau keys are markers, so the calibration cannot be run through a
+config that will not load); the quantity itself is 1 − arm (a)/(b)'s held-out R² at the verdict k, which
+the summarizer has just re-derived from the tensors. It also states, without asserting, when
+tau_K < tau_agent_K < 1 FAILS on this pair — `config.py` then refuses both E9 cells and 0039's
+pre-registered contingency is what resolves it, never an edit made after the score file exists.
+**`append_0041.py`** (E9 short cell registration; the ONLY verdict-bearing cell of the campaign, ONE new
+row **H-E9F** `unresolved` spliced after the H-E9L row — the id matches `ledger_check._ROW`, which
+`H-E9-llama` silently would not): asserts `[e9.rule]`/`[e9.controls]` are `config/e9.toml`'s key by key
+EXCEPT the five tau-derived ones; that those five are this pair's own, cross-checked against entry 0040's
+E8 report AND against `results/e9f/calibration/tau.json`; that the cell registers no rope and no bridge;
+R1; and that `align/coverage.json` was written under this exact config sha. **It checks the tau
+calibration at REGISTRATION**, which `e9 --check` never does — the 2026-09-14 sitting printed ready, ran
+25 of 25 and was refused at home for exactly that gap.
+**`append_0042.py`** (the H-E9F verdict): `summarize_e9 --config config/e9f.toml` in-process, `verdict:
+H-E9F = <CELL>` from `ledger_check.VERDICTS` via the band word; run facts as `--box/--launched/--finished`;
+refuses a partial close (this config does not allow one) and a run whose dumps carry no RoPE spec. The
+τ_K ceiling 0039 registered is a required `--tau-ceiling-applies {yes,no}` + `--tau-ceiling-note`: nothing
+in `results/` records that decision, and `yes` forces the cell to `unresolved` whatever the band says.
+**`append_0043.py`** (E9 long half registration at a NATIVE receiver; DESCRIPTIVE, no row): declares entry
+0035's D1(a), its configuration bridge and its scaled-receiver reading INAPPLICABLE, and states that the
+cell cannot move, support or refute H-E9L and is never pooled with 0036's handoffs; asserts the floor
+equals the short cell's cap AND that the ids it excludes under that floor are EXACTLY the short cell's
+included set, so the partition is audited rather than asserted, with the residual above the cap — scored by
+neither cell — named and counted; same tau and calibration checks as 0041.
+**`append_0044.py`** (long-half figures; DESCRIPTIVE, no `verdict:` line): `summarize_e9 --config
+config/e9fl.toml` in-process; `--cutoff-reason` required on a partial close and forbidden otherwise; reads
+`results/e9l/summary.json` only to state 0036's scaled-receiver figures BESIDE these, with the
+non-comparability spelled out (different models, tokenizers, handoff sets, mappers and τ, and one receiver
+scaled past its pretraining window).
+Every figure in all six comes from a fail-closed summarizer, a coverage/calibration record or a config at
+run time; **no result number is written in any of the scripts**, and each refuses when its summarizer
+refuses. Earlier (2026-09-14, later): **0038 APPENDED** 2026-09-14 (chain `c9128ee936cd`, `ledger ok`; both readers passed
 in-process; script retired in the same change; **no drafts staged**). Earlier that day: **`append_0038.py` STAGED** (E9 scaled short cell figures: in-process `summarize_e9 --config
 config/e9s.toml` then `e9_compare --native config/e9.toml --scaled config/e9s.toml --long results/e9l/summary.json`; descriptive,
 no `verdict:` line, no row change; run facts as `--box/--launched/--finished`; refuses on a partial close, a refusing

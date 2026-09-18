@@ -1,0 +1,162 @@
+# E9 on a SECOND MODEL FAMILY, LONG cell -- the same instrument on the handoffs above this pair's short
+# cap, on meta-llama/Llama-3.2-3B -> meta-llama/Llama-3.1-8B. Registration entry: see [e9.gate]
+# (PROVISIONAL -- read the note there). DESCRIPTIVE, and the campaign's cuttable stage.
+#
+# THIS CELL CANNOT MOVE, SUPPORT OR REFUTE H-E9L, AND IS NEVER POOLED WITH ENTRY 0036's 35 HANDOFFS.
+# H-E9L was measured on a receiver pushed past its pretraining window by static YaRN (entry 0035's D1(a)):
+# the question there was whether a SCALED receiver retains transfer-relevant fidelity at 35K-80K. Here the
+# receiver is NATIVE: Llama-3.1-8B ships max_position_embeddings = 131072 with llama3 scaling already in
+# the checkpoint, so 81,920 positions need no scaling at all. There is therefore NO [e9.rope] and, in
+# consequence, NO [e9.bridge] -- config.py refuses a bridge without a rope, and that refusal is correct
+# rather than an obstacle: the bridge's entire content is scaled-receiver versus native-receiver, and a
+# natively-long receiver has no scaled arm to compare. Imposing YaRN here to preserve the comparison was
+# considered and rejected: upstream scaled_config merges the YaRN keys OVER the checkpoint's own
+# rope_parameters, replacing rope_type "llama3" while leaving low/high_freq_factor behind -- it would
+# remove the checkpoint's native scaling rather than compose with it, and the resulting number would
+# measure an artifact of our own construction. Two experiments sharing a length axis, nothing more.
+#
+# The floor and cap below are REGISTERED LENGTH THRESHOLDS in Llama-3 tokens, not hardware bounds. 81,920
+# is NOT "32,768 x 2.5" here -- there is no scaling factor to multiply -- it is the same numeric band
+# entry 0036 reported, kept only so the two long cells are defined over the same token-count band. The
+# included SETS differ and are never pooled. Together with config/e9f.toml's cap the split is clean and
+# exhaustive over every handoff whose longer side is within 81,920 (short: max(|S|,|R|) <= 32,768; long:
+# 32,768 < max(|S|,|R|) <= 81,920), and the residual above 81,920 is scored by neither cell and must be
+# named and counted in both entries from the two coverage.json files. Every one of those counts comes from
+# results/e9fl/align/coverage.json and exists nowhere else; 0029's 25, 0036's 35 and 0029's 39 excluded
+# are Qwen-tokenizer facts and carry over to nothing.
+#
+# THIS FILE CANNOT LOAD, AND THAT IS THE POINT -- see the same paragraph in config/e9f.toml. The five
+# tau-derived keys are 1 - THIS pair's archived held-out R^2 and functions of it; the mapper has not been
+# fitted and cannot be fitted here. Each carries a refusing UNRESOLVED marker instead of a number.
+#
+# e9.assert_ready refuses until this file and ledger/ledger.md (with the entries in [e9.gate]) are
+# committed unmodified AND the upstream checkout is at `upstream_sha`, clean for every invoked path.
+
+[e9]
+pair = "llama3.2-3b-to-llama3.1-8b"  # receiver = target (Llama-3.1-8B), source = Llama-3.2-3B; mapper k from [e9.mapper]
+results_dir = "results/e9fl"
+scratch_dir = "results/e9fl/scratch" # per-handoff dumps, deleted after scoring unless kept
+upstream_path = "../kv-transfer-replication"   # ONE clone, moved per cell with `git checkout --detach <that cell's pin>`
+# Commit P: the one-line kvt/pairs.py PAIRS entry, based on 063f4023. It does not exist; e9.assert_ready
+# refuses on this placeholder by name. Never a plausible-looking sha.
+upstream_sha = "UPSTREAM_SHA_PENDING::UNRESOLVED::upstream_sha@P::commit P (the kvt/pairs.py PAIRS entry on top of 063f4023) is neither written nor pushed"
+e8_report = "results/e8f/report.json"   # tau is 1 - THIS pair's mapper's held-out R^2; left unset, summarize_e9
+                                     # defaults to results/e8/report.json and would calibrate against Qwen's
+
+[e9.gate]                            # entries the committed ledger must carry (the driver's REQUIRED_ENTRIES per config)
+required_entries = ["0019", "0023", "0025", "0027", "0043"]   # 0043 = this cell's registration. PROVISIONAL, exactly
+                                     # as config/e9f.toml's list is: numbers are allocated by docs/drafts/README.md at
+                                     # staging time and the committed ledger ends at 0038. The predecessors are
+                                     # enforced transitively by the append scripts' ordering guards.
+
+[e9.handoffs]
+suite = "swe-bench"
+agent = "composio_swekit"            # the only family with observed Lane A switches (entries 0010/0015)
+context_cap = 81920                  # a REGISTERED length threshold in Llama-3 tokens, NOT a hardware limit and NOT
+                                     # a multiple of anything: both models are natively 131,072, so nothing is
+                                     # scaled and there is no factor to multiply. It is the numeric band entry 0036
+                                     # reported, kept so the two long cells are defined over the same token counts.
+context_floor = 32768                # a handoff with |S| AND |R| within the floor was decided by this pair's SHORT
+                                     # cell (config/e9f.toml) and is EXCLUDED here, counted. Same numeric threshold
+                                     # as the short cap, so the two Llama cells partition their handoffs exactly;
+                                     # e9_align's excluded_prior_cap makes that partition auditable, not asserted.
+
+[e9.order]                           # registered run order and stopping rule (unattended sitting)
+by = "n_sender_asc"                  # shortest sender first; ties by handoff id
+allow_partial = true                 # `e9 --close-partial` may close an unfinished run: the scored set must be a PREFIX of the
+                                     # registered order; the entry names the unscored by id; coverage travels with the number
+
+[e9.profiles]                        # descriptive length profiles, bins fixed before data
+s_len_edges = [32768, 50000, 65000]  # |S| bins: (32768, 49999] / [50000, 64999] / [65000, 81920]; the same numeric bins
+                                     # entry 0035 registered, so the two long cells are DESCRIBED over the same bands
+s_pos_edges = [0, 8192, 32768, 65536]   # matched-token position in S, RE-CUT at Llama's own boundary: 8,192 is llama3
+                                     # scaling's original_max_position_embeddings -- the same on both sides despite the
+                                     # differing factors (3.2: 32.0, 3.1: 8.0) -- and is where this family's RoPE
+                                     # frequency rescaling begins, so it is the honest Llama form of the
+                                     # length-generalization question. 0035's 49,152 was the midpoint of a 2.5x YaRN
+                                     # window and means nothing here. Descriptive; decides nothing.
+
+[e9.alignment]
+method = "difflib.SequenceMatcher(autojunk=False).get_matching_blocks over token ids"
+
+[e9.mapper]
+k = 1                                # verdict_k, fixed at registration in config/e8f.toml [e8.mappers]
+space = "content"
+
+[e9.keep]                            # handoffs whose full dumps are retained for CPU recomputation
+seed = 9
+n = 3                                # a fresh draw of 3 from this cell's sorted included ids (numpy choice without
+                                     # replacement is not nested, so this is not a subset of the short cell's 8).
+                                     # Small on purpose: at the cap a single kept handoff is ~31 GB of fp16 dumps.
+
+[e9.rule]                            # entry 0023 (supersedes 0019's band clause): median over included
+                                     # handoffs of f*(tau_K) on the K read-out, centered per-head delta.
+                                     # Reported here, verdict-bearing for nothing: this cell has no row.
+statistic = "median f*(tau_K) over included handoffs, E9-same, K"
+holds_max = 0.15                     # anchored to CacheBlend's 10-15% recompute of high-deviation tokens
+degrades_min = 0.50                  # the operator's stated judgment (0023), not a citation
+# tau per read-out = 1 - the archived k=1 held-out R^2 (per-head A5, head- and layer-averaged) of THIS PAIR's
+# mapper, written by `summarize_e9 --calibrate-tau` into results/e9fl/calibration/tau.json and copied here; the
+# summarizer recomputes both and refuses on disagreement. V's tau serves only the alongside f*. The mapper has
+# not been fitted, so both values are UNRESOLVED and this file refuses to load. Never a Qwen value.
+tau_K = "UNRESOLVED::tau_K@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/tau.json, from results/e8f/report.json arm (a) k=1 (entry 0040, provisional)"
+tau_V = "UNRESOLVED::tau_V@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/tau.json, from results/e8f/report.json arm (a) k=1 (entry 0040, provisional)"
+# entry 0025, descriptive: f*(tau) is ALSO reported at each tau below, K and V, every arm, per handoff and
+# median, so a HOLDS says how far inside the registered tolerance identity sits. The cells and the band
+# are computed at tau_K above only; nothing on this ladder is verdict-bearing. Fixed before any prefill.
+# tau-derived, hence unresolved: config.py refuses any rung outside (0, tau_K) or not strictly decreasing.
+tau_ladder = [0.10, 0.03]                # ABSOLUTE, and identical to config/e9.toml (operator ruling
+                                     # 2026-09-18). NOT a function of tau_K: the ladder is verdict-bearing
+                                     # for nothing, so holding the rungs fixed across families is what makes
+                                     # a Llama f*(0.03) directly comparable to entry 0029's Qwen f*(0.03).
+                                     # Scaling them by tau_K would have made the one descriptive number that
+                                     # invites cross-family comparison the one number that cannot be compared.
+                                     # config.py still refuses any rung outside (0, tau_K), so these are
+                                     # re-validated against this pair's own tau_K once it is calibrated.
+# entry 0025, alongside: the same mapper measured on AGENT text (results/e8f/report.json arm (b), k = 1) gives
+# the looser tolerance the distribution E9 actually reads; reported at this tau too, verdict-bearing for nothing.
+# config.py refuses unless tau_K < tau_agent_K < 1, so a mapper that scores BETTER on agent text than on generic
+# stops this file loading, and the remedy is the contingency the registering entry fixes in advance.
+tau_agent_K = "UNRESOLVED::tau_agent_K@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/tau.json, from results/e8f/report.json arm (b) k=1 (entry 0040, provisional)"
+# entry 0025 (review finding 5): f*(tau_K) is ALSO reported over tokens whose matched block is at least this
+# long (blocks re-derived from the pairs), beside the block-length distribution; descriptive.
+min_block_len = 4
+
+[e9.controls]                        # registered, decide nothing (0023)
+null_seed = 23                       # delta_null: seeded derangement of sender positions on the first handoff
+seam_bins = [0, 1, 2, 4, 8, 16]      # b(t) bins 0 / 1 / 2-3 / 4-7 / 8-15 / 16+, fixed before data; must equal
+                                     # e9_pertoken.SEAM_BIN_EDGES exactly or the summarizer refuses
+# entry 0025 (review finding 3): the 0023 identity control scores a dump against itself and cannot fail on
+# the box. Prefix invariance can: the receiver prefills S followed by R's first token, and rows 0..|S|-1
+# must equal the S dump up to kernel arithmetic (causal attention). HALTS if the max centered per-token
+# deviation (token mean, K or V) exceeds this. It is tau-derived -- three orders below tau_K by the function
+# the registering entry fixes -- so it is UNRESOLVED here and refuses rather than inheriting Qwen's 1e-4.
+prefix_invariance_max_delta = 1e-4   # ABSOLUTE, identical to config/e9.toml (operator ruling 2026-09-18).
+                                     # NOT a function of tau_K: this is a FLOAT32 KERNEL-NOISE FLOOR -- the
+                                     # receiver prefills S then R's first token and rows 0..|S|-1 must equal
+                                     # the S dump up to causal-attention arithmetic. That bound is a property
+                                     # of the arithmetic and the kernel, not of how well a mapper fitted, so
+                                     # tying it to tau_K would move a reproducibility floor for a reason
+                                     # unrelated to reproducibility. Entry 0025 set it three orders below
+                                     # tau_K and well above float32 noise; both still hold here.
+# entry 0025 (review finding 6): seeded percentile bootstrap of the median f*(tau_K) over included handoffs,
+# reported beside the point median the rule reads; lower/upper at 2.5 / 97.5 with e7_stats.quantile.
+bootstrap_seed = 25
+bootstrap_reps = 2000
+# THE TWO CONTROLS THAT REPLACE ENTRY 0035's CONFIGURATION BRIDGE. The bridge asked "does scaling the
+# receiver move the reading?"; with a native receiver the question is instead "is the receiver really
+# native at this length?", and that is answerable without a second arm, at zero GPU cost, from the per-dump
+# RoPE metadata the driver records beside each dump's fingerprint (upstream kvt/data.py writes meta["rope"]
+# from the RopeSpec read off the loaded model -- its own rotary_emb.inv_freq and attention_scaling -- and
+# halt-checks the reconstruction at every dumped position). Both are fail-closed and both survive the
+# deletion of the non-kept dumps, which is why the driver records them before the rmtree:
+#   (1) NATIVE WINDOW: context_cap above must be <= every dump's recorded max_position_embeddings. This is
+#       the positive "no extrapolation happened" statement the bridge used to make. A run whose dumps carry
+#       no RoPE block at all -- a pin older than 063f4023 -- FAILS this control; it does not pass it vacuously.
+#   (2) RoPE IDENTITY: the recorded rope_type, parameters and inv_freq must agree across every dump OF THE
+#       SAME MODEL ROLE. Role-scoped, not global, and this is not a weakening: the source (Llama-3.2,
+#       llama3 factor 32.0) and the receiver (Llama-3.1, llama3 factor 8.0) build DIFFERENT inverse-frequency
+#       vectors by construction, so a cross-role equality assert would refuse every CORRECT run of this pair.
+#       E9 dumps the source model too (the cross arm), so both roles really are present in every run.
+# Neither is a knob, so neither is a key here: a key config.py does not read would be silently ignored, and a
+# silently ignored control is worse than none. They are asserted by the summarizer over the recorded report.

@@ -12,8 +12,10 @@ on R, source on S), then `score_positions.py` over the aligned position pairs ->
 per-head SSE/SST and R² for E9-same and E9-cross, PLUS the per-token record (0023:
 `--per-token`, squares [n, L, H] per read-out and arm, from which every 0023 figure is
 recomputed on CPU). Dumps are deleted after scoring except for the seeded keep-subset, whose
-dumps are fingerprinted so a CPU summarizer can re-score them from tensors. The report is
-checkpointed after every handoff, so a reclaimed GPU box loses one handoff, not the run.
+dumps are fingerprinted so a CPU summarizer can re-score them from tensors. Every dump's recorded
+RoPE spec (`dump_rope`) is kept for every handoff, kept or not, since that is the only trace a
+deleted dump leaves of what the box actually applied. The report is checkpointed after every
+handoff, so a reclaimed GPU box loses one handoff, not the run.
 
 Two pre-batch controls (0023) run on the first included handoff's dumps, before it is scored:
 the pipeline identity (R := S, pairs (p, p): every per-token square must be exactly zero; a
@@ -39,7 +41,7 @@ from linear_ceiling.e9_align import align, load_handoffs, write_alignment
 from linear_ceiling.e9_pertoken import null_pairs
 from linear_ceiling.e8 import upstream_python
 from linear_ceiling.e8_text import qwen_encoder
-from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
+from linear_ceiling.hashing import hash_json_obj, sha256_file_bytes, sha256_text_file
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.rng import make_rng
 from linear_ceiling.e9_pertoken import centered_delta as _centered_delta, token_mean as _token_mean
@@ -129,6 +131,49 @@ def dump_fingerprint(d: Path) -> dict[str, str]:
     return {p.relative_to(d).as_posix(): sha256_file_bytes(p) for p in sorted(d.rglob("*")) if p.is_file()}
 
 
+def dump_rope_meta(d: Path, which: str) -> dict:
+    """The RoPE the box ACTUALLY applied in one dump, read from the upstream's meta.json (`kvt/data.py`
+    at 063f4023 writes `meta["rope"] = RopeSpec.to_json()` plus `check_max_abs`, `check_atol` and the
+    model's `max_position_embeddings`; borrowed fact, {kv-transfer-replication, kvt/data.py, 063f4023}).
+
+    Recorded beside the fingerprint for EVERY dump, not only the kept subset: the unkept dumps are
+    deleted as soon as they are scored, so without this the report holds nothing a summarizer could
+    assert the RoPE controls against. Two of them: the context cap sat inside every dump's own window
+    (`context_cap <= max_position_embeddings`), and the frequencies never moved mid-run. For a family
+    whose receiver is natively long -- no `[e9.rope]`, and therefore no bridge control to run -- that
+    pair of asserts is the whole of the native-window evidence, which is why it is recorded even when
+    `cfg.rope` is null.
+
+    `which` is the dump's model role as `dump_kv.py` was called ("target" = receiver, "source" = the
+    sender's model), and any identity assert must be scoped BY it. A cross-release pair may carry
+    different RoPE scaling on its two sides (Llama-3.2-3B declares llama3 factor 32.0, Llama-3.1-8B
+    factor 8.0), so receiver dumps agree with receiver dumps and source dumps with source dumps --
+    never across. That is a matched-KV pair all the same: `check_matched_kv` tests n_kv and d_h only.
+
+    `inv_freq` travels as a digest, not as d_h/2 floats per dump per handoff; the assert needs equality
+    across dumps, and equality of the canonical-JSON hash is equality of the vector. `parameters` is the
+    config's rope block as the upstream copied it and is NOT the authority: under transformers 4 a config
+    with `rope_scaling` but no `rope_parameters` records only `rope_theta` there, while `inv_freq`, read
+    from the model's own rotary embedding, still carries the scaling it applied. A dump written under a
+    pin older than 063f4023 (E9's own 0026 pin) has no rope block at all; that is RECORDED as
+    `recorded: false` rather than refused, so those runs still score and still summarize.
+    """
+    meta = json.loads((Path(d) / "meta.json").read_text(encoding="utf-8"))
+    rec = {"which": which, "model": meta.get("model"), "rope_theta": meta.get("rope_theta"),
+           "recorded": bool(meta.get("rope"))}
+    r = meta.get("rope")
+    if not r:
+        return rec
+    params = dict(r.get("parameters") or {})
+    inv = [float(x) for x in (r.get("inv_freq") or [])]
+    rec.update({"rope_type": params.get("rope_type"), "parameters": params,
+                "attention_scaling": r.get("attention_scaling"),
+                "inv_freq_sha256": hash_json_obj(inv), "n_inv_freq": len(inv),
+                "max_position_embeddings": r.get("max_position_embeddings"),
+                "check_max_abs": r.get("check_max_abs"), "check_atol": r.get("check_atol")})
+    return rec
+
+
 def score_pairs(cfg: E9Config, hdir: Path, pairs_npz: Path, score_path: Path, tokens_path: Path,
                 *, cross: bool, same_tgt: str = "same_tgt", runner=subprocess.run) -> dict:
     """One score_positions call (with --per-token) -> the record the report keeps for it."""
@@ -209,6 +254,10 @@ def run_bridge(cfg: E9Config, handoffs: list, enc, runner=subprocess.run) -> dic
         brec.update({"handoff_id": hid, "n_sender": n_s, "pairs_file": pairs_file.name,
                      "pairs_sha256": sha256_file_bytes(pairs_file),
                      "kept_dumps": {name: dump_fingerprint(hdir / name) for name in ("same_src", "scaled")},
+                     # both dumps are the receiver; here the two specs differ BY DESIGN (that difference
+                     # IS the control), which is why these records sit under bridge and never join the
+                     # per-handoff ones a cross-dump identity assert reads.
+                     "dump_rope": {name: dump_rope_meta(hdir / name, "target") for name in ("same_src", "scaled")},
                      "kept_dir": hdir.resolve().relative_to(cfg.results_dir.resolve()).as_posix()})
         out["handoffs"][hid] = brec
         print(f"[bridge] {hid}: native vs scaled receiver, same K R² {brec['same_K_r2_layer_mean']:.4f} over {n_s} positions")
@@ -260,11 +309,15 @@ def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, r_ids: 
         raise RuntimeError(f"E9 REFUSED: prefix-invariance dump did not produce {plus_dir}/meta.json")
     pre = score_pairs(cfg, hdir, id_pairs, cdir / "prefix.json", cdir / "prefix.tokens.npz",
                       cross=False, same_tgt="same_src_plus1", runner=runner)
+    pre_rope = dump_rope_meta(plus_dir, "target")     # read BEFORE the rmtree below: the only trace this dump leaves
     shutil.rmtree(plus_dir, ignore_errors=True)
     worst = prefix_invariance_max_delta(cdir / "prefix.json", cdir / "prefix.tokens.npz", n_s)
     tol = float(cfg.controls["prefix_invariance_max_delta"])
     pre.update({"max_token_delta": worst, "tolerance": tol, "extra_token": int(r_ids[0]),
-                "pairs_file": id_pairs.name, "pairs_sha256": sha256_file_bytes(id_pairs)})
+                "pairs_file": id_pairs.name, "pairs_sha256": sha256_file_bytes(id_pairs),
+                # a fourth RECEIVER dump, transient and deleted above; recorded so the summarizer's
+                # "the frequencies never moved mid-run" assert covers the control prefill too.
+                "dump_rope": pre_rope})
     if worst > tol:
         raise RuntimeError(f"E9 HALTED: prefix-invariance control exceeds tolerance (max centered delta "
                            f"{worst:.3e} > {tol:.1e}); the box does not reproduce a prefix under one extra token")
@@ -293,6 +346,7 @@ def score_handoff(cfg: E9Config, stem: str, s_ids: np.ndarray, r_ids: np.ndarray
     tdir.mkdir(parents=True, exist_ok=True)
     rec = score_pairs(cfg, hdir, pairs_npz, cfg.results_dir / "scores" / f"{stem}.json",
                       tdir / f"{stem}.tokens.npz", cross=True, runner=runner)
+    rec["dump_rope"] = {name: dump_rope_meta(hdir / name, which) for name, (_, which) in dumps.items()}
     if keep:
         rec["kept_dumps"] = {name: dump_fingerprint(hdir / name) for name in dumps}
         rec["kept_dir"] = hdir.resolve().relative_to(cfg.results_dir.resolve()).as_posix()

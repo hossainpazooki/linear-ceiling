@@ -56,8 +56,11 @@ def _pair_snapshots(tmp_path, rng, *, same: bool):
     pair's own canonical basis so K loads on high-rho directions and V on low-rho ones
     (or identically, for the SAME case)."""
     V, hs, ht = 400, 24, CFG["hidden_size"]      # ht = 32
-    cfg_s = {**CFG, "hidden_size": hs, "vocab_size": V}
-    cfg_t = {**CFG, "vocab_size": V}
+    # Real ids (the test_e0_cli.py idiom): analyze_pair now labels the result with
+    # pairs.pair_name unconditionally, which refuses a model id outside every registered
+    # ladder -- that refusal is the point of the change, so the fixture must name models.
+    cfg_s = {**CFG, "hidden_size": hs, "vocab_size": V, "_name_or_path": "Qwen/Qwen3-0.6B"}
+    cfg_t = {**CFG, "vocab_size": V, "_name_or_path": "Qwen/Qwen3-1.7B"}
     Z = rng.standard_normal((V, 12))
     Es = Z @ rng.standard_normal((12, hs)) + 0.2 * rng.standard_normal((V, hs))
     Et = Z @ rng.standard_normal((12, ht)) + 0.2 * rng.standard_normal((V, ht))
