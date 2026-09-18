@@ -181,3 +181,59 @@ Never paste either credential into commands, logs, this transcript, or git. The 
 were supplied in chat and should be revoked after the campaign. The HF token has already served its only
 Sitting-A purpose. Credential sweeps must search for actual `hf_...` token shapes and token files, not the
 literal variable name `HF_TOKEN` that intentionally appears in checked-in scripts.
+
+## Attempt 7 failed at the fit, and was resumed — 2026-09-18 (Claude session `linear-ceiling-11`)
+
+**What happened.** `sitting_a.sh` attempt 7 completed the gates, both generic dumps and the full
+95-minute probe, then died three seconds into the fit:
+
+```
+[2026-09-18T17:50:48Z] == fit k=1/4/8
+fit_mapper.py: error: the following arguments are required: --pair
+[2026-09-18T17:50:51Z] SITTING_A_FAILED fit k=1/4/8
+```
+
+`tools/runpod/sitting_a.sh:223` called `fit_mapper.py` without `--pair`. The line was copied from the
+runbook step, which omitted it as well. This is the same class as the `probe.py` fix in `cd91a47`,
+missed for the fit. An audit of every upstream-script invocation in `tools/` and the runbook found one
+further instance (`probe.py` in the runbook prose); all three are fixed in `4e990e5`.
+`tools/runpod/sitting_b.sh` invokes only `linear_ceiling.e9 --config` and is unaffected.
+
+**Nothing was lost.** The failure was argument parsing, before any computation. Both dumps, all six
+probe `r2_*.npy` files and `summary.json` were intact on the pod, and were already home and
+digest-verified (box-vs-home sha256 agreeing on every file) before the resume was launched.
+
+**How it was resumed.** `tools/runpod/resume_a_fit.sh` — NOT a re-run of `sitting_a.sh`. A full re-run
+would have regenerated both generic dumps, which would have left the already-computed probe describing
+*different bytes* than the fit that followed it, and would have spent the 95 minutes again against the
+19:45:22Z provider-side termination. The resume runs fit → E8 driver → packaging only, and before the
+fit it ASSERTS the reused inputs exist and writes their sha256 into the log, so the resumed run is tied
+to the bytes it actually reused:
+
+```
+source meta.json 254b3fca43a107a9 (30 files) | target meta.json 9da4f754449cddac (34 files)
+r2_K_rope_train 886f29af0f9c2273 | r2_K_rope_heldout 8c3ff7a870a2bb2a
+r2_K_stripped_train 6c09b9613fd592ab | r2_K_stripped_heldout be91dfc6f9dacd0a
+r2_V_train 5be65febf11e1d99 | r2_V_heldout b8f48be7549af6bb | summary.json c182fd7bf9b6bde6
+```
+
+`/workspace/sitting_a.log` was copied to `sitting_a.attempt7.log` before the relaunch (rotate rule);
+the packaging step carries both logs home.
+
+**Threading, stated rather than implicit.** The resume exports `OMP/OPENBLAS/MKL/NUMEXPR_NUM_THREADS=8`.
+The cgroup quota is 7.65 CPUs and the previous process ran 111 threads with ~50k throttle events, which
+was most of the observed 3.7x slowdown; with the cap the fit produced k1 in ~1 min and k4 in ~2 min
+against a projected ~55 minutes for the whole fit. **No registered parameter changes** — not the rule,
+τ, band, cap, seeds, k, λ or hold-out — only reduction threading, which can move float32 results at the
+last ULP. That is the class entry 0028 registered a cross-platform tolerance for and is unavoidable
+between box and home regardless, but the sitting record should carry it as a stated fact.
+
+**Incremental pulling.** Because the container disk is ephemeral (`volumeInGb 0`) and `terminateAfter`
+is armed for 19:45:22Z, a read-only incremental puller runs at home, rsyncing artifacts into the same
+staging layout as they appear and recording a box-side and home-side sha256 for each. Mapper files are
+pulled only once their size is unchanged across two consecutive polls, so a partially written
+`safetensors` cannot land looking healthy. It never writes to the pod.
+
+*(Note for whoever writes the next home-side tool: macOS ships bash 3.2, which has no `declare -A`. The
+first version of the puller used an associative array and exited the first time it touched a mapper
+path — i.e. exactly when it became load-bearing.)*
