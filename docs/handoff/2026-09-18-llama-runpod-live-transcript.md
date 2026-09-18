@@ -22,7 +22,7 @@ post-A registration and tooling blockers below are closed.
 - Linear Ceiling commit used by the live scientific process:
   `cd91a477c3ff4e72b99db604006b8be997c76a5c`. Later commits change verifier/docs only, not the running
   estimator/config.
-- Current pushed Linear Ceiling HEAD before the pending downstream-hardening batch: `771f74e`.
+- Current pushed Linear Ceiling HEAD: `db01387`.
 
 ## Ledger and pre-registration
 
@@ -57,7 +57,7 @@ post-A registration and tooling blockers below are closed.
   completed at `2026-09-18T16:44:00Z`; `K_stripped` completed at `2026-09-18T17:17:29Z`; `V` is
   currently running. The process PID at this
   writing is 4550. Do not interrupt while it remains healthy.
-- Last observed spend at this writing: `$0.7429`; account balance `$10.5069`.
+- Last observed spend at this writing: `$0.8728`; account balance `$10.3769`.
 
 Monitor without dumping the large progress log:
 
@@ -109,10 +109,9 @@ All failures occurred before a scientific report existed. Preserve this history;
   cross-check instead of exact dict equality; added two regression tests. This was fixed before the E8
   report existed or any result value was inspected.
 - `771f74e`: append-only correction machinery for entry 0039's three-marker/five-marker prose error.
+- `f809adf`: harden the 0041/0042/0043 appenders and correct the E9 short/long runbook semantics.
+- `db01387`: record the `K_stripped` probe milestone in this transcript.
 - Last completed suite: **484 passed, 1 skipped**; ledger check green.
-- A not-yet-committed downstream hardening batch currently touches
-  `docs/drafts/append_0041.py`, `append_0042.py`, `append_0043.py`, `docs/drafts/README.md`, and the Llama
-  runbook. Review, test, commit, and push it without mixing any result number.
 
 ## Required completion sequence for Sitting A
 
@@ -161,11 +160,16 @@ All failures occurred before a scientific report existed. Preserve this history;
 - Run E9F/E9FL calibrations and align-only passes home-side; these write disjoint directories. Do not run
   two BLAS-heavy calibrations concurrently on the 18 GB home host.
 - Append 0041 only after E9F calibration/coverage and committed config pass.
-- No RunPod Sitting B/C runner or pull verifier exists. Do not adapt EC2 scripts blindly: their remotes,
-  paths, shutdown semantics, and SSH transport are incompatible. Build and fresh-clone rehearse B first.
+- RunPod-native Sitting-B runner and incremental pull verifier are being built in parallel in the shared
+  working tree. They are not yet reviewed, committed, or rehearsed. Do not rent B until all three are done.
 - B needs an 80 GB GPU, at least the registered 250 GB container disk, a unique terminate verification
   file, measured max `max(n_sender,n_receiver)`, and concurrent per-handoff pull/hash/delete. The short
   cell forbids partial close: finish or resume.
+- Hostile review found two additional pre-rent gates. Every included alignment must have `n_matched >= 1`,
+  and the first run-order handoff must have `n_matched >= 2` because the null control needs a derangement.
+  Also, the wrapper must dispatch absent report -> plain run, incomplete report -> `--resume`, and complete
+  report -> terminal success; a plain driver call over a complete report otherwise reruns it. Before
+  retaining controls on resume, validate every identity/prefix/null artifact against its recorded hash.
 - Home disk is currently roughly 76 GiB free before the rest of A lands. After E9F alignment, compute the
   exact kept-dump budget `sum(nS * 245760 + nR * 131072)` bytes before renting B.
 - R8 backup has no Llama dataset/repo/card yet. It runs after pod termination from the verified home
