@@ -49,6 +49,16 @@ step() { STEP="$1"; say "== $1"; }
 fail() { say "SITTING_A_FAILED $STEP"; }
 trap fail ERR
 
+step "host facts"
+# Recorded before anything else so the sitting log can answer "what did this run on?" without the
+# API (R7 step 6's read-back discipline, and the runbook's box row).
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader 2>&1 | sed 's/^/  gpu: /' || say "  nvidia-smi unavailable"
+say "  vcpu: $(nproc 2>/dev/null || echo '?')"
+for f in /sys/fs/cgroup/memory.max /sys/fs/cgroup/memory/memory.limit_in_bytes; do
+  [ -r "$f" ] && say "  cgroup mem ($f): $(cat "$f")" && break
+done
+say "  disk: $(df -h "$WORK" | awk 'NR==2{print $4" free of "$2}')"
+
 say "sitting A  pair=$PAIR exp=$EXP rehearsal=$REHEARSAL"
 say "up=$UP_REPO@${UP_SHA:0:12}  lc=$LC_REPO@${LC_SHA:0:12}"
 
@@ -91,6 +101,22 @@ else
   UP_PY="$WORK/kv-transfer-replication/.venv/bin/python"
 fi
 say "  linear-ceiling python: $LC_PY"
+
+# The CUDA smoke test belongs HERE: after the venv, before the ~22 GB weight pull. A driver mismatch
+# against the pinned torch 2.11.0+cu128 is otherwise found at the first dump, ~25 billed minutes in
+# instead of ~8. allowedCudaVersions on the create call should prevent it; this proves it worked.
+if [ "$REHEARSAL" != "1" ]; then
+  step "CUDA smoke test (before any download)"
+  "$UP_PY" -c "
+import torch
+print(f'  torch {torch.__version__}  cuda_available={torch.cuda.is_available()}')
+assert torch.cuda.is_available(), 'torch.cuda.is_available() is False'
+torch.zeros(1).cuda()
+print(f'  device: {torch.cuda.get_device_name(0)}')
+free, total = torch.cuda.mem_get_info()
+print(f'  gpu memory: {free/2**30:.2f} GiB free of {total/2**30:.2f} GiB')
+" || { say "REFUSED: torch cannot reach the GPU on this host"; exit 1; }
+fi
 
 # ---------------------------------------------------------------- 3. traces
 step "traces"

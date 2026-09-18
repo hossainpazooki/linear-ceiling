@@ -312,6 +312,9 @@ def cmd_up(a) -> int:
                "campaign_start_balance": camp_start, "created_epoch": time.time(), "price": a.price,
                "cap": a.cap, "gpu": a.gpu, "name": a.name, "cloud": a.cloud,
                "hours": a.hours, "projected": round(projected, 4),
+               # The watchdog's ceiling must follow the card actually rented: a fixed $2.00 would kill
+               # a correct L40S sitting at 2.53 h. sitting_max = price x TTL, warn at 60% of it.
+               "sitting_max": round(projected, 4), "warn": round(0.6 * projected, 4),
                "verify_file": a.verify_file,
                "created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     save_state(pending)
@@ -474,14 +477,15 @@ def cmd_watchdog(a) -> int:
     if not st or not st.get("created_epoch"):
         raise SystemExit("rp REFUSED: no pod state to watch. An empty state file is an error here, not "
                          "a quiet no-op: it is indistinguishable from 'the watchdog is running'.")
-    sitting_max = a.sitting_max if a.sitting_max is not None else st.get("projected")
+    sitting_max = a.sitting_max if a.sitting_max is not None else st.get("sitting_max", st.get("projected"))
     ttl = a.ttl if a.ttl is not None else st.get("hours")
     if sitting_max is None or ttl is None:
         raise SystemExit("rp REFUSED: --sitting-max and --ttl are mandatory (and `up` normally stores "
                          "defaults for both). Without them the only ceiling is the account limit.")
     limit = min(a.kill, float(sitting_max))
+    warn_at = a.warn if a.warn is not None else st.get("warn", 0.6 * float(sitting_max))
     print(f"watchdog: sitting kill ${limit:.2f}, account kill ${a.kill:.2f}, TTL {ttl}h, "
-          f"poll {a.every}s. Ctrl-C stops the NET, not the pod.", flush=True)
+          f"warn ${warn_at:.2f}, poll {a.every}s. Ctrl-C stops the NET, not the pod.", flush=True)
     warned = False
     unreachable = 0
     while True:
@@ -506,8 +510,8 @@ def cmd_watchdog(a) -> int:
             return _terminate_until_gone(f"sitting ${sit:.4f} / campaign ${camp:.4f}")
         if hours >= float(ttl):
             return _terminate_until_gone(f"TTL {hours:.2f}h >= {ttl}h")
-        if sit >= a.warn and not warned:
-            print(f"watchdog: WARNING sitting ${sit:.4f} >= ${a.warn:.2f} \a")
+        if sit >= warn_at and not warned:
+            print(f"watchdog: WARNING sitting ${sit:.4f} >= ${warn_at:.2f} \a")
             warned = True
         time.sleep(a.every)
 
@@ -565,6 +569,8 @@ def main() -> int:
     p = sub.add_parser("up", help="create a pod (bills money; --dry-run first, --yes required)")
     p.add_argument("--gpu", required=True); p.add_argument("--price", type=float, required=True)
     p.add_argument("--hours", type=float, required=True)
+    # Real use is ~50 GB (22.5 GB bf16 weights + ~8 GB venvs + ~10 GB pull set + caches). 120 leaves
+    # headroom without narrowing the host pool: minDisk is a filter, and stock is already "Low".
     p.add_argument("--disk", type=int, default=120, help="container disk GB (ephemeral; no volume)")
     # 48 GB, measured not guessed: kvt/models.load_model calls from_pretrained(dtype=float32) with NO
     # device_map and only then .to(device), so the whole fp32 model materialises in host RAM first --
@@ -574,7 +580,15 @@ def main() -> int:
     # it casually, and do not lower it below 48 to chase stock.
     p.add_argument("--min-ram", type=int, default=48, help="pod RAM floor in GB; fp32 8B loads to host first (~30 GiB)")
     p.add_argument("--min-vcpu", type=int, default=8)
-    p.add_argument("--image", default="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04")
+        # runpod/base 1.3.1: CUDA 12.8.1, and NO torch -- correct, because sitting_a.sh builds the pinned
+    # stack (torch 2.11.0+cu128, transformers 5.15.1) that entry 0028's tolerance was measured on; a
+    # pytorch image would ship an unused torch and cost GB. Verified in runpod/containers
+    # official-templates/base/Dockerfile: apt installs openssh-server, rsync, tmux, jq, git, curl, wget,
+    # and uv arrives via COPY --from=ghcr.io/astral-sh/uv. container-template/start.sh appends
+    # $PUBLIC_KEY to authorized_keys and generates host keys -- and gates ALL ssh setup on PUBLIC_KEY
+    # being set, which is exactly why an account with no pubKey yields an unreachable pod. It also
+    # writes /etc/rp_environment from printenv, which is what the dead man sources.
+    p.add_argument("--image", default="runpod/base:1.3.1-cuda1281-ubuntu2204")
     p.add_argument("--name", default=f"{NAME_PREFIX}sitting-a")
     p.add_argument("--pubkey", default=str(Path.home() / ".ssh" / "id_rsa.pub"))
     p.add_argument("--cap", type=float, default=10.0, help="CAMPAIGN-wide cap, not per-pod")
@@ -600,7 +614,8 @@ def main() -> int:
     p.set_defaults(fn=cmd_terminate)
 
     p = sub.add_parser("watchdog")
-    p.add_argument("--warn", type=float, default=7.0); p.add_argument("--kill", type=float, default=9.0)
+    p.add_argument("--warn", type=float, default=None, help="default: 60%% of the sitting ceiling `up` stored")
+    p.add_argument("--kill", type=float, default=9.0)
     p.add_argument("--sitting-max", type=float, default=None); p.add_argument("--ttl", type=float, default=None)
     p.add_argument("--unreachable-terminate-after", type=float, default=10.0)
     p.add_argument("--every", type=int, default=60); p.set_defaults(fn=cmd_watchdog)

@@ -16,14 +16,15 @@ exactly why the value must leave here at FULL precision. `summarize_e8` prints 4
 0.3186 where the summarizer recomputes 0.3186442653116294 refuses, and has.
 
   tau_K       = 1 - (arm (a), generic text) held-out K R^2 at the verdict k   [entry 0016 / 0023]
+              -- from --home-r2 when given, because the summarizer's 1e-9 cross-check runs at HOME
   tau_V       = 1 - (arm (a), generic text) held-out V R^2                    [alongside f* only]
   tau_agent_K = 1 - (arm (b), agent text)   held-out K R^2                    [entry 0025, alongside]
 
-WHAT IT REFUSES TO DO. `tau_ladder` and `prefix_invariance_max_delta` are registered as FUNCTIONS of
-tau_K by the registering entry, and that entry is not written. This tool will evaluate a function it
-is GIVEN (`--ladder`, `--prefix-delta`) and will not invent one: without them it prints the two keys
-as still-unresolved and says so in its exit line. Choosing them is a registration decision, not a
-tooling one.
+WHAT IT REFUSES TO DO. It will not choose `tau_ladder` or `prefix_invariance_max_delta`. The
+2026-09-18 ruling registered both ABSOLUTE and identical to config/e9.toml ([0.10, 0.03] and 1e-4),
+so they are already written in the Llama configs and this tool only ECHOES values it is handed via
+`--ladder` / `--prefix-delta`, validating them against tau_K. Without them it prints both as
+unresolved and exits 3. Which values they take is a registration decision, not a tooling one.
 
 Usage:
   .venv/bin/python tools/emit_tau.py results/e8f/report.json --pair llama3.2-3b-to-llama3.1-8b
@@ -75,6 +76,11 @@ def main() -> int:
                     help="tau_ladder rungs, as the REGISTERING ENTRY fixes them; omit to leave unresolved")
     ap.add_argument("--prefix-delta", type=float, default=None,
                     help="prefix_invariance_max_delta, as the REGISTERING ENTRY fixes it; omit to leave unresolved")
+    ap.add_argument("--home-r2", default=None,
+                    help="a HOME-produced upstream r2.json (score_mapper output over the pulled dumps). "
+                         "STRONGLY PREFERRED: see the module docstring on cross-platform jitter.")
+    ap.add_argument("--jitter-max", type=float, default=1e-6,
+                    help="refuse if the home and box held-out R^2 differ by more than this")
     ap.add_argument("--json", help="also write the record here")
     a = ap.parse_args()
 
@@ -87,6 +93,38 @@ def main() -> int:
         raise SystemExit(f"emit_tau REFUSED: report is for pair {rep.get('pair')!r}, not {a.pair!r}. "
                          "tau is 1 - THIS pair's own held-out R^2 and is never inherited.")
     t = taus(rep, a.k)
+
+    # M5, the trap this option exists to close. The E8 report's R^2 was computed ON THE BOX. The value
+    # typed into the config is later cross-checked by `summarize_e9 --calibrate-tau`, which re-scores
+    # AT HOME, at a tolerance of 1e-9 -- and entry 0028 exists precisely because float32 reductions do
+    # not reproduce bit-for-bit across platforms. Taking tau from the box therefore risks a config that
+    # refuses at summary time, AFTER sitting B has been paid for and with no repair allowed (the rule
+    # and tau are frozen once a score file exists). So when a HOME re-score is available, it is the
+    # authority and the box report becomes the cross-check.
+    if a.home_r2:
+        hp = Path(a.home_r2)
+        if not hp.exists():
+            raise SystemExit(f"emit_tau REFUSED: {hp} does not exist. Produce it at home by running the "
+                             "upstream score_mapper over the PULLED dumps before writing the config.")
+        home = json.loads(hp.read_text(encoding="utf-8"))
+        deltas, home_tau = {}, {}
+        for key, name in (("K", "tau_K"), ("V", "tau_V")):
+            field = f"{key}_r2_heldout_layer_mean"
+            if field not in home:
+                raise SystemExit(f"emit_tau REFUSED: {hp} has no {field}; that is not a score_mapper r2.json")
+            home_tau[name] = 1.0 - float(home[field])
+            deltas[name] = abs(home_tau[name] - t[name])
+        worst = max(deltas.values())
+        print(f"# home-vs-box jitter: " + ", ".join(f"{k} {v:.3e}" for k, v in deltas.items()))
+        if worst > a.jitter_max:
+            raise SystemExit(
+                f"emit_tau REFUSED: the home re-score differs from the box by {worst:.3e}, above "
+                f"--jitter-max {a.jitter_max:.3e}. That is not a number to paste -- it is a finding. "
+                "Entry 0028 registered a cross-platform tolerance for exactly this; a difference this "
+                "large needs its own reading before any tau is written.")
+        t.update(home_tau)     # the HOME values are what the config gets
+        print(f"# tau_K and tau_V taken from the HOME re-score {hp} (box report used as cross-check).")
+        print("# tau_agent_K stays from the E8 report: arm (b) has no home re-score of its own.")
 
     print(f"# tau for {a.pair} at k = {a.k}, from {path} (verdict_k in the report: {rep.get('verdict_k')!r})")
     print("# Full precision on purpose: summarize_e9 --calibrate-tau recomputes and refuses at 1e-9.")
