@@ -90,7 +90,9 @@ step "venvs"
 if [ "$REHEARSAL" = "1" ]; then
   say "  rehearsal: using the ambient interpreter for linear-ceiling only"
   LC_PY="${LC_PY:-python3}"
-  ( cd linear-ceiling && $LC_PY -m pip install --quiet -e ".[dev]" >/dev/null 2>&1 || true )
+  # This install is part of the rehearsal's proof. Suppressing its failure would let the script
+  # continue and misreport an uninstalled package as a trace-manifest refusal.
+  ( cd linear-ceiling && "$LC_PY" -m pip install --quiet -e ".[dev]" )
 else
   command -v uv >/dev/null 2>&1 || pip install --quiet uv
   ( cd linear-ceiling && uv venv --python 3.12 .venv >/dev/null \
