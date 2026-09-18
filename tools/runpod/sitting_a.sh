@@ -208,7 +208,8 @@ import json, sys
 m = json.load(open(sys.argv[1]))
 r = m.get("rope")
 assert r, f"{sys.argv[2]} dump carries no rope block: the pin predates the RoPE spec"
-assert r.get("rope_type") == "llama3", f"{sys.argv[2]} rope_type is {r.get('rope_type')!r}, expected llama3"
+rope_type = r.get("rope_type") or (r.get("parameters") or {}).get("rope_type")
+assert rope_type == "llama3", f"{sys.argv[2]} rope_type is {rope_type!r}, expected llama3"
 ck = r.get("check_max_abs")
 assert ck is not None and float(ck) < 1e-5, f"{sys.argv[2]} rope check_max_abs {ck} is not under 1e-5"
 print(f"  {sys.argv[2]}: rope llama3, check_max_abs {ck}")
