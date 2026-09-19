@@ -2785,3 +2785,78 @@ excluded and counted; generation quality after reuse not measured. `eval_hellasw
 `compose_mapper.py` remain out of scope for this pair (upstream `apply_mapper` re-applies with a plain θ).
 
 prior-entries-sha256: a93cc5ee357122a8b9fa6885c42e7932022fe046c6953da6c7d616781948b25d
+
+### 0043 — 2026-09-19 — Pre-prefill amendment to 0042: the driver's checkpoint write is atomic, and the stop protocol for a budget-limited sitting is registered; descriptive, no cell moves
+
+**What this is.** An amendment to entry 0042, appended **before any prefill of this cell**, on the
+0025/0026/0027 precedent: the registered instrument changed after its registering entry, and a change to
+the instrument is stated before the run, never explained after it. Nothing here moves a cell, states a
+figure, or touches τ, the rule, the band, the ladder, the cap, the keep draw or the run order. Pair
+llama3.2-3b-to-llama3.1-8b (meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B), `config/e9f.toml` sha256 `2e7cade40489`, run order and coverage from
+`results/e9f/align/coverage.json` sha256 `6a8dc1242300`, both committed and unmodified. At the moment of
+writing, `results/e9f/` holds no report, no score file, no token record and no kept dump.
+
+**(a) The checkpoint write is atomic.** Entry 0042 recorded that the driver "gained refusals only".
+That is no longer the whole of it: `e9._write_checkpoint` now writes `report.json` to a temporary file,
+`fsync`s it, and `os.replace`s it into place, and `e9.close_partial` writes through the same function.
+**Nothing computed changes** — the same bytes are produced from the same inputs, and no number, refusal
+or control is affected. The reason it changed is (b): the registered stop stops the driver **by signal**,
+and a signal that lands during a plain `write_text` leaves a truncated `report.json`. Under the rule
+below the closing basis is a checkpoint, so a torn checkpoint does not cost one handoff — it costs the
+prefix. The change is recorded here because it is the registered instrument, not because it is large.
+
+**(b) The stop protocol.** This cell runs under a hard dollar ceiling, so how it stops decides which
+prefix entry 0042 closes on — and that must be fixed before any score exists, exactly as 0042
+fixed the order for the same reason.
+
+1. **A healthy run closes on all 28 included handoffs.** A partial is a registered outcome, never
+   the preferred one and never a rescue.
+2. **Drain before the ceiling.** The home watchdog stops the **driver** before the spend ceiling
+   terminates the **pod**, by `SIGTERM` to the driver's recorded pid (never a self-matching pattern —
+   protocol R4). The pod stays up so the home puller can finish the tensors already written. The ceiling
+   remains unchanged behind this, as the backstop.
+3. **When.** At `70%` of the sitting ceiling by default, or **earlier** if the puller's own
+   measurement — bytes still outstanding ÷ the rate it is actually achieving — says the remaining pull
+   needs more than the leftover budget. A measurement may only move the drain earlier, never later: the
+   outstanding figure counts the kept dumps a checkpoint already names and cannot see the handoff in
+   flight, so an uncapped measurement reads "nothing outstanding" at the moment the most is at risk.
+4. **The closing basis after ANY abnormal end** — drained, hard-killed, crashed, or a pod lost outright
+   — is the **last checkpoint whose every named artifact is sha-verified at home**: the small records and
+   the kept directories of the scored prefix, each byte-for-byte against that checkpoint's own
+   fingerprints. It is a genuine driver checkpoint and a prefix of the registered `n_sender_asc` order.
+   **It is never an edited report.** If no checkpoint verifies whole at home, there is no close, and
+   H-E9F stays `unresolved` — that is the finding, not a problem to be worked around.
+5. **Where.** The close happens **at home, on the verified mirror**, never on the box: box storage is
+   ephemeral, so after a hard kill it is already gone at exactly the moment a close is needed.
+   `tools/runpod/pull_verify_b.py --final-partial` refuses unless the driver is provably stopped, proves
+   the basis, and writes the termination receipt; `e9 --close-partial --config config/e9f.toml` then
+   stamps it and needs nothing but `report.json`.
+6. **What the closing entry must carry.** The cutoff reason, the coverage as "n scored of N registered"
+   beside every number, and every unscored handoff named by id — as entry 0036 did for the long half.
+
+**(c) The gate, and one regenerated artifact.** `config/e9f.toml`'s `[e9.gate]` now requires
+`0019/0023/0025/0027/0042/0043` — entry 0042's list extended by this entry and nothing else — so
+`e9 --check` refuses until this amendment is committed on the ledger. Enforcement, not decoration: a
+protocol deciding which prefix a stopped run closes on must bind the driver, and 0042 recorded the
+gate as it stood then. Adding one entry changed the file's sha256 to `2e7cade40489`, and
+`results/e9f/align/coverage.json` and `results/e9f/calibration/tau.json` are recorded under that sha, so
+both were regenerated by `e9 --align-only` and `summarize_e9 --calibrate-tau`. **The coverage file
+differs in exactly one key, `config_sha256`**: the 28 included handoffs, the `n_sender_asc` run
+order, the keep draw, the exclusion counts and every alignment are identical, and τ_K, τ_V and τ_agent_K
+are unchanged to every digit. No registered quantity moved; the file now records the sha of the file that
+actually governs it. No other config is touched.
+
+**Why this is an amendment and not a note.** Under 0042 the scored set of a stopped run is a prefix of
+a registered order, which fixes *which* handoffs a partial keeps. It did not fix *when* the run stops or
+*which* checkpoint is then closed on, and both are choices that could otherwise be made with the scores
+already visible. Registering them here removes that freedom before there is anything to see.
+
+**What this does NOT touch.** The H-E8, H-E9, H-E9L and H-E9F cells and every verdict; τ_K, τ_V,
+τ_agent_K, the rule, the band edges, the ladder, `prefix_invariance_max_delta`, the cap, the seeds, the
+keep draw, the run order, the coverage figures themselves; every other cell's config and results. Entry 0039's τ_K ceiling of 0.45 and entry
+0041's report-only ordering both stand as written.
+
+**Scope.** One pair (meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B), one cell, one sitting's stopping behaviour. Nothing here is
+evidence about KV reuse, and nothing here may be cited as a finding.
+
+prior-entries-sha256: 5112398f506937881144964ba7fbca7316d68165e7aaedccf00974005de7849f
