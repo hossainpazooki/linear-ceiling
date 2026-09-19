@@ -478,6 +478,10 @@ say "  every included n_matched >= 1; first run-order n_matched >= 2"
 
 step "checkpoint classification (plain, validated resume, or already complete)"
 REPORT="$LC_DIR/results/$EXP/report.json"
+# NOTE for editors: this heredoc sits inside a $( ) command substitution, and bash re-parses quotes
+# there even though the delimiter is quoted. A lone apostrophe in a Python comment below -- in a word
+# like "launchers" written possessively -- makes the whole script fail to parse with "unexpected EOF".
+# Keep apostrophes out of this block; `bash -n` catches it, so run that after editing.
 RUN_MODE="$("$LC_PY" - "$REPORT" "$CFG" "$UP_SHA" <<'PY'
 import hashlib, json, sys
 from pathlib import Path
@@ -486,9 +490,30 @@ from linear_ceiling.hashing import sha256_text_file
 report, cfg_path = map(Path, sys.argv[1:3])
 up_sha = sys.argv[3]
 if not report.exists():
+    # M2. Files without a checkpoint mean the driver died during the FIRST handoff, before it had
+    # written anything to resume from. Refusing here (as this did) leaves the sitting stuck on a
+    # billing card until someone cleans up by hand, and a plain relaunch over half-written score or
+    # tensor files is worse than that. So: move them aside, never delete them, and run plain. The
+    # quarantine is timestamped so a second crash cannot overwrite the evidence of the first, and it
+    # is listed on stderr so the setup log records exactly what was displaced.
+    import shutil, time
     leftovers = [p for name in ("scores", "tokens", "controls", "scratch")
                  if (p := report.parent / name).exists() and any(p.iterdir())]
-    assert not leftovers, f"result files exist without a checkpoint report: {leftovers}"
+    if leftovers:
+        stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        # Two crashes inside one second collide on a second-resolution stamp, and mkdir then raises --
+        # which would make the SECOND crash unrecoverable in the name of preserving the first. Take the
+        # next free suffix instead. exist_ok would be wrong here: it would merge the two crashes.
+        q = report.parent / f"quarantine.{stamp}"
+        n = 2
+        while q.exists():
+            q = report.parent / f"quarantine.{stamp}.{n}"
+            n += 1
+        q.mkdir(parents=True)
+        for src in leftovers:
+            shutil.move(str(src), str(q / src.name))
+            print(f"QUARANTINED {src.name} -> {q.name}/ (no checkpoint existed; nothing deleted)",
+                  file=sys.stderr)
     print("plain")
     raise SystemExit
 r = json.loads(report.read_text(encoding="utf-8"))

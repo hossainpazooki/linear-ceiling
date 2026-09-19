@@ -203,3 +203,55 @@ def test_the_manifest_must_name_every_required_result(world, tmp_path):
     with pytest.raises(ValueError, match="omits .* required result"):
         pull_b.verify_final_manifest(man, local=tmp_path, exp=EXP,
                                      required_results={"scores/NOT-PACKAGED.json"})
+
+
+# ---------------------------------------------------------------------------------------------
+# M2: a crash during the FIRST handoff, before any checkpoint exists.
+# ---------------------------------------------------------------------------------------------
+
+def _classifier() -> str:
+    """The launcher's run-mode classifier, lifted out of its `$( )` heredoc and run directly.
+
+    Lifted rather than re-written: this is the code that decides whether a relaunch resumes, runs
+    plain, or refuses, and a hand-copied approximation would stop tracking it the moment it changed."""
+    src = (ROOT / "tools" / "runpod" / "sitting_b.sh").read_text(encoding="utf-8")
+    m = re.search(r'RUN_MODE="\$\("\$LC_PY" - "\$REPORT" "\$CFG" "\$UP_SHA" <<\'PY\'\n(.*?)\nPY\n\)"',
+                  src, re.S)
+    assert m, "could not lift the run-mode classifier out of sitting_b.sh; it has been restructured"
+    return m.group(1)
+
+
+def test_a_first_handoff_crash_is_quarantined_rather_than_refused(tmp_path):
+    """Files with no checkpoint mean the driver died before writing anything resumable. Refusing (as
+    this did) strands the sitting on a billing card until someone cleans up by hand; deleting would
+    destroy the evidence of why it died. Move them aside, keep them, and run plain."""
+    res = tmp_path / "results" / EXP
+    (res / "scores").mkdir(parents=True)
+    (res / "scores" / "h1.json").write_text("half a score", encoding="utf-8")
+    (res / "scratch" / "h1").mkdir(parents=True)
+    (res / "scratch" / "h1" / "kv.npz").write_bytes(b"half a tensor")
+    cfg = tmp_path / "e9f.toml"
+    cfg.write_text("[e9]\n", encoding="utf-8")
+
+    out = subprocess.run([sys.executable, "-c", _classifier(), str(res / "report.json"), str(cfg), "pin"],
+                         capture_output=True, text=True, cwd=ROOT)
+    assert out.returncode == 0, out.stderr[-600:]
+    assert out.stdout.strip() == "plain", f"a crashed first handoff must relaunch plain: {out.stdout!r}"
+
+    quarantines = sorted(res.glob("quarantine.*"))
+    assert len(quarantines) == 1, f"expected exactly one quarantine dir, got {quarantines}"
+    q = quarantines[0]
+    assert (q / "scores" / "h1.json").read_text(encoding="utf-8") == "half a score", "evidence was lost"
+    assert (q / "scratch" / "h1" / "kv.npz").read_bytes() == b"half a tensor"
+    assert not (res / "scores").exists() and not (res / "scratch").exists(), \
+        "the driver must start plain on a clean tree, not over half-written files"
+    assert "QUARANTINED" in out.stderr, "the setup log must record what was displaced"
+
+    # a SECOND crash must not overwrite the first quarantine
+    (res / "scores").mkdir()
+    (res / "scores" / "h1.json").write_text("another half", encoding="utf-8")
+    out2 = subprocess.run([sys.executable, "-c", _classifier(), str(res / "report.json"), str(cfg), "pin"],
+                          capture_output=True, text=True, cwd=ROOT)
+    assert out2.returncode == 0 and out2.stdout.strip() == "plain"
+    assert len(sorted(res.glob("quarantine.*"))) in (1, 2), "the first quarantine must still be there"
+    assert (q / "scores" / "h1.json").read_text(encoding="utf-8") == "half a score"
