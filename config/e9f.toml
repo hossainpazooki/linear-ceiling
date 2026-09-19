@@ -48,7 +48,7 @@ upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # commit P: the kvt/
 e8_report = "results/e8f/report.json"
 
 [e9.gate]                            # entries the committed ledger must carry (the driver's REQUIRED_ENTRIES per config)
-required_entries = ["0019", "0023", "0025", "0027", "0041"]   # 0041 = this cell's registration. PROVISIONAL: entry
+required_entries = ["0019", "0023", "0025", "0027", "0042"]   # 0042 = this cell's registration. PROVISIONAL: entry
                                      # numbers are allocated only by docs/drafts/README.md at staging time, in
                                      # staging order, and the committed ledger ends at 0038. The family registration
                                      # and the E8 figures it depends on are enforced transitively -- the staged

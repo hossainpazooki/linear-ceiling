@@ -196,7 +196,7 @@ def test_e9fl_refuses_a_bridge_block_because_it_has_no_scaled_arm(tmp_path):
 
 # ---- the rest of both files is well formed: everything but the calibration is ready ---------------------
 
-@pytest.mark.parametrize("name,cap,floor,keep_n,last", [("e9f", 32768, 0, 8, "0041"), ("e9fl", 81920, 32768, 3, "0043")])
+@pytest.mark.parametrize("name,cap,floor,keep_n,last", [("e9f", 32768, 0, 8, "0042"), ("e9fl", 81920, 32768, 3, "0044")])
 def test_the_resolved_config_loads_as_a_native_llama_cell(tmp_path, name, cap, floor, keep_n, last):
     c = _resolved_cfg(tmp_path, name)
     assert c.pair == PAIR and pair_models(c.pair) == MODELS

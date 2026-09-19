@@ -2586,3 +2586,55 @@ alignment-free calibration corpus, off-policy text for Llama-3, visible messages
 hypothesis cell changes with this entry.
 
 prior-entries-sha256: cabb1b15ba3c508ab35124b3121e1f193af265fa3d7fa8d8281f8d85c97692fb
+
+### 0041 — 2026-09-18 — The τ_K < τ_agent_K ordering was never registered; `config.py`'s refusal becomes report-only; descriptive, no cell moves
+
+**What this entry rules, and what it does not.** `config.py` has required
+`tau_K < tau_agent_K < 1` of every E9 config. **No entry registers that ordering.** Entry 0025
+registers τ_agent_K's *derivation* — 1 − arm (b)'s held-out K R² at the verdict k, recomputed by
+`summarize_e9 --calibrate-tau` and refused on disagreement, exactly as τ_K is — and states that it
+“is a K tolerance and is applied to nothing else” and that “The band reads τ_K only; this entry does
+not move it”. It fixes no ordering between the two. The nearest clause, “a verdict-bearing τ chosen
+after seeing which is looser is exactly what 0023 refused to do”, forbids *choosing* a τ after seeing
+the data; it presupposes nothing about which is looser, and nothing is chosen here. The requirement
+exists only in code, predates this model family, and its own refusal message names τ_agent_K “the
+LOOSER agent-text tolerance from entry 0020 arm (b)” — that is what entry 0020 **measured** on the
+Qwen pair, which is an observation and not a rule.
+
+**Therefore:** a quantity this ledger says is applied to nothing and reads no band could, in the
+code, stop an entire cell from loading. That is corrected in the narrowest available way. The
+`load_e9_config` refusal on the ordering becomes a **recorded, reported fact**: the relation between
+τ_K and τ_agent_K is stated wherever they are, and refuses nothing. `summarize_e9` states it beside
+both values.
+
+**Nothing else moves, and this is exhaustive.** τ_K, τ_V and τ_agent_K keep their registered
+derivations (0023, 0025) — no value is edited, anywhere, in any config. The band still reads τ_K
+only (0023, 0025). The τ ladder, the τ_K ceiling and the prefix-invariance HALT are untouched
+(0039). Every other refusal in `load_e9_config` stands, including the three `UNRESOLVED::` markers
+that keep an uncalibrated cell unloadable — this ruling does not make `config/e9f.toml` or
+`config/e9fl.toml` loadable by itself; only their own calibration does. `0 < τ_agent_K < 1` is still
+required, because a τ outside the unit interval is not a tolerance at all. No hypothesis row is
+added, no `verdict:` line follows, and no decided cell moves — H-E8 is entry 0020's and is untouched.
+
+**The occasion, stated so it is not mistaken for the reason.** On `llama3.2-3b-to-llama3.1-8b`, entry 0040 reported
+τ_K = 0.2861 and τ_agent_K = 0.2689, so the code refused the family's E9 configs.
+That is what made the mismatch visible; it is not what makes it a mismatch. The ruling above would
+read identically had the inequality gone the other way, and it is made on what 0025 says rather than
+on what this pair measured. **This entry does not claim that this pair's mapper transfers better to
+agent text than to generic text.** Entry 0040 disclosed that the registered arm (b) hold-out carries
+two distinct windows, one of them weighted nine times, so that comparison rests on two windows and not
+on ten; whether the inversion is a property of the pair or of the draw is open, needs arm (b) rescored
+at `agent_holdout_frac = 1.0` over every agent sequence, and enters by its own numbered entry.
+
+**Enforcement, and how this entry was checked before it was written.** The appending script refuses
+unless (i) entry 0025 still contains both quoted clauses above, read from this ledger — a citation
+that has drifted is a false entry; (ii) `config.py` no longer carries the refusal and does carry the
+report-only marker, so the change is in the tree *before* the record claims it; and (iii) both
+`config/e9f.toml` and `config/e9fl.toml` load with a deliberately INVERTED stand-in τ pair
+(τ_K > τ_agent_K), proving the ordering no longer blocks, while their real fields still carry refusing
+markers. Tests pin the report-only behaviour and that an out-of-unit-interval τ_agent_K still refuses.
+
+**Scope.** A ruling about what the record registers, on the whole E9 instrument, not about any pair.
+It reads no data, decides no hypothesis, and moves no cell.
+
+prior-entries-sha256: b6774ebbb3c06280b2cefc9a85d9287302144cc6c45f941d1dd876b36abcacad

@@ -1,311 +1,211 @@
-"""Append entry 0043 -- the E9 LONG half of the second model family, registered BEFORE any prefill, at a
-NATIVE receiver. DESCRIPTIVE: no hypothesis row, no `verdict:` line, no cell moves. It declares entry
-0035's D1(a) receiver scaling, its configuration bridge (control 4) and its scaled-receiver reading
-INAPPLICABLE here, and states that this cell cannot move, support or refute H-E9L and is never pooled with
-entry 0036's handoffs.
+"""Append entry 0043 -- the E9 short cell of the second model family RAN; the H-E9F verdict, written ONLY
+from an in-process `summarize_e9 --config config/e9f.toml` run (it refuses on anything wrong and nothing is
+written then). Sets the H-E9F cell by its `verdict:` line.
 
-Ordering guard: 0042 present, 0043 absent. Nothing under this entry may exist yet: `results/e9fl/` holds no
-report and no score file (R1). What MUST exist: `config/e9fl.toml` CALIBRATED against THIS pair's own E8
-report and committed; `results/e9fl/calibration/tau.json` (checked here, at registration -- `e9 --check`
-never looks for it); `results/e9fl/align/coverage.json` from `e9 --align-only --config config/e9fl.toml`,
-written under this exact config sha; the SHORT cell's completed run, whose included set this cell's floor
-must exclude EXACTLY (the partition is checked, not asserted in prose); and the upstream HEAD at the pin,
-clean. Every number below is read from the config, that coverage file, the calibration record or the short
-cell's report; nothing is typed.
+Ordering guard: 0042 on the ledger, 0043 absent, the H-E9F row present and still `unresolved`. The band
+outcome maps to the ledger vocabulary (HOLDS -> HELD, DEGRADES -> NOT CONFIRMED, UNRESOLVED -> unresolved).
+Run facts the summarizer cannot know come as arguments and are refused when missing:
 
-  --date <YYYY-MM-DD>   (defaults to today; the entry is dated the day it is appended)
+  --box "<instance type, GPU, region, instance id>"   --launched <UTC>   --finished <UTC>
+  [--tau-ceiling-applies {yes,no}] --tau-ceiling-note "<provenance note about entry 0039's ceiling>"
+  --date <YYYY-MM-DD>   (defaults to --finished's date)
   --preview             (print, do not append)
 
-Runs `ledger_check` after appending. Delete once appended, chained to the append with `&&`."""
+The tau ceiling is not optional: entry 0039 registered, before the fit, that tau_K > 0.45 makes this
+cell UNRESOLVED BY CONSTRUCTION (a mapper that transfers badly enough makes f*(tau_K) trivially small
+for everything, and a HOLDS read off it would mean nothing). The script derives whether the ceiling
+applies from the summarizer's tau_K. `--tau-ceiling-applies`, when supplied, is an auditable assertion
+about that derived result and is refused on disagreement; it never selects the verdict. The required
+free-text note records provenance only and likewise cannot alter the verdict.
+
+Per entry 0042: coverage "n scored of N registered" travels with every number; nothing is pooled with
+entry 0029's handoffs; f* is read on a floor (0027). Runs `ledger_check` after appending. Delete once
+appended, chained to the append with `&&`."""
 import argparse
-import datetime as dt
 import json
 import re
 import subprocess
 import sys
-from pathlib import Path
 
-from linear_ceiling.config import load_e8_config, load_e9_config
 from linear_ceiling import REPO_ROOT
-from linear_ceiling.e9 import UPSTREAM_PATHS, _PENDING, required_markers
-from linear_ceiling.e9_pertoken import SEAM_BIN_EDGES
-from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
-from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash
+from linear_ceiling.config import load_e7_config, load_e9_config
+from linear_ceiling.e7_manifest import manifest_path, manifest_sha256
+from linear_ceiling.ledger_check import VERDICTS, _ENTRIES_HEAD, chain_hash
 from linear_ceiling.pairs import pair_models
+from linear_ceiling.summarize_e9 import summarize
 
 NUM, PREV = "0043", "0042"
-FAMILY = f"{int(NUM) - 4:04d}"      # the family registration entry (0039 as staged); shifts with NUM
-SHORT = f"{int(NUM) - 2:04d}"       # the short cell's registration entry (0041 as staged)
-CONFIG_TAU_TOL = 1e-9                # config and home calibration are the registered authority
-BOX_TAU_TOL = 1e-6                   # the E8 box report may differ by registered cross-platform arithmetic
+FAMILY = f"{int(NUM) - 3:04d}"      # the family registration entry (0039 as staged); shifts with NUM
+E8FIG = f"{int(NUM) - 2:04d}"       # the E8 figures entry, which reported the fit this mapper came from
+TAU_K_CEILING = 0.45                 # entry 0039; asserted against the committed entry below
 ap = argparse.ArgumentParser()
-ap.add_argument("--date", default=dt.date.today().isoformat())
+ap.add_argument("--box", required=True)
+ap.add_argument("--launched", required=True)
+ap.add_argument("--finished", required=True)
+ap.add_argument("--tau-ceiling-applies", choices=("yes", "no"), default=None,
+                help="optional assertion only; derived from summary tau_K > entry 0039's 0.45")
+ap.add_argument("--tau-ceiling-note", required=True,
+                help="provenance note only; cannot select whether the ceiling applies")
+ap.add_argument("--date", default=None)
 ap.add_argument("--preview", action="store_true")
 a = ap.parse_args()
+a.date = a.date or a.finished[:10]
 assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.date), "--date must be YYYY-MM-DD (the ledger heading's form)"
 
 LEDGER = REPO_ROOT / "ledger" / "ledger.md"
 text = LEDGER.read_text(encoding="utf-8").replace("\r\n", "\n")
 assert f"### {PREV} " in text and f"### {NUM} " not in text, f"ordering: {PREV} present, {NUM} absent"
-
-cfg = load_e9_config(REPO_ROOT / "config" / "e9fl.toml", REPO_ROOT)   # refuses while any tau key is a marker
-short = load_e9_config(REPO_ROOT / "config" / "e9f.toml", REPO_ROOT)
-e9 = load_e9_config(REPO_ROOT / "config" / "e9.toml", REPO_ROOT)
-e9l = load_e9_config(REPO_ROOT / "config" / "e9l.toml", REPO_ROOT)
-e8f = load_e8_config(REPO_ROOT / "config" / "e8f.toml", REPO_ROOT)
+family_start = text.index(f"### {FAMILY} ")
+family_end = text.find("\n### ", family_start + 1)
+family_entry = text[family_start: family_end if family_end >= 0 else len(text)]
+assert re.search(r"\*\*τ_K ceiling\*\*.*?short cell is UNRESOLVED by\s+construction.*?\n0\.45\.",
+                 family_entry, re.S), \
+    f"entry {FAMILY} no longer registers the expected tau_K > {TAU_K_CEILING:g} ceiling"
+cfg = load_e9_config(REPO_ROOT / "config" / "e9f.toml", REPO_ROOT)
+e7 = load_e7_config(REPO_ROOT / "config" / "e7.toml", REPO_ROOT)
+manifest = manifest_sha256(manifest_path(e7))
 src_id, tgt_id = pair_models(cfg.pair)
-assert cfg.pair == short.pair == e8f.pair and cfg.upstream_sha == short.upstream_sha == e8f.upstream_sha, \
-    "the three cells of one family share a pair and a pin"
 
-# The instrument is 0023/0025/0027's. Only the three calibrated tau fields are this pair's own;
-# the absolute ladder and prefix-invariance delta were registered as literals equal to config/e9.toml's.
-PAIR_CALIBRATED_TAU = ("tau_K", "tau_V", "tau_agent_K")
-assert set(cfg.rule) == set(e9.rule) and set(cfg.controls) == set(e9.controls), "the rule/controls key sets must be E9's"
-for key, mine in cfg.rule.items():
-    if key not in PAIR_CALIBRATED_TAU:
-        assert mine == e9.rule[key], f"[e9.rule] {key} is {mine!r}, not config/e9.toml's {e9.rule[key]!r}"
-for key, mine in cfg.controls.items():
-    assert mine == e9.controls[key], f"[e9.controls] {key} is {mine!r}, not config/e9.toml's {e9.controls[key]!r}"
-assert list(cfg.controls["seam_bins"]) == list(SEAM_BIN_EDGES), "seam_bins differ from the registered edges (0023)"
-for key in ("tau_K", "tau_V", "tau_agent_K"):
-    assert float(cfg.rule[key]) == float(short.rule[key]), \
-        f"the two cells of one family must carry the SAME {key}: it is 1 - one mapper's held-out R^2"
-# The receiver is native and the bridge is inapplicable, not merely omitted.
-assert cfg.rope is None and cfg.bridge is None, \
-    "this cell registers no [e9.rope] and no [e9.bridge]: the receiver is natively long and has no scaled arm"
-assert e9l.rope is not None and e9l.bridge is not None, \
-    "config/e9l.toml no longer carries the scaled receiver and bridge this entry declares inapplicable"
-# The partition against the short cell.
-assert cfg.context_floor == short.context_cap, \
-    f"the long floor {cfg.context_floor} must equal the short cap {short.context_cap}, or the two cells do not partition"
-assert cfg.context_cap > cfg.context_floor and cfg.allow_partial and cfg.order_by == "n_sender_asc"
-assert cfg.profiles and set(cfg.profiles) == {"s_len_edges", "s_pos_edges"}
-assert required_markers(cfg)[-1] == f"### {NUM} ", "config/e9fl.toml's [e9.gate] does not end at this entry"
-assert cfg.e8_report is not None and Path(cfg.e8_report).resolve() == (e8f.results_dir / "report.json").resolve()
+summarize(cfg)                                              # refuses on anything wrong; nothing is written then
+f = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+rep = json.loads((cfg.results_dir / "report.json").read_text(encoding="utf-8"))
+assert rep["complete"] and rep["upstream_sha"] == cfg.upstream_sha
+assert f["rope"] is None and f["bridge"] is None and f["length_profiles"] is None, \
+    "this cell registers no rope, no bridge and no length profiles; the summary carries one"
+assert not f.get("partial"), "config/e9f.toml does not allow a partial close; the report claims one"
 
-# Tau: the home calibration is authoritative for K/V. The box-written E8 report may differ within the
-# registered 1e-6 cross-platform tolerance; config and calibration must agree at 1e-9. Agent K comes
-# directly from E8 arm (b), rather than a home re-score, and must agree across all three records at 1e-9.
-e8_rep = json.loads(cfg.e8_report.read_text(encoding="utf-8"))
-assert e8_rep["pair"] == cfg.pair
-kv = str(e8f.verdict_k)
-box_tau = {"K": 1.0 - float(e8_rep["per_k"][kv]["generic"]["K"]),
-           "V": 1.0 - float(e8_rep["per_k"][kv]["generic"]["V"]),
-           "agent_K": 1.0 - float(e8_rep["per_k"][kv]["agent"]["K"])}
-cal_path = cfg.results_dir / "calibration" / "tau.json"
-assert cal_path.exists(), ("run `summarize_e9 --calibrate-tau --config config/e9fl.toml --e8-report "
-                           f"{cfg.e8_report}` BEFORE registering: `e9 --check` never looks for it (learnings 2026-09-14)")
-cal = json.loads(cal_path.read_text(encoding="utf-8"))
-assert cal["pair"] == cfg.pair and cal["e8_report_sha256"] == sha256_file_bytes(cfg.e8_report)
-assert cal["mapper"]["k"] == cfg.mapper_k and all(cal["generic_dumps_match_e8_fingerprints"].values()), \
-    "the calibration mapper or generic dumps do not match the E8 artifacts they claim to re-score"
-for key in ("K", "V"):
-    home = float(cal["tau"][key])
-    assert abs(home - box_tau[key]) <= BOX_TAU_TOL * max(1.0, abs(home), abs(box_tau[key])), \
-        f"tau_{key}: home calibration and box E8 report differ beyond the registered 1e-6 tolerance"
-    assert abs(float(cfg.rule[f"tau_{key}"]) - home) <= CONFIG_TAU_TOL * max(1.0, abs(home)), \
-        f"tau_{key}: config/e9fl.toml and the authoritative home calibration disagree"
-agent = float(cal["tau"]["agent_K"])
-assert abs(agent - box_tau["agent_K"]) <= CONFIG_TAU_TOL * max(1.0, abs(agent), abs(box_tau["agent_K"])), \
-    "tau_agent_K: calibration and E8 arm (b) disagree"
-assert abs(float(cfg.rule["tau_agent_K"]) - agent) <= CONFIG_TAU_TOL * max(1.0, abs(agent)), \
-    "tau_agent_K: config/e9fl.toml and calibration disagree"
+BAND_TO_VERDICT = {"HOLDS": "HELD", "DEGRADES": "NOT CONFIRMED", "UNRESOLVED": "unresolved"}
+band_verdict = BAND_TO_VERDICT[f["band_outcome"]]
+tau = f["tau"]
+ceiling = float(tau["K"]) > TAU_K_CEILING
+if a.tau_ceiling_applies is not None:
+    asserted_ceiling = a.tau_ceiling_applies == "yes"
+    assert asserted_ceiling == ceiling, \
+        (f"--tau-ceiling-applies {a.tau_ceiling_applies} disagrees with the registered rule: "
+         f"tau_K {float(tau['K']):.6g} > {TAU_K_CEILING:g} is "
+         f"{'true' if ceiling else 'false'}; the operator assertion cannot select the verdict")
+VERDICT = "unresolved" if ceiling else band_verdict
+assert VERDICT in VERDICTS, f"{VERDICT!r} is not one of ledger_check.VERDICTS"
 
-# R1: nothing under this entry exists yet.
-assert not (cfg.results_dir / "report.json").exists(), f"{cfg.results_dir}/report.json exists: a run happened before registration; refusing"
-for sub in ("scores", "controls", "bridge", "scratch"):
-    assert not (cfg.results_dir / sub).exists(), f"{cfg.results_dir}/{sub} exists: refusing"
+# The two controls that stand in for entry 0035's configuration bridge on a natively long receiver.
+rope = f["dump_rope"]
+assert rope and rope.get("recorded"), \
+    ("the run's dumps carry no RoPE spec, so neither the native-window nor the frequency-identity control "
+     "ran; the pin must be the RoPE-spec commit or a descendant of it")
+roles = ", ".join(f"{role} ({r['n_dumps']} dumps, max_position_embeddings {r['max_position_embeddings']:,}, "
+                  f"inv_freq {str(r['inv_freq_sha256'])[:12]}, attention factor {r['attention_scaling']})"
+                  for role, r in rope["by_role"].items())
+n_roles = len(rope["by_role"])
 
-cov_path = cfg.results_dir / "align" / "coverage.json"
-assert cov_path.exists(), "run `e9 --align-only --config config/e9fl.toml` first: the coverage this entry states comes from the instrument"
-cov = json.loads(cov_path.read_text(encoding="utf-8"))
-assert cov["config_sha256"] == sha256_text_file(cfg.config_path), "coverage.json was written under another config/e9fl.toml"
-assert cov["context_cap"] == cfg.context_cap and cov["context_floor"] == cfg.context_floor and cov["rope"] is None
-recs = {r["handoff_id"]: r for r in cov["alignments"]}
-order = cov["run_order"]
-included = sorted(h for h, r in recs.items() if not r["excluded"])
-assert sorted(order) == included and len(order) == cov["coverage"]["included"] > 0
-assert all(int(recs[h]["n_matched"]) >= 1 for h in order), \
-    "an included handoff has no matched positions, so score_positions cannot run"
-assert int(recs[order[0]]["n_matched"]) >= 2, \
-    "the first run-order handoff has fewer than two matched positions, so the null control cannot run"
-expected_order = sorted(included, key=lambda h: (recs[h]["n_sender"], h))
-assert order == expected_order, "run order must be |S| ascending with ties broken by handoff id"
-ns = [recs[h]["n_sender"] for h in order]
-keep = cov["keep_subset"]
-assert len(keep) == cfg.keep_n and set(keep) <= set(order)
-by_reason = {}
-for h, r in recs.items():
-    if r["excluded"]:
-        by_reason.setdefault(r["reason"], []).append(h)
-empty = sorted(by_reason.get("receiver prompt is empty in the trace", []))
-residual = sorted(h for reason, hs in by_reason.items() if "exceeds context cap" in reason for h in hs)
-prior_cap = sorted(by_reason.get(f"S and R within context floor {cfg.context_floor} (decided under the prior cap)", []))
-assert len(empty) + len(residual) + len(prior_cap) == cov["coverage"]["excluded"], "an exclusion reason this entry does not name"
+sent = lambda t: t.strip().rstrip(".") + "."      # operator free text, punctuated once  # noqa: E731
+s = lambda d, nd=4: f"{d['median']:.{nd}f} (p10 {d['p10']:.{nd}f}, p90 {d['p90']:.{nd}f})"   # noqa: E731
+fs, cov, cc = f["fstar"], f["coverage"], f["coverage_comparison"]
+boot, pre, ra = f["median_fstar_same_K_bootstrap"], f["prefix_control"], f["rescore_agreement"]
+ratio, br, lad = f["cross_over_same_median_delta"], f["bridge_r2"], f["fstar_ladder"]
+agent, rule = f["fstar_at_tau_agent"], f["rule"]
+n_sc, n_reg = cov["scored"], cov["registered"]
+COVER = f"{n_sc} scored of {n_reg} registered"
+cross_band = ("beyond the DEGRADES edge" if fs["cross_K"]["median"] >= rule["degrades_min"] else
+              "inside the HOLDS edge" if fs["cross_K"]["median"] <= rule["holds_max"] else "between the edges")
+ladder_txt = "; ".join(f"τ = {float(k):g}: same K {s(lad['same_K'][k])} / V {s(lad['same_V'][k])}"
+                       for k in sorted(lad["same_K"], key=lambda k: -float(k)))
+seam = " · ".join(f"{r['bin']}: {r['median']:.3f} (n={r['n_tokens']})"
+                  for r in f["seam_profile_left_pooled"]["same_K"] if r["median"] is not None)
+dn = f["delta_null"]
+kept_scored = len(ra["per_handoff"])
+rescore_txt = (f"the {kept_scored} kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under "
+               f"0028's tolerance (every square within {ra['max_rel_square']:.1e} relative, max |f* diff| "
+               f"{ra['max_fstar_abs_diff']:.1e})" if kept_scored else
+               "NO kept handoff was scored, so the keep-subset re-score has nothing to read (stated, never a zero)")
+blocks = f["fstar_blocks_ge_min"]["same_K"]
+first = ((f"**UNRESOLVED BY CONSTRUCTION (entry {FAMILY}'s registered τ_K ceiling).** τ_K for "
+          f"this pair is {tau['K']:.4f} > {TAU_K_CEILING:.2f}. Operator provenance note "
+          f"(non-verdict-bearing): {sent(a.tau_ceiling_note)} The band word below is computed and stated, but the cell is set to "
+          f"`unresolved`: a recompute fraction read against a tolerance this loose does not distinguish a receiver "
+          f"that agrees with itself from one that does not, and that reading was fixed before the fit, not after "
+          f"this number was seen.\n\n") if ceiling else
+         (f"**The registered τ_K ceiling does not bite (entry {FAMILY}).** τ_K = {tau['K']:.4f} ≤ "
+          f"{TAU_K_CEILING:.2f}, so the band below is read as the rule writes it. Operator provenance note "
+          f"(non-verdict-bearing): {sent(a.tau_ceiling_note)}\n\n"))
 
-# The partition, checked against the short cell's OWN completed run rather than asserted in prose.
-short_rep = json.loads((short.results_dir / "report.json").read_text(encoding="utf-8"))
-assert short_rep.get("complete") and short_rep["pair"] == cfg.pair, "the short cell's run is not complete"
-short_included = sorted(a_["handoff_id"] for a_ in short_rep["alignments"] if not a_["excluded"])
-assert prior_cap == short_included, \
-    ("the handoffs this cell excludes under its floor are not exactly the short cell's included set; the two "
-     "Llama cells do not partition and the residual count below would be wrong")
-sum_s = sum(recs[h]["n_sender"] for h in order)
-sum_r = sum(recs[h]["n_receiver"] for h in order)
+ENTRY = f"""### {NUM} — {a.date} — E9 short cell ran on the second model family `[BASELINE]`; H-E9F {VERDICT} ({COVER})
 
-if not a.preview:
-    # R1 is a statement about committed bytes, not merely files that happen to exist in the worktree.
-    # Require both the calibrated long config and the preceding ledger to be tracked and byte-identical
-    # to HEAD immediately before appending; preview remains useful while those commits are being staged.
-    for rel, path in (("config/e9fl.toml", cfg.config_path), ("ledger/ledger.md", LEDGER)):
-        tracked = subprocess.run(["git", "ls-files", "--error-unmatch", "--", rel], cwd=REPO_ROOT,
-                                 capture_output=True)
-        assert tracked.returncode == 0, f"{rel} is not tracked; registration requires committed inputs"
-        clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", rel], cwd=REPO_ROOT)
-        assert clean.returncode == 0, f"{rel} differs from HEAD; commit it before registration"
-        committed = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=REPO_ROOT, capture_output=True)
-        assert committed.returncode == 0 and committed.stdout == path.read_bytes(), \
-            f"{rel} is not byte-identical to HEAD; commit the calibrated config and preceding ledger first"
-    assert _PENDING not in cfg.upstream_sha and re.fullmatch(r"[0-9a-f]{40}", cfg.upstream_sha), \
-        "config/e9fl.toml still carries the pending upstream pin placeholder"
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cfg.upstream_path, capture_output=True, text=True).stdout.strip()
-    assert head == cfg.upstream_sha, f"upstream HEAD {head[:12]} != the pin {cfg.upstream_sha[:12]}"
-    dirty = subprocess.run(["git", "status", "--porcelain", "--", *UPSTREAM_PATHS], cwd=cfg.upstream_path,
-                           capture_output=True, text=True).stdout.strip()
-    assert not dirty, f"upstream invoked paths are dirty at the pin:\n{dirty}"
+{first}**Setup, as registered ({PREV}).** {a.box}; linear-ceiling at the commit carrying {PREV} and
+`config/e9f.toml` (gate: entries {'/'.join(cfg.required_entries)}), upstream pin `{cfg.upstream_sha[:7]}`
+(the one-line `PAIRS` entry on top of the RoPE-spec commit). Pair {cfg.pair}: receiver {tgt_id}, source
+{src_id}, **neither scaled** — no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling` on any dump; the
+k = {cfg.mapper_k} mapper this family's E8 sitting fitted (entry {E8FIG}) for the cross arm, by sha. Launched
+{a.launched}, finished {a.finished}. Complete: {COVER}, in the registered `{cfg.order_by}` order. Of
+{cov['observed']} observed handoffs: {n_reg} included (|S| and |R| both within {cfg.context_cap:,} tokens
+under this pair's own tokenizer), {cc['n']['excluded_long']} above the cap, {cc['n']['excluded_empty_r']}
+with an empty receiver prompt. Every figure below is `summarize_e9 --config config/e9f.toml`'s, from a run
+that passed all of its checks: alignments re-derived from the raw traces under the cap; every R²
+recomputed from recorded moments; per-token squares summed against the moments; {rescore_txt}; τ
+recomputed from the archived mapper and checked against the config; controls checked.
 
-tau_K, tau_V, tau_agent = float(cfg.rule["tau_K"]), float(cfg.rule["tau_V"]), float(cfg.rule["tau_agent_K"])
-ladder = ", ".join(f"{float(t):.4g}" for t in cfg.rule["tau_ladder"])
-names = lambda hs: "; ".join(f"`{h}`" for h in hs)      # noqa: E731
-lens = lambda hs: ", ".join(f"{recs[h]['n_sender']:,}" for h in hs)      # noqa: E731
-sl, sp = cfg.profiles["s_len_edges"], cfg.profiles["s_pos_edges"]
-sl_bins = " / ".join(f"({sl[i]:,}, {sl[i + 1] - 1:,}]" if i == 0 else f"[{sl[i]:,}, {sl[i + 1] - 1:,}]"
-                     for i in range(len(sl) - 1)) + f" / [{sl[-1]:,}, {cfg.context_cap:,}]"
-sp_bins = " / ".join(f"[{sp[i]:,}, {sp[i + 1] - 1:,}]" for i in range(len(sp) - 1)) + f" / [{sp[-1]:,}, {cfg.context_cap:,}]"
-gates = "/".join(cfg.required_entries)
-heldout = cal["heldout"]
+**The two controls that replace entry 0035's configuration bridge.** This receiver is natively long, so
+there is no scaled arm to compare and no bridge to run; what stands in its place is read off the dumps
+themselves, from the `RopeSpec` the upstream recorded off each loaded model's own rotary embedding and
+halt-checked against the model at every dumped position (worst |diff| {rope['spec_check_max_abs']:.1e}
+against atol {rope['spec_check_atol']:.0e}), over all {rope['n_dumps']} dumps of the run. **(i) Native
+window:** the registered cap {cfg.context_cap:,} sat inside EVERY dump's own recorded
+`max_position_embeddings` — no dump asked either model for a position its configuration does not declare,
+which is the positive "no extrapolation happened" statement. **(ii) Frequency identity, scoped by model
+role:** {roles}. The {n_roles} roles are compared separately and MUST be: this pair's two sides carry
+different llama3 scaling factors and build different inverse-frequency vectors by construction, so an
+unscoped equality assert would refuse every correct run. Every dump recorded an attention factor of 1.0,
+the only positive evidence that the box applied no scaling the registration does not describe.
 
-ENTRY = f"""### {NUM} — {a.date} — E9 long half registered before any prefill on the second model family, at a NATIVE receiver: entry 0035's D1(a), its configuration bridge and its scaled-receiver reading declared INAPPLICABLE; descriptive, no cell moves
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run
+order: max centered per-token δ {pre['max_token_delta']:.3e} over {pre['n_positions']:,} positions
+(tolerance {pre['tolerance']:.0e}, this pair's own value — entry {FAMILY}'s pre-registered function of
+τ_K, never the Qwen cells'). δ_null same K / V token-mean median {dn['same_K']['median_token_mean']:.3f} /
+{dn['same_V']['median_token_mean']:.3f}; equal-token null pairs {f['delta_null_equal_token_fraction']:.4f}.
+Matched fraction |M|/|R| (a floor): {s(f['matched_fraction'])}.
 
-**Why, and why now.** The short cell of this family ({SHORT}, decided by {PREV}) covers the handoffs whose
-longer side fits {cfg.context_floor:,} tokens. The handoffs above it are the same question at greater
-length, and on this pair they can be asked WITHOUT scaling anything: the receiver {tgt_id} ships a native
-window that already covers the cap below. This entry registers that run before any prefill —
-`results/e9fl/` holds no report and no score file at append, and the script refuses otherwise (R1) — and
-registers, equally explicitly, what it is NOT. The only things under it are the alignment pass
-(`e9 --align-only --config config/e9fl.toml`, `align/coverage.json` sha256
-`{sha256_file_bytes(cov_path)[:12]}`) and the τ calibration (`calibration/tau.json` sha256
-`{sha256_file_bytes(cal_path)[:12]}`), both checked here against the committed config.
+**The rule (0023, carried verbatim by {PREV}) and the figure it reads.** Per scored handoff, E9-same, K
+read-out: f*(τ_K) = the fraction of matched tokens an oracle must recompute before the mean centered
+deviation of the rest is at or below τ_K = {tau['K']:.4f}; median over scored handoffs; HOLDS ≤
+{rule['holds_max']}, DEGRADES ≥ {rule['degrades_min']}, UNRESOLVED between. τ_K is 1 − THIS pair's own
+held-out R² ({f['calibration']['heldout']['K_r2_layer_mean']:.4f} over
+{f['calibration']['heldout']['n_tokens']:,} tokens), recomputed here and refused on disagreement.
 
-**Descriptive, and what that forecloses.** **No hypothesis row is added and no `verdict:` line will
-follow.** In particular this cell **cannot move, support or refute H-E9L, and is never pooled with entry
-0036's handoffs.** H-E9L is a claim about a receiver pushed PAST its pretraining window by static YaRN
-(entry 0035's D1(a)): the question there was whether a SCALED receiver keeps transfer-relevant fidelity at
-those lengths. Here nothing is scaled. Two experiments sharing a length axis and nothing else; the numbers
-are stated beside each other, never added, averaged or compared as if one were a replication of the other.
+- **median f*(τ_K), E9-same K: {s(fs['same_K'])}** over {fs['same_K']['n']} handoffs ({COVER}). Seeded
+  bootstrap of the median (seed {boot['seed']}, {boot['reps']} reps; reported, not read):
+  [{boot['lower_2.5']:.4f}, {boot['upper_97.5']:.4f}].
+- f*(τ_V = {tau['V']:.4f}), E9-same V (alongside): {s(fs['same_V'])}.
+- τ ladder (descriptive): {ladder_txt}.
+- f*(τ_agent_K = {f['tau_agent_K']:.4f}) (alongside): same K {s(agent['same_K'])}; cross K {s(agent['cross_K'])}.
+- f*(τ_K) over matched blocks of length ≥ {f['min_block_len']}: same K {s(blocks) if blocks else 'NOT COMPUTABLE'}.
+- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: {seam}.
 
-**Entry 0035's three scaled-receiver instruments, declared INAPPLICABLE by construction.** (i) **D1(a),
-the receiver configuration**: there is no `[e9.rope]` — the receiver's own checkpoint declares a window
-covering {cfg.context_cap:,}, so no scaling is needed and applying one would measure an artifact of our own
-construction. (Imposing YaRN here to preserve the comparison with 0036 was considered and rejected:
-upstream `scaled_config` merges the override OVER the checkpoint's own rope parameters, replacing this
-family's native `rope_type` while leaving its band factors behind — it would REMOVE the checkpoint's own
-scaling rather than compose with it.) (ii) **Control 4, the configuration bridge**: its entire content is
-scaled arm versus native arm on the same tokens, and a natively long receiver has no scaled arm;
-`config.py` refuses a `[e9.bridge]` without an `[e9.rope]`, and that refusal is correct here rather than an
-obstacle. (iii) **The scaled-receiver reading** ("if the bridge control exceeds its maximum, H-E9L is a
-claim about the scaled receiver only") has no referent and is not carried over. What replaces all three is
-stated below and costs no GPU time.
+**Band outcome, against the rule as written: {f['band_outcome']}** — on this pair's {n_sc} scored
+handoffs, **never pooled with entry 0029's**: the same numeric cap over a different tokenizer selects a
+different set of handoffs, and the two cells are compared in prose or not at all.
+{"Not one scored handoff has a single matched token whose centered deviation exceeds τ_K on the same-model arm." if fs['same_K']['median'] == 0 and fs['same_K']['p90'] == 0 else ""}
 
-**The two controls that replace the bridge.** Read off the dumps themselves: upstream `kvt/data.py` writes
-each dump's `RopeSpec` — the `inv_freq` and attention factor of the loaded model's OWN rotary embedding —
-halt-checks the reconstruction against the model at every dumped position, and
-`linear_ceiling.e9.dump_rope_meta` keeps that record beside every dump's fingerprint BEFORE the non-kept
-dumps are deleted. **(1) Native window:** `context_cap` = {cfg.context_cap:,} must be ≤ EVERY dump's
-recorded `max_position_embeddings` — the positive statement that no extrapolation happened, which is
-exactly what the bridge used to establish by measurement. A run whose dumps carry NO RoPE block at all (a
-pin older than the RoPE-spec commit, where the strip is plain-θ and therefore silently wrong for this
-family) **FAILS** this control; it does not pass it vacuously, and the summarizer refuses such a run
-outright for this cell. **(2) Frequency identity, scoped by model ROLE:** the recorded spec must be
-identical across every dump of the receiver, and across every dump of the source, compared separately.
-Role-scoped is not a weakening: this pair's two sides carry different scaling factors and build different
-inverse-frequency vectors by construction, so an unscoped equality assert would refuse every CORRECT run.
-Both are fail-closed in `summarize_e9` and both survive the deletion of the non-kept dumps.
+**Read on a floor (0027, bound to this cell).** f*(τ) is an oracle LOWER BOUND on the recompute fraction
+(oracle selection, recompute in isolation); this cell reads "no more than the mapper, on a floor", never
+that an achievable scheme reaches it.
 
-**The verdict set is a band of token counts, and the thresholds are not hardware bounds.**
-`context_floor = {cfg.context_floor:,}`, `context_cap = {cfg.context_cap:,}`: registered LENGTH thresholds
-in this pair's own tokens. {cfg.context_cap:,} is NOT "{cfg.context_floor:,} × 2.5" here — there is no
-scaling factor to multiply — it is the same numeric band entry 0036 reported, kept only so the two long
-cells are DEFINED over the same token counts. A handoff whose |S| and |R| both fit the floor was covered by
-the short cell and is EXCLUDED here with its own reason; this script checks that those excluded ids are
-EXACTLY the short cell's included set, so the partition is audited rather than asserted. Coverage from the
-alignment pass: **{cov['coverage']['observed']} observed · {len(order)} included · {len(prior_cap)}
-excluded as covered by the short cell · {len(residual)} excluded above the cap · {len(empty)} excluded for
-an empty receiver prompt**. Together the two cells cover every handoff whose longer side is within
-{cfg.context_cap:,} tokens; the **residual — {len(residual)} handoffs above {cfg.context_cap:,} — is scored
-by NEITHER cell** and is named here so it cannot be mistaken for absence: {names(residual) if residual else 'none'}
-{f'(|S| {lens(residual)})' if residual else ''}. Included |S| runs {ns[0]:,} to {ns[-1]:,}; the prefill
-budget is {sum_s:,} sender tokens (both models) + {sum_r:,} receiver tokens = {2 * sum_s + sum_r:,} tokens.
+**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through this pair's own
+k = {cfg.mapper_k} mapper: median f*(τ_K) = {s(fs['cross_K'])} and f*(τ_V) = {s(fs['cross_V'])}; against
+the same edges the transfer arm sits {cross_band}. Cross/same median-δ ratio K / V: {s(ratio['K'], 1)} /
+{s(ratio['V'], 1)}. Bridge R² (A5 across the handoff; decides nothing): same K {s(br['same_K'])}, same V
+{s(br['same_V'])}, cross K {s(br['cross_K'])}, cross V {s(br['cross_V'])}.
 
-**The instrument, unchanged.** 0023's rule verbatim, with τ this pair's own and IDENTICAL to the short
-cell's (one mapper, one calibration): τ_K = {tau_K:.4f} = 1 − {heldout['K_r2_layer_mean']:.4f}, the
-k = {cfg.mapper_k} mapper's held-out R² over {heldout['n_tokens']:,} tokens; τ_V = {tau_V:.4f}; τ_agent_K =
-{tau_agent:.4f}. The HOME calibration is authoritative for K/V: this config agrees with it at 1e-9 and
-the box-written E8 report agrees within the registered 1e-6 cross-platform tolerance; agent K agrees
-across config, calibration and E8 arm (b) at 1e-9. The τ ladder ({ladder}); the seam bins; the block floor
-({cfg.rule['min_block_len']}); the bootstrap (seed {cfg.controls['bootstrap_seed']},
-{cfg.controls['bootstrap_reps']} reps). The band words
-HOLDS ≤ {cfg.rule['holds_max']} / DEGRADES ≥ {cfg.rule['degrades_min']:.2f} are **computed and reported
-here and are verdict-bearing for nothing**: this cell has no row. f* stays an oracle LOWER BOUND read on a
-floor (0027).
+**What this establishes, stated narrowly.** On {tgt_id} re-rendering {n_sc} real SWE-bench
+`{cfg.agent}` handoffs whose sender and receiver prompts both fit {cfg.context_cap:,} tokens under this
+pair's own tokenizer, with 0019's alignment and 0023's per-token rule and τ calibrated on THIS pair's
+k = {cfg.mapper_k} mapper, the same-model oracle recompute floor is as stated above. **Not established:**
+anything about the {cc['n']['excluded_long']} handoffs above the cap or the
+{cc['n']['excluded_empty_r']} with an empty receiver prompt; any achievable recompute scheme; anything
+about the Qwen cells, which are a different pair and are unchanged; one pair, one direction, one mapper,
+one alignment method; generation quality after reuse. `eval_hellaswag.py` and `compose_mapper.py` remain
+out of scope for this pair (entry {FAMILY}).
 
-**Run order, stopping rule, resume.** The driver scores the included handoffs in the registered order
-`{cfg.order_by}` (|S| ascending, with any ties broken by id): `{order[0].split('/')[-1]}` ({ns[0]:,})
-first, `{order[-1].split('/')[-1]}` ({ns[-1]:,}) last. Controls run on the first handoff in that order.
-**This is the campaign's cuttable stage.** If the sitting must end before all {len(order)} are scored,
-`e9 --close-partial --config config/e9fl.toml` closes the run: allowed only by this config, refused unless
-the scored set is a PREFIX of the registered order, stamping the close time and naming every unscored
-handoff; the figures entry then states "n scored of {len(order)} registered" beside every number. The
-cutoff is the operator's, is recorded with its reason, and may not depend on any score. A relaunch after a
-crash uses `--resume`.
-
-**Keep subset.** n = {cfg.keep_n}, seed {cfg.keep_seed}, a fresh draw from THIS cell's sorted included ids
-(numpy `choice` without replacement is not nested, so this is not a subset of the short cell's):
-{names(keep)}. Small on purpose — at this cap one kept handoff is tens of GB of fp16 dumps. Their
-stride-1 dumps are retained, fingerprinted, pulled home and re-scored from tensors by the summarizer under
-0028's tolerance.
-
-**Controls (1–3 as 0023/0025; 5 re-cut; 6 as 0025).** (1) Pipeline identity HALT. (2) Prefix-invariance
-HALT on the first handoff in run order, max centered δ ≤
-{float(cfg.controls['prefix_invariance_max_delta']):.0e} — entry {FAMILY}'s
-pre-registered absolute float32 kernel-noise bound, exactly `config/e9.toml`'s and never a function of
-τ_K. (3) δ_null, seeded derangement (seed
-{cfg.controls['null_seed']}). **(5) Length profiles (descriptive):** f*(τ_K) and median δ_K (i) by |S| bin
-{sl_bins}, and (ii) by matched-token position in S {sp_bins} — (ii) is the long-context figure, and its
-edges are re-cut at this family's OWN boundary (the point where its RoPE frequency rescaling begins),
-because entry 0035's edges were the midpoint of a YaRN window that does not exist here. (6) Seam profiles
-b(t) and b⁻(t) as 0025, same bins.
-
-**Gate and enforcement.** `e9 --check --config config/e9fl.toml` refuses until entries {gates} are in the
-committed ledger, `config/e9fl.toml` is committed unmodified, the upstream is at the pin
-`{cfg.upstream_sha[:12]}` with every invoked path clean, and the mapper artifact is present by sha.
-`summarize_e9 --config config/e9fl.toml` (fail-closed, the only reader) re-derives every alignment from the
-raw traces with the floor, re-derives the run order, checks a partial close is a prefix, recomputes every
-figure, re-scores the kept dumps from tensors, recomputes τ, checks the controls and the two RoPE controls
-above, and states the profiles and the band. The τ calibration is checked at THIS entry as well as by the
-summarizer, for the reason entry {SHORT} gives.
-
-**What this does NOT touch.** The H-E8, H-E9, H-E9L and H-E9F cells; entry 0036's figures and its 35
-handoffs; τ, the rule, the band, the ladder and the keep subsets of every other cell; `results/e9/`,
-`results/e9l/`, `results/e9s/`, `results/e9f/`, `results/e8*/`; `config/e9.toml`, `config/e9l.toml`,
-`config/e9s.toml`, `config/e9c.toml`, `config/e9f.toml`. Nothing here is a figure: this cell's enter by
-their own numbered entry, and the paper only from that entry.
-
-**Scope.** One pair ({src_id} → {tgt_id}), one direction, one agent family, the long band of one corpus at
-a NATIVE receiver; off-policy text for Llama-3; floor not method (0027); the {len(residual)} handoffs above
-{cfg.context_cap:,} and the {len(empty)} with an empty receiver prompt stay excluded and counted;
-generation quality after reuse not measured. `eval_hellaswag.py` and `compose_mapper.py` remain out of
-scope for this pair (entry {FAMILY}).
+verdict: H-E9F = {VERDICT}
+e7-manifest-sha256: {manifest}
 
 prior-entries-sha256: PLACEHOLDER
 """
@@ -314,12 +214,16 @@ if a.preview:
     print(ENTRY)
     raise SystemExit(0)
 
+row = re.compile(rf"^(\| H-E9F \|.*\| E9-family \(entry {PREV}\) \|) unresolved (\|\s*)$", re.M)
+assert len(row.findall(text)) == 1, "H-E9F row not found in its expected shape (registered `unresolved` by " + PREV + ")"
+text = row.sub(lambda m: f"{m.group(1)} {VERDICT} {m.group(2)}", text)
+
 new = text + ("" if text.endswith("\n") else "\n") + "\n" + ENTRY
 head = _ENTRIES_HEAD.search(new)
 digest = chain_hash(new, new.index(f"### {NUM} "), head.start())
 new = new.replace("prior-entries-sha256: PLACEHOLDER", f"prior-entries-sha256: {digest}")
 LEDGER.write_text(new, encoding="utf-8", newline="\n")
-print(f"appended {NUM}; chain", digest[:12])
+print(f"appended {NUM} (H-E9F = {VERDICT}); chain", digest[:12])
 r = subprocess.run([sys.executable, "-m", "linear_ceiling.ledger_check"], cwd=REPO_ROOT, capture_output=True, text=True)
 print(r.stdout.strip() or r.stderr.strip())
 raise SystemExit(r.returncode)

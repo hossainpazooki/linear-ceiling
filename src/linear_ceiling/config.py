@@ -287,9 +287,16 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         raise ValueError(f"{path.name} [e9.rule] tau_ladder must be a strictly decreasing list of values in "
                          "(0, tau_K): the ladder reads how far INSIDE the registered tolerance f* sits (entry 0025). "
                          "It is tau-derived: an uncalibrated cell carries an UNRESOLVED marker here and refuses")
-    if not (float(rule["tau_K"]) < float(rule["tau_agent_K"]) < 1.0):
-        raise ValueError(f"{path.name} [e9.rule] tau_agent_K must sit in (tau_K, 1): it is the LOOSER agent-text "
-                         "tolerance from entry 0020 arm (b), reported alongside (entry 0025)")
+    # ORDERING_NOT_REGISTERED (entry 0041). This used to REFUSE unless tau_K < tau_agent_K < 1. No entry
+    # registers that ordering: 0025 registers tau_agent_K's DERIVATION, says it "is a K tolerance and is
+    # applied to nothing else", and says "The band reads tau_K only". The refusal encoded what entry 0020
+    # MEASURED on the Qwen pair -- an observation -- and it could stop a whole cell from loading on a
+    # quantity the ledger says decides nothing. It is now a recorded fact, reported wherever the two
+    # values are, and refuses nothing. What is still REQUIRED is that tau_agent_K be a tolerance at all:
+    # outside (0, 1) it is not one.
+    if not (0.0 < float(rule["tau_agent_K"]) < 1.0):
+        raise ValueError(f"{path.name} [e9.rule] tau_agent_K must lie in (0, 1): it is 1 - a held-out R^2 "
+                         "(entry 0025) and a value outside the unit interval is not a tolerance")
     if not (isinstance(rule["min_block_len"], int) and rule["min_block_len"] >= 1):
         raise ValueError(f"{path.name} [e9.rule] min_block_len must be an integer >= 1 (entry 0025)")
     if not (isinstance(ctl["prefix_invariance_max_delta"], (int, float)) and 0 < float(ctl["prefix_invariance_max_delta"]) < 1):
