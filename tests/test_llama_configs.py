@@ -20,6 +20,7 @@ from linear_ceiling import e8 as e8_driver
 from linear_ceiling import e9 as e9_driver
 from linear_ceiling.config import load_e8_config, load_e9_config
 from linear_ceiling.e9_pertoken import SEAM_BIN_EDGES
+from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.pairs import pair_models
 
 PAIR = "llama3.2-3b-to-llama3.1-8b"
@@ -212,13 +213,25 @@ def test_the_resolved_config_loads_as_a_native_llama_cell(tmp_path, name, cap, f
 
 @pytest.mark.parametrize("name", E9_NAMES)
 def test_the_resolved_config_carries_a_real_pin_that_is_still_enforced(tmp_path, name):
-    """Same as the E8 twin: the pin is recorded now, so what must be proven is that a pin which does
-    not hold still refuses -- a recorded sha nobody checks would be worse than a placeholder."""
+    """The pin is recorded now, so what must be proven is that a pin which does NOT hold still refuses
+    -- a recorded sha nobody checks would be worse than a placeholder.
+
+    This asserts against `check_upstream`, the function `e9.assert_ready` delegates the pin to, rather
+    than against `assert_ready` itself. An earlier version called `assert_ready` on a config written to
+    `tmp_path` and PASSED ONLY BECAUSE THE ENVIRONMENT WAS INCOMPLETE: while the pin was still a
+    placeholder, `assert_ready` refused early, before reaching a `relative_to(REPO_ROOT)` that a config
+    outside the repo can never satisfy. The moment the upstream checkout was moved to the real pin the
+    same test began failing on that ValueError -- so it was testing the environment, not the guard.
+    Going through `check_upstream` tests the mechanism that actually enforces the pin and is
+    independent of where the config file happens to live."""
     c = _resolved_cfg(tmp_path, name)
     assert re.fullmatch(r"[0-9a-f]{40}", c.upstream_sha) and "UNRESOLVED" not in c.upstream_sha
-    bogus = c.__class__(**{**c.__dict__, "upstream_sha": "0" * 40})
+    # a well-formed sha that is not in the checkout: neither ancestor nor present
     with pytest.raises(RuntimeError, match="REFUSED"):
-        e9_driver.assert_ready(bogus, REPO_ROOT)
+        check_upstream(c.upstream_path, "0" * 40, e9_driver.UPSTREAM_PATHS, who="E9")
+    # and a malformed one is refused before git is consulted at all
+    with pytest.raises(RuntimeError, match="REFUSED"):
+        check_upstream(c.upstream_path, "not-a-sha", e9_driver.UPSTREAM_PATHS, who="E9")
 
 
 def test_the_qwen_configs_are_untouched():
