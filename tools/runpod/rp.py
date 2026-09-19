@@ -397,7 +397,7 @@ def cmd_wait_ssh(a) -> int:
             print("  waiting for a public SSH port", flush=True)
         time.sleep(a.every)
     print(f"wait-ssh: SSH never came up within {a.timeout} min — TERMINATING rather than burning")
-    return cmd_terminate(argparse.Namespace(pod=None))
+    return cmd_terminate(argparse.Namespace(pod=None, force=True))
 
 
 def cmd_arm_deadman(a) -> int:
@@ -638,7 +638,9 @@ def main() -> int:
     p.add_argument("--hours", type=float, required=True)
     # Real use is ~50 GB (22.5 GB bf16 weights + ~8 GB venvs + ~10 GB pull set + caches). 120 leaves
     # headroom without narrowing the host pool: minDisk is a filter, and stock is already "Low".
-    p.add_argument("--disk", type=int, default=120, help="container disk GB (ephemeral; no volume)")
+    # 250 GB for sitting B: per-handoff dumps reach ~12.4 GB and the keep subset is 8, against
+    # sitting A's ~50 GB peak. Sized from the measured budget, not guessed.
+    p.add_argument("--disk", type=int, default=250, help="container disk GB (ephemeral; no volume)")
     # 48 GB, measured not guessed: kvt/models.load_model calls from_pretrained(dtype=float32) with NO
     # device_map and only then .to(device), so the whole fp32 model materialises in host RAM first --
     # 29.91 GiB for Llama-3.1-8B (32 x 4096 x ... verified from the gated config). 48 leaves ~18 GiB of
@@ -656,7 +658,10 @@ def main() -> int:
     # being set, which is exactly why an account with no pubKey yields an unreachable pod. It also
     # writes /etc/rp_environment from printenv, which is what the dead man sources.
     p.add_argument("--image", default="runpod/base:1.3.1-cuda1281-ubuntu2204")
-    p.add_argument("--name", default=f"{NAME_PREFIX}sitting-a")
+    # Default is sitting-b now that A is done. This is not cosmetic: cmd_terminate's legacy
+    # existence-only receipt path is reachable ONLY for a pod named exactly
+    # "linear-ceiling-sitting-a", so B takes the fail-closed JSON-receipt path by default.
+    p.add_argument("--name", default=f"{NAME_PREFIX}sitting-b")
     p.add_argument("--pubkey", default=str(Path.home() / ".ssh" / "id_rsa.pub"))
     p.add_argument("--cap", type=float, default=10.0, help="CAMPAIGN-wide cap, not per-pod")
     p.add_argument("--cloud", default="COMMUNITY", choices=["COMMUNITY", "SECURE"])
@@ -664,8 +669,12 @@ def main() -> int:
                    help="refuse a $/h above this; the cheap card is the whole point of the brief")
     p.add_argument("--cuda", nargs="*", default=["12.8", "12.9"],
                    help="allowedCudaVersions; setup.sh builds torch 2.11.0+cu128")
+    # DO NOT set this for sitting B. It is a provider-side hard kill that cannot be extended without
+    # editing the pod (which restarts the container and, at volumeInGb 0, wipes /workspace mid-run), and
+    # a B that overruns its estimate would be destroyed rather than closed under the registered partial
+    # rule. Sitting A could afford it; B cannot. Left available for short, bounded sittings only.
     p.add_argument("--terminate-after", default=None,
-                   help="ISO DateTime for RunPod's own terminateAfter (a third layer, never relied on)")
+                   help="ISO DateTime for RunPod's terminateAfter. DO NOT USE for sitting B -- see the code comment")
     vg = p.add_mutually_exclusive_group(required=True)
     vg.add_argument("--verify-file",
                     help="path the home side writes after verifying the pull; `terminate` refuses without it")

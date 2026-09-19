@@ -99,3 +99,30 @@ def test_the_watchdog_loop_keeps_polling_through_a_gql_systemexit(rp, monkeypatc
     assert rp.cmd_watchdog(args) == 0, "the watchdog must exit 0 only because nothing is billing"
     assert state["polls"] >= 3, "it must have kept polling after the SystemExits"
     assert "unreachable" in capsys.readouterr().out
+
+
+def test_guardrail_terminate_paths_do_not_crash_on_a_missing_force_flag(rp, monkeypatch, capsys):
+    """Every INTERNAL terminate must pass force=True, or it raises AttributeError and burns money.
+
+    `cmd_terminate` reads `a.force` (the receipt interlock, which protects a human's manual
+    terminate). The guardrails build their own Namespace, and one built without `force` raises
+    AttributeError -- so the wait-ssh timeout, the spend ceiling and the TTL would all CRASH at the
+    exact moment they are supposed to stop the meter. This pins the contract."""
+    seen = {}
+
+    def fake_terminate(ns):
+        seen["force"] = getattr(ns, "force", "ABSENT")   # ABSENT means the caller would have crashed
+        return 0
+
+    monkeypatch.setattr(rp, "cmd_terminate", fake_terminate)
+    monkeypatch.setattr(rp, "pods", lambda: [])
+    monkeypatch.setattr(rp.time, "sleep", lambda *_: None)
+    rp._terminate_until_gone("test")
+    assert seen["force"] is True, "the retry loop must pass force=True"
+
+    # and the wait-ssh timeout path, which is the other internal caller
+    src = (rp.__file__ and open(rp.__file__, encoding="utf-8").read()) or ""
+    calls = [ln for ln in src.splitlines() if "cmd_terminate(argparse.Namespace" in ln]
+    assert calls, "expected internal cmd_terminate calls to exist"
+    assert all("force=True" in ln for ln in calls), \
+        f"an internal terminate call omits force=True and would crash: {calls}"
