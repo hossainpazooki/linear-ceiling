@@ -39,7 +39,7 @@ cell changes.
 | H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | NOT CONFIRMED |
 | H-E9 | (achievable fraction of the headroom upper bound at a re-rendered handoff) at a re-rendered handoff, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity. Rule (entry 0019, band approved 2026-09-01, frozen before any prefill): per-handoff E9-same pooled K R² (definition A5) at LCS-floor matched positions, median over included handoffs — HOLDS >= 0.70, DEGRADES <= 0.40, UNRESOLVED between; V reported alongside, verdict-bearing for nothing; handoffs over the 32,768-token cap excluded and counted. Row added with 0019's commit set completion — the entry says "registered in the table" and the row was initially missing (process slip, noted in the handoff; the entry text is immutable and unchanged). | E9 (band in entry 0019) | HELD |
 | H-E9L | (E9's claim on the long half) at a re-rendered handoff whose sender prompt exceeds the prior cap of 32,768 tokens, same-model KV agreement on content-matched tokens keeps its usefulness under a receiver extended to 81,920 positions by static YaRN. Rule verbatim from entry 0023: median over the newly included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.3186) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; decided on the 35 newly included handoffs only, never pooled with 0029's 25; read on a floor (0027) and, if the bridge control exceeds 0.15, as a claim about the scaled receiver only. Registered by entry 0035 before any prefill. | E9-long (entry 0035) | HELD |
-| H-E9F | (E9's claim on a second model family) at a re-rendered handoff whose sender and receiver prompts both fit 32,768 tokens under the pair's own tokenizer, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity on meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B — a matched-KV cross-release pair with a natively long receiver, neither side scaled. Rule verbatim from entry 0023: median over the included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.2861) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; τ_K is 1 − THIS pair's own k = 1 held-out R² (entry 0040) and is never Qwen's; decided on this pair's 28 included handoffs — or, under the stopping rule this entry registers, on a PREFIX of them in `n_sender_asc` order with its coverage stated — never pooled with entry 0029's 25 — the same numeric cap over a different tokenizer is a different set of handoffs; read on a floor (0027). Registered by entry 0042 before any prefill. | E9-family (entry 0042) | unresolved |
+| H-E9F | (E9's claim on a second model family) at a re-rendered handoff whose sender and receiver prompts both fit 32,768 tokens under the pair's own tokenizer, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity on meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B — a matched-KV cross-release pair with a natively long receiver, neither side scaled. Rule verbatim from entry 0023: median over the included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.2861) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; τ_K is 1 − THIS pair's own k = 1 held-out R² (entry 0040) and is never Qwen's; decided on this pair's 28 included handoffs — or, under the stopping rule this entry registers, on a PREFIX of them in `n_sender_asc` order with its coverage stated — never pooled with entry 0029's 25 — the same numeric cap over a different tokenizer is a different set of handoffs; read on a floor (0027). Registered by entry 0042 before any prefill. | E9-family (entry 0042) | HELD |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -2860,3 +2860,130 @@ keep draw, the run order, the coverage figures themselves; every other cell's co
 evidence about KV reuse, and nothing here may be cited as a finding.
 
 prior-entries-sha256: 5112398f506937881144964ba7fbca7316d68165e7aaedccf00974005de7849f
+
+### 0044 — 2026-09-19 — E9 short cell ran on the second model family `[BASELINE]`; H-E9F HELD (28 scored of 28 registered)
+
+**The registered τ_K ceiling does not bite (entry 0039).** τ_K = 0.2861 ≤ 0.45, so the band below is read as the rule writes it. Operator provenance note (non-verdict-bearing): tau_K 0.2861 = 1 MINUS this pair's own k=1 generic held-out K R^2 (0.7139, entry 0040's verified E8 report), recomputed by summarize_e9 --calibrate-tau and agreeing to 1e-9; it sits below entry 0039's 0.45 ceiling, which was registered before the fit. The billed sitting began at pod creation 16:02:36Z, 72 minutes before the driver launch stated above.
+
+**Setup, as registered (0042, amended by 0043).** RunPod SECURE, pod k83m2em0mgp9dx created 2026-09-19T16:02:36Z at $1.59/h under a 5.0 h / $7.95 ceiling (runpod_state.json, receipt e9f-verified.json); NVIDIA A100-SXM4-80GB, 81,920 MiB, driver 580.126.16; torch 2.11.0+cu128 (CUDA 12.8), transformers 5.15.1, numpy 2.5.2, python 3.12.13 — as the box recorded them in sitting_b.evidence/versions.txt at 17:14:36Z; linear-ceiling at the commit carrying 0043 and
+`config/e9f.toml` (gate: entries 0019/0023/0025/0027/0042/0043), upstream pin `06f8d55`
+(the one-line `PAIRS` entry on top of the RoPE-spec commit). Pair llama3.2-3b-to-llama3.1-8b: receiver meta-llama/Llama-3.1-8B, source
+meta-llama/Llama-3.2-3B, **neither scaled** — no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling` on any dump; the
+k = 1 mapper this family's E8 sitting fitted (entry 0040) for the cross arm, by sha. Launched
+2026-09-19T17:14:41Z, finished 2026-09-19T18:18:30Z. 28 scored of 28 registered, in the registered `n_sender_asc` order. Of
+68 observed handoffs: 28 included (|S| and |R| both within 32,768 tokens
+under this pair's own tokenizer), 36 above the cap, 4
+with an empty receiver prompt. Every figure below is `summarize_e9 --config config/e9f.toml`'s, from a run
+that passed all of its checks: alignments re-derived from the raw traces under the cap; every R²
+recomputed from recorded moments; per-token squares summed against the moments; the 8 kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square within 8.8e-04 relative, max |f* diff| 0.0e+00); τ
+recomputed from the archived mapper and checked against the config; controls checked.
+
+**The two controls that replace entry 0035's configuration bridge.** This receiver is natively long, so
+there is no scaled arm to compare and no bridge to run; what stands in its place is read off the dumps
+themselves, from the `RopeSpec` the upstream recorded off each loaded model's own rotary embedding and
+halt-checked against the model at every dumped position (worst |diff| 1.2e-07
+against atol 1e-05), over all 85 dumps of the run. **(i) Native
+window:** the registered cap 32,768 sat inside EVERY dump's own recorded
+`max_position_embeddings` — no dump asked either model for a position its configuration does not declare,
+which is the positive "no extrapolation happened" statement. **(ii) Frequency identity, scoped by model
+role:** source (28 dumps, max_position_embeddings 131,072, inv_freq 31576ad84e5a, attention factor 1.0), target (57 dumps, max_position_embeddings 131,072, inv_freq 8480b7658cd7, attention factor 1.0). The 2 roles are compared separately and MUST be: this pair's two sides carry
+different llama3 scaling factors and build different inverse-frequency vectors by construction, so an
+unscoped equality assert would refuse every correct run. Every dump recorded an attention factor of 1.0,
+the only positive evidence that the box applied no scaling the registration does not describe.
+
+**How the sitting actually ran, for the record.** The card was not the one planned. Creates were repeatedly
+refused for stock on the $1.19 A100 80GB PCIe and then the $1.39 A100 SXM, both community: **nine such
+refusals are recorded in `~/.cache/linear-ceiling/create-attempts.log`** (15:52:01Z–16:01:59Z), and
+earlier by-hand attempts that day are not separately recorded, so no total is stated here. The sitting
+ran on a SECURE A100 SXM at $1.59/h with a 5.0 h ceiling — which put entry
+0043's drain at 3.5 h and made a registered partial the likelier outcome. It did not occur: the run
+finished all 28 in 63.8 minutes, and the drain never armed. Three SETUP attempts failed before the
+driver started, none of which touched a scored artefact and all of which are macOS→Linux archive or
+tooling defects rather than anything about this pair: a traces archive carrying macOS AppleDouble
+members (rebuilt with `COPYFILE_DISABLE=1`, re-verified against the committed manifest); the same
+defect in the weight archive (17 GiB by `du`, `freed-bytes.log`), whose own sha256 matched, so the
+cache was extracted by hand with `--exclude='._*'` and then verified per object — 6 LFS blobs by
+content sha256, 14 git blobs by sha1;
+and a false positive in that per-object check from a size-based rather than name-length-based rule.
+Two different BLAS thread caps applied, and they are not the same cap: ON THE BOX the driver ran
+under a **13**-thread cap that `sitting_b.sh` derived from the container's cgroup CPU quota
+(`/sys/fs/cgroup/cpu.max`), whose raw value the run did not record — the box log states only the derived
+cap — and never from the host core count, which the same log records as `vcpu: 128` at 17:12:55Z. (That
+log line's own parenthetical reads `NOT nproc=13`: the script prints `nproc` a second time AFTER
+exporting `OMP_NUM_THREADS=13`, and GNU `nproc` honours that variable, so the 13 there is an artifact of
+the cap being reported and not a second measurement of the host. Stated because a reader grepping
+`nproc` in the log finds 13 and would otherwise read this entry as wrong.) The box also recorded
+`disk: 107G free of 160G`. AT HOME the summarizer ran under an **8**-thread cap. Both matter only through entry 0028's float32 reduction-order tolerance, which the
+keep-subset re-score figures above already bound.
+
+**One input was rebuilt, and its bytes differ from the earlier record's.** `results/e7/` was absent on the
+summarizing machine (`results/` is gitignored and E7 ran elsewhere), so `summarize_e9` refused until
+`skeleton_report.json` was regenerated by its own registered driver from `traces/` verified against the
+committed manifest `371fb4bf3cb0`; `summarize_e7`, which recomputes every E7 figure from the raw traces,
+then PASSED on it. The regenerated report's sha256 is `27dc922e3f7d…` (recorded in
+`results/e9f/summary.json`) and it **DIFFERS** from the `0aba0fbe…` that the 2026-09-10 long-run summary
+records in the public dataset `hossainpazooki/linear-ceiling-e9l-2026-09-10`. **The cause is not
+established and none is asserted here.** What is established is that the difference is not in the
+values: the regenerated rows reproduce that earlier summary's six coverage figures to all 16 digits, and
+this file feeds the DESCRIPTIVE coverage comparison alone — no verdict-bearing figure, no control and no
+τ reads it (`summarize_e9` takes only `headroom.rows` from it). Nothing under `results/e9f/` was
+touched.
+
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run
+order: max centered per-token δ 0.000e+00 over 7,435 positions
+(tolerance 1e-04 — entry 0039's registered ABSOLUTE literal, deliberately
+IDENTICAL to `config/e9.toml`'s by the operator's 2026-09-18 ruling, and never a function of τ_K: it is a
+float32 kernel-noise floor, a property of the arithmetic rather than of how well a mapper fitted). δ_null same K / V token-mean median 2.004 /
+2.015; equal-token null pairs 0.0083.
+Matched fraction |M|/|R| (a floor): 0.9304 (p10 0.8794, p90 0.9788).
+
+**The rule (0023, carried verbatim by 0043) and the figure it reads.** Per scored handoff, E9-same, K
+read-out: f*(τ_K) = the fraction of matched tokens an oracle must recompute before the mean centered
+deviation of the rest is at or below τ_K = 0.2861; median over scored handoffs; HOLDS ≤
+0.15, DEGRADES ≥ 0.5, UNRESOLVED between. τ_K is 1 − THIS pair's own
+held-out R² (0.7139 over
+2,560 tokens), recomputed here and refused on disagreement.
+
+- **median f*(τ_K), E9-same K: 0.0000 (p10 0.0000, p90 0.0000)** over 28 handoffs (28 scored of 28 registered). Seeded
+  bootstrap of the median (seed 25, 2000 reps; reported, not read):
+  [0.0000, 0.0000].
+- f*(τ_V = 0.5289), E9-same V (alongside): 0.0000 (p10 0.0000, p90 0.0000).
+- τ ladder (descriptive): τ = 0.1: same K 0.0000 (p10 0.0000, p90 0.2505) / V 0.0000 (p10 0.0000, p90 0.2942); τ = 0.03: same K 0.1078 (p10 0.0010, p90 0.4536) / V 0.1491 (p10 0.0094, p90 0.5047).
+- f*(τ_agent_K = 0.2689) (alongside): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.8040 (p10 0.6888, p90 0.8925).
+- f*(τ_K) over matched blocks of length ≥ 4: same K 0.0000 (p10 0.0000, p90 0.0000).
+- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: 0: 0.223 (n=2502) · 1: 0.107 (n=1777) · 2-3: 0.065 (n=2853) · 4-7: 0.051 (n=4467) · 8-15: 0.053 (n=6030) · 16+: 0.010 (n=151808).
+
+**Band outcome, against the rule as written: HOLDS** — on this pair's 28 scored
+handoffs, **never pooled with entry 0029's**: the same numeric cap over a different tokenizer selects a
+different set of handoffs, and the two cells are compared in prose or not at all.
+f* = 0 on a handoff means its MEAN centered deviation over matched tokens is ALREADY at or below τ_K
+with nothing recomputed. It is entry 0023's mean-repair statistic and is **NOT** a statement that no
+single token exceeds τ_K — entry 0038 draws that distinction explicitly, and the identical sentence in
+entries 0029 and 0036 claimed otherwise; it is not repeated here. The fraction of tokens individually
+above τ_K is not computed by this summarizer and no figure for it is stated. How far inside the
+tolerance this cell sits is what the τ ladder and the seam profile above show.
+
+**Read on a floor (0027, bound to this cell).** f*(τ) is an oracle LOWER BOUND on the recompute fraction
+(oracle selection, recompute in isolation); this cell reads "no more than the mapper, on a floor", never
+that an achievable scheme reaches it.
+
+**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through this pair's own
+k = 1 mapper: median f*(τ_K) = 0.7317 (p10 0.6074, p90 0.8516) and f*(τ_V) = 0.8148 (p10 0.7407, p90 0.8977); against
+the same edges the transfer arm sits beyond the DEGRADES edge. Cross/same median-δ ratio K / V: 30.0 (p10 3.8, p90 65.4) /
+42.0 (p10 5.2, p90 122.0). Bridge R² (A5 across the handoff; decides nothing): same K 0.9199 (p10 0.7812, p90 0.9685), same V
+0.9020 (p10 0.7478, p90 0.9608), cross K 0.5848 (p10 0.5124, p90 0.6142), cross V 0.2657 (p10 0.2264, p90 0.2948).
+
+**What this establishes, stated narrowly.** On meta-llama/Llama-3.1-8B re-rendering 28 real SWE-bench
+`composio_swekit` handoffs whose sender and receiver prompts both fit 32,768 tokens under this
+pair's own tokenizer, with 0019's alignment and 0023's per-token rule and τ calibrated on THIS pair's
+k = 1 mapper, the same-model oracle recompute floor is as stated above. **Not established:**
+anything about the 36 handoffs above the cap or the
+4 with an empty receiver prompt; any achievable recompute scheme; anything
+about the Qwen cells, which are a different pair and are unchanged; one pair, one direction, one mapper,
+one alignment method; generation quality after reuse. `eval_hellaswag.py` and `compose_mapper.py` remain
+out of scope for this pair (entry 0039).
+
+verdict: H-E9F = HELD
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 53b14a5e89f3a829a115ca9e233a3b52440e8ff1711e45ecda11126a6901bcca
