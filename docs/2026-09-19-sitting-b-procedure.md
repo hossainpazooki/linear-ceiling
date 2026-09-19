@@ -17,6 +17,7 @@ entry **0042**, which also registers the stopping rule (`by = "n_sender_asc"`, `
 | b | **upstream commit P exists at the pin** | `06f8d55592570deae70c3feb9f84a75c4044fb03` — currently on `emersony99/kv-transfer-replication`, pending `hossainpazooki/kv-transfer-replication#1`. That PR must merge **without squash or rebase** or the sha dies and `e9 --check` refuses |
 | c | `e9 --check --config config/e9f.toml` prints ready from a **fresh clone** | the registering entry is committed and pushed |
 | d | `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report results/e8f/report.json` **has run** | the gate never looks at `tau.json`; skipping this is how 2026-09-14's card was released before the summarizer refused |
+| e0 | **weight tarball BUILT** | `hf-cache.tar.gz` must exist before `up`. It did not, and nothing said to make it — the step existed only in my head. Build it at $0 (§1b); building it with the meter running is 10–20 min of CPU for ~0% size gain. |
 | e | weights staged | **done 2026-09-19.** `~/Desktop/linear-ceiling/box-cache/hub/` — Llama-3.2-3B 5.99 GiB (2 shards) + Llama-3.1-8B 14.97 GiB (4 shards), `*.json` + `*.safetensors` + `tokenizer*` only, **0 token files**, and it passes `sitting_b.sh`'s own `cache_complete` for both. Tar to `hf-cache.tar.gz` for the no-token path |
 | f | **the three-scenario rehearsal passes** | `pytest -q tests/test_sitting_b_rehearsal.py` |
 
@@ -62,6 +63,31 @@ so** instead of filling the disk. Nothing on the box is deleted while it is paus
 > Also reclaimable, ~6.0 GiB: `~/.cache/huggingface/hub/models--meta-llama--Llama-3.2-3B`, a
 > duplicate of what was staged. Not needed to pass the gate (57 + 21 = 78 ≥ 65), so it is left alone;
 > it is the next thing to clear if the margin tightens.
+
+## 1b. Build the weight archive — BEFORE renting
+
+`sitting_b.sh` extracts with `tar --no-same-owner -xzf "$WEIGHTS_TGZ"`, so it must be a **gzip**
+archive; GNU tar's `-z` errors on a plain tar. The content is bf16 safetensors and is incompressible,
+so use the fastest level — anything higher is pure CPU time for no size gain.
+
+```bash
+cd ~/Desktop/linear-ceiling
+tar -C box-cache -cf - hub | gzip -1 > hf-cache.tar.gz     # ~10 min, ~21 GB out
+shasum -a 256 hf-cache.tar.gz | tee -a ~/.cache/linear-ceiling/staged-inputs.log
+tar -tzf hf-cache.tar.gz | head -3                          # top level MUST be hub/
+tar -tzf hf-cache.tar.gz | grep -cE '\.safetensors$'        # must be 6
+tar -tzf hf-cache.tar.gz | grep -E '(^|/)(token|stored_tokens)$|\.token$' || echo NONE
+```
+
+The on-box validator refuses any member outside `hub/`, any token file, and any escaping link, so
+confirm all three here rather than discovering it after a 32-minute upload.
+
+**Disk:** the tarball is a second copy — 57 GiB free becomes ~36 GiB. Name **both** paths as
+reclaimable so the pre-create gate stays honest and both get deleted after the on-box check:
+
+```bash
+--reclaimable ~/Desktop/linear-ceiling/box-cache --reclaimable ~/Desktop/linear-ceiling/hf-cache.tar.gz
+```
 
 ## 2. Rent
 
@@ -153,8 +179,8 @@ Confirm every shard on the box before deleting anything at home:
 .venv/bin/python tools/runpod/rp.py ssh \
   'find /workspace/hf/hub -name "*.safetensors" -exec sha256sum {} + | sort'
 # compare against home, then -- only if all six lines match:
-( cd ~/Desktop/linear-ceiling && du -sh box-cache && rm -rf box-cache ) \
-  | tee -a ~/.cache/linear-ceiling/freed-bytes.log
+( cd ~/Desktop/linear-ceiling && du -sh box-cache hf-cache.tar.gz \
+    && rm -rf box-cache hf-cache.tar.gz ) | tee -a ~/.cache/linear-ceiling/freed-bytes.log
 ```
 
 Six shards: 3B has 2, 8B has 4 (§1). Both models are re-downloadable from the Hub with the ambient
@@ -166,6 +192,7 @@ gate was passed on the promise of them.
 ```bash
 nohup .venv/bin/python tools/runpod/pull_verify_b.py --delete-verified --terminate-on-receipt \
     --reclaimable ~/Desktop/linear-ceiling/box-cache \
+    --reclaimable ~/Desktop/linear-ceiling/hf-cache.tar.gz \
     > ~/.cache/linear-ceiling/pull-e9f.log 2>&1 & disown
 ps -o pid=,ppid=,command= -p $!
 ```
