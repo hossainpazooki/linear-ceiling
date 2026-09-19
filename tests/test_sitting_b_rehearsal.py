@@ -369,3 +369,72 @@ def test_a_launcher_failure_is_noticed_rather_than_polled_through(world):
     w.driver.fail(w.box, 95)
     with pytest.raises(pull_b.BoxFailed, match="rc=95"):
         _round(w)
+
+
+# ---------------------------------------------------------------------------------------------
+# UNATTENDED. Both sessions hit their limit at 23:35 on 2026-09-18 and went dark for three hours.
+# If that happens mid-run, these paths must finish the sitting with nobody watching.
+# ---------------------------------------------------------------------------------------------
+
+def test_a_drained_run_closes_itself_with_nobody_watching(world, monkeypatch):
+    """A drain and a crash arrive IDENTICALLY: the watchdog SIGTERMs the driver, the driver exits
+    non-zero, and the launcher writes `SITTING_B_FAILED rc=143`. So one unattended path serves both.
+
+    What must not happen is the loop noticing the terminal status and returning, leaving the pod to
+    idle at the full card rate until the spend ceiling kills it hours later -- with the tensors the
+    launcher wrote in its last seconds destroyed along with it."""
+    w = world
+    w.driver.run(2)
+    assert _round(w) is False
+
+    # handoff 3 completes on the box, and only THEN does the drain land
+    w.driver.run(3)
+    w.driver.fail(w.box, 143)                       # SIGTERM: 128 + 15
+
+    terminated = {"n": 0}
+    monkeypatch.setattr(pull_b.rp, "pods", lambda: [{"id": POD, "name": f"{rp.NAME_PREFIX}sitting-b"}])
+    monkeypatch.setattr(pull_b, "Transport", lambda *_a, **_k: types.SimpleNamespace(
+        run_bytes=lambda *_x, **_y: b"STOPPED 4242\n"))      # the pod is up, the driver pid is dead
+    monkeypatch.setattr(pull_b.rp, "cmd_terminate", lambda ns: terminated.update(n=1) or 0)
+    a = w.args
+    a.terminate_on_receipt = True
+
+    # drive the loop the way main() does, so the BoxFailed handler is the thing under test
+    rc = None
+    try:
+        _round(w)
+    except pull_b.BoxFailed as e:
+        a._ignore_box_status = True
+        for _ in range(2):
+            try:
+                pull_b.run_round(a, w.tx, w.state, w.runpod_state)
+            except Exception:
+                pass
+        rc = pull_b.final_partial(a, w.runpod_state)
+    assert rc == 0, "a drained sitting must close itself on its verified prefix"
+
+    receipt = json.loads(w.verify.read_text(encoding="utf-8"))
+    assert receipt["partial"]["n_scored"] == 3, \
+        "handoff 3 landed before the drain and must be IN the close, not lost to it"
+    assert receipt["partial"]["unscored"] == ORDER[3:]
+    assert terminated["n"] == 1, "the pod must be terminated once the receipt exists, not left idling"
+
+
+def test_the_terminal_sweep_rescues_what_the_launcher_wrote_last(world, monkeypatch):
+    """The round that notices the terminal status must still PULL. The launcher's final writes are on
+    a disk the terminate is about to destroy, so skipping that sweep loses exactly the handoff the
+    drain was timed to preserve."""
+    w = world
+    w.driver.run(2)
+    assert _round(w) is False
+    n_before = len(list((w.local / "scores").glob("*.json")))
+
+    w.driver.run(3)                                  # h3 exists on the box but has never been pulled
+    w.driver.fail(w.box, 143)
+    with pytest.raises(pull_b.BoxFailed):
+        _round(w)
+    n_after = len(list((w.local / "scores").glob("*.json")))
+    assert n_after == n_before + 1, \
+        f"the terminal round pulled nothing ({n_before} -> {n_after}); h3 would have died with the pod"
+    assert (w.local / "checkpoints" / "report.3.json").is_file(), \
+        "and it must snapshot that prefix, which is what the close will run on"

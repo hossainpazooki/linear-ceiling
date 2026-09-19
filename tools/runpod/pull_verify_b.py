@@ -830,10 +830,21 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
     logs = [x.format(exp=a.exp) for x in FINAL_LOGS] + [f"{a.exp}.final.sha256"]
     n_small = mirror_small(tx, a.remote_results, local, state["small_seen"])
     n_logs = mirror_workspace_files(tx, a.remote_work, logs, local / "logs" / "box", state["log_seen"])
-    check_box_status(local, a.exp)          # M3: a failed launcher is terminal; stop waiting on it
+    # M3. A terminal box status is noticed here but raised at the END of the round, after this round
+    # has pulled and verified everything it can. Raising now would skip the one sweep most worth
+    # doing: the launcher has just stopped, so whatever it last wrote is on the box RIGHT NOW and
+    # will be destroyed by the terminate that follows.
+    terminal = None
+    if not getattr(a, "_ignore_box_status", False):
+        try:
+            check_box_status(local, a.exp)
+        except BoxFailed as e:
+            terminal = e
     report_path = local / "report.json"
     if not report_path.exists():
         print(f"no report.json yet ({n_small} result files, {n_logs} logs refreshed)", flush=True)
+        if terminal:
+            raise terminal
         return False
     try:
         report = _load_json(report_path)
@@ -908,6 +919,8 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
     write_drain_hint(state, local, report, path=Path(a.drain_hint).expanduser())
     state_path = Path(a.state).expanduser()
     _atomic_json(state_path, state, mode=0o600)
+    if terminal and report.get("complete") is not True:
+        raise terminal                     # this round's sweep is done; now stop waiting
     if report.get("complete") is not True:
         return False
 
@@ -1143,9 +1156,31 @@ def main(argv: list[str] | None = None) -> int:
             if run_round(a, tx, state, runpod_state):
                 return 0
         except BoxFailed as e:
-            print(f"\a BOX FAILED: {e}. The launcher will not produce a complete run, so this loop "
-                  f"has nothing left to wait for. What is mirrored here may still be a closeable "
-                  f"prefix: stop the pod, then `--final-partial`.", flush=True)
+            # This is the unattended path, and it is the SAME one a drain takes: the watchdog's drain
+            # signals the driver, the driver exits non-zero, and the launcher writes
+            # `SITTING_B_FAILED rc=143`. So "the box failed" and "the budget stopped it on purpose"
+            # arrive here identically, and both must finish without anyone watching -- the alternative
+            # is a pod idling at the full card rate until the spend ceiling kills it hours later, with
+            # the in-flight handoff lost for nothing.
+            print(f"\a BOX TERMINAL: {e}. No complete run can follow, so this closes the sitting.",
+                  flush=True)
+            a._ignore_box_status = True     # the status is known; further sweeps must not re-raise
+            for sweep in range(2):
+                # Two more sweeps: the launcher has just stopped, so its last writes are on a disk that
+                # the terminate below is about to destroy. Failures here are not fatal -- the point is
+                # to rescue what can be rescued, and the close runs on whatever verified.
+                try:
+                    run_round(a, tx, state, runpod_state)
+                except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as se:
+                    print(f"  final sweep {sweep + 1} incomplete ({type(se).__name__}: {se})", flush=True)
+            rc = final_partial(a, runpod_state)
+            if rc == 0:
+                print("  the sitting is closed on a verified prefix; run `e9 --close-partial` to stamp it",
+                      flush=True)
+            else:
+                print("\a  NO closing basis verified here. The pod is terminated anyway if asked: there "
+                      "is nothing further it can produce, and H-E9F stays unresolved.", flush=True)
+                terminate_on_receipt(a, "the box is terminal and no basis verified")
             return 5
         except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as e:
             print(f"round failed safely ({type(e).__name__}: {e}); nothing unverified was deleted", flush=True)
