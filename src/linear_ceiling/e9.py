@@ -27,6 +27,7 @@ through `summarize_e9` and a numbered entry.
 """
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import time
@@ -421,13 +422,76 @@ def _resumable(report: dict, cfg: E9Config) -> dict:
     return kept
 
 
+def _recorded_artifact_matches(root: Path, rec: dict, file_key: str, sha_key: str) -> bool:
+    """True only for a plain filename whose bytes still match the checkpoint record."""
+    name, digest = rec.get(file_key), rec.get(sha_key)
+    if not isinstance(name, str) or not name or Path(name).name != name:
+        return False
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        return False
+    path = root / name
+    return path.is_file() and sha256_file_bytes(path) == digest
+
+
+def _resumable_controls(report: dict, cfg: E9Config, first_hid: str, kept_scores: dict) -> dict | None:
+    """Retain controls only when every recorded input/output artifact is still byte-identical.
+
+    ``_resumable`` validates handoff score and per-token files. Controls have their own three score,
+    per-token and pairs records; trusting the JSON alone could silently carry a damaged control across
+    a paid relaunch. Returning ``None`` makes ``run`` redo the first handoff and all controls.
+    """
+    controls = report.get("controls")
+    if not isinstance(controls, dict) or controls.get("handoff_id") != first_hid or first_hid not in kept_scores:
+        return None
+    root = cfg.results_dir / "controls"
+    for label in ("identity", "prefix", "null"):
+        rec = controls.get(label)
+        if not isinstance(rec, dict):
+            return None
+        for file_key, sha_key in (("score_file", "score_sha256"),
+                                  ("tokens_file", "tokens_sha256"),
+                                  ("pairs_file", "pairs_sha256")):
+            if not _recorded_artifact_matches(root, rec, file_key, sha_key):
+                return None
+    return controls
+
+
 def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
         encoder=None, resume: bool = False) -> Path:
     assert_ready(cfg, repo_root)
+    out = cfg.results_dir / "report.json"
+    if out.exists() and not resume:
+        old = json.loads(out.read_text(encoding="utf-8"))
+        if old.get("complete"):
+            raise RuntimeError("E9 REFUSED: a complete report already exists; refusing to overwrite a finished run "
+                               "(archive and delete it explicitly to rerun)")
+        raise RuntimeError("E9 REFUSED: an unfinished report exists; relaunch with --resume to keep its scored handoffs, "
+                           "or delete it to start over (a rotated log first, R4)")
     src_id, _ = pair_models(cfg.pair)
     enc = encoder or qwen_encoder(snapshot(src_id))
     counter = lambda t, ct="assistant": 0     # noqa: E731  (texts only; token counts unused here)
     handoffs = load_handoffs(submission_dirs(e7, cfg), counter)
+    # A configured bridge handoff that does not exist in the corpus is a CONFIG typo, and checking it
+    # is a dict lookup -- so it is checked here, before any alignment, rather than inside the bridge
+    # run far downstream. Cheapest failure first, the same reason the box script puts its gates before
+    # the weight pull: otherwise a mistyped id is reported only after every handoff has been aligned,
+    # and (as the alignment guards below now show) it can be pre-empted entirely by a data-level
+    # refusal that tells the operator nothing about the actual mistake. `bridge_run` re-checks
+    # membership itself; this does not replace that, it just finds it sooner.
+    # The bridge is a REGISTERED control that `bridge_run` executes before the first scored handoff,
+    # "so a late failure cannot lose it". Both of its refusals are therefore validated here, ahead of
+    # the alignment guards below -- otherwise a new data-level guard (no included handoff / no matched
+    # positions) pre-empts them and reports something that says nothing about the actual mistake, which
+    # is what happened when those guards were added. `bridge_run` re-checks both itself; this only
+    # finds them sooner, and costs at most len(bridge) alignments.
+    if cfg.bridge:
+        _by_id = {h.handoff_id: h for h in handoffs}
+        for _hid in cfg.bridge["handoffs"]:
+            if _hid not in _by_id:
+                raise RuntimeError(f"E9 REFUSED: bridge handoff {_hid} is not among the observed handoffs")
+            _rec, *_ = align(_by_id[_hid], enc, cfg.context_cap)   # no floor: bridge handoffs sit below it
+            if _rec.excluded:
+                raise RuntimeError(f"E9 REFUSED: bridge handoff {_hid} is excluded at the cap ({_rec.reason})")
     align_dir = cfg.results_dir / "align"
     records, aligned = [], {}
     for h in handoffs:
@@ -438,18 +502,26 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
             aligned[h.handoff_id] = (s_ids, r_ids, pairs)
     included = sorted(aligned)
     order = run_order(records, included, cfg.order_by)
+    if not order:
+        raise RuntimeError("E9 REFUSED: alignment produced no included handoff")
+    by_hid = {r.handoff_id: r for r in records}
+    empty = [hid for hid in order if by_hid[hid].n_matched < 1]
+    if empty:
+        raise RuntimeError("E9 REFUSED: included handoff(s) have no matched token positions: " + ", ".join(empty))
+    if by_hid[order[0]].n_matched < 2:
+        raise RuntimeError(f"E9 REFUSED: first run-order handoff {order[0]} has fewer than two matched token positions; "
+                           "the registered derangement null control is not computable")
     keep = keep_subset(included, cfg.keep_seed, cfg.keep_n)
     cfg.results_dir.mkdir(parents=True, exist_ok=True)
-    out = cfg.results_dir / "report.json"
-    prior_scores, prior = {}, None
+    prior_scores, prior, prior_controls = {}, None, None
     if resume:
         if not out.exists():
             raise RuntimeError("E9 REFUSED: --resume without a checkpoint report")
         prior = json.loads(out.read_text(encoding="utf-8"))
         prior_scores = _resumable(prior, cfg)
-    elif out.exists() and not json.loads(out.read_text(encoding="utf-8")).get("complete"):
-        raise RuntimeError("E9 REFUSED: an unfinished report exists; relaunch with --resume to keep its scored handoffs, "
-                           "or delete it to start over (a rotated log first, R4)")
+        prior_controls = _resumable_controls(prior, cfg, order[0], prior_scores)
+        if prior_controls is None:
+            prior_scores.pop(order[0], None)       # controls and the first score are one resumable unit
     report = {
         "config_sha256": sha256_text_file(cfg.config_path),   # newline-normalized: the box writes LF, home checks out CRLF
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
@@ -459,9 +531,9 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
                      "excluded": len(records) - len(included)},
         "alignments": [asdict(r) for r in records],
         "run_order": order, "order_by": cfg.order_by,
-        "keep_subset": keep, "bridge": None, "controls": None, "scores": {}, "complete": False,
+        "keep_subset": keep, "bridge": None, "controls": prior_controls, "scores": {}, "complete": False,
         "resumed_from": {"scored": sorted(prior_scores), "bridge": bool(prior and prior.get("bridge")),
-                         "controls": bool(prior and prior.get("controls"))} if resume else None,
+                         "controls": prior_controls is not None} if resume else None,
         "note": "f*, medians and the H-E9 verdict travel only through summarize_e9 and a numbered entry",
     }
     if prior and prior.get("bridge"):
@@ -469,8 +541,6 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
     elif cfg.bridge:
         report["bridge"] = run_bridge(cfg, handoffs, enc, runner)
         out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint: the bridge survives a later crash
-    if prior and prior.get("controls") and prior["controls"]["handoff_id"] == order[0] and order[0] in prior_scores:
-        report["controls"] = prior["controls"]
     for i, hid in enumerate(order):
         stem = _stem(hid)
         s_ids, r_ids, pairs = aligned[hid]

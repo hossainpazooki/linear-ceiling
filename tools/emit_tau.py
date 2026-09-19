@@ -55,15 +55,17 @@ def taus(report: dict, k: int) -> dict:
         if not (0.0 < v < 1.0):
             raise SystemExit(f"emit_tau REFUSED: {name} = {v!r} is not in (0, 1). An R^2 outside [0, 1) "
                              "means the mapper did not fit; tau is not defined and no config may be written.")
-    # Entry 0025's reading: tau_K anchors to GENERIC text, tau_agent_K to the agent text E9 actually
-    # reads, and the mapper is expected to do WORSE on the shifted distribution. config.py enforces
-    # tau_K < tau_agent_K; saying so here points at the measurement rather than at the loader.
+    # Entry 0041: the tau_K < tau_agent_K ordering is NOT registered by any entry, so this REPORTS it
+    # and refuses nothing. It used to refuse, mirroring config.py's own check -- which encoded what
+    # entry 0020 measured on the Qwen pair, not a rule. 0025 registers tau_agent_K's derivation and
+    # says it "is a K tolerance and is applied to nothing else". A tool that blocked on it would put
+    # back exactly the refusal 0041 removed.
     if not out["tau_K"] < out["tau_agent_K"]:
-        raise SystemExit(f"emit_tau REFUSED: tau_K {out['tau_K']!r} is not below tau_agent_K "
-                         f"{out['tau_agent_K']!r}: this pair's mapper scored no worse on agent text than on "
-                         "generic text, which entry 0025's reading does not contemplate. config.py would "
-                         "refuse the written config too. This is a finding for the registering entry, not "
-                         "a value to paste.")
+        print(f"# NOTE (entry 0041, reported not refused): tau_agent_K {out['tau_agent_K']!r} sits BELOW "
+              f"tau_K {out['tau_K']!r} -- this pair's mapper scored no worse on agent text than on the "
+              f"generic text it was fitted on. Read entry 0040's disclosure before treating that as a "
+              f"property of the pair: the registered arm (b) hold-out carries two distinct windows.",
+              file=sys.stderr)
     return out
 
 

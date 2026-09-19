@@ -42,6 +42,7 @@ import argparse
 import http.client
 import json
 import os
+import secrets
 import shutil
 import subprocess
 import sys
@@ -272,6 +273,11 @@ def cmd_up(a) -> int:
                          "bills, and nobody can log in.")
     pubkey = pub.read_text().strip()
     st = load_state()
+    verify = Path(a.verify_file).expanduser().resolve() if a.verify_file else None
+    if verify is not None and verify.exists():
+        raise SystemExit(f"rp REFUSED: verification interlock {verify} already exists. Remove the stale "
+                         "receipt before creating a new pod; a receipt from an older sitting must never "
+                         "authorize termination of a new one.")
     bal = balance()
     camp_start = float(st.get("campaign_start_balance", bal))
     camp_spent = round(camp_start - bal, 4)
@@ -315,7 +321,11 @@ def cmd_up(a) -> int:
                # The watchdog's ceiling must follow the card actually rented: a fixed $2.00 would kill
                # a correct L40S sitting at 2.53 h. sitting_max = price x TTL, warn at 60% of it.
                "sitting_max": round(projected, 4), "warn": round(0.6 * projected, 4),
-               "verify_file": a.verify_file,
+               "verify_file": str(verify) if verify is not None else None,
+               # New sittings bind the home verification receipt to a fresh nonce as well as the pod id.
+               # Older state (notably the already-live 2026-09-18 Sitting A) has no nonce and retains the
+               # existence-only compatibility path in cmd_terminate; never retrofit a nonce mid-sitting.
+               "verify_nonce": secrets.token_hex(16) if a.verify_file else None,
                "created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     save_state(pending)
     try:
@@ -410,6 +420,46 @@ def cmd_arm_deadman(a) -> int:
     return 2
 
 
+VERIFY_RECEIPT_SCHEMA = "linear-ceiling.runpod.verify.v1"
+
+
+def _check_verify_interlock(st: dict, verify: Path, target_pod: str | None) -> tuple[bool, str]:
+    """Validate the home receipt that makes destruction of ephemeral disk safe.
+
+    State written before verify_nonce was introduced is deliberately supported by existence only. That
+    compatibility is needed for a pod that was already billing when the stronger receipt shipped; every
+    newly-created pod gets a nonce and therefore takes the fail-closed JSON path below.
+    """
+    if not verify.exists():
+        return False, "does not exist"
+    nonce = st.get("verify_nonce")
+    if not nonce:
+        # Narrow compatibility for the pod that was already live when receipt nonces shipped. A
+        # missing/corrupt nonce in any later sitting is a refusal, never a silent downgrade.
+        if st.get("name") == f"{NAME_PREFIX}sitting-a":
+            return True, "legacy Sitting-A existence-only interlock"
+        return False, "has no verification nonce in state (not an eligible legacy Sitting A)"
+    try:
+        receipt = json.loads(verify.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return False, f"is not a readable JSON receipt ({type(e).__name__})"
+    if receipt.get("schema") != VERIFY_RECEIPT_SCHEMA:
+        return False, f"has schema {receipt.get('schema')!r}, expected {VERIFY_RECEIPT_SCHEMA!r}"
+    expected = {
+        "verify_nonce": nonce,
+        "pod_id": st.get("pod_id"),
+        "created_utc": st.get("created_utc"),
+    }
+    for key_name, want in expected.items():
+        if not want or receipt.get(key_name) != want:
+            return False, f"does not match this sitting's {key_name}"
+    if target_pod is not None and receipt.get("pod_id") != target_pod:
+        return False, "belongs to another pod"
+    if not receipt.get("report_sha256") or not receipt.get("verified_utc"):
+        return False, "does not record a verified report hash and verification time"
+    return True, "nonce- and pod-bound receipt"
+
+
 def cmd_terminate(a) -> int:
     st = load_state()
     # The sitting's product (the mapper and the dumps) lives on EPHEMERAL disk: terminate destroys
@@ -417,11 +467,13 @@ def cmd_terminate(a) -> int:
     # until the home side has written its verification file. --force is for the guardrails, which
     # must always be able to stop the meter.
     verify = Path(str(st.get("verify_file") or "")) if st.get("verify_file") else None
-    if not a.force and verify is not None and not verify.exists():
-        raise SystemExit(f"rp REFUSED: {verify} does not exist, so the pull has not been verified at "
-                         "home and terminating would destroy the sitting's only artifacts. Verify "
-                         "first, or pass --force if you accept losing them.")
     pid = a.pod or st.get("pod_id")
+    if not a.force and verify is not None:
+        ok, why = _check_verify_interlock(st, verify, pid)
+        if not ok:
+            raise SystemExit(f"rp REFUSED: verification interlock {verify} {why}, so the pull has not "
+                             "been verified for THIS sitting and terminating would destroy its only "
+                             "artifacts. Verify first, or pass --force if you accept losing them.")
     live = pods()
     if pid:
         targets = [pid]
@@ -458,13 +510,16 @@ def _terminate_until_gone(reason: str) -> int:
         print(f"watchdog: TERMINATING ({reason}) attempt {attempt}", flush=True)
         try:
             cmd_terminate(argparse.Namespace(pod=None, force=True))
-        except Exception as e:                                   # noqa: BLE001 - must not escape
+        except (Exception, SystemExit) as e:   # SystemExit is a BaseException: `except Exception`
+            # does NOT catch it, and gql() raises SystemExit for every API failure. This retry loop
+            # is the one path that must never give up, so it catches both. (2026-09-18: the watchdog
+            # died here-adjacent on [SSL: UNEXPECTED_EOF_WHILE_READING] and the pod ran unwatched.)
             print(f"  terminate attempt {attempt} failed: {e}", flush=True)
         try:
             if not [x for x in pods() if x["name"].startswith(NAME_PREFIX)]:
                 print("watchdog: pod is gone. \a", flush=True)
                 return 0
-        except Exception as e:                                   # noqa: BLE001
+        except (Exception, SystemExit) as e:
             print(f"  could not confirm ({e}); retrying", flush=True)
         print("  \a STILL BILLING — retrying in 30s. CHECK THE CONSOLE.", flush=True)
         time.sleep(30)
@@ -501,7 +556,11 @@ def cmd_watchdog(a) -> int:
             sit, camp, bal = spend_now(st)
             ps = [x for x in pods() if x["name"].startswith(NAME_PREFIX)]
             unreachable = 0
-        except Exception as e:                                   # noqa: BLE001 - any failure, not just SystemExit
+        except (Exception, SystemExit) as e:
+            # BOTH, deliberately. gql() converts every network failure into SystemExit, and SystemExit
+            # derives from BaseException -- so the original `except SystemExit` missed ordinary errors
+            # and the B2 fix's `except Exception` missed the SystemExits, killing the watchdog on a
+            # transient SSL EOF while a pod was billing. Neither alone is correct.
             unreachable += 1
             print(f"  watchdog: API unreachable ({e}); retry {unreachable}", flush=True)
             if unreachable * a.every >= a.unreachable_terminate_after * 60:
@@ -607,8 +666,11 @@ def main() -> int:
                    help="allowedCudaVersions; setup.sh builds torch 2.11.0+cu128")
     p.add_argument("--terminate-after", default=None,
                    help="ISO DateTime for RunPod's own terminateAfter (a third layer, never relied on)")
-    p.add_argument("--verify-file", default=None,
-                   help="path the home side writes after verifying the pull; `terminate` refuses without it")
+    vg = p.add_mutually_exclusive_group(required=True)
+    vg.add_argument("--verify-file",
+                    help="path the home side writes after verifying the pull; `terminate` refuses without it")
+    vg.add_argument("--unsafe-no-verify-interlock", action="store_true",
+                    help="explicitly create ephemeral disk with no verified-pull termination interlock")
     p.add_argument("--dry-run", action="store_true"); p.add_argument("--yes", action="store_true")
     p.set_defaults(fn=cmd_up)
 

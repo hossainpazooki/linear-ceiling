@@ -105,8 +105,8 @@ degrades_min = 0.50                  # the operator's stated judgment (0023), no
 # mapper, written by `summarize_e9 --calibrate-tau` into results/e9fl/calibration/tau.json and copied here; the
 # summarizer recomputes both and refuses on disagreement. V's tau serves only the alongside f*. The mapper has
 # not been fitted, so both values are UNRESOLVED and this file refuses to load. Never a Qwen value.
-tau_K = "UNRESOLVED::tau_K@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/tau.json, from results/e8f/report.json arm (a) k=1 (entry 0040, provisional)"
-tau_V = "UNRESOLVED::tau_V@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/tau.json, from results/e8f/report.json arm (a) k=1 (entry 0040, provisional)"
+tau_K = 0.28613264291767326   # entry 0040, from this pair's own held-out R^2 at k=1
+tau_V = 0.5289405768857098   # entry 0040, from this pair's own held-out R^2 at k=1
 # entry 0025, descriptive: f*(tau) is ALSO reported at each tau below, K and V, every arm, per handoff and
 # median, so a HOLDS says how far inside the registered tolerance identity sits. The cells and the band
 # are computed at tau_K above only; nothing on this ladder is verdict-bearing. Fixed before any prefill.
@@ -123,7 +123,7 @@ tau_ladder = [0.10, 0.03]                # ABSOLUTE, and identical to config/e9.
 # the looser tolerance the distribution E9 actually reads; reported at this tau too, verdict-bearing for nothing.
 # config.py refuses unless tau_K < tau_agent_K < 1, so a mapper that scores BETTER on agent text than on generic
 # stops this file loading, and the remedy is the contingency the registering entry fixes in advance.
-tau_agent_K = "UNRESOLVED::tau_agent_K@llama3.2-3b-to-llama3.1-8b::results/e9fl/calibration/tau.json, from results/e8f/report.json arm (b) k=1 (entry 0040, provisional)"
+tau_agent_K = 0.26891567134937666   # entry 0040, from this pair's own held-out R^2 at k=1
 # entry 0025 (review finding 5): f*(tau_K) is ALSO reported over tokens whose matched block is at least this
 # long (blocks re-derived from the pairs), beside the block-length distribution; descriptive.
 min_block_len = 4

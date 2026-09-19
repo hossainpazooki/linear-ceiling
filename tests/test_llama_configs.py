@@ -49,14 +49,23 @@ def _toml(name):
     return tomllib.loads(_text(name))["e9" if name.startswith("e9") else "e8"]
 
 
-def _resolve(text, *, leave=()):
-    """Substitute a stand-in for every tau-derived marker but those named in `leave`."""
-    for key, value in STANDIN.items():
-        if key in leave:
-            continue
-        text, n = re.subn(rf'(?m)^{key} = "UNRESOLVED::[^"]*"$', f"{key} = {value}", text)
-        assert n == 1, f"{key}: expected exactly one refusing marker line, found {n}"
+def _mark(text, keys):
+    """Put a refusing UNRESOLVED marker BACK on `keys`, to test the pre-calibration refusals.
+
+    The committed configs carried markers until entry 0040 stated this pair's tau and 0041 unblocked
+    the loader; they now carry real values. The refusals those markers trigger still matter -- a future
+    cell starts uncalibrated -- so the marker state is constructed here instead of read from disk."""
+    for key in keys:
+        text, n = re.subn(rf'(?m)^{key} = [0-9.eE+-]+.*$',
+                          f'{key} = "UNRESOLVED::{key}@{PAIR}::constructed by the test suite"', text)
+        assert n == 1, f"{key}: expected exactly one calibrated line to mark, found {n}"
     return text
+
+
+def _resolve(text, *, leave=()):
+    """Back-compat shim: the configs are calibrated, so 'resolving' is now a no-op except for `leave`,
+    which is re-marked so the caller can test that key's refusal."""
+    return _mark(text, leave) if leave else text
 
 
 def _resolved_cfg(tmp_path, name, *, leave=(), extra=""):
@@ -104,10 +113,25 @@ def test_e8f_carries_a_real_pin_and_still_refuses_one_that_does_not_hold():
 # ---- the refusals that keep E9-Llama from running before the E8 fit -------------------------------------
 
 @pytest.mark.parametrize("name", E9_NAMES)
-def test_llama_e9_config_refuses_outright_until_tau_is_calibrated(name):
-    """The whole cell is unreachable: no driver, gate or summarizer can hold this config at all."""
+def test_llama_e9_config_is_calibrated_and_loads(name):
+    """Entry 0040 stated this pair's tau and 0041 made the ordering report-only, so the cells load.
+
+    The three values must be REAL numbers in (0, 1) and must not be any Qwen constant -- that is the
+    property the UNRESOLVED markers existed to protect, and it is now checked directly."""
+    c = load_e9_config(REPO_ROOT / "config" / f"{name}.toml", REPO_ROOT)
+    for key in TAU_KEYS:
+        v = c.rule[key]
+        assert isinstance(v, float) and 0.0 < v < 1.0, f"{key} is {v!r}, not a calibrated tolerance"
+        assert f"{v!r}" not in QWEN_TAU, f"{key} carries a Qwen value"
+
+
+@pytest.mark.parametrize("name", E9_NAMES)
+def test_an_uncalibrated_marker_would_still_refuse(tmp_path, name):
+    """The refusal the markers triggered is still live for the next uncalibrated cell."""
+    p = tmp_path / f"{name}.toml"
+    p.write_text(_mark(_text(name), ("tau_K",)), encoding="utf-8")
     with pytest.raises(ValueError, match="tau_K must be a calibrated number"):
-        load_e9_config(REPO_ROOT / "config" / f"{name}.toml", REPO_ROOT)
+        load_e9_config(p, REPO_ROOT)
 
 
 @pytest.mark.parametrize("name", E9_NAMES)
@@ -162,8 +186,10 @@ def test_rule_and_controls_are_e9s_on_every_key_that_is_not_tau_derived(name):
         assert llama[section].keys() == e9[section].keys()
         for key, value in e9[section].items():
             if key in TAU_KEYS:
-                assert isinstance(llama[section][key], str) and llama[section][key].startswith("UNRESOLVED::")
-                assert PAIR in llama[section][key]      # the marker names the pair whose R^2 is missing
+                # calibrated since entry 0040: a real tolerance, and NEVER the Qwen one it replaced
+                v = llama[section][key]
+                assert isinstance(v, float) and 0.0 < v < 1.0, f"{key} is {v!r}, not a calibrated tolerance"
+                assert v != value, f"{key} equals config/e9.toml's {value!r}: a Qwen tau in a Llama cell"
             else:
                 assert llama[section][key] == value, f"{name}.toml [e9.{section}] {key} is not E9's"
     assert llama["controls"]["seam_bins"] == list(SEAM_BIN_EDGES)
