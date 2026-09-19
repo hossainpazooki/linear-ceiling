@@ -97,7 +97,7 @@ reclaimable so the pre-create gate stays honest and both get deleted after the o
 # clouds and ends with the cheapest adequate row spelled as the exact `up` flags to paste.
 .venv/bin/python tools/runpod/rp.py price --min-gb 80 --limit 14
 .venv/bin/python tools/runpod/rp.py up --gpu "NVIDIA A100 80GB PCIe" --cloud COMMUNITY --price 1.19 \
-    --hours 6.0 --max-price 1.25 --disk 250 \
+    --hours 6.0 --max-price 1.25 --disk 160 \
     --verify-file ~/.cache/linear-ceiling/e9f-verified.json --dry-run
 # read the dry run, then repeat with --yes
 ```
@@ -126,6 +126,14 @@ operator.
 
 **80 GB card, not 48.** Measured, not guessed: `docs/probes/2026-09-18-llama-8b-fp32-prefill-memory.md`
 — Llama-3.1-8B fp32 OOMs at T = 32,768 on a 44.43 GiB card, peak 43.2 GiB.
+
+**`--disk` and `--cuda` are create-time FILTERS, not just settings.** On 2026-09-19 six creates were
+refused with "no longer any instances" on a card the `price` listing still showed as available — the
+listing applies only the RAM/vCPU floors, while the create also filters on `containerDiskInGb` and
+`allowedCudaVersions`. Defaults are now **160 GB** (against the ~95 GiB peak computed in §6, so ~54
+GiB of margin — a figure registered by no ledger entry, checked against 0042/0043 before changing)
+and **CUDA 12.8/12.9/13.0** (a 13.0 driver runs cu128 wheels; the on-box CUDA smoke test before any
+weight download is the real check and fails fast). Neither widens what gets validated.
 
 **Never pass `--terminate-after`.** It is a provider-side hard kill that cannot be extended without
 editing the pod, which at `volumeInGb 0` wipes `/workspace` mid-run. A sitting B that overruns would
@@ -175,10 +183,25 @@ it refuses; that refusal is the measurement replacing §3.4's extrapolation.
 archive (hub/ only, no token file, no escaping link) and then re-runs `cache_complete` on both models.
 Confirm every shard on the box before deleting anything at home:
 
+The HF cache stores each shard as a **symlink** under `snapshots/` pointing at
+`../../blobs/<sha256>`, and for LFS files **the blob's filename IS the sha256 of its contents** — so
+the box can verify itself with no list from home at all, which removes the step where a path-prefix
+difference gets mistaken for a hash mismatch:
+
 ```bash
-.venv/bin/python tools/runpod/rp.py ssh \
-  'find /workspace/hf/hub -name "*.safetensors" -exec sha256sum {} + | sort'
-# compare against home, then -- only if all six lines match:
+.venv/bin/python tools/runpod/rp.py ssh 'cd /workspace/hf && \
+  for b in hub/models--*/blobs/*; do \
+    [ "$(stat -c %s "$b")" -lt 1000000 ] && continue; \
+    [ "$(sha256sum "$b" | cut -d" " -f1)" = "$(basename "$b")" ] || echo "BAD $b"; \
+  done; echo SELF_CHECK_DONE'
+```
+
+Skip files under ~1 MB: small non-LFS blobs are named by git sha1, not content sha256. If you also
+want the home comparison, compare **the hash column only** (`| awk '{print $1}' | sort`) — the paths
+differ by prefix and a whole-line diff always "mismatches".
+
+```bash
+# only if the self-check printed no BAD line:
 ( cd ~/Desktop/linear-ceiling && du -sh box-cache hf-cache.tar.gz \
     && rm -rf box-cache hf-cache.tar.gz ) | tee -a ~/.cache/linear-ceiling/freed-bytes.log
 ```

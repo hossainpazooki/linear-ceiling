@@ -780,7 +780,13 @@ def build_parser() -> argparse.ArgumentParser:
     # 2026-09-19 from the committed coverage.json rather than from the cap figure times 8. Peak is
     # ~95 GiB of 250 (weights 22.5 + venvs ~8 + repos/traces ~2 + working handoff <= 12.4 + 50.1),
     # against sitting A's ~50 GB. Sized from the measured budget, not guessed.
-    p.add_argument("--disk", type=int, default=250, help="container disk GB (ephemeral; no volume)")
+    # 160, not 250, as of 2026-09-19: `containerDiskInGb` is a CREATE-TIME FILTER as well as a size,
+    # so an oversized request narrows the host pool and contributed to six "no longer any instances"
+    # refusals on a card the price listing still showed. The procedure's own arithmetic is ~95 GiB
+    # peak (weights 22.5 + venvs ~8 + repos/traces ~2 + working handoff <= 12.4 + kept trees <= 50.1),
+    # and 160 GB is ~149 GiB, leaving ~54 GiB of margin. This figure is registered by NO ledger entry
+    # -- it is operational, and was checked against 0042/0043 before changing.
+    p.add_argument("--disk", type=int, default=160, help="container disk GB (ephemeral; no volume)")
     # 48 GB, measured not guessed: kvt/models.load_model calls from_pretrained(dtype=float32) with NO
     # device_map and only then .to(device), so the whole fp32 model materialises in host RAM first --
     # 29.91 GiB for Llama-3.1-8B (32 x 4096 x ... verified from the gated config). 48 leaves ~18 GiB of
@@ -807,7 +813,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--cloud", default="COMMUNITY", choices=["COMMUNITY", "SECURE"])
     p.add_argument("--max-price", type=float, default=0.85,
                    help="refuse a $/h above this; the cheap card is the whole point of the brief")
-    p.add_argument("--cuda", nargs="*", default=["12.8", "12.9"],
+    # 13.0 added 2026-09-19: this is ALSO a create-time filter, and a 13.0 driver runs cu128 wheels
+    # (minor-version compatibility). It is not a loosening of what gets validated -- the CUDA smoke
+    # test still runs on the box before any weight is downloaded and fails fast if the stack is wrong.
+    p.add_argument("--cuda", nargs="*", default=["12.8", "12.9", "13.0"],
                    help="allowedCudaVersions; setup.sh builds torch 2.11.0+cu128")
     # DO NOT set this for sitting B. It is a provider-side hard kill that cannot be extended without
     # editing the pod (which restarts the container and, at volumeInGb 0, wipes /workspace mid-run), and
