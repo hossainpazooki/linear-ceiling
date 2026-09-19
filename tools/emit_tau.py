@@ -79,8 +79,13 @@ def main() -> int:
     ap.add_argument("--home-r2", default=None,
                     help="a HOME-produced upstream r2.json (score_mapper output over the pulled dumps). "
                          "STRONGLY PREFERRED: see the module docstring on cross-platform jitter.")
+    # NOT a registered tolerance. Entry 0028 registers 1e-05 (per-head sums) and 1e-02 (squares) for
+    # the keep-subset PER-TOKEN re-score, which is a different comparison; no entry fixes a tolerance
+    # for a scorer-level held-out R^2 compared across machines. 1e-6 is an operational default chosen
+    # here to be far tighter than anything that would matter and far looser than bit-equality; a
+    # difference above it is a finding to be read, not a value to paste.
     ap.add_argument("--jitter-max", type=float, default=1e-6,
-                    help="refuse if the home and box held-out R^2 differ by more than this")
+                    help="operational default, NOT registered: refuse if home and box R^2 differ by more")
     ap.add_argument("--json", help="also write the record here")
     a = ap.parse_args()
 
@@ -97,7 +102,8 @@ def main() -> int:
     # M5, the trap this option exists to close. The E8 report's R^2 was computed ON THE BOX. The value
     # typed into the config is later cross-checked by `summarize_e9 --calibrate-tau`, which re-scores
     # AT HOME, at a tolerance of 1e-9 -- and entry 0028 exists precisely because float32 reductions do
-    # not reproduce bit-for-bit across platforms. Taking tau from the box therefore risks a config that
+    # not reproduce bit-for-bit across platforms (it registers 1e-05/1e-02 for the keep-subset per-token
+    # re-score; no entry fixes a tolerance for the comparison made here). Taking tau from the box therefore risks a config that
     # refuses at summary time, AFTER sitting B has been paid for and with no repair allowed (the rule
     # and tau are frozen once a score file exists). So when a HOME re-score is available, it is the
     # authority and the box report becomes the cross-check.
@@ -120,8 +126,10 @@ def main() -> int:
             raise SystemExit(
                 f"emit_tau REFUSED: the home re-score differs from the box by {worst:.3e}, above "
                 f"--jitter-max {a.jitter_max:.3e}. That is not a number to paste -- it is a finding. "
-                "Entry 0028 registered a cross-platform tolerance for exactly this; a difference this "
-                "large needs its own reading before any tau is written.")
+                "Entry 0028 registered cross-platform tolerances for the keep-subset per-token re-score "
+                "(1e-05 on sums, 1e-02 on squares) because float32 reductions do not reproduce bit-for-bit "
+                "across machines; it fixes none for THIS comparison, so a difference this large needs its "
+                "own reading before any tau is written.")
         t.update(home_tau)     # the HOME values are what the config gets
         print(f"# tau_K and tau_V taken from the HOME re-score {hp} (box report used as cross-check).")
         print("# tau_agent_K stays from the E8 report: arm (b) has no home re-score of its own.")

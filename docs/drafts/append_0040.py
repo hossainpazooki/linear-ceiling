@@ -104,14 +104,84 @@ fp = rep["mapper"]["files"][kv]
 suites = ", ".join(cfg.text["suites"])
 n_train = int(round((1 - cfg.holdout_frac) * cfg.text["n_seqs"] * (cfg.text["seq_len"] / cfg.stride)))
 tok = rep["tokens"]
+
+# ---- the agent draw's window multiplicity, RECOMPUTED here, never typed -------------------------
+# Entry 0016 section 4's sampling rule was followed byte-for-byte; this is a property of the draw it
+# produced under the Llama-3 BPE, not a departure from it. It is disclosed because tau_agent_K is
+# derived from arm (b)'s HELD-OUT set, and that set turns out to carry far fewer distinct windows
+# than sequences. Every figure below is computed from the token file the report fingerprints and from
+# its committed manifest -- nothing here is asserted.
+import numpy as _np
+from collections import Counter as _Counter
+_draw_path = Path(REPO_ROOT) / tok["path"]
+assert sha256_file_bytes(_draw_path) == tok["sha256"], \
+    "the agent token file on disk is not the one results/e8f/report.json fingerprints"
+_draw = _np.load(_draw_path)
+_man_path = _draw_path.parent / (_draw_path.stem + ".manifest.json")
+assert sha256_file_bytes(_man_path) == tok["manifest_sha256"], \
+    "the agent draw's manifest on disk is not the one results/e8f/report.json fingerprints"
+_man = json.loads(_man_path.read_text(encoding="utf-8"))
+_rows_meta = _man["rows"]
+_n = int(_draw.shape[0])
+_uniq = int(_np.unique(_draw, axis=0).shape[0])
+_n_hold = int(_np.ceil(cfg.holdout_frac * _n))          # score_mapper holds out the LAST ceil(frac*n)
+_hold = _draw[-_n_hold:]
+_hold_uniq = int(_np.unique(_hold, axis=0).shape[0])
+_groups = _Counter(r.tobytes() for r in _draw)
+_worst = max(_groups.values())
+_dup_idx = sorted(i for i, r in enumerate(_draw) if _groups[r.tobytes()] > 1)
+_dup_trajs = [f"{_rows_meta[i]['suite']}/{_rows_meta[i]['traj_id']}" for i in _dup_idx]
+# Name the colliding trajectories the way the manifest does, grouped by agent, so a reader can go and
+# look at them rather than take the count on trust.
+from collections import defaultdict as _dd
+_by_agent = _dd(list)
+for _i in _dup_idx:
+    _r = _rows_meta[_i]
+    _agent, _, _task = _r["traj_id"].partition("/")
+    _by_agent[_agent].append(_task)
+_dup_desc = "; ".join(f"{len(v)} from `{k}` ({', '.join(sorted(v))})" for k, v in sorted(_by_agent.items()))
+_dup_note = ""
+if _uniq < _n:
+    _dup_note = (
+        f"\n\n**Disclosure: the agent draw repeats windows, and the registered hold-out is two of them.** "
+        f"The arm (b) draw is {_n} sequences but only **{_uniq} distinct windows**: rows "
+        f"{_dup_idx[0]}–{_dup_idx[-1]} are byte-identical, one window appearing **{_worst} times**. "
+        f"`score_mapper` holds out the LAST ceil({cfg.holdout_frac} × {_n}) = {_n_hold} sequences, so arm "
+        f"(b)'s registered held-out R² — and therefore τ_agent_K — is computed on **{_hold_uniq} distinct "
+        f"windows**, one of them weighted {_worst}×. The repeated window is the opening of "
+        f"{len(_dup_trajs)} DIFFERENT trajectories — {_dup_desc} — "
+        f"which share a ≥ {cfg.text['seq_len']}-token preamble under the Llama-3 BPE, and `[e8.text] window = "
+        f"\"{cfg.text['window']}\"` takes the FIRST window of each. Entry 0016 §4's rule was followed "
+        f"byte-for-byte and is not changed here; this is a property of the draw it produces on this corpus "
+        f"with this tokenizer. The generic draw is unaffected (checked: all distinct). **No figure in this "
+        f"entry is adjusted for it.** A reading over every agent sequence, or over distinct windows only, "
+        f"requires arm (b) rescored at `agent_holdout_frac = 1.0` with per-sequence records — the shape "
+        f"entry 0030 registered for the Qwen pair — and enters by its own numbered entry, not this one.")
 rp_rel = rp.resolve().relative_to(Path(REPO_ROOT).resolve()).as_posix()
 band = rep["verdict_bearing"]["outcome"]
+# An appended entry is IMMUTABLE, so this passage may claim only what the ledger actually says. An
+# earlier draft asserted two things that are false and would have been permanent: that the ordering is
+# "registered" (no entry registers it) and that 0039 carries a "pre-registered contingency" for it
+# (0039 registers contingencies for the tau ladder, the prefix-invariance tolerance and the tau_K
+# ceiling, and for nothing else). It also read the inversion as a property of the PAIR, which the
+# held-out set does not support -- see the duplicate-window disclosure. Checked sentence by sentence
+# against 0025, 0020 and 0039 as appended.
 tau_note = ("" if ordered else
-            "  **The registered ordering τ_K < τ_agent_K < 1 does NOT hold on this pair** "
-            f"(τ_K = {tau_K:.4f}, τ_agent_K = {tau_agent_K:.4f}): this pair's mapper scores at least as well on "
-            "agent text as on generic text. `config.py` refuses any E9 config carrying these two values, so the "
-            "short and long cells cannot load until entry 0039's pre-registered contingency is applied by a "
-            "numbered entry. Nothing is edited into a config to make it load.")
+            f"  **τ_agent_K sits BELOW τ_K on the registered held-out set** (τ_K = {tau_K:.4f}, "
+            f"τ_agent_K = {tau_agent_K:.4f}). **This is not stated as a property of the pair.** The "
+            "registered arm (b) hold-out is the last ceil(0.2 x 50) = 10 sequences of the agent draw, and "
+            "those 10 rows carry only TWO DISTINCT WINDOWS (see the disclosure above), one of them nine "
+            "times, so the comparison rests on two windows rather than ten. What the inversion is a "
+            "property of -- this pair, or this draw -- is not decided by this entry and no rule is "
+            "changed after seeing it. `load_e9_config` refuses any E9 config carrying these two values, "
+            "because `config.py` requires `tau_K < tau_agent_K < 1`. **That ordering is registered by no "
+            "entry.** Entry 0025 registers τ_agent_K's derivation (1 − arm (b)'s held-out K R², recomputed "
+            "and refused on disagreement) and states that it “is a K tolerance and is applied to nothing "
+            "else” and that “the band reads τ_K only”; it fixes no ordering. The check predates this "
+            "family, and its own message calls τ_agent_K “the LOOSER agent-text tolerance from entry 0020 "
+            "arm (b)” — it encodes what 0020 MEASURED on the Qwen pair. So `config/e9f.toml` and "
+            "`config/e9fl.toml` cannot load until a numbered entry rules on that check. **Nothing is edited "
+            "into a config, and no guard is relaxed, to make them load.**")
 
 ENTRY = f"""### {NUM} — {a.date} — E8 ran on the second model family `[BASELINE, DESCRIPTIVE]`: {cfg.pair}; the pair's own τ stated; no cell moves
 
@@ -148,16 +218,24 @@ here is pooled with a Qwen figure.**
 held-out R² at the verdict k, and it is the only calibration the family's E9 cells may use: **τ_K =
 1 − {per_k[kv]['generic']['K']:.4f} = {tau_K:.4f}**, τ_V = 1 − {per_k[kv]['generic']['V']:.4f} =
 {tau_V:.4f}, and the alongside agent-text tolerance τ_agent_K = 1 − {per_k[kv]['agent']['K']:.4f} =
-{tau_agent_K:.4f} (entry 0025's arm (b) reading, verdict-bearing for nothing).{tau_note} These three come
+{tau_agent_K:.4f} (entry 0025's arm (b) reading, verdict-bearing for nothing).{_dup_note}{tau_note} These three come
 from the arm (a) and arm (b) numbers in the table above, which the summarizer re-derived from the tensors;
 they are not carried over from anything. `config/e9f.toml` and `config/e9fl.toml` still carry their
 refusing `UNRESOLVED::` markers at this entry (checked by the script that appended it): the next entry
 writes these values in and `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report {rp_rel}`
 then recomputes them from the archived mapper independently and refuses on any disagreement. **A Qwen τ appears nowhere in
-this family's configs and never will.** **Correction to immutable entry 0039:** its prose said five
-τ-derived keys were unresolved. Only `tau_K`, `tau_V`, and `tau_agent_K` carried markers; `tau_ladder =
-[0.10, 0.03]` and `prefix_invariance_max_delta = 1e-4` were already literal, registered values. This
-correction changes no registered rule or value.
+this family's configs and never will.** **Corrections to immutable entry 0039** (append-only; neither
+changes a registered rule or value, and both are errors of prose in 0039, not of the configs, which
+were and are correct): **(i)** 0039 said five τ-derived keys were unresolved. Only `tau_K`, `tau_V` and
+`tau_agent_K` carried markers; `tau_ladder = [0.10, 0.03]` and `prefix_invariance_max_delta = 1e-4`
+were already literal, registered values. **(ii)** 0039's paragraph (2) registers
+`prefix_invariance_max_delta` as "ABSOLUTE 1e-4, identical to config/e9.toml" and then says "It must
+NOT inherit the Qwen cells' value." Those two clauses contradict each other. The registered value is
+**1e-4, deliberately identical to `config/e9.toml`'s** — it is a float32 kernel-noise floor, a property
+of the arithmetic and the attention kernel rather than of how well a mapper fitted, so it does not
+scale with τ and has no reason to differ between families. The trailing clause is a leftover from the
+superseded framing in which the key was a function of τ_K, and is void. `config/e9f.toml` and
+`config/e9fl.toml` carry 1e-4 and always did.
 
 **What this establishes, stated narrowly.** On {src_id} → {tgt_id}, a matched-KV cross-release pair, with
 a k = {cfg.verdict_k} linear KV mapper fit on {cfg.text['n_seqs']} generic calibration windows and scored
