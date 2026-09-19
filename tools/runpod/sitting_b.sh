@@ -328,7 +328,18 @@ need_free_gib() {                       # need_free_gib <gib> <why>
   say "  free space: ${have} GiB (need ${want} GiB for $why)"
   [ "${have:-0}" -ge "$want" ] || refuse "only ${have} GiB free at $WORK; $why needs ${want} GiB"
 }
-need_free_gib 60 "the weight cache plus several handoffs of dumps"
+# REHEARSAL=1 stops at the E9 gate: it downloads no weights and writes no dump, so the 60 GiB floor
+# is guarding against bytes it will never write. Refusing on it would mean the rehearsal cannot run on
+# a home disk that is legitimately full of the very weight cache waiting to be uploaded -- which is
+# exactly when it is most worth running. The floor is reduced to what the rehearsal DOES use (the two
+# clones and their venvs) and the log says plainly that the real floor went unchecked.
+if [ "$REHEARSAL" = 1 ]; then
+  need_free_gib 5 "the rehearsal clones and venvs"
+  say "  REHEARSAL: the 60 GiB weights+dumps floor was NOT checked; it is a box-disk property and this"
+  say "             run writes neither. On the box it is checked in full."
+else
+  need_free_gib 60 "the weight cache plus several handoffs of dumps"
+fi
 
 step "fresh-pin E9 gate before weights"
 cd "$LC_DIR"
