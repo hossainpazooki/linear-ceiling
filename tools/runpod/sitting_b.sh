@@ -41,6 +41,7 @@ MAPPER_ST_SHA="${MAPPER_ST_SHA:?MAPPER_ST_SHA is required}"
 COVERAGE_SHA256="${COVERAGE_SHA256:?COVERAGE_SHA256 is required (the full home coverage.json sha256)}"
 
 EXP="${EXP:-e9f}"
+REHEARSAL="${REHEARSAL:-0}"          # 1 = $0 dry run: clone, venvs, traces, mapper, gate; stop before weights
 WORK="${WORK:-/workspace}"
 HF_HOME="${HF_HOME:-$WORK/hf}"
 WEIGHTS_TGZ="${WEIGHTS_TGZ:-$WORK/hf-cache.tar.gz}"
@@ -128,6 +129,26 @@ for f in /sys/fs/cgroup/memory.max /sys/fs/cgroup/memory/memory.limit_in_bytes; 
   [ -r "$f" ] && { say "  cgroup mem ($f): $(<"$f")"; break; }
 done
 say "  disk: $(df -h "$WORK" | awk 'NR==2{print $4" free of "$2}')"
+
+# Thread cap from the CGROUP QUOTA, never nproc. Sitting A reported nproc 96 against a 7.65-CPU quota
+# and ran 111 threads with ~50k throttle events; capping at 8 turned a projected ~55-minute fit into
+# 11. nproc on a container host is the HOST's core count and is actively misleading here.
+LC_THREADS=""
+if [ -r /sys/fs/cgroup/cpu.max ]; then                      # cgroup v2: "<quota> <period>" or "max <period>"
+  read -r _q _p < /sys/fs/cgroup/cpu.max || true
+  [ "${_q:-max}" != "max" ] && [ "${_p:-0}" -gt 0 ] && LC_THREADS=$(( _q / _p ))
+elif [ -r /sys/fs/cgroup/cpu/cpu.cfs_quota_us ] && [ -r /sys/fs/cgroup/cpu/cpu.cfs_period_us ]; then
+  _q=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us); _p=$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us)
+  [ "$_q" -gt 0 ] && [ "$_p" -gt 0 ] && LC_THREADS=$(( _q / _p ))
+fi
+[ -z "$LC_THREADS" ] || [ "$LC_THREADS" -lt 1 ] && LC_THREADS=$(nproc 2>/dev/null || echo 8)
+[ "$LC_THREADS" -gt 16 ] && LC_THREADS=16                   # beyond this the reductions thrash, not speed up
+export OMP_NUM_THREADS="$LC_THREADS" OPENBLAS_NUM_THREADS="$LC_THREADS" \
+       MKL_NUM_THREADS="$LC_THREADS" NUMEXPR_NUM_THREADS="$LC_THREADS" \
+       VECLIB_MAXIMUM_THREADS="$LC_THREADS"
+say "  thread cap: $LC_THREADS (from the cgroup CPU quota, NOT nproc=$(nproc 2>/dev/null || echo '?'))"
+say "  NOTE: BLAS threading changes float32 reduction order at the last ULP -- the class entry 0028"
+say "        registered a cross-platform tolerance for. No registered parameter changes."
 say "sitting B pair=$PAIR exp=$EXP"
 say "up=$UP_REPO@${UP_SHA:0:12} lc=$LC_REPO@${LC_SHA:0:12}"
 say "launcher sha256 $(sha256sum "$0" | awk '{print $1}')"
@@ -178,6 +199,25 @@ UP_PY="$UP_DIR/.venv/bin/python"
 LC_PY="$LC_DIR/.venv/bin/python"
 say "  upstream python: $UP_PY"
 say "  linear-ceiling python: $LC_PY"
+
+if [ "$REHEARSAL" = "1" ]; then
+  say "== CUDA smoke test: SKIPPED (rehearsal; no GPU expected)"
+else
+step "CUDA smoke test (before any download)"
+# Here, not at the first dump: a driver/CUDA mismatch against the pinned cu128 build otherwise
+# surfaces ~25 billed minutes in instead of ~8. allowedCudaVersions on the create call should prevent
+# it; this proves the filter worked, and refuses cheaply if it did not.
+"$UP_PY" -c "
+import torch
+print(f'  torch {torch.__version__} cuda_available={torch.cuda.is_available()}')
+assert torch.cuda.is_available(), 'torch.cuda.is_available() is False'
+torch.zeros(1).cuda()
+free, total = torch.cuda.mem_get_info()
+print(f'  device: {torch.cuda.get_device_name(0)}')
+print(f'  gpu memory: {free/2**30:.2f} GiB free of {total/2**30:.2f} GiB')
+assert total/2**30 >= 70, f'sitting B needs an 80 GB card; this one reports {total/2**30:.1f} GiB'
+" || refuse "torch cannot reach a large-enough GPU on this host"
+fi
 
 step "home tau calibration present and bound to this config"
 CFG="$LC_DIR/config/$EXP.toml"
@@ -251,10 +291,29 @@ fi
 printf '%s  %s\n' "$MAPPER_JSON_SHA" "$MD/k1.json" | sha256sum -c -
 printf '%s  %s\n' "$MAPPER_ST_SHA" "$MD/k1.safetensors" | sha256sum -c -
 
+# Free-space floor on the box. Sitting B writes ~12.4 GB of dumps PER HANDOFF (same_src 4.30 +
+# same_tgt 4.30 + cross_src 3.76 at the cap) and the driver deletes each set only after the home side
+# has pulled and verified it, so a stalled puller fills a 250 GB disk in about twenty handoffs. This
+# refuses BEFORE the weights rather than dying mid-run with a half-written dump.
+need_free_gib() {                       # need_free_gib <gib> <why>
+  local want="$1" why="$2" have
+  have=$(df -PBG "$WORK" | awk 'NR==2{gsub(/G/,"",$4); print $4}')
+  say "  free space: ${have} GiB (need ${want} GiB for $why)"
+  [ "${have:-0}" -ge "$want" ] || refuse "only ${have} GiB free at $WORK; $why needs ${want} GiB"
+}
+need_free_gib 60 "the weight cache plus several handoffs of dumps"
+
 step "fresh-pin E9 gate before weights"
 cd "$LC_DIR"
 "$LC_PY" -m linear_ceiling.e9 --check --config "config/$EXP.toml"
 say "  config sha256 $(sha256sum "$CFG" | awk '{print $1}')"
+
+if [ "$REHEARSAL" = "1" ]; then
+  say "REHEARSAL COMPLETE: shas, venvs, tau binding, traces, mapper and the E9 gate all agree."
+  say "  Nothing downloaded, no GPU touched, no cost. The next step on a real box is the weights."
+  say "SITTING_B_OK"
+  exit 0
+fi
 
 step "weights (pre-staged, or token passed to download processes only)"
 export HF_HOME HF_HUB_DISABLE_IMPLICIT_TOKEN=1

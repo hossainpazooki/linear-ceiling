@@ -665,10 +665,45 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--runpod-state", default=str(rp.STATE))
     ap.add_argument("--expected-pod-name", default=POD_NAME)
     ap.add_argument("--every", type=int, default=60)
+    # The kept-dump budget for this cell is ~50.1 GiB (8 handoffs x (n_sender*245760 + n_receiver*131072)),
+    # measured from coverage.json, and --local defaults to results/<exp> so tensors land in their FINAL
+    # location -- there is no staging copy to double-count it. The floor below is that budget plus
+    # headroom; the run pauses rather than filling the disk, because a full disk mid-pull corrupts the
+    # very artifacts the sitting exists to produce.
+    ap.add_argument("--min-free-gib", type=float, default=65.0,
+                    help="refuse to start below this; pause and alert if it is crossed during the run")
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--delete-verified", action="store_true",
                     help="after raw-byte verification, delete that one kept remote tree to free pod disk")
     return ap
+
+
+
+def free_gib(path: Path) -> float:
+    """Free space where the kept tensors actually land."""
+    st = os.statvfs(path if path.exists() else path.parent)
+    return st.f_bavail * st.f_frsize / 2**30
+
+
+def require_free_space(local: Path, floor: float, *, blocking: bool) -> None:
+    """Refuse before the run, PAUSE during it. Never silently fill the disk.
+
+    A pull that runs out of space part-way through a kept tensor leaves a short file whose hash will
+    not match -- and the pod deletes nothing until the hash matches, so the artifact survives on the
+    box only until the run ends. Pausing keeps the operator's options open; filling the disk does not.
+    """
+    have = free_gib(local)
+    if have >= floor:
+        return
+    msg = (f"only {have:.1f} GiB free at {local}, below the {floor:.1f} GiB floor "
+           f"(this cell's kept dumps need ~50.1 GiB)")
+    if not blocking:
+        raise SystemExit(f"pull_verify_b REFUSED: {msg}")
+    while free_gib(local) < floor:
+        print(f"\a  PAUSED: {msg}. Free space and I will continue; nothing is deleted on the pod "
+              f"while paused.", flush=True)
+        time.sleep(60)
+    print(f"  resumed: {free_gib(local):.1f} GiB free", flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -680,6 +715,7 @@ def main(argv: list[str] | None = None) -> int:
         validate_runpod_binding(runpod_state, expected_name=a.expected_pod_name)
     except ValueError as e:
         raise SystemExit(f"pull_verify_b REFUSED: {e}") from e
+    require_free_space(Path(a.local).expanduser(), a.min_free_gib, blocking=False)
     pull_state_path = Path(a.state).expanduser()
     state = _load_json(pull_state_path) if pull_state_path.exists() else {
         "schema": "linear-ceiling.runpod.pull-b.v1",
@@ -696,7 +732,13 @@ def main(argv: list[str] | None = None) -> int:
         if state.get(key) != want:
             raise SystemExit(f"pull_verify_b REFUSED: pull state {key} belongs to another sitting")
     tx = Transport(runpod_state["pod_id"], a.expected_pod_name)
+    local_root = Path(a.local).expanduser()
     while True:
+        # Checked EVERY round, not only at startup: the kept tensors arrive over hours, and the disk
+        # that was comfortable at the first handoff is the one that fills at the eighth. Pausing here
+        # blocks before a round pulls anything, so nothing is half-written and nothing on the pod is
+        # deleted while we wait.
+        require_free_space(local_root, a.min_free_gib, blocking=True)
         try:
             if run_round(a, tx, state, runpod_state):
                 return 0
