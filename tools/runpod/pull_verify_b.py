@@ -199,11 +199,18 @@ def validate_checkpoint_report(report: dict, *, config: Path, exp: str, pair: st
         raise ValueError("report pair/upstream pin does not match the config")
     if report.get("config_sha256") != text_sha256(config):
         raise ValueError("report config_sha256 does not match the home config")
-    if report.get("partial"):
-        raise ValueError("E9F forbids a partial close, but the report claims one")
+    # Entry 0042 REGISTERS a stopping rule for this cell: [e9.order] by = "n_sender_asc" and
+    # allow_partial = true. This verifier was written when the short cell forbade a partial close, and
+    # it refused both the report claiming one AND the config permitting one -- so as written it would
+    # have refused a correctly-registered E9F run outright, and a budget-killed sitting could never be
+    # closed. What must still be enforced is the SHAPE of a partial: the scored set must be a PREFIX of
+    # the registered run order (checked below against `order`), never "the handoffs that happened to
+    # finish". The config and the report must also agree with each other about whether a partial is
+    # permitted, so neither can drift from the registered rule.
     order_cfg = cfg.get("order") or {}
-    if bool(order_cfg.get("allow_partial", False)):
-        raise ValueError("E9F config unexpectedly permits a partial close")
+    allow_partial = bool(order_cfg.get("allow_partial", False))
+    if report.get("partial") and not allow_partial:
+        raise ValueError("the report claims a partial close but the registered config forbids one")
     expected_order_by = order_cfg.get("by", "id")
     if report.get("order_by") != expected_order_by:
         raise ValueError("report order_by does not match the E9F config")
@@ -317,6 +324,14 @@ def parse_manifest(path: Path) -> dict[str, str]:
 
 
 def manifest_local_path(rel: str, *, local: Path, exp: str) -> Path:
+    """Where a path named by the box's final manifest lands at home.
+
+    This MUST accept everything `sitting_b.sh` actually lists, or the verification fails, the terminate
+    receipt is never written, and a FINISHED sitting sits there billing. As first written it accepted
+    only results/ and FINAL_LOGS, while the box's manifest also lists `manifest_check.out`, the
+    `sitting_b.evidence/` tree and the per-attempt `<exp>.*.halt.*` files -- so it could never have
+    succeeded. The rule is still allow-list, not "anything goes": every accepted shape is enumerated,
+    scratch tensors are still refused, and `safe_rel` still rejects traversal."""
     prefix = f"linear-ceiling/results/{exp}/"
     if rel.startswith(prefix):
         result_rel = safe_rel(rel[len(prefix):], what="manifest result path")
@@ -324,6 +339,16 @@ def manifest_local_path(rel: str, *, local: Path, exp: str) -> Path:
             raise ValueError("final manifest must not include incrementally deleted scratch tensors")
         return local / result_rel
     if rel in {x.format(exp=exp) for x in FINAL_LOGS}:
+        return local / "logs" / "box" / rel
+    # the run's own evidence tree, kept beside the logs
+    if rel.startswith("sitting_b.evidence/"):
+        return local / "logs" / "box" / safe_rel(rel, what="manifest evidence path")
+    # the traces/manifest check the box ran before the gates
+    if rel == "manifest_check.out":
+        return local / "logs" / "box" / rel
+    # per-attempt halt records: <exp>.<something>.halt.{log,rc,status}, no directory component
+    if (rel.startswith(f"{exp}.") and rel.rpartition(".")[2] in {"log", "rc", "status"}
+            and ".halt." in rel and "/" not in rel):
         return local / "logs" / "box" / rel
     raise ValueError(f"final manifest contains an out-of-scope path: {rel}")
 

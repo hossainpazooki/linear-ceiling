@@ -25,10 +25,13 @@
 # results/e9fl/align/coverage.json and exists nowhere else; 0029's 25, 0036's 35 and 0029's 39 excluded
 # are Qwen-tokenizer facts and carry over to nothing.
 #
-# THIS FILE CANNOT LOAD, AND THAT IS THE POINT -- see the same paragraph in config/e9f.toml. The three
-# pair-calibrated fields tau_K, tau_V and tau_agent_K depend on THIS pair's archived held-out R^2; the
-# mapper has not been fitted and cannot be fitted here, so each carries a refusing UNRESOLVED marker.
-# The absolute tau_ladder [0.10, 0.03] and prefix_invariance_max_delta 1e-4 are already registered literals.
+# THIS FILE IS CALIBRATED AND LOADS -- see the same paragraph in config/e9f.toml. The three
+# pair-calibrated fields tau_K, tau_V and tau_agent_K are 1 - THIS pair's archived held-out R^2, taken
+# from entry 0040's verified E8 report and confirmed independently by `summarize_e9 --calibrate-tau`;
+# they carried refusing UNRESOLVED markers until sitting A produced the mapper. The absolute
+# tau_ladder [0.10, 0.03] and prefix_invariance_max_delta 1e-4 are entry 0039's registered literals.
+# NOTE: this cell (the long half) is NOT registered by entry 0042, which registers the short cell only;
+# it takes its own numbered entry, and nothing here is frozen until that entry exists.
 #
 # e9.assert_ready refuses until this file and ledger/ledger.md (with the entries in [e9.gate]) are
 # committed unmodified AND the upstream checkout is at `upstream_sha`, clean for every invoked path.

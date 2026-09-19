@@ -22,7 +22,12 @@ def _fixture(tmp_path: Path):
         '[e9]\n'
         f'pair = "{pull_b.PAIR}"\n'
         'results_dir = "results/e9f"\n'
-        'upstream_sha = "upstream-pin"\n',
+        'upstream_sha = "upstream-pin"\n'
+        # entry 0042 registers the stopping rule for this cell; the fixture must mirror it or the
+        # tests below assert behaviour the real config can never produce.
+        '[e9.order]\n'
+        'by = "n_sender_asc"\n'
+        'allow_partial = true\n',
         encoding="utf-8",
     )
     score_sha = _write(local / "scores" / "h.json", b"score")
@@ -48,7 +53,7 @@ def _fixture(tmp_path: Path):
         "coverage": {"observed": 1, "included": 1, "excluded": 0},
         "alignments": [{"handoff_id": "h", "excluded": False}],
         "run_order": ["h"],
-        "order_by": "id",
+        "order_by": "n_sender_asc",   # entry 0042's registered order
         "keep_subset": ["h"],
         "bridge": None,
         "controls": {"handoff_id": "h", **controls},
@@ -106,10 +111,17 @@ def test_complete_report_refuses_missing_score_and_partial(tmp_path):
     report["controls"] = None
     with pytest.raises(ValueError, match="complete report scores"):
         pull_b.validate_complete_report(report, config=config, exp="e9f", pair=pull_b.PAIR)
+    # Entry 0042 registers allow_partial = true for this cell, so a partial report is NOT refused for
+    # being partial. What is still refused is a partial whose config does not permit one -- the two
+    # must agree, or either could drift from the registered rule.
     _, config, report = _fixture(tmp_path / "again")
+    forbidding = config.read_text(encoding="utf-8").replace("allow_partial = true", "allow_partial = false")
+    (tmp_path / "again" / "forbids.toml").write_text(forbidding, encoding="utf-8")
     report["partial"] = {"n_scored": 1}
-    with pytest.raises(ValueError, match="forbids a partial"):
-        pull_b.validate_complete_report(report, config=config, exp="e9f", pair=pull_b.PAIR)
+    forbids = tmp_path / "again" / "forbids.toml"
+    report["config_sha256"] = pull_b.text_sha256(forbids)   # the report is written under THAT config
+    with pytest.raises(ValueError, match="registered config forbids one"):
+        pull_b.validate_complete_report(report, config=forbids, exp="e9f", pair=pull_b.PAIR)
 
 
 def test_manifest_refuses_traversal_and_missing_required_path(tmp_path):
@@ -156,10 +168,17 @@ def test_checkpoint_identity_refuses_wrong_included_order_and_control_handoff(tm
     _, config, report = _fixture(tmp_path)
     report["alignments"].append({"handoff_id": "a", "excluded": False})
     report["coverage"] = {"observed": 2, "included": 2, "excluded": 0}
-    report["run_order"] = ["h", "a"]       # not the registered ID sort ["a", "h"]
     report["complete"] = False
+    # The ID-sort guard only applies to a cell registered `by = "id"`. E9F registers n_sender_asc
+    # (entry 0042), so that guard is exercised against its own config rather than deleted -- it is
+    # still live code for any cell that registers the ID order, including config/e9.toml's default.
+    id_cfg = tmp_path / "by_id.toml"
+    id_cfg.write_text(config.read_text(encoding="utf-8").replace('by = "n_sender_asc"', 'by = "id"'),
+                      encoding="utf-8")
+    id_report = dict(report, order_by="id", run_order=["h", "a"],   # not the registered ID sort
+                     config_sha256=pull_b.text_sha256(id_cfg))
     with pytest.raises(ValueError, match="ID-sorted"):
-        pull_b.validate_checkpoint_report(report, config=config, exp="e9f", pair=pull_b.PAIR)
+        pull_b.validate_checkpoint_report(id_report, config=id_cfg, exp="e9f", pair=pull_b.PAIR)
     report["run_order"] = ["a", "h"]
     report["scores"] = {}
     report["controls"] = {"handoff_id": "not-first"}

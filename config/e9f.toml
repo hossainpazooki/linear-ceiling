@@ -12,16 +12,23 @@
 # without a rope, which is the correct refusal: a natively-long receiver has no scaled arm to compare).
 # The registered cap below is a LENGTH THRESHOLD in Llama-3 tokens, not a hardware bound.
 #
-# THIS FILE CANNOT LOAD, AND THAT IS THE POINT. tau_K, tau_V and tau_agent_K depend on THIS pair's
-# archived held-out R^2. That R^2 does not exist: the Llama mapper has not been fitted, E8 on this pair
-# has not run, and neither can run on any machine here. Each of those three carries a refusing
-# UNRESOLVED marker instead of a number, so
-# `load_e9_config` raises before any driver, gate or summarizer can see this cell. A Qwen tau copied
-# here would load, run, and produce a verdict calibrated against the wrong pair's mapper -- which is
-# exactly the failure the markers exist to make impossible. The absolute tau_ladder [0.10, 0.03] and
-# prefix_invariance_max_delta 1e-4 are already literal, registered values. Fill the three tau fields from
-# `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report results/e8f/report.json`, never by
-# hand: the summarizer recomputes tau and refuses on any disagreement with this file.
+# THIS FILE IS CALIBRATED AND LOADS. It did not, and could not, until this pair's own mapper existed:
+# tau_K, tau_V and tau_agent_K are each 1 - THIS pair's archived held-out R^2, and until sitting A ran
+# they carried refusing UNRESOLVED markers so that no driver, gate or summarizer could see the cell. The
+# values below came from entry 0040's verified E8 report via `tools/emit_tau.py` at full float
+# precision, and were then confirmed INDEPENDENTLY by
+# `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report results/e8f/report.json`, which
+# recomputes them from the archived mapper and refuses on any disagreement with this file (it agreed to
+# within 1e-9). Never edit them by hand; the summarizer is the authority and will refuse.
+#
+# The protection the markers gave has NOT been dropped with them: a Qwen tau pasted here would load and
+# produce a verdict calibrated against the wrong pair's mapper, so tests assert that no config/e9.toml
+# constant appears in any Llama config, and that a re-inserted UNRESOLVED marker still refuses -- which
+# is what the next uncalibrated cell will rely on. The absolute tau_ladder [0.10, 0.03] and
+# prefix_invariance_max_delta 1e-4 are entry 0039's registered literals, deliberately identical across
+# families. On this pair tau_agent_K < tau_K; entry 0041 ruled that ordering was never registered, so it
+# is reported and enforces nothing, and entry 0040's two-window disclosure is the caveat on reading it.
+# From entry 0042 the gate pins this file committed-unmodified, so this header is frozen with it.
 #
 # e9.assert_ready refuses until this file and ledger/ledger.md (with the entries in [e9.gate]) are
 # committed unmodified AND the upstream checkout is at `upstream_sha`, clean for every invoked path.
@@ -56,6 +63,24 @@ required_entries = ["0019", "0023", "0025", "0027", "0042"]   # 0042 = this cell
                                      # ledger -- so only this cell's own number is named here. If anything else is
                                      # appended first, this list, config/e8f.toml's [e8.gate], config/e9fl.toml's
                                      # [e9.gate] and every NUM string move up together, in ONE commit.
+
+[e9.order]                           # registered run order and stopping rule (entry 0042). config/e9.toml
+                                     # registers NEITHER, because 0029's sitting ran to completion in one
+                                     # sitting on a card that was already paid for. This cell runs under a
+                                     # HARD DOLLAR CEILING, and without these two keys a budget kill mid-run
+                                     # yields no verdict at all -- only a spent card -- because the summarizer
+                                     # refuses a partial close it was never told to expect. Registered BEFORE
+                                     # the run, as entry 0035 did for the long half.
+by = "n_sender_asc"                  # shortest sender first, ties by handoff id. Two reasons, both fixed before
+                                     # any data: the cheapest handoffs are scored first, so a budget kill keeps
+                                     # the MOST handoffs rather than an arbitrary set; and the order is a
+                                     # deterministic function of the alignment, so the prefix a partial close
+                                     # accepts cannot be chosen after seeing which handoffs scored well.
+allow_partial = true                 # `e9 --close-partial` may close an unfinished run. The scored set must be a
+                                     # PREFIX of the order above -- not "the ones that happened to finish" -- the
+                                     # closing entry names every unscored handoff by id, and coverage ("n scored
+                                     # of N registered") travels beside every number, exactly as entry 0036 did.
+                                     # A partial close is a REGISTERED outcome here, never a rescue.
 
 [e9.handoffs]
 suite = "swe-bench"
