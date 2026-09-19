@@ -384,7 +384,12 @@ def verify_final_manifest(manifest_path: Path, *, local: Path, exp: str,
         raise ValueError(f"{exp}.rc is not EXIT=0")
     if (box_logs / f"{exp}.status").read_text(encoding="utf-8").strip() != "SITTING_B_OK":
         raise ValueError(f"{exp}.status is not SITTING_B_OK")
-    if "SITTING_B_OK" not in (box_logs / f"{exp}.log").read_text(encoding="utf-8", errors="replace").splitlines():
+    # sitting_b.sh writes `[<utc>] SITTING_B_OK`, never a bare line, so an exact-match test could
+    # NEVER pass on a real run: a correct complete sitting got no receipt and billed until --force.
+    # Match the marker as the last field of some line, which accepts the box's timestamped form and
+    # still refuses SITTING_B_FAILED or a marker embedded in prose.
+    log_lines = (box_logs / f"{exp}.log").read_text(encoding="utf-8", errors="replace").splitlines()
+    if not any(ln.split()[-1:] == ["SITTING_B_OK"] for ln in log_lines):
         raise ValueError(f"{exp}.log has no terminal SITTING_B_OK line")
     return checked, total, manifest
 
@@ -476,7 +481,11 @@ def mirror_small(tx: Transport, remote_results: str, local: Path, seen: dict) ->
 def mirror_workspace_files(tx: Transport, remote_work: str, names: list[str], local_logs: Path,
                            seen: dict, *, force: bool = False) -> int:
     quoted = " ".join(shlex.quote(f"{remote_work.rstrip('/')}/{x}") for x in names)
-    cmd = f"for f in {quoted}; do [ -f \"$f\" ] && stat -c '%s\\t%Y\\t%n' \"$f\"; done"
+    # `[ -f x ] && stat` is the loop's last command, so a MISSING last name makes the whole loop exit
+    # 1 and run_bytes raise. The final manifest is in this list and does not exist until the run ends,
+    # so EVERY mid-run round died before pulling a single kept dump. `|| true` per iteration fixes it;
+    # absence is the normal case here, not an error.
+    cmd = f"for f in {quoted}; do [ -f \"$f\" ] && stat -c '%s\\t%Y\\t%n' \"$f\" || true; done"
     listing: dict[str, list[object]] = {}
     for line in tx.run_bytes(cmd).decode("utf-8").splitlines():
         size, mtime, absolute = line.split("\t", 2)
@@ -671,7 +680,9 @@ def build_parser() -> argparse.ArgumentParser:
     # headroom; the run pauses rather than filling the disk, because a full disk mid-pull corrupts the
     # very artifacts the sitting exists to produce.
     ap.add_argument("--min-free-gib", type=float, default=65.0,
-                    help="refuse to start below this; pause and alert if it is crossed during the run")
+                    help="PRE-CREATE check only: refuse to start below this")
+    ap.add_argument("--headroom-gib", type=float, default=10.0,
+                    help="during the run the floor is (outstanding kept bytes) + this, never a constant")
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--delete-verified", action="store_true",
                     help="after raw-byte verification, delete that one kept remote tree to free pod disk")
@@ -683,6 +694,29 @@ def free_gib(path: Path) -> float:
     """Free space where the kept tensors actually land."""
     st = os.statvfs(path if path.exists() else path.parent)
     return st.f_bavail * st.f_frsize / 2**30
+
+
+def outstanding_gib(local: Path, report: dict | None) -> float:
+    """Bytes the checkpoint still expects to land here, in GiB.
+
+    The floor must track what is LEFT to pull, not a constant: the pulled tensors consume the very
+    space a fixed floor measures, so a constant floor makes the puller pause against its own
+    downloads and never resume. (Measured: a 65 GiB floor with 79.6 GiB free froze for good after the
+    4th kept dump.)"""
+    if not report:
+        return 0.0
+    total = 0
+    for _hid, rec in (report.get("scores") or {}).items():
+        kept = rec.get("kept_dumps")
+        if not kept:
+            continue
+        kdir = rec.get("kept_dir") or ""
+        for dump, files in kept.items():
+            for rel in files:
+                if not (local / kdir / dump / rel).is_file():      # not yet home
+                    total += int(rec.get("kept_bytes", {}).get(dump, 0)) or 0
+                    break
+    return total / 2**30
 
 
 def require_free_space(local: Path, floor: float, *, blocking: bool) -> None:
@@ -738,7 +772,14 @@ def main(argv: list[str] | None = None) -> int:
         # that was comfortable at the first handoff is the one that fills at the eighth. Pausing here
         # blocks before a round pulls anything, so nothing is half-written and nothing on the pod is
         # deleted while we wait.
-        require_free_space(local_root, a.min_free_gib, blocking=True)
+        # DYNAMIC floor: what is still outstanding plus headroom, never the pre-create constant.
+        # a.min_free_gib stays the PRE-CREATE check only (checked once, above).
+        try:
+            _rep = _load_json(local_root / "report.json") if (local_root / "report.json").exists() else None
+        except Exception:                                          # a torn checkpoint mid-write
+            _rep = None
+        _need = outstanding_gib(local_root, _rep) + a.headroom_gib
+        require_free_space(local_root, _need, blocking=True)
         try:
             if run_round(a, tx, state, runpod_state):
                 return 0

@@ -27,6 +27,7 @@ through `summarize_e9` and a numbered entry.
 """
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -395,6 +396,26 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
     return p
 
 
+def _write_checkpoint(out: Path, report: dict) -> None:
+    """Write report.json ATOMICALLY: temp file in the same directory, fsync, then rename.
+
+    The checkpoint is the only record of which handoffs are scored, and the registered stopping rule
+    (entry 0042) closes a partial run on the PREFIX it names -- so a torn report.json costs the whole
+    partial, not one handoff. A plain write_text is a read-modify-truncate-write: a process killed
+    inside it leaves a truncated file that json.load refuses. That is not hypothetical here, because
+    the home-side wind-down stops the driver by signalling it.
+
+    rename(2) within a directory is atomic, so a reader sees either the previous checkpoint or the new
+    one and never a partial one. This changes NOTHING computed -- same bytes, same order, same
+    schema -- only when they become visible.
+    """
+    tmp = out.with_name(out.name + ".tmp")
+    tmp.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    with open(tmp, "rb") as fh:
+        os.fsync(fh.fileno())
+    os.replace(tmp, out)
+
+
 def run_order(records: list, included: list[str], order_by: str) -> list[str]:
     """The registered order the driver scores in (entry 0035 stopping rule): by id (E9), or by |S|
     ascending with the id as tie-break (E9-long), so a run stopped at the cutoff has scored a PREFIX."""
@@ -540,13 +561,13 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
         report["bridge"] = prior["bridge"]
     elif cfg.bridge:
         report["bridge"] = run_bridge(cfg, handoffs, enc, runner)
-        out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint: the bridge survives a later crash
+        _write_checkpoint(out, report)   # checkpoint: the bridge survives a later crash
     for i, hid in enumerate(order):
         stem = _stem(hid)
         s_ids, r_ids, pairs = aligned[hid]
         if hid in prior_scores and (i > 0 or report["controls"] is not None):
             report["scores"][hid] = prior_scores[hid]
-            out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+            _write_checkpoint(out, report)
             print(f"[{i + 1}/{len(order)}] {hid}: kept from the checkpoint (score and per-token files match their hashes)")
             continue
         t0 = time.time()
@@ -557,11 +578,11 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
             report["controls"] = controls
         report["scores"][hid] = rec
         report["scores"][hid]["seconds"] = time.time() - t0
-        out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint per handoff
+        _write_checkpoint(out, report)   # checkpoint per handoff
         print(f"[{i + 1}/{len(order)}] {hid}: same K "
               f"{report['scores'][hid]['same_K_r2_layer_mean']:.4f} in {report['scores'][hid]['seconds']:.0f}s")
     report["complete"] = True
-    out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    _write_checkpoint(out, report)
     return out
 
 

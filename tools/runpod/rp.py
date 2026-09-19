@@ -563,8 +563,18 @@ def cmd_watchdog(a) -> int:
             # transient SSL EOF while a pod was billing. Neither alone is correct.
             unreachable += 1
             print(f"  watchdog: API unreachable ({e}); retry {unreachable}", flush=True)
+            # A HOME network drop also stops the pull, so terminating on recovery destroys a healthy
+            # run AND its unpulled evidence (measured: a simulated 15-minute outage force-terminated a
+            # healthy pod at $1.69). Alert and KEEP POLLING; the first successful poll re-evaluates the
+            # spend, TTL and drain rules, which are the right authorities. The terminate stays only as
+            # a long backstop for a genuinely unreachable account.
             if unreachable * a.every >= a.unreachable_terminate_after * 60:
-                return _terminate_until_gone("API unreachable too long")
+                print(f"\a  watchdog: API unreachable for {a.unreachable_terminate_after:.0f} min. "
+                      f"NOT terminating -- a home outage is not a runaway pod. Still polling; the "
+                      f"ceilings decide on the first successful poll.", flush=True)
+                if unreachable * a.every >= a.unreachable_backstop_after * 60:
+                    return _terminate_until_gone(
+                        f"API unreachable for {a.unreachable_backstop_after:.0f} min (long backstop)")
             time.sleep(a.every)
             continue
         hours = (time.time() - float(st["created_epoch"])) / 3600.0
@@ -696,7 +706,10 @@ def main() -> int:
     p.add_argument("--warn", type=float, default=None, help="default: 60%% of the sitting ceiling `up` stored")
     p.add_argument("--kill", type=float, default=9.0)
     p.add_argument("--sitting-max", type=float, default=None); p.add_argument("--ttl", type=float, default=None)
-    p.add_argument("--unreachable-terminate-after", type=float, default=10.0)
+    p.add_argument("--unreachable-terminate-after", type=float, default=10.0,
+                   help="minutes of unreachability after which to ALERT (no longer terminates)")
+    p.add_argument("--unreachable-backstop-after", type=float, default=45.0,
+                   help="minutes after which to terminate anyway; a home outage must not trip this")
     p.add_argument("--every", type=int, default=60); p.set_defaults(fn=cmd_watchdog)
 
     p = sub.add_parser("ssh"); p.add_argument("rest", nargs="*"); p.set_defaults(fn=cmd_ssh)
