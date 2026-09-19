@@ -593,6 +593,7 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
     if bad_small:
         print(f"  REFUSED checkpoint fingerprints: {bad_small[0]}; no remote tensor deletion this round",
               flush=True)
+    any_kept_bad = False
     for label, kept_dir, items in kept_groups(report):
         bad, checked, _ = verify_artifacts(local, items)
         if bad:
@@ -602,6 +603,7 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
             tx.stream_tar(remote_parent, [leaf], local / parent)
             bad, checked, _ = verify_artifacts(local, items)
         if bad:
+            any_kept_bad = True
             print(f"  REFUSED kept {label}: {bad[0]}; remote bytes retained", flush=True)
             continue
         print(f"  verified kept {label}: {checked} files", flush=True)
@@ -614,6 +616,26 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
             print(f"  deleted/proved absent verified remote tree: {kept_dir}", flush=True)
         elif a.delete_verified:
             print(f"  retained remote tree {kept_dir}: checkpoint small-file verification failed", flush=True)
+
+    # ---- B5: snapshot every FULLY VERIFIED checkpoint -------------------------------------------
+    # A ceiling kill destroys the pod's disk, so the only thing that survives is what is already here
+    # AND provably whole. `report.json` on its own is not enough: summarize_e9 re-scores the kept
+    # dumps from tensors and refuses if any fingerprint is missing, so a report naming a kept dump
+    # still in flight makes the WHOLE partial unusable -- the exact failure entry 0042's stopping rule
+    # is supposed to prevent.
+    # So: when every artifact this checkpoint names is verified at home, keep a numbered copy. After a
+    # hard kill the operator installs the LAST snapshot as report.json and closes on that prefix. It is
+    # a genuine driver checkpoint and a prefix of the registered order, so 0042's rule is satisfied
+    # with nothing edited. The snapshot is written atomically so a kill cannot tear it either.
+    if not bad_small and not any_kept_bad:
+        n_scored = len(report.get("scores", {}))
+        if n_scored:
+            snaps = local / "checkpoints"
+            snaps.mkdir(parents=True, exist_ok=True)
+            _atomic_json(snaps / f"report.{n_scored}.json", report)
+            state["last_verified_n_scored"] = n_scored
+            print(f"  snapshot: checkpoints/report.{n_scored}.json (every named artifact verified here)",
+                  flush=True)
 
     state_path = Path(a.state).expanduser()
     _atomic_json(state_path, state, mode=0o600)
