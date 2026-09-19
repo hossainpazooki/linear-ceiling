@@ -13,7 +13,67 @@ amendment: one upstream commit + re-pin) to queue behind an expensive one (the H
 waits on an A100 not yet requested). Earlier allocations ("0025 = H-E9 verdict", the seed's
 "0025 = E8 amendment") are superseded by this sentence.
 
-Current state (2026-09-14, later): **0038 APPENDED** 2026-09-14 (chain `c9128ee936cd`, `ledger ok`; both readers passed
+Current state (2026-09-19): **0039–0042 are APPENDED** (family registration, E8 figures, the τ-ordering
+ruling, the E9 short-cell registration). Their numbers are now permanent, and every remaining draft cites
+them by literal rather than by an offset from its own `NUM` — the offsets were correct only while the whole
+block moved together, and inserting an entry *inside* the block is exactly the case they got wrong.
+
+**Four drafts staged, in this staging order: `append_0043.py`, `append_0044.py`, `append_0045.py`,
+`append_0046.py`.**
+
+- **`append_0043.py`** — the PRE-PREFILL AMENDMENT to 0042, and the only one that can run today.
+  Descriptive. Registers (a) the driver's atomic checkpoint write and (b) the stop protocol for a
+  budget-limited sitting: the drain, the signal, and the rule that the closing basis after any abnormal
+  end is the last checkpoint whose every named artifact is sha-verified at home. Every claim about the
+  instrument is asserted against the source, so it cannot describe tooling that does not exist, and R1 is
+  checked (`results/e9f/` holds no report, score, token record or kept dump). It also adds itself to
+  `config/e9f.toml`'s `[e9.gate]`, which changed that file's sha; the coverage and calibration were
+  regenerated under it and the coverage differs in exactly one key, `config_sha256`.
+- **`append_0044.py`** — the H-E9F verdict (was 0043). It used to REFUSE any partial close, written when
+  the cell forbade one; 0042 registers one, so a budget-stopped run could be closed, mirrored and verified
+  and then have no verdict entry to write. It now checks the *shape* — a prefix of the registered order
+  with the unscored tail named — and requires `--cutoff-reason` on a partial.
+- **`append_0045.py`** — the E9-long registration (was 0044). `config/e9fl.toml`'s `[e9.gate]` moved with it.
+- **`append_0046.py`** — the E9-long figures (was 0045).
+
+**Contingency, one commit:** if another session's entry lands first, all four move up together — every
+`NUM`/`PREV` string, `[e8.gate]` in `config/e8f.toml`, and `[e9.gate]` in `config/e9f.toml` and
+`config/e9fl.toml` — and that commit must precede `e8 --check` / `e9 --check`, which verify each config is
+committed unmodified. The drafts are a chain: each refuses unless its predecessor's heading is already on
+the ledger, each runs `ledger_check` after appending and exits with its return code, and each is deleted in
+the same commit as its append, chained with `&&` (the 0025 lesson). On this checkout the interpreter is
+`.venv/bin/python`. **0044–0046 still cannot run:** the upstream commit P is not yet merged at the pin, and
+none of their cells has run. What each asserts and refuses on:
+**`append_0043.py`** (PRE-PREFILL AMENDMENT to 0042; DESCRIPTIVE, no row, no `verdict:` line): the only
+one that can run today. Asserts R1 (`results/e9f/` holds no report, score file, token record or kept dump),
+that the config still registers `n_sender_asc` + `allow_partial`, and that the gate list is exactly 0042's
+extended by this entry. Every claim it makes about the instrument is checked AGAINST THE SOURCE rather than
+typed: `e9._write_checkpoint` writes via a temp file, `fsync` and `os.replace` and `close_partial` uses it;
+`pull_verify_b` defines `choose_partial_basis`, `require_driver_stopped`, `final_partial`,
+`write_drain_hint` and exposes `--final-partial`; `rp.py` defines `drain_threshold`, `send_drain_signal`,
+`read_drain_hint` and signals with `kill -TERM`. The drain fraction and the registered handoff count are
+READ (from `DRAIN_FALLBACK_FRACTION` and from `coverage.json`'s `run_order`), never typed.
+
+**`append_0044.py`** (the H-E9F verdict): `summarize_e9 --config config/e9f.toml` in-process, `verdict:
+H-E9F = <CELL>` from `ledger_check.VERDICTS` via the band word; run facts as `--box/--launched/--finished`;
+refuses a partial close (this config does not allow one) and a run whose dumps carry no RoPE spec. The
+τ_K ceiling 0039 registered is derived mechanically from the summary (`tau_K > 0.45` forces the cell to
+`unresolved` whatever the band says). Optional `--tau-ceiling-applies {yes,no}` is an assertion that must
+agree with that derivation and cannot select the verdict; required `--tau-ceiling-note` records provenance only.
+**`append_0045.py`** (E9 long half registration at a NATIVE receiver; DESCRIPTIVE, no row): declares entry
+0035's D1(a), its configuration bridge and its scaled-receiver reading INAPPLICABLE, and states that the
+cell cannot move, support or refute H-E9L and is never pooled with 0036's handoffs; asserts the floor
+equals the short cell's cap AND that the ids it excludes under that floor are EXACTLY the short cell's
+included set, so the partition is audited rather than asserted, with the residual above the cap — scored by
+neither cell — named and counted; same tau and calibration checks as 0041.
+**`append_0046.py`** (long-half figures; DESCRIPTIVE, no `verdict:` line): `summarize_e9 --config
+config/e9fl.toml` in-process; `--cutoff-reason` required on a partial close and forbidden otherwise; reads
+`results/e9l/summary.json` only to state 0036's scaled-receiver figures BESIDE these, with the
+non-comparability spelled out (different models, tokenizers, handoff sets, mappers and τ, and one receiver
+scaled past its pretraining window).
+Every figure in all six comes from a fail-closed summarizer, a coverage/calibration record or a config at
+run time; **no result number is written in any of the scripts**, and each refuses when its summarizer
+refuses. Earlier (2026-09-14, later): **0038 APPENDED** 2026-09-14 (chain `c9128ee936cd`, `ledger ok`; both readers passed
 in-process; script retired in the same change; **no drafts staged**). Earlier that day: **`append_0038.py` STAGED** (E9 scaled short cell figures: in-process `summarize_e9 --config
 config/e9s.toml` then `e9_compare --native config/e9.toml --scaled config/e9s.toml --long results/e9l/summary.json`; descriptive,
 no `verdict:` line, no row change; run facts as `--box/--launched/--finished`; refuses on a partial close, a refusing

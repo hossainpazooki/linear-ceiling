@@ -1,0 +1,81 @@
+# E8 on a SECOND MODEL FAMILY -- transfer under the agent-trace distribution shift (the instrument of
+# ledger entry 0009, amended by 0016), re-run on meta-llama/Llama-3.2-3B -> meta-llama/Llama-3.1-8B.
+# DESCRIPTIVE: this cell carries no hypothesis row and re-decides nothing. H-E8 is 0009/0020's and is
+# immutable; every figure produced here is stated for the Llama pair alone and is never pooled with the
+# Qwen figures. Registration entry: see [e8.gate] (PROVISIONAL -- read the note there before trusting it).
+#
+# The pair IS matched-KV: both sides carry num_key_value_heads = 8 and a per-head dim of 128 (the 8B
+# declares no head_dim and reaches 128 as hidden_size // num_attention_heads = 4096 / 32), so upstream
+# `check_matched_kv` passes unrelaxed, the paper's Sec 2.1 premise holds, and the Appendix-D / Table-12
+# parameter count is exact for this pair. Nothing about the estimator is extended: the whole upstream
+# delta is ONE entry in kvt/pairs.py's PAIRS so that dump_kv, fit_mapper and score_positions accept the
+# pair by name. The matched-KV premise rests on the SOURCE config, which has not been read on any
+# machine here (the meta-llama repos are gated); `tools/preflight_pair.py` against the gated snapshots
+# is the gate on it, and if it fails this file is void rather than merely wrong.
+#
+# The two sides carry DIFFERENT llama3 RoPE scaling factors (3.2: 32.0, 3.1: 8.0). That is not a
+# matched-KV problem -- check_matched_kv reads n_kv and d_h only -- but it IS why `upstream_sha` must be
+# commit P on top of 063f4023 and never on top of d5786df, whose strip is plain-theta and therefore
+# silently wrong for `rope_type = "llama3"` on BOTH sides.
+#
+# e8.assert_ready refuses until this file and ledger/ledger.md (with 0009, 0016 and [e8.gate]'s entry)
+# are committed unmodified AND the upstream checkout is at `upstream_sha` with a clean tree for every
+# path E8 invokes. TODAY it refuses on the pin, by design: commit P is not written and not pushed.
+
+[e8]
+pair = "llama3.2-3b-to-llama3.1-8b"  # source = Llama-3.2-3B, receiver = target = Llama-3.1-8B. Cross-release
+                                     # inside one family, so the name carries BOTH sides: the upstream short
+                                     # form would read "llama3.2-3b-to-8b" and assert a Llama-3.2-8B, which
+                                     # does not exist. The string keys the mapper, the dumps, the token file,
+                                     # the sealed prediction and every report, and the seal is unrewritable.
+results_dir = "results/e8f"          # a NEW directory: results dirs are literal config values, never pair-keyed,
+                                     # and the registration script's "holds nothing yet" gate reads this one
+tokens_dir = "data/e8f"              # gitignored; the agent-text token file lives here. Entry 0016's sampling
+                                     # rule re-drawn under the Llama-3 BPE is a DIFFERENT 50 windows, not a
+                                     # re-use of results/e8's -- stated in the registration entry
+upstream_path = "../kv-transfer-replication"   # the identical string every other config uses: ONE clone, moved
+                                     # per cell with `git -C ../kv-transfer-replication checkout --detach <pin>`
+# The pin is commit P: the one-line kvt/pairs.py PAIRS entry, based on 063f4023 (the RoPE-spec commit) and
+# pushed to the remote tools/ec2/setup.sh clones from. It does not exist. e8.assert_ready's `re.fullmatch
+# (r"[0-9a-f]{40}", ...)` refuses on this value by name -- a fail-closed placeholder, never a plausible sha.
+upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # commit P: the kvt/pairs.py PAIRS entry, parented on 063f4023 (the
+                                     # RoPE-spec commit -- required, because this pair's two sides carry
+                                     # different llama3 factors and a plain-theta strip is silently wrong).
+                                     # Lives on emersony99/kv-transfer-replication pending
+                                     # hossainpazooki/kv-transfer-replication#1, which asks for a merge
+                                     # without squash or rebase so this sha stays valid as the pin.
+scope_note = "off-policy text for Llama-3; cross-release pair (source 3.2, receiver 3.1); matched-KV (8 x 128 both sides); not a real switch point; visible messages only (0012)"
+
+[e8.gate]                            # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016), never replacing them
+required_entries = ["0039"]          # PROVISIONAL. Entry numbers are allocated ONLY by docs/drafts/README.md at
+                                     # staging time, in staging order, and the committed ledger ends at 0038.
+                                     # If anything else is appended first, this value, the [e9.gate] lists in
+                                     # config/e9f.toml and config/e9fl.toml, and every NUM string in the staged
+                                     # append scripts move up together in ONE commit -- before `e8 --check`,
+                                     # which verifies this file is committed unmodified.
+
+[e8.mappers]                         # upstream artifacts, read-only: mappers/<pair>/k<k>
+verdict_k = 1                        # a LITERAL fixed at registration, not resolved after the k-sweep: this file
+                                     # is committed with its registering entry and the gate checks it unmodified,
+                                     # while the fit happens after. k = 1 for comparability with entry 0016.
+report_k = [1, 4, 8]                 # under the matched-KV premise p = k x n_kv x d_h = 1024k and n_train =
+                                     # 0.8 x 50 x (1024 / 4) = 10,240, so p/n = 0.10 / 0.40 / 0.80 -- numerically
+                                     # IDENTICAL to Qwen's. Entry 0016's k = 4 collapse is therefore directly
+                                     # comparable here, with no p/n caveat to state.
+
+[e8.arms]
+generic_dumps = "data/kv/llama3.2-3b-to-llama3.1-8b"   # relative to upstream; the pair's own n = 50 dumps, produced by the fit sitting
+agent_dumps = "results/e8f/kv/agent"           # relative to this repo; written by the driver
+holdout_frac = 0.2                             # arm (a)'s protocol, matched exactly (0016)
+stride = 4
+
+[e8.text]                            # sampling rule registered in 0016, byte-for-byte; the DRAW differs (Llama-3 BPE)
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["tau2-bench", "swe-bench"] # stratified equally; one window per trajectory
+window = "first"                     # the first seq_len tokens of the role-tagged concatenation
+
+[e8.band]                            # entry 0009, frozen: absolute drop in held-out pooled R2
+holds_max_drop = 0.05
+degrades_min_drop = 0.15

@@ -39,6 +39,7 @@ cell changes.
 | H-E8 | (transfer survives the agent-trace distribution shift) A linear KV mapper fit on generic calibration text retains its held-out pooled R² (definition A5) when the KV states come from agent-trace text instead, within the tolerance band registered in entry 0009 before E8 runs. Evaluated on the one pair with fitted mappers upstream (qwen3-0.6b-to-1.7b); the traces are off-policy for Qwen, so this tests CONTENT distribution shift, never on-policy agent behaviour and never a real mid-trajectory switch. | E8 (band in entry 0009) | NOT CONFIRMED |
 | H-E9 | (achievable fraction of the headroom upper bound at a re-rendered handoff) at a re-rendered handoff, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity. Rule (entry 0019, band approved 2026-09-01, frozen before any prefill): per-handoff E9-same pooled K R² (definition A5) at LCS-floor matched positions, median over included handoffs — HOLDS >= 0.70, DEGRADES <= 0.40, UNRESOLVED between; V reported alongside, verdict-bearing for nothing; handoffs over the 32,768-token cap excluded and counted. Row added with 0019's commit set completion — the entry says "registered in the table" and the row was initially missing (process slip, noted in the handoff; the entry text is immutable and unchanged). | E9 (band in entry 0019) | HELD |
 | H-E9L | (E9's claim on the long half) at a re-rendered handoff whose sender prompt exceeds the prior cap of 32,768 tokens, same-model KV agreement on content-matched tokens keeps its usefulness under a receiver extended to 81,920 positions by static YaRN. Rule verbatim from entry 0023: median over the newly included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.3186) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; decided on the 35 newly included handoffs only, never pooled with 0029's 25; read on a floor (0027) and, if the bridge control exceeds 0.15, as a claim about the scaled receiver only. Registered by entry 0035 before any prefill. | E9-long (entry 0035) | HELD |
+| H-E9F | (E9's claim on a second model family) at a re-rendered handoff whose sender and receiver prompts both fit 32,768 tokens under the pair's own tokenizer, same-model KV agreement on content-matched tokens retains the transfer-relevant fidelity on meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B — a matched-KV cross-release pair with a natively long receiver, neither side scaled. Rule verbatim from entry 0023: median over the included handoffs of the oracle selective-recompute fraction f*(τ_K = 0.2861) on the K read-out, HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between; τ_K is 1 − THIS pair's own k = 1 held-out R² (entry 0040) and is never Qwen's; decided on this pair's 28 included handoffs — or, under the stopping rule this entry registers, on a PREFIX of them in `n_sender_asc` order with its coverage stated — never pooled with entry 0029's 25 — the same numeric cap over a different tokenizer is a different set of handoffs; read on a floor (0027). Registered by entry 0042 before any prefill. | E9-family (entry 0042) | HELD |
 
 Gates: **G1** (W1) = H-S2 first clause via E0 — decided SAME (entry 0004). **G2** (W6) and
 **G3** (W9) are retired with the screen line (entry 0006); the live gates are entry 0006's
@@ -2374,3 +2375,615 @@ one direction, one mapper, one alignment method; generation quality after reuse.
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: c9128ee936cd7e8afefa0301ddf9f8306abbe4676de31480fe9db50c8d037a54
+
+### 0039 — 2026-09-18 — A second model family registered before any fit: the matched-KV pair meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B, the upstream re-pin that registers it, the amended seal requirement, and E8 on the new pair; descriptive, no hypothesis row
+
+**Why, and why now.** Every result on this ledger is one pair: Qwen3-0.6B → 1.7B. H-E8 `NOT CONFIRMED`
+(0020), H-E9 `HELD` (0029) and H-E9L `HELD` (0036) are claims about that pair, and the honest reading of
+all three has always been "one pair, one direction, one mapper". A second family is the cheapest thing
+that can turn a single-pair observation into a statement with any generality, and it is the first
+question a reviewer asks. This entry registers the family — the pair, the upstream change that makes the
+instrument accept it, the amended seal requirement, and E8 on it — BEFORE any mapper is fitted and before the calibration
+text is drawn. It decides nothing: **no hypothesis row is added, no `verdict:` line follows, and the
+H-E8 cell does not move.** The one verdict-bearing cell of this campaign is the E9 short cell, registered
+by its own later entry with its own row.
+
+**The pair, and the fact the whole design rests on.** `llama3.2-3b-to-llama3.1-8b` = meta-llama/Llama-3.2-3B (source) → meta-llama/Llama-3.1-8B
+(receiver/target). Cross-release inside one family, so the name carries BOTH sides: the upstream's
+same-release short form names only the TARGET's size, which here would assert a Llama-3.2-8B — a model
+that does not exist. The string keys the mapper directory, the dumps, the token file and every report,
+so a name that misidentifies the receiver is
+not recoverable. **The pair is matched-KV**, which is what makes the upstream delta one line:
+both sides carry 8 KV heads and a per-head dim of 128, so `check_matched_kv` passes unrelaxed, the
+paper's Sec. 2.1 premise holds, and `Mapper.formula_params` is exact for this pair (the Appendix-D /
+Table-12 parameter-count control is preserved, not forfeited). Read from the two GATED `meta-llama`
+snapshots by `tools/preflight_pair.py`, record sha256 `e99c29a75d0b` (2026-09-18T13:14:29Z),
+20/20 checks passed, and cited by nothing else —
+no mirror, no re-upload, no remembered value ({sourceRepo: meta-llama/Llama-3.2-3B, filePath: config.json, sha256:
+35f063e9f381} and {sourceRepo: meta-llama/Llama-3.1-8B, filePath: config.json, sha256:
+54acfad3cffe}): Llama-3.2-3B: 28 layers, hidden 3072, 24 attention heads, 8 KV heads, head_dim 128 (declared), vocab 128,256, max_position_embeddings 131,072, rope_theta 500000, rope_scaling {"factor": 32.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}, tie_word_embeddings True, 229,376 KV bytes/token (fp32, all layers, K and V) · Llama-3.1-8B: 32 layers, hidden 4096, 32 attention heads, 8 KV heads, head_dim 128 (DERIVED as hidden_size // num_attention_heads; the config declares none), vocab 128,256, max_position_embeddings 131,072, rope_theta 500000, rope_scaling {"factor": 8.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}, tie_word_embeddings False, 262,144 KV bytes/token (fp32, all layers, K and V).
+
+**The shared-vocabulary gate, which could still kill this.** `scripts/prepare_tokens.py` refuses unless
+the two tokenizers' `get_vocab()` maps are equal, and `weights.assert_shared_vocab` is the home-side half
+of the same check. Both sides ship the 128,256-entry Llama-3 BPE, but added and special
+tokens are part of that map. The preflight record's check "shared vocab: get_vocab() maps" passed —
+128256 entries, identical mapping — and that is the evidence; had it failed there would be no E8 corpus for this pair
+and the family decision would reopen rather than be worked around.
+
+**The two sides carry DIFFERENT RoPE, and that is safe here for a stated reason.** Source
+rope_scaling {"factor": 32.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}; receiver {"factor": 8.0, "high_freq_factor": 4.0, "low_freq_factor": 1.0, "original_max_position_embeddings": 8192, "rope_type": "llama3"}. The two
+build different inverse-frequency vectors. That is not a matched-KV problem (`check_matched_kv` reads
+`n_kv` and `d_h` only) and not a content-space problem — PROVIDED the pin strips with each dump's OWN
+recorded `RopeSpec`, read off the loaded model's `rotary_emb.inv_freq` and halt-checked at every dumped
+position. That machinery is entry 0035's commit `063f4023fdde`, and this entry requires the pin to be a
+DESCENDANT of it (checked by this script). Under an older base the strip is plain-θ, which is silently
+wrong for `rope_type "llama3"` on both sides. Consequence carried forward to every cell of this family:
+any "the recorded RoPE is identical across the run" control is scoped **per model role** — receiver dumps
+against receiver dumps, source dumps against source dumps — because a cross-role equality assert would
+refuse every CORRECT run of this pair.
+
+**The upstream change, and what it is not.** Pin `06f8d5559257`, base 063f4023fdde: **one entry in
+`kvt/pairs.py`'s `PAIRS`**, so `dump_kv`, `fit_mapper`, `probe`, `score_mapper` and `score_positions`
+accept the pair by name. No dataclass change, no signature change, no relaxation of any check, no new
+flag. An earlier design for this campaign assumed unmatched head dims and specified a rectangular
+mapper, a registry flag, a `check_kv_heads`, a `formula_params` signature change and a τ ceiling
+justified by the conditioning of that map; **the pair is matched-KV, so every one of those is dropped**
+and nothing about the estimator is extended. `linear-ceiling` never writes upstream: the change is landed
+by the operator from `docs/2026-09-18-llama-upstream-patch-spec.md` and pushed before any box is rented
+(`tools/ec2/setup.sh` clones by sha). **Known limitation, recorded rather than fixed:**
+`kvt/mapper.py::apply_mapper` still strips and re-applies with the plain θ it records, so it is wrong for
+any `rope_type != "default"` and therefore for this pair; it is OFF the E8/E9 path (the scorers work in
+content space through `KVDump`), so `eval_hellaswag.py` and `compose_mapper.py` must not be run on this
+pair without a fix. Keeping the diff at one dict entry is worth more than pre-emptively fixing a path
+nobody here calls. **While the single upstream checkout sits at this pin the Qwen cells refuse at their
+gates** — existing practice, not a regression: re-summarizing a Qwen cell means
+`git -C kv-transfer-replication checkout --detach <that cell's pin>` first. There is ONE clone.
+
+**The seal (invariant 1), AMENDED for this entry — operator ruling, 2026-09-18.** This registration
+carries **no sealed prediction**, and the requirement is amended rather than satisfied. Invariant 1
+exists for the SCREEN's pre-fit predictions: a prediction that can be sealed before a fit must be.
+The screen line is `SHELVED` (H-S1/S3/S4, entries 0003–0006) and `screen.py` has no entry point that
+produces a payload, so there is no screen prediction about this pair to seal. The alternatives were
+considered and rejected in the open: sealing a *null* or procedural payload would satisfy the check
+while asserting nothing, which is precisely the failure this ledger is built to prevent; and inventing
+a pre-fit R² to seal would put a number on the record that no instrument produced. The amendment is
+narrow — it applies to a **descriptive second-family registration that adds no hypothesis row**, and
+it does not touch invariant 1 for any cell that does carry a screen prediction.
+
+What survives the amendment is the clause that actually carries the evidential weight: **no fitted
+mapper for this pair exists in ANY configured artifact root at append** (this script re-checks all
+four and refuses otherwise), and this script additionally refuses if a sealed prediction for the pair
+has appeared since the ruling. "Registered before any fit" therefore remains a checkable claim about
+the world, not an assertion of good faith.
+
+**E8 on the new pair (`config/e8f.toml`, `results/e8f/`).** 0009's instrument and 0016's amendment,
+unchanged: mapper fit on generic calibration text, scored on agent-trace text, arm (a) generic vs arm (b)
+agent, held-out pooled R² (definition A5), band HOLDS ≤ 0.05 drop /
+DEGRADES ≥ 0.15 drop; verdict k = 1 fixed here at registration
+(not chosen after the sweep), reported at k = 1, 4, 8; `[e8.text]` seed
+8, n = 50, len = 1024, suites tau2-bench, swe-bench, window
+"first"; holdout 0.2, stride 4. **The sampling RULE is 0016's
+byte-for-byte; the DRAW is not** — it is re-made under the Llama-3 BPE and is a different
+50 windows, not a reuse of `results/e8/`'s. Parameter count per read-out is
+p = k · n_kv · d_h = 1,024k against n_train = 10,240, so **p/n is k = 1: 0.10 / k = 4: 0.40 / k = 8: 0.80** — numerically
+identical to the Qwen arm's, because the two pairs happen to share 8 KV heads and head_dim 128. The
+k-sweep collapse entry 0016 reports is therefore directly comparable here at the same p/n, and there is no
+p/n caveat to state. **Descriptive: every figure produced
+under this config is stated for the Llama pair alone and is never pooled with a Qwen figure; H-E8's cell
+was decided by 0020 and does not move.** Scope recorded in the report: "off-policy text for Llama-3; cross-release pair (source 3.2, receiver 3.1); matched-KV (8 x 128 both sides); not a real switch point; visible messages only (0012)".
+
+**BOS carry-over, stated rather than changed.** The existing instrument tokenizes with
+`add_special_tokens=False` in both the generic-calibration and agent-text paths, and that rule carries
+over unchanged. Llama-3's `<|begin_of_text|>` is therefore absent and the first content token takes the
+attention-sink role. This is self-consistent across the two E8 arms and preserves comparability with the
+registered instrument; it is not a claim that the token layout matches a normal chat/inference request.
+
+**Three decisions fixed now, before any number exists.** The E9 cells of this family calibrate τ from
+THIS pair's own mapper, and three values that follow from τ_K must be fixed before τ_K is seen or they
+are not registered at all. (1) **τ ladder** (`[e9.rule] tau_ladder`, descriptive, verdict-bearing for
+nothing): ABSOLUTE [0.10, 0.03], identical to config/e9.toml; not a function of tau_K (operator ruling 2026-09-18). (2) **Prefix-invariance tolerance**
+(`[e9.controls] prefix_invariance_max_delta`, a HALT): ABSOLUTE 1e-4, identical to config/e9.toml; a float32 kernel-noise floor (operator ruling 2026-09-18). It must NOT inherit the
+Qwen cells' value. (3) **τ_K ceiling** — the τ_K above which the short cell is UNRESOLVED by
+construction, because a mapper that transfers badly enough makes f*(τ_K) trivially small for everything:
+0.45. All five tau-derived keys in `config/e9f.toml` and `config/e9fl.toml` carry refusing
+`UNRESOLVED::` markers at append (this script checks it), so neither cell can load, let alone run, until
+the calibration exists — a Qwen τ pasted in would load and produce a verdict calibrated against the wrong
+pair's mapper, which is the failure the markers exist to make impossible.
+
+**Gate and enforcement.** `e8 --check --config config/e8f.toml` refuses until entries 0009/0016/0039 are in the
+committed ledger, `config/e8f.toml` is committed unmodified, and the upstream is at the pin with every
+invoked path clean; `[e8.gate]` EXTENDS the driver's 0009/0016 premise entries and cannot weaken them.
+`summarize_e8 --config config/e8f.toml` is the only reader of the run's figures: it re-runs the upstream
+scorer on the fingerprinted dumps, cross-checks arm (a) against the archived `r2.json` for every k, and
+refuses on any disagreement. Tests: `tests/test_pairs.py` (the pair name round-trips and the Qwen names
+are byte-identical), `tests/test_llama_configs.py` (the three configs; the five tau keys refuse
+individually), `tools/preflight_pair.py` (the gate on the two gated checkpoints).
+
+**What this does NOT touch.** The H-E8, H-E9 and H-E9L cells; τ_K, τ_V, τ_agent_K, the rule, the band,
+the ladder and the keep subsets of the Qwen cells; `results/e8*/`, `results/e9*/`; `config/e8.toml`,
+`config/e8a.toml`, `config/e8c.toml`, `config/e9.toml`, `config/e9l.toml`, `config/e9s.toml`,
+`config/e9c.toml` and `config/seal.toml` (unchanged: `_resolve` expands only the literal `${upstream}`,
+and the four existing artifact roots already cover the new pair under one clone). No figure appears in
+this entry: E8's enter by their own numbered entry, and the paper only from that entry.
+
+**Scope.** One new pair, one direction, one agent family, off-policy text for Llama-3, visible messages
+only (0012); a cross-release pair whose two sides carry different llama3 RoPE factors; a registration,
+not a result. The matched-KV premise rests on the preflight record cited above and on nothing else.
+
+prior-entries-sha256: 0c8bc66ba38a207ba5d01b8cc98a4f318f26aac4b089af78b4affdfb4393d725
+
+### 0040 — 2026-09-18 — E8 ran on the second model family `[BASELINE, DESCRIPTIVE]`: llama3.2-3b-to-llama3.1-8b; the pair's own τ stated; no cell moves
+
+**Provenance.** Registered by 0039 before any fit; `config/e8f.toml` and this ledger committed
+unmodified; upstream at the pin `06f8d55` (the one-line `PAIRS` entry on top of the
+RoPE-spec commit), clean for every invoked path; entry 0039's no-seal ruling re-verified AFTER the fit:
+no `ledger/predictions/llama3.2-3b-to-llama3.1-8b.*` sidecar exists, so no post-fit prediction is presented as pre-fit.
+RunPod secure A40 48GB, pod 4cxydvpwbyr1ix, machine 9abgo2ybpf3t; launched 2026-09-18T15:47:09Z, finished 2026-09-18T18:13:29Z. Source meta-llama/Llama-3.2-3B, receiver meta-llama/Llama-3.1-8B. Every figure
+below is `summarize_e8 --config config/e8f.toml`'s, from a run that passed all of its checks: the upstream
+scorer re-run on the fingerprinted dumps, arm (a) cross-checked against the archived `r2.json` for every k
+(at the verdict k: archived 0.713867 vs recomputed 0.713867), the mapper
+bytes re-hashed (k = 1: `k1.json` 6cbfad42b6b0,
+`k1.safetensors` fe77166a8ff4), the agent token file and its manifest re-hashed
+(agent_n50_len1024_seed8.npy, sha256 4e02d14af008).
+
+**What ran.** 0009's instrument with 0016's amendment, unchanged and re-registered by 0039: the mapper
+is fit on generic calibration text and scored on agent-trace text; arm (a) is the generic held-out arm,
+arm (b) the agent arm; the figure is held-out pooled R² (definition A5, per head, averaged over heads then
+layers). The sampling RULE is 0016's byte-for-byte — seed 8, n = 50,
+len = 1024, suites tau2-bench, swe-bench, window "first", holdout 0.2,
+stride 4 — and the DRAW is this pair's own, re-made under the Llama-3 BPE. Parameter count per
+read-out p = k · n_kv · d_h against n_train = 10,240.
+
+| k | arm (a) generic K / V | arm (b) agent K / V | drop K / V | band K / V |
+|---|---|---|---|---|
+| 1 (verdict-bearing, K and V separately) | 0.7139 / 0.4711 | 0.7311 / 0.4599 | -0.0172 / +0.0111 | HOLDS / HOLDS |
+| 4 (reported only) | 0.6183 / 0.2909 | 0.6219 / 0.2265 | -0.0036 / +0.0644 | HOLDS / UNRESOLVED |
+| 8 (reported only) | -0.0591 / -0.9696 | -0.1333 / -1.3388 | +0.0742 / +0.3692 | UNRESOLVED / DEGRADES |
+
+Band (entry 0009, unchanged): HOLDS if the drop ≤ 0.05, DEGRADES if the drop ≥
+0.15, UNRESOLVED between; verdict k = 1 fixed at registration, K
+and V read separately and neither alone (0009) → K **HOLDS** / V **HOLDS**. **This is a
+DESCRIPTIVE reading of the band on a second pair. H-E8's cell was decided by entry 0020 on the Qwen pair
+under the registered 0016 protocol; it does not move, this entry carries no `verdict:` line, and no figure
+here is pooled with a Qwen figure.**
+
+**This pair's τ, stated here and written nowhere yet.** τ per read-out is 1 − this pair's archived
+held-out R² at the verdict k, and it is the only calibration the family's E9 cells may use: **τ_K =
+1 − 0.7139 = 0.2861**, τ_V = 1 − 0.4711 =
+0.5289, and the alongside agent-text tolerance τ_agent_K = 1 − 0.7311 =
+0.2689 (entry 0025's arm (b) reading, verdict-bearing for nothing).
+
+**Disclosure: the agent draw repeats windows, and the registered hold-out is two of them.** The arm (b) draw is 50 sequences but only **42 distinct windows**: rows 41–49 are byte-identical, one window appearing **9 times**. `score_mapper` holds out the LAST ceil(0.2 × 50) = 10 sequences, so arm (b)'s registered held-out R² — and therefore τ_agent_K — is computed on **2 distinct windows**, one of them weighted 9×. The repeated window is the opening of 9 DIFFERENT trajectories — 3 from `20250415_openhands` (astropy__astropy-14309, astropy__astropy-14365, astropy__astropy-14369); 6 from `20250616_Skywork-SWE-32B` (astropy__astropy-13398, astropy__astropy-13579, astropy__astropy-14309, astropy__astropy-14369, astropy__astropy-14508, astropy__astropy-14539) — which share a ≥ 1024-token preamble under the Llama-3 BPE, and `[e8.text] window = "first"` takes the FIRST window of each. Entry 0016 §4's rule was followed byte-for-byte and is not changed here; this is a property of the draw it produces on this corpus with this tokenizer. The generic draw is unaffected (checked: all distinct). **No figure in this entry is adjusted for it.** A reading over every agent sequence, or over distinct windows only, requires arm (b) rescored at `agent_holdout_frac = 1.0` with per-sequence records — the shape entry 0030 registered for the Qwen pair — and enters by its own numbered entry, not this one.  **τ_agent_K sits BELOW τ_K on the registered held-out set** (τ_K = 0.2861, τ_agent_K = 0.2689). **This is not stated as a property of the pair.** The registered arm (b) hold-out is the last ceil(0.2 x 50) = 10 sequences of the agent draw, and those 10 rows carry only TWO DISTINCT WINDOWS (see the disclosure above), one of them nine times, so the comparison rests on two windows rather than ten. What the inversion is a property of -- this pair, or this draw -- is not decided by this entry and no rule is changed after seeing it. `load_e9_config` refuses any E9 config carrying these two values, because `config.py` requires `tau_K < tau_agent_K < 1`. **That ordering is registered by no entry.** Entry 0025 registers τ_agent_K's derivation (1 − arm (b)'s held-out K R², recomputed and refused on disagreement) and states that it “is a K tolerance and is applied to nothing else” and that “the band reads τ_K only”; it fixes no ordering. The check predates this family, and its own message calls τ_agent_K “the LOOSER agent-text tolerance from entry 0020 arm (b)” — it encodes what 0020 MEASURED on the Qwen pair. So `config/e9f.toml` and `config/e9fl.toml` cannot load until a numbered entry rules on that check. **Nothing is edited into a config, and no guard is relaxed, to make them load.** These three come
+from the arm (a) and arm (b) numbers in the table above, which the summarizer re-derived from the tensors;
+they are not carried over from anything. `config/e9f.toml` and `config/e9fl.toml` still carry their
+refusing `UNRESOLVED::` markers at this entry (checked by the script that appended it): the next entry
+writes these values in and `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report results/e8f/report.json`
+then recomputes them from the archived mapper independently and refuses on any disagreement. **A Qwen τ appears nowhere in
+this family's configs and never will.** **Corrections to immutable entry 0039** (append-only; neither
+changes a registered rule or value, and both are errors of prose in 0039, not of the configs, which
+were and are correct): **(i)** 0039 said five τ-derived keys were unresolved. Only `tau_K`, `tau_V` and
+`tau_agent_K` carried markers; `tau_ladder = [0.10, 0.03]` and `prefix_invariance_max_delta = 1e-4`
+were already literal, registered values. **(ii)** 0039's paragraph (2) registers
+`prefix_invariance_max_delta` as "ABSOLUTE 1e-4, identical to config/e9.toml" and then says "It must
+NOT inherit the Qwen cells' value." Those two clauses contradict each other. The registered value is
+**1e-4, deliberately identical to `config/e9.toml`'s** — it is a float32 kernel-noise floor, a property
+of the arithmetic and the attention kernel rather than of how well a mapper fitted, so it does not
+scale with τ and has no reason to differ between families. The trailing clause is a leftover from the
+superseded framing in which the key was a function of τ_K, and is void. `config/e9f.toml` and
+`config/e9fl.toml` carry 1e-4 and always did.
+
+**What this establishes, stated narrowly.** On meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B, a matched-KV cross-release pair, with
+a k = 1 linear KV mapper fit on 50 generic calibration windows and scored
+on 50 agent-trace windows drawn under 0016's rule from tau2-bench, swe-bench, how much held-out
+pooled R² the mapper loses under the content distribution shift, at the k values in the table. **Not
+established:** anything about H-E8, which is a Qwen claim and is unchanged; anything about on-policy agent
+behaviour (the traces are off-policy for Llama-3 exactly as they were for Qwen) or about a real
+mid-trajectory switch point; anything pooled across the two pairs; generation quality after reuse.
+`eval_hellaswag.py` and `compose_mapper.py` are out of scope for this pair (upstream `apply_mapper`
+re-applies with a plain θ and is wrong for `rope_type "llama3"`; entry 0039).
+
+**Scope.** All of 0009's, 0016's and 0039's limits: one new pair, one direction, one mapper, one
+alignment-free calibration corpus, off-policy text for Llama-3, visible messages only (0012). No
+hypothesis cell changes with this entry.
+
+prior-entries-sha256: cabb1b15ba3c508ab35124b3121e1f193af265fa3d7fa8d8281f8d85c97692fb
+
+### 0041 — 2026-09-18 — The τ_K < τ_agent_K ordering was never registered; `config.py`'s refusal becomes report-only; descriptive, no cell moves
+
+**What this entry rules, and what it does not.** `config.py` has required
+`tau_K < tau_agent_K < 1` of every E9 config. **No entry registers that ordering.** Entry 0025
+registers τ_agent_K's *derivation* — 1 − arm (b)'s held-out K R² at the verdict k, recomputed by
+`summarize_e9 --calibrate-tau` and refused on disagreement, exactly as τ_K is — and states that it
+“is a K tolerance and is applied to nothing else” and that “The band reads τ_K only; this entry does
+not move it”. It fixes no ordering between the two. The nearest clause, “a verdict-bearing τ chosen
+after seeing which is looser is exactly what 0023 refused to do”, forbids *choosing* a τ after seeing
+the data; it presupposes nothing about which is looser, and nothing is chosen here. The requirement
+exists only in code, predates this model family, and its own refusal message names τ_agent_K “the
+LOOSER agent-text tolerance from entry 0020 arm (b)” — that is what entry 0020 **measured** on the
+Qwen pair, which is an observation and not a rule.
+
+**Therefore:** a quantity this ledger says is applied to nothing and reads no band could, in the
+code, stop an entire cell from loading. That is corrected in the narrowest available way. The
+`load_e9_config` refusal on the ordering becomes a **recorded, reported fact**: the relation between
+τ_K and τ_agent_K is stated wherever they are, and refuses nothing. `summarize_e9` states it beside
+both values.
+
+**Nothing else moves, and this is exhaustive.** τ_K, τ_V and τ_agent_K keep their registered
+derivations (0023, 0025) — no value is edited, anywhere, in any config. The band still reads τ_K
+only (0023, 0025). The τ ladder, the τ_K ceiling and the prefix-invariance HALT are untouched
+(0039). Every other refusal in `load_e9_config` stands, including the three `UNRESOLVED::` markers
+that keep an uncalibrated cell unloadable — this ruling does not make `config/e9f.toml` or
+`config/e9fl.toml` loadable by itself; only their own calibration does. `0 < τ_agent_K < 1` is still
+required, because a τ outside the unit interval is not a tolerance at all. No hypothesis row is
+added, no `verdict:` line follows, and no decided cell moves — H-E8 is entry 0020's and is untouched.
+
+**The occasion, stated so it is not mistaken for the reason.** On `llama3.2-3b-to-llama3.1-8b`, entry 0040 reported
+τ_K = 0.2861 and τ_agent_K = 0.2689, so the code refused the family's E9 configs.
+That is what made the mismatch visible; it is not what makes it a mismatch. The ruling above would
+read identically had the inequality gone the other way, and it is made on what 0025 says rather than
+on what this pair measured. **This entry does not claim that this pair's mapper transfers better to
+agent text than to generic text.** Entry 0040 disclosed that the registered arm (b) hold-out carries
+two distinct windows, one of them weighted nine times, so that comparison rests on two windows and not
+on ten; whether the inversion is a property of the pair or of the draw is open, needs arm (b) rescored
+at `agent_holdout_frac = 1.0` over every agent sequence, and enters by its own numbered entry.
+
+**Enforcement, and how this entry was checked before it was written.** The appending script refuses
+unless (i) entry 0025 still contains both quoted clauses above, read from this ledger — a citation
+that has drifted is a false entry; (ii) `config.py` no longer carries the refusal and does carry the
+report-only marker, so the change is in the tree *before* the record claims it; and (iii) both
+`config/e9f.toml` and `config/e9fl.toml` load with a deliberately INVERTED stand-in τ pair
+(τ_K > τ_agent_K), proving the ordering no longer blocks, while their real fields still carry refusing
+markers. Tests pin the report-only behaviour and that an out-of-unit-interval τ_agent_K still refuses.
+
+**Scope.** A ruling about what the record registers, on the whole E9 instrument, not about any pair.
+It reads no data, decides no hypothesis, and moves no cell.
+
+prior-entries-sha256: b6774ebbb3c06280b2cefc9a85d9287302144cc6c45f941d1dd876b36abcacad
+
+### 0042 — 2026-09-18 — E9 short cell registered before any prefill on the second model family: H-E9's instrument on meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B; H-E9F added `unresolved`; τ recalibrated on this pair's own k = 1 mapper
+
+**Why, and why now.** H-E9 `HELD` (0029) and H-E9L `HELD` (0036) are claims about one pair. Entry 0040
+has just run E8 on a second family and produced the one thing a second E9 cell needs: this pair's own
+mapper and its own held-out R². This entry registers the cell BEFORE any prefill: `results/e9f/` holds no
+report and no score file at append, and the script refuses otherwise (R1). The only things under it are
+the instrument's own alignment pass (`e9 --align-only --config config/e9f.toml`, `align/coverage.json`
+sha256 `c0764a05f486`) and the τ calibration (`summarize_e9 --calibrate-tau`,
+`calibration/tau.json` sha256 `54c6962230fe`), both checked here against the
+committed config. **This is the one verdict-bearing cell of the Llama campaign**: the family registration
+(0039) and the long half are descriptive, and exactly one hypothesis row is added.
+
+**Hypothesis H-E9F (row added to the table, `unresolved`).** The statement is H-E9's on a second model
+family; the rule is 0023's verbatim, with only τ recalibrated. Per matched token the centered deviation in
+R²'s units between the receiver's own K at the sender position and at the re-rendered position; a token
+needs recompute when it exceeds **τ_K = 0.2861**; the verdict statistic is the median over included
+handoffs of the oracle selective-recompute fraction f*(τ_K) on the K read-out; **HOLDS ≤
+0.15 / DEGRADES ≥ 0.50 / UNRESOLVED between**. τ_V =
+0.5289, τ_agent_K = 0.2689 (alongside, verdict-bearing for nothing), the τ ladder (0.1, 0.03),
+the seam bins, the block floor (4) and the bootstrap (seed
+25, 2000 reps) are 0025's, unchanged. f* stays an
+oracle LOWER BOUND read on a floor (0027).
+
+**τ is this pair's.** τ_K = 1 − 0.7139 =
+0.2861 and τ_V = 1 − 0.4711 = 0.5289, the k = 1 mapper's held-out R² over
+2,560 tokens (A5 per head, averaged over heads then layers (kvt.mapper.mapper_r2)), recomputed by `summarize_e9 --calibrate-tau`
+from the archived mapper (`mappers/llama3.2-3b-to-llama3.1-8b/k1`, json
+6cbfad42b6b0) against the archived `r2.json`
+(8498e977785e) and entry 0040's E8 report
+(4682508afd35); τ_agent_K = 1 − that mapper's agent-arm R² (0025's alongside
+tolerance), and on this pair **τ_agent_K = 0.2689 sits BELOW τ_K**. Entry 0041 ruled that the
+τ_K < τ_agent_K ordering was never registered, so that relation is REPORTED and enforces nothing; entry
+0040 disclosed that the registered arm (b) hold-out carries two distinct windows with one weighted
+nine times, so whether the inversion is a property of this pair or of that draw is open and is not decided
+here. What `load_e9_config` actually enforces today is: τ_K and τ_V each in (0, 1); the ladder strictly
+decreasing inside (0, τ_K); τ_agent_K in (0, 1). The ladder and prefix bound are the exact absolute
+literals entry 0039 registered, deliberately identical across families. What keeps a Qwen τ out of
+this cell is not an ordering check: it is that `summarize_e9 --calibrate-tau` recomputes all three from
+THIS pair's own archived mapper and refuses on any disagreement with this file, and that a test asserts no
+`config/e9.toml` constant appears in a Llama config.
+**No figure from this cell is ever pooled with a Qwen figure.**
+
+**The verdict set, and why it is not 0029's.** `context_cap = 32,768` is the same NUMERIC
+threshold entry 0029 registered, and that is all it shares: it is a registered length threshold in this
+pair's own tokens, not a hardware bound (both models are natively long), and `e9_align` measures |S| and
+|R| under the pair's own tokenizer, so the Llama-3 BPE re-partitions the handoff set. Coverage from the
+alignment pass: **68 observed · 28 included · 36 excluded
+above the cap · 4 excluded for an empty receiver prompt**. Included |S| runs 7,435 to
+32,478; the prefill budget is 640,898 sender tokens (both models) + 182,192 receiver tokens =
+1,463,988 tokens. The 36 above the cap are not lost: the long half of this family
+(its own later entry) takes those within its own cap and names the residual above it. H-E9F is a claim
+about these 28 handoffs; coverage travels with every figure (0032's clause, kept).
+
+**The receiver is NATIVE, and nothing is scaled.** There is no `[e9.rope]` and therefore no `[e9.bridge]`:
+the receiver's own checkpoint declares a window that already covers this cap, so there is no scaled arm to
+compare and entry 0035's control 4 does not apply here. What replaces it is read off the dumps themselves
+(upstream `kvt/data.py` writes each dump's `RopeSpec` — the `inv_freq` and attention factor of the loaded
+model's own rotary embedding — halt-checked against the model at every dumped position, and
+`linear_ceiling.e9.dump_rope_meta` keeps that record beside every dump's fingerprint BEFORE the non-kept
+dumps are deleted): **(i) native window** — the registered cap must be ≤ every dump's recorded
+`max_position_embeddings`, the positive statement that no extrapolation happened; **(ii) frequency
+identity** — the recorded spec must be identical across every dump OF THE SAME MODEL ROLE. (ii) is
+role-scoped and must be: this pair's two sides carry different llama3 scaling factors and build different
+inverse-frequency vectors by construction, so an unscoped equality assert would refuse every CORRECT run.
+Both are asserted by `summarize_e9`, which also refuses a dump recording an attention factor other than
+1.0 — the only positive evidence that the box applied no scaling the registration does not describe.
+
+**The stopping rule, registered before the run.** `[e9.order] by = "n_sender_asc"` and
+`allow_partial = true`. `config/e9.toml` registers neither, because 0029's sitting ran to
+completion on a card already paid for; this cell runs under a hard dollar ceiling, and without a
+registered stopping rule a budget kill mid-run would yield **no verdict at all** — only a spent card —
+because the summarizer refuses a partial close it was never told to expect. Both keys are fixed here,
+BEFORE any prefill, exactly as entry 0035 did for the long half. Shortest sender first (ties by handoff
+id) means the cheapest handoffs score first, so a kill keeps the MOST handoffs rather than an arbitrary
+set, and the order is a deterministic function of the alignment, so the prefix a partial close accepts
+cannot be chosen after seeing which handoffs scored well. `e9 --close-partial` may then close an
+unfinished run **only** on a PREFIX of that order — never "the ones that happened to finish" — the
+closing entry names every unscored handoff by id, and coverage ("n scored of 28 registered")
+travels beside every number, as 0036's did. A partial close is a REGISTERED OUTCOME of this cell, not a
+rescue, and there is **no registered minimum number of scored handoffs** — the operator's ruling was
+shortest-first plus allow-partial, on E9-long's convention that coverage travels beside every number,
+and none of this repo's code defines a "too short" prefix. What the instrument actually does, read from
+`e9.close_partial` and `summarize_e9`: a close is REFUSED if nothing scored, if the scored set is not a
+prefix of the registered order, if the report is already complete, if it was written under another
+config, or **if the controls never ran** — the identity, prefix-invariance and null controls execute on
+the first handoff in run order, so they are a precondition of any close, not an optional extra. Above
+that floor there is no threshold: ANY non-empty prefix is decided by the same rule, the median and the
+seeded bootstrap are computed over exactly the scored handoffs, the unscored are named by id, and
+coverage ("n scored of 28 registered") is stated beside every number. The reader weighs the
+coverage; the entry does not pre-judge it and no later choice is available.
+
+**Tokenisation: `add_special_tokens=False`, carried over and now stated for E9 as well.** Entry 0039
+recorded this for E8's generic-calibration and agent-text paths. The same convention governs THIS cell:
+every handoff's sender and receiver text is tokenised without special tokens, so Llama-3's
+`<|begin_of_text|>` is absent at position 0 and the first content token takes the attention-sink role.
+It is registered rather than changed, for the same reason as there — it keeps the instrument identical
+to the one the Qwen cells ran under, where the convention was a no-op — and it is stated here so the
+E9 cell is not read as a normal chat/inference token layout. A Llama-native-BOS variant is out of scope
+and unrun.
+
+**One driver change, stated because it is the registered instrument.** `linear_ceiling.e9` gained
+refusals only: every included handoff must carry at least one matched token position, the first handoff
+in run order at least two (or the registered derangement null is not computable), a bridge handoff must
+be observed and within the cap, and a resumed run must validate each retained control artifact against
+its recorded hash before reusing it. **Nothing about what is computed changes** — not the included set,
+the run order, the keep draw, the scoring, or any schema — and the new guards were checked against the
+decided Qwen cells and would not have refused any of them. They are stated here because a change to the
+instrument belongs on the record even when it only adds refusals.
+
+**Run order, keep subset, controls.** The driver scores the included handoffs in `n_sender_asc` order;
+the controls run on the first handoff in that order. Keep subset: n = 8, seed 9,
+a fresh draw from THIS cell's sorted included ids (numpy `choice` without replacement is not nested with
+0025's draw, so it is not a subset of anything): `20241016_composio_swekit/astropy__astropy-14182_traj#68`; `20241016_composio_swekit/astropy__astropy-7166_traj#88`; `20241016_composio_swekit/astropy__astropy-7671_traj#85`; `20241025_composio_swekit/astropy__astropy-14182_traj#78`; `20241025_composio_swekit/astropy__astropy-14508_traj#90`; `20241025_composio_swekit/astropy__astropy-14539_traj#96`; `20241025_composio_swekit/astropy__astropy-14995_traj#74`; `20241025_composio_swekit/astropy__astropy-7166_traj#66`. Their three stride-1 dumps are retained,
+fingerprinted, pulled home and re-scored from tensors by the summarizer under 0028's tolerance. Controls
+(1–3 as 0023/0025; 6 as 0025): (1) pipeline identity HALT (a dump scored against itself, every square
+exactly zero); (2) prefix-invariance HALT on the first handoff in run order, max centered δ ≤
+1e-04 — entry 0039's pre-registered absolute
+float32 kernel-noise bound, explicitly held identical across families and not derived from τ_K; (3) δ_null,
+seeded derangement of sender positions (seed 23); (6) seam profiles b(t) and
+b⁻(t), same bins. The cross arm runs through this pair's own k = 1 mapper by sha, and its
+outcome is descriptive and decides nothing (0027).
+
+**Gate and enforcement.** `e9 --check --config config/e9f.toml` refuses until entries 0019/0023/0025/0027/0042 are in the
+committed ledger, `config/e9f.toml` is committed unmodified, the upstream is at the pin
+`06f8d5559257` with every invoked path clean, and the mapper artifact is present by sha.
+`summarize_e9 --config config/e9f.toml` (fail-closed, the only reader) re-derives every alignment from the
+raw traces under the cap, recomputes every figure, re-scores the kept dumps from tensors, recomputes τ and
+refuses on disagreement with this config, checks the controls and the two RoPE controls above, and states
+f*, the profiles and the band. **The τ calibration is checked at THIS entry, not only by the summarizer:**
+`e9 --check` does not look for `calibration/tau.json`, and on 2026-09-14 a sitting printed ready, ran to
+completion and was refused at home for exactly that gap (learnings). The record exists and agrees before
+this row is written.
+
+**What this does NOT touch.** The H-E8, H-E9 and H-E9L cells; the Qwen τ values, rule, band, ladder, keep
+subsets and results directories; `config/e9.toml`, `config/e9l.toml`, `config/e9s.toml`, `config/e9c.toml`
+and every `config/e8*.toml` but this family's. Nothing here is a figure: H-E9F's verdict and every number
+enter by their own numbered entry, and the paper only from that entry.
+
+**Scope.** One new pair (meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B), one direction, one agent family, the short half of one
+corpus under a natively long receiver; off-policy text for Llama-3 (entry 0039, restated for this cell above); floor not method
+(0027); the 36 handoffs above the cap and the 4 with an empty receiver prompt stay
+excluded and counted; generation quality after reuse not measured. `eval_hellaswag.py` and
+`compose_mapper.py` remain out of scope for this pair (upstream `apply_mapper` re-applies with a plain θ).
+
+prior-entries-sha256: a93cc5ee357122a8b9fa6885c42e7932022fe046c6953da6c7d616781948b25d
+
+### 0043 — 2026-09-19 — Pre-prefill amendment to 0042: the driver's checkpoint write is atomic, and the stop protocol for a budget-limited sitting is registered; descriptive, no cell moves
+
+**What this is.** An amendment to entry 0042, appended **before any prefill of this cell**, on the
+0025/0026/0027 precedent: the registered instrument changed after its registering entry, and a change to
+the instrument is stated before the run, never explained after it. Nothing here moves a cell, states a
+figure, or touches τ, the rule, the band, the ladder, the cap, the keep draw or the run order. Pair
+llama3.2-3b-to-llama3.1-8b (meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B), `config/e9f.toml` sha256 `2e7cade40489`, run order and coverage from
+`results/e9f/align/coverage.json` sha256 `6a8dc1242300`, both committed and unmodified. At the moment of
+writing, `results/e9f/` holds no report, no score file, no token record and no kept dump.
+
+**(a) The checkpoint write is atomic.** Entry 0042 recorded that the driver "gained refusals only".
+That is no longer the whole of it: `e9._write_checkpoint` now writes `report.json` to a temporary file,
+`fsync`s it, and `os.replace`s it into place, and `e9.close_partial` writes through the same function.
+**Nothing computed changes** — the same bytes are produced from the same inputs, and no number, refusal
+or control is affected. The reason it changed is (b): the registered stop stops the driver **by signal**,
+and a signal that lands during a plain `write_text` leaves a truncated `report.json`. Under the rule
+below the closing basis is a checkpoint, so a torn checkpoint does not cost one handoff — it costs the
+prefix. The change is recorded here because it is the registered instrument, not because it is large.
+
+**(b) The stop protocol.** This cell runs under a hard dollar ceiling, so how it stops decides which
+prefix entry 0042 closes on — and that must be fixed before any score exists, exactly as 0042
+fixed the order for the same reason.
+
+1. **A healthy run closes on all 28 included handoffs.** A partial is a registered outcome, never
+   the preferred one and never a rescue.
+2. **Drain before the ceiling.** The home watchdog stops the **driver** before the spend ceiling
+   terminates the **pod**, by `SIGTERM` to the driver's recorded pid (never a self-matching pattern —
+   protocol R4). The pod stays up so the home puller can finish the tensors already written. The ceiling
+   remains unchanged behind this, as the backstop.
+3. **When.** At `70%` of the sitting ceiling by default, or **earlier** if the puller's own
+   measurement — bytes still outstanding ÷ the rate it is actually achieving — says the remaining pull
+   needs more than the leftover budget. A measurement may only move the drain earlier, never later: the
+   outstanding figure counts the kept dumps a checkpoint already names and cannot see the handoff in
+   flight, so an uncapped measurement reads "nothing outstanding" at the moment the most is at risk.
+4. **The closing basis after ANY abnormal end** — drained, hard-killed, crashed, or a pod lost outright
+   — is the **last checkpoint whose every named artifact is sha-verified at home**: the small records and
+   the kept directories of the scored prefix, each byte-for-byte against that checkpoint's own
+   fingerprints. It is a genuine driver checkpoint and a prefix of the registered `n_sender_asc` order.
+   **It is never an edited report.** If no checkpoint verifies whole at home, there is no close, and
+   H-E9F stays `unresolved` — that is the finding, not a problem to be worked around.
+5. **Where.** The close happens **at home, on the verified mirror**, never on the box: box storage is
+   ephemeral, so after a hard kill it is already gone at exactly the moment a close is needed.
+   `tools/runpod/pull_verify_b.py --final-partial` refuses unless the driver is provably stopped, proves
+   the basis, and writes the termination receipt; `e9 --close-partial --config config/e9f.toml` then
+   stamps it and needs nothing but `report.json`.
+6. **What the closing entry must carry.** The cutoff reason, the coverage as "n scored of N registered"
+   beside every number, and every unscored handoff named by id — as entry 0036 did for the long half.
+
+**(c) The gate, and one regenerated artifact.** `config/e9f.toml`'s `[e9.gate]` now requires
+`0019/0023/0025/0027/0042/0043` — entry 0042's list extended by this entry and nothing else — so
+`e9 --check` refuses until this amendment is committed on the ledger. Enforcement, not decoration: a
+protocol deciding which prefix a stopped run closes on must bind the driver, and 0042 recorded the
+gate as it stood then. Adding one entry changed the file's sha256 to `2e7cade40489`, and
+`results/e9f/align/coverage.json` and `results/e9f/calibration/tau.json` are recorded under that sha, so
+both were regenerated by `e9 --align-only` and `summarize_e9 --calibrate-tau`. **The coverage file
+differs in exactly one key, `config_sha256`**: the 28 included handoffs, the `n_sender_asc` run
+order, the keep draw, the exclusion counts and every alignment are identical, and τ_K, τ_V and τ_agent_K
+are unchanged to every digit. No registered quantity moved; the file now records the sha of the file that
+actually governs it. No other config is touched.
+
+**Why this is an amendment and not a note.** Under 0042 the scored set of a stopped run is a prefix of
+a registered order, which fixes *which* handoffs a partial keeps. It did not fix *when* the run stops or
+*which* checkpoint is then closed on, and both are choices that could otherwise be made with the scores
+already visible. Registering them here removes that freedom before there is anything to see.
+
+**What this does NOT touch.** The H-E8, H-E9, H-E9L and H-E9F cells and every verdict; τ_K, τ_V,
+τ_agent_K, the rule, the band edges, the ladder, `prefix_invariance_max_delta`, the cap, the seeds, the
+keep draw, the run order, the coverage figures themselves; every other cell's config and results. Entry 0039's τ_K ceiling of 0.45 and entry
+0041's report-only ordering both stand as written.
+
+**Scope.** One pair (meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B), one cell, one sitting's stopping behaviour. Nothing here is
+evidence about KV reuse, and nothing here may be cited as a finding.
+
+prior-entries-sha256: 5112398f506937881144964ba7fbca7316d68165e7aaedccf00974005de7849f
+
+### 0044 — 2026-09-19 — E9 short cell ran on the second model family `[BASELINE]`; H-E9F HELD (28 scored of 28 registered)
+
+**The registered τ_K ceiling does not bite (entry 0039).** τ_K = 0.2861 ≤ 0.45, so the band below is read as the rule writes it. Operator provenance note (non-verdict-bearing): tau_K 0.2861 = 1 MINUS this pair's own k=1 generic held-out K R^2 (0.7139, entry 0040's verified E8 report), recomputed by summarize_e9 --calibrate-tau and agreeing to 1e-9; it sits below entry 0039's 0.45 ceiling, which was registered before the fit. The billed sitting began at pod creation 16:02:36Z, 72 minutes before the driver launch stated above.
+
+**Setup, as registered (0042, amended by 0043).** RunPod SECURE, pod k83m2em0mgp9dx created 2026-09-19T16:02:36Z at $1.59/h under a 5.0 h / $7.95 ceiling (runpod_state.json, receipt e9f-verified.json); NVIDIA A100-SXM4-80GB, 81,920 MiB, driver 580.126.16; torch 2.11.0+cu128 (CUDA 12.8), transformers 5.15.1, numpy 2.5.2, python 3.12.13 — as the box recorded them in sitting_b.evidence/versions.txt at 17:14:36Z; linear-ceiling at the commit carrying 0043 and
+`config/e9f.toml` (gate: entries 0019/0023/0025/0027/0042/0043), upstream pin `06f8d55`
+(the one-line `PAIRS` entry on top of the RoPE-spec commit). Pair llama3.2-3b-to-llama3.1-8b: receiver meta-llama/Llama-3.1-8B, source
+meta-llama/Llama-3.2-3B, **neither scaled** — no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling` on any dump; the
+k = 1 mapper this family's E8 sitting fitted (entry 0040) for the cross arm, by sha. Launched
+2026-09-19T17:14:41Z, finished 2026-09-19T18:18:30Z. 28 scored of 28 registered, in the registered `n_sender_asc` order. Of
+68 observed handoffs: 28 included (|S| and |R| both within 32,768 tokens
+under this pair's own tokenizer), 36 above the cap, 4
+with an empty receiver prompt. Every figure below is `summarize_e9 --config config/e9f.toml`'s, from a run
+that passed all of its checks: alignments re-derived from the raw traces under the cap; every R²
+recomputed from recorded moments; per-token squares summed against the moments; the 8 kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square within 8.8e-04 relative, max |f* diff| 0.0e+00); τ
+recomputed from the archived mapper and checked against the config; controls checked.
+
+**The two controls that replace entry 0035's configuration bridge.** This receiver is natively long, so
+there is no scaled arm to compare and no bridge to run; what stands in its place is read off the dumps
+themselves, from the `RopeSpec` the upstream recorded off each loaded model's own rotary embedding and
+halt-checked against the model at every dumped position (worst |diff| 1.2e-07
+against atol 1e-05), over all 85 dumps of the run. **(i) Native
+window:** the registered cap 32,768 sat inside EVERY dump's own recorded
+`max_position_embeddings` — no dump asked either model for a position its configuration does not declare,
+which is the positive "no extrapolation happened" statement. **(ii) Frequency identity, scoped by model
+role:** source (28 dumps, max_position_embeddings 131,072, inv_freq 31576ad84e5a, attention factor 1.0), target (57 dumps, max_position_embeddings 131,072, inv_freq 8480b7658cd7, attention factor 1.0). The 2 roles are compared separately and MUST be: this pair's two sides carry
+different llama3 scaling factors and build different inverse-frequency vectors by construction, so an
+unscoped equality assert would refuse every correct run. Every dump recorded an attention factor of 1.0,
+the only positive evidence that the box applied no scaling the registration does not describe.
+
+**How the sitting actually ran, for the record.** The card was not the one planned. Creates were repeatedly
+refused for stock on the $1.19 A100 80GB PCIe and then the $1.39 A100 SXM, both community: **nine such
+refusals are recorded in `~/.cache/linear-ceiling/create-attempts.log`** (15:52:01Z–16:01:59Z), and
+earlier by-hand attempts that day are not separately recorded, so no total is stated here. The sitting
+ran on a SECURE A100 SXM at $1.59/h with a 5.0 h ceiling — which put entry
+0043's drain at 3.5 h and made a registered partial the likelier outcome. It did not occur: the run
+finished all 28 in 63.8 minutes, and the drain never armed. Three SETUP attempts failed before the
+driver started, none of which touched a scored artefact and all of which are macOS→Linux archive or
+tooling defects rather than anything about this pair: a traces archive carrying macOS AppleDouble
+members (rebuilt with `COPYFILE_DISABLE=1`, re-verified against the committed manifest); the same
+defect in the weight archive (17 GiB by `du`, `freed-bytes.log`), whose own sha256 matched, so the
+cache was extracted by hand with `--exclude='._*'` and then verified per object — 6 LFS blobs by
+content sha256, 14 git blobs by sha1;
+and a false positive in that per-object check from a size-based rather than name-length-based rule.
+Two different BLAS thread caps applied, and they are not the same cap: ON THE BOX the driver ran
+under a **13**-thread cap that `sitting_b.sh` derived from the container's cgroup CPU quota
+(`/sys/fs/cgroup/cpu.max`), whose raw value the run did not record — the box log states only the derived
+cap — and never from the host core count, which the same log records as `vcpu: 128` at 17:12:55Z. (That
+log line's own parenthetical reads `NOT nproc=13`: the script prints `nproc` a second time AFTER
+exporting `OMP_NUM_THREADS=13`, and GNU `nproc` honours that variable, so the 13 there is an artifact of
+the cap being reported and not a second measurement of the host. Stated because a reader grepping
+`nproc` in the log finds 13 and would otherwise read this entry as wrong.) The box also recorded
+`disk: 107G free of 160G`. AT HOME the summarizer ran under an **8**-thread cap. Both matter only through entry 0028's float32 reduction-order tolerance, which the
+keep-subset re-score figures above already bound.
+
+**One input was rebuilt, and its bytes differ from the earlier record's.** `results/e7/` was absent on the
+summarizing machine (`results/` is gitignored and E7 ran elsewhere), so `summarize_e9` refused until
+`skeleton_report.json` was regenerated by its own registered driver from `traces/` verified against the
+committed manifest `371fb4bf3cb0`; `summarize_e7`, which recomputes every E7 figure from the raw traces,
+then PASSED on it. The regenerated report's sha256 is `27dc922e3f7d…` (recorded in
+`results/e9f/summary.json`) and it **DIFFERS** from the `0aba0fbe…` that the 2026-09-10 long-run summary
+records in the public dataset `hossainpazooki/linear-ceiling-e9l-2026-09-10`. **The cause is not
+established and none is asserted here.** What is established is that the difference is not in the
+values: the regenerated rows reproduce that earlier summary's six coverage figures to all 16 digits, and
+this file feeds the DESCRIPTIVE coverage comparison alone — no verdict-bearing figure, no control and no
+τ reads it (`summarize_e9` takes only `headroom.rows` from it). Nothing under `results/e9f/` was
+touched.
+
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run
+order: max centered per-token δ 0.000e+00 over 7,435 positions
+(tolerance 1e-04 — entry 0039's registered ABSOLUTE literal, deliberately
+IDENTICAL to `config/e9.toml`'s by the operator's 2026-09-18 ruling, and never a function of τ_K: it is a
+float32 kernel-noise floor, a property of the arithmetic rather than of how well a mapper fitted). δ_null same K / V token-mean median 2.004 /
+2.015; equal-token null pairs 0.0083.
+Matched fraction |M|/|R| (a floor): 0.9304 (p10 0.8794, p90 0.9788).
+
+**The rule (0023, carried verbatim by 0043) and the figure it reads.** Per scored handoff, E9-same, K
+read-out: f*(τ_K) = the fraction of matched tokens an oracle must recompute before the mean centered
+deviation of the rest is at or below τ_K = 0.2861; median over scored handoffs; HOLDS ≤
+0.15, DEGRADES ≥ 0.5, UNRESOLVED between. τ_K is 1 − THIS pair's own
+held-out R² (0.7139 over
+2,560 tokens), recomputed here and refused on disagreement.
+
+- **median f*(τ_K), E9-same K: 0.0000 (p10 0.0000, p90 0.0000)** over 28 handoffs (28 scored of 28 registered). Seeded
+  bootstrap of the median (seed 25, 2000 reps; reported, not read):
+  [0.0000, 0.0000].
+- f*(τ_V = 0.5289), E9-same V (alongside): 0.0000 (p10 0.0000, p90 0.0000).
+- τ ladder (descriptive): τ = 0.1: same K 0.0000 (p10 0.0000, p90 0.2505) / V 0.0000 (p10 0.0000, p90 0.2942); τ = 0.03: same K 0.1078 (p10 0.0010, p90 0.4536) / V 0.1491 (p10 0.0094, p90 0.5047).
+- f*(τ_agent_K = 0.2689) (alongside): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.8040 (p10 0.6888, p90 0.8925).
+- f*(τ_K) over matched blocks of length ≥ 4: same K 0.0000 (p10 0.0000, p90 0.0000).
+- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: 0: 0.223 (n=2502) · 1: 0.107 (n=1777) · 2-3: 0.065 (n=2853) · 4-7: 0.051 (n=4467) · 8-15: 0.053 (n=6030) · 16+: 0.010 (n=151808).
+
+**Band outcome, against the rule as written: HOLDS** — on this pair's 28 scored
+handoffs, **never pooled with entry 0029's**: the same numeric cap over a different tokenizer selects a
+different set of handoffs, and the two cells are compared in prose or not at all.
+f* = 0 on a handoff means its MEAN centered deviation over matched tokens is ALREADY at or below τ_K
+with nothing recomputed. It is entry 0023's mean-repair statistic and is **NOT** a statement that no
+single token exceeds τ_K — entry 0038 draws that distinction explicitly, and the identical sentence in
+entries 0029 and 0036 claimed otherwise; it is not repeated here. The fraction of tokens individually
+above τ_K is not computed by this summarizer and no figure for it is stated. How far inside the
+tolerance this cell sits is what the τ ladder and the seam profile above show.
+
+**Read on a floor (0027, bound to this cell).** f*(τ) is an oracle LOWER BOUND on the recompute fraction
+(oracle selection, recompute in isolation); this cell reads "no more than the mapper, on a floor", never
+that an achievable scheme reaches it.
+
+**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through this pair's own
+k = 1 mapper: median f*(τ_K) = 0.7317 (p10 0.6074, p90 0.8516) and f*(τ_V) = 0.8148 (p10 0.7407, p90 0.8977); against
+the same edges the transfer arm sits beyond the DEGRADES edge. Cross/same median-δ ratio K / V: 30.0 (p10 3.8, p90 65.4) /
+42.0 (p10 5.2, p90 122.0). Bridge R² (A5 across the handoff; decides nothing): same K 0.9199 (p10 0.7812, p90 0.9685), same V
+0.9020 (p10 0.7478, p90 0.9608), cross K 0.5848 (p10 0.5124, p90 0.6142), cross V 0.2657 (p10 0.2264, p90 0.2948).
+
+**What this establishes, stated narrowly.** On meta-llama/Llama-3.1-8B re-rendering 28 real SWE-bench
+`composio_swekit` handoffs whose sender and receiver prompts both fit 32,768 tokens under this
+pair's own tokenizer, with 0019's alignment and 0023's per-token rule and τ calibrated on THIS pair's
+k = 1 mapper, the same-model oracle recompute floor is as stated above. **Not established:**
+anything about the 36 handoffs above the cap or the
+4 with an empty receiver prompt; any achievable recompute scheme; anything
+about the Qwen cells, which are a different pair and are unchanged; one pair, one direction, one mapper,
+one alignment method; generation quality after reuse. `eval_hellaswag.py` and `compose_mapper.py` remain
+out of scope for this pair (entry 0039).
+
+verdict: H-E9F = HELD
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 53b14a5e89f3a829a115ca9e233a3b52440e8ff1711e45ecda11126a6901bcca

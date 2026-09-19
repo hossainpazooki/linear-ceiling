@@ -175,12 +175,25 @@ def calibrate_tau(cfg: E9Config, runner=subprocess.run, *, allow_dirty_upstream:
     mapper = up / "mappers" / cfg.pair / f"k{cfg.mapper_k}"
     src, tgt = up / "data" / "kv" / cfg.pair / "source", up / "data" / "kv" / cfg.pair / "target"
     archived = up / "results" / "mapper" / cfg.pair / "r2.json"
-    e8_report = Path(e8_report) if e8_report else Path(REPO_ROOT) / "results" / "e8" / "report.json"
+    # tau is 1 - THIS pair's own held-out R^2. The argument wins; then the config's registered
+    # [e9] e8_report; then E9's own default. Routing the DEFAULT (and not only the call sites) is what
+    # keeps a second model family from silently inheriting the Qwen constants: _check_calibration and
+    # `--calibrate-tau` both reach here without an argument, so a config that registers its own E8
+    # report is followed from every entry point, and config/e9.toml, e9l.toml and e9s.toml -- which
+    # register none -- keep the same path they always had.
+    e8_report = Path(e8_report) if e8_report else (cfg.e8_report or Path(REPO_ROOT) / "results" / "e8" / "report.json")
     for p in (mapper.with_suffix(".json"), mapper.with_suffix(".safetensors"), src / "meta.json",
               tgt / "meta.json", archived, e8_report):
         if not p.exists():
             raise ValueError(f"tau calibration: {p} does not exist")
     e8 = json.loads(e8_report.read_text(encoding="utf-8"))
+    # Fail-closed: a report that does not NAME this pair cannot calibrate it. e8.py records "pair" in
+    # every report it writes, so an absent key is an unrecognized report, not an old one -- and the
+    # failure it guards against (a mapper and a tau from the wrong pair, scored against these dumps)
+    # would be invisible in every downstream number.
+    if e8.get("pair") != cfg.pair:
+        raise ValueError(f"tau calibration: E8 report at {e8_report} is for pair {e8.get('pair')!r}, "
+                         f"not {cfg.pair!r}; tau is 1 - THIS pair's held-out R^2 and is never inherited")
     fps = e8.get("dumps", {}).get("generic", {})
     dumps_match = {name: dump_fingerprint(d) == fps.get(name) for name, d in (("source", src), ("target", tgt))}
     if not all(dumps_match.values()):
@@ -281,6 +294,158 @@ def _check_calibration(cfg: E9Config, runner) -> dict:
     return fresh
 
 
+# ------------------------------------------- the per-dump RoPE record (the native receiver's control)
+
+# The fields that must not move between two dumps of the SAME model role. `parameters` is the config's
+# rope block as the upstream copied it and is NOT the authority (under transformers 4 a config with
+# `rope_scaling` but no `rope_parameters` records only rope_theta there); `inv_freq_sha256` is, since it
+# digests the frequency vector read off the model's own rotary embedding.
+_ROPE_IDENTITY_FIELDS = ("model", "rope_theta", "rope_type", "parameters", "attention_scaling",
+                         "inv_freq_sha256", "n_inv_freq", "max_position_embeddings")
+
+
+def _rope_records(rep: dict, scored: list) -> tuple[dict, list]:
+    """Every dump's RoPE record the driver kept (`e9.dump_rope_meta`), labelled for a refusal message.
+
+    The three per-handoff dumps of every scored handoff, kept or not, plus the prefix control's fourth
+    (transient) receiver dump. The BRIDGE dumps are deliberately NOT here: its two arms are the same
+    receiver under the native and the scaled RoPE, so their specs differ BY DESIGN -- that difference is
+    the control -- and folding them in would make the identity clause refuse every correct scaled run.
+    Returns (records by label, the scored handoffs carrying no block at all)."""
+    recs, missing = {}, []
+    for hid in scored:
+        block = (rep.get("scores") or {}).get(hid, {}).get("dump_rope")
+        if not block:
+            missing.append(hid)
+            continue
+        for name, rec in sorted(block.items()):
+            recs[f"{hid} {name}"] = rec
+    pre = ((rep.get("controls") or {}).get("prefix") or {}).get("dump_rope")
+    if pre:
+        recs["controls prefix (same_src_plus1)"] = pre
+    return recs, missing
+
+
+def _rope_value_equal(a, b) -> bool:
+    """`RopeSpec.from_model` casts every numeric config value to float, so the registered 32768 arrives
+    as 32768.0. Compare numbers as numbers and everything else as itself."""
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return float(a) == float(b)
+    return a == b
+
+
+def _check_rope_meta(cfg: E9Config, rep: dict, scored: list) -> dict | None:
+    """The RoPE controls read off the dumps themselves, not off config (entry 0035; the records are
+    `e9.dump_rope_meta`'s, kept for every dump because the unkept ones are deleted as soon as scored).
+
+    For a SCALED receiver the configuration bridge is the control: the scaled arm against the native
+    one, same tokens, same box. A NATIVELY long receiver has no scaled arm, so there is no bridge to
+    run and these two asserts are the whole of the evidence in its place:
+
+      (a) the run's context cap sat inside EVERY dump's own window -- `context_cap <=
+          max_position_embeddings` as the box recorded it -- so no dump asked the model for a position
+          past what its configuration declares, and
+      (b) the frequencies never moved mid-run: every field of `_ROPE_IDENTITY_FIELDS` equal across every
+          dump of one model ROLE.
+
+    (b) is scoped by role ("target" = receiver, "source" = the sender's model) and must be: a
+    cross-release pair carries different RoPE on its two sides (Llama-3.2-3B declares llama3 factor
+    32.0, Llama-3.1-8B factor 8.0 -- matched-KV all the same, since that tests n_kv and d_h only), so an
+    unscoped equality assert would refuse every CORRECT run of such a pair.
+
+    Fail-closed throughout, with one registered exception. A dump written under a pin older than the
+    RoPE-spec commit carries no block (`recorded: false`) and never will: config/e9.toml pins
+    d5786df..., where the strip is plain-theta, and refusing there would refuse the Qwen short cell for
+    lacking a control it never registered. So an unrecorded dump refuses only where the control is the
+    registration -- a cell with a context floor and NO [e9.rope], i.e. the long half of a natively long
+    receiver, which is exactly what has no bridge. MIXED evidence refuses everywhere: some handoffs with
+    the block and some without, or some dumps recorded and some not, is doubt, not history.
+
+    Returns the block the summary states, or None when the report carries no records at all."""
+    recs, missing = _rope_records(rep, scored)
+    native_long = bool(cfg.context_floor) and cfg.rope is None
+    if not recs:
+        # An EMPTY record set is not weaker evidence than an all-unrecorded one, it is the same
+        # absence, so it refuses in the same place: where the two asserts below ARE the registered
+        # control, a report that carries no block at all cannot pass vacuously. Returning None here
+        # unconditionally (the original form) let `dump_rope: null` stand for "checked", which is the
+        # one reading this function's docstring and config/e9fl.toml both promise is impossible.
+        if native_long:
+            raise ValueError("per-dump RoPE record: no scored handoff carries a RoPE block at all, so neither "
+                             "the native-window nor the frequency-identity control ran -- and for a natively "
+                             "long receiver (no [e9.rope], no bridge) those two ARE the control. Re-run the "
+                             "driver at the RoPE-spec pin (or a descendant), which records a block per dump")
+        return None
+    if missing:
+        raise ValueError(f"per-dump RoPE record: {len(missing)} of {len(scored)} scored handoffs carry none "
+                         f"(first: {missing[0]}); a run half-recorded by two drivers cannot be checked")
+    unrecorded = sorted(lbl for lbl, r in recs.items() if not r.get("recorded"))
+    if unrecorded and len(unrecorded) != len(recs):
+        raise ValueError(f"per-dump RoPE record: {len(unrecorded)} of {len(recs)} dumps carry no RoPE spec "
+                         f"(first: {unrecorded[0]}) while the rest do; the run mixes two upstream pins")
+    if unrecorded:
+        if native_long:
+            raise ValueError("per-dump RoPE record: no dump carries a RoPE spec, so neither the native-window nor "
+                             "the frequency-identity control ran -- and for a natively long receiver "
+                             "(no [e9.rope], no bridge) those two ARE the control. The pin must be the RoPE-spec "
+                             "commit or a descendant of it; under an older one the strip is plain-theta")
+        return {"recorded": False, "n_dumps": len(recs),
+                "note": "the dumps of this run carry no RoPE spec (a pin older than the RoPE-spec commit); the "
+                        "native-window and frequency-identity controls did not run and are stated for nothing"}
+    by_role, worst_check, atol = {}, 0.0, None
+    for lbl, r in sorted(recs.items()):
+        mpe = r.get("max_position_embeddings")
+        if not isinstance(mpe, int) or isinstance(mpe, bool) or mpe <= 0:
+            raise ValueError(f"per-dump RoPE record: {lbl} records max_position_embeddings {mpe!r}; the "
+                             "native-window control has nothing to read")
+        if cfg.context_cap > mpe:
+            raise ValueError(f"context cap {cfg.context_cap} is outside the window {lbl} recorded "
+                             f"(max_position_embeddings {mpe}); the run asked for positions the dump's own "
+                             "configuration does not declare")
+        chk, atol = r.get("check_max_abs"), r.get("check_atol")
+        if not isinstance(chk, (int, float)) or not isinstance(atol, (int, float)) or float(chk) > float(atol):
+            raise ValueError(f"per-dump RoPE record: {lbl} does not record a passing spec-vs-model check "
+                             f"(max |diff| {chk!r} against atol {atol!r})")
+        worst_check, atol = max(worst_check, float(chk)), float(atol)
+        # (b), by role: the receiver's dumps agree with the receiver's, the source's with the source's.
+        role = r.get("which")
+        if role not in ("target", "source"):
+            raise ValueError(f"per-dump RoPE record: {lbl} records model role {role!r}; the identity control "
+                             "is scoped by role and cannot place this dump")
+        first_lbl, first = by_role.setdefault(role, (lbl, r))
+        for field in _ROPE_IDENTITY_FIELDS:
+            if not _rope_value_equal(r.get(field), first.get(field)):
+                raise ValueError(f"per-dump RoPE record: {lbl} and {first_lbl} are both '{role}' dumps of this run "
+                                 f"but differ on {field} ({r.get(field)!r} vs {first.get(field)!r}); the "
+                                 "frequencies moved mid-run")
+        # ... and equal to what the run REGISTERED. A scaled run reaches the box through
+        # `scaled_config`, which writes rope_parameters = {config's, **[e9.rope]}, so every registered key
+        # is present in the record and a mismatch is the box having applied something else. With no
+        # [e9.rope] there is nothing registered to match: the model's own config supplied the RoPE, and
+        # its scaling (llama3's, say) is native and NOT an override -- so the only positive evidence that
+        # the experiment applied none is the attention factor, which a native RoPE leaves at 1.
+        if cfg.rope:
+            params = r.get("parameters") or {}
+            for key, want in cfg.rope.items():
+                if key not in params or not _rope_value_equal(params[key], want):
+                    raise ValueError(f"per-dump RoPE record: {lbl} recorded {key} = {params.get(key, '<absent>')!r}, "
+                                     f"not the registered [e9.rope] {key} = {want!r}")
+        elif not _rope_value_equal(r.get("attention_scaling"), 1.0):
+            raise ValueError(f"per-dump RoPE record: this config registers no [e9.rope], but {lbl} recorded "
+                             f"attention_scaling {r.get('attention_scaling')!r}, not 1.0; the box applied a "
+                             "scaled RoPE the registration does not describe")
+    return {"recorded": True, "n_dumps": len(recs), "context_cap": cfg.context_cap,
+            "registered_rope": cfg.rope, "spec_check_max_abs": worst_check, "spec_check_atol": atol,
+            "by_role": {role: {"n_dumps": sum(1 for r in recs.values() if r.get("which") == role),
+                               **{f: rec.get(f) for f in _ROPE_IDENTITY_FIELDS}}
+                        for role, (_, rec) in sorted(by_role.items())},
+            "note": "per-dump evidence, not config: the cap sat inside every dump's recorded window and the "
+                    "frequencies are identical across every dump of each model role (they may differ BETWEEN "
+                    "roles; a cross-release pair carries different RoPE on its two sides)"}
+
+
 # ---------------------------------------------------------------- the summary
 
 def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> str:
@@ -358,6 +523,10 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         raise ValueError("scored handoff set differs from the included set")
     cov["scored"], cov["registered"] = len(scored), len(order)
     cov["unscored"] = order[len(scored):] if partial else []
+    # 1b. Entry 0035's RoPE controls, read off what the box actually wrote into each dump rather than off
+    #     config. They outlive the dumps (unkept ones are deleted as soon as they are scored), and for a
+    #     receiver that is natively long they REPLACE the configuration bridge, which has no scaled arm.
+    rope_meta = _check_rope_meta(cfg, rep, scored)
 
     # 2. Every R² from moments; score + per-token files by hash; squares sum to moments;
     #    kept dumps by fingerprint + re-score (moments AND per-token).
@@ -671,7 +840,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         "coverage": cov, "tau": tau, "rule": dict(cfg.rule), "band_outcome": outcome,
         "context_cap": cfg.context_cap, "context_floor": cfg.context_floor, "rope": cfg.rope,     # entry 0035
         "run_order": order, "order_by": cfg.order_by, "partial": partial,
-        "bridge": bridge, "length_profiles": profiles,
+        "bridge": bridge, "length_profiles": profiles, "dump_rope": rope_meta,     # entry 0035
         "fstar": {arm: _stats(fstar[arm].values()) for arm in ARMS},
         "fstar_per_handoff": fstar,
         "tau_ladder": ladder,                                                     # entry 0025, descriptive
@@ -737,12 +906,25 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
                            + "; ".join(f"{r['bin']}: {'n/a' if r['fstar_K_pooled'] is None else format(r['fstar_K_pooled'], '.4f')} / "
                                        f"{'n/a' if r['median_token_delta_K'] is None else format(r['median_token_delta_K'], '.3f')} (n={r['n_tokens']})"
                                        for r in profiles["s_pos"]) + "\n")
+    rope_line = ""
+    if rope_meta and not rope_meta["recorded"]:
+        rope_line = (f"per-dump RoPE record: none of the {rope_meta['n_dumps']} dumps carries a spec (a pin older than "
+                     "the RoPE-spec commit); the native-window and frequency-identity controls did not run\n")
+    elif rope_meta:
+        rope_line = (f"per-dump RoPE record ({rope_meta['n_dumps']} dumps, spec-vs-model check max |diff| "
+                     f"{rope_meta['spec_check_max_abs']:.1e} within {rope_meta['spec_check_atol']:.0e}): cap "
+                     f"{cfg.context_cap} inside every dump's recorded window ("
+                     + ", ".join(f"{role} {b['max_position_embeddings']}" for role, b in rope_meta["by_role"].items())
+                     + "); frequencies identical across every dump of each role ("
+                     + ", ".join(f"{role} inv_freq {str(b['inv_freq_sha256'])[:12]}" for role, b in rope_meta["by_role"].items())
+                     + ")" + ("" if cfg.rope else "; NATIVE receiver -- no [e9.rope] and no bridge, so this IS the control")
+                     + "\n")
     md = ("E9 summary -- alignments re-derived from raw traces; every R² recomputed from recorded "
           "moments; per-token squares summed against the moments; keep-subset re-scored from "
           "fingerprinted tensors; tau recomputed from the archived mapper; controls checked\n\n"
           f"pair {cfg.pair} | upstream {cfg.upstream_sha[:12]} | config {rep['config_sha256'][:12]} | "
           f"coverage: {cov['included']} included / {cov['excluded']} excluded (cap {cfg.context_cap}) "
-          f"of {cov['observed']} observed handoffs\n" + long_lines +
+          f"of {cov['observed']} observed handoffs\n" + long_lines + rope_line +
           f"keep-subset re-score (entry 0028): {len(rescore_agreement)} kept handoffs; per-head sums within "
           f"{_fe(ra['max_rel_sum'])} relative (tolerance {_SUM_TOL:.0e}); every square within "
           f"{_fe(ra['max_rel_square'])} relative (tolerance {_RESCORE_RTOL:.0e}); "
@@ -817,11 +999,16 @@ def main(argv=None) -> int:
                     help="0023: derive tau from the archived k=1 mapper record; writes results/e9/calibration/tau.json")
     ap.add_argument("--allow-dirty-upstream", action="store_true",
                     help="calibration only, before the upstream re-pin is committed; recorded in tau.json")
+    ap.add_argument("--e8-report", default=None,
+                    help="the E8 report tau is read from; overrides [e9] e8_report and E9's results/e8/report.json "
+                         "default. A second model family calibrates against ITS OWN E8 arm (a)/(b), never Qwen's; "
+                         "the report's recorded pair must equal this config's or the calibration refuses.")
     a = ap.parse_args(argv)
     cfg = load_e9_config(Path(a.config), REPO_ROOT)
     try:
         if a.calibrate_tau:
-            out = calibrate_tau(cfg, allow_dirty_upstream=a.allow_dirty_upstream)
+            out = calibrate_tau(cfg, allow_dirty_upstream=a.allow_dirty_upstream,
+                                e8_report=Path(a.e8_report) if a.e8_report else None)
             print(json.dumps({"tau": out["tau"], "heldout": out["heldout"], "upstream_head": out["upstream_head"],
                               "upstream_pin_check": out["upstream_pin_check"],
                               "diagnostics": out["diagnostics"]}, indent=1))

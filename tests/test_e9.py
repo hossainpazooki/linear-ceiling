@@ -2,6 +2,7 @@
 import hashlib
 import json
 import types
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -202,6 +203,38 @@ def test_run_scores_included_counts_excluded_and_runs_controls(env, tmp_path):
     assert dump[dump.index("--stride") + 1] == "1"
 
 
+@pytest.mark.parametrize("n_matched,msg", [
+    (0, "no matched token positions"),
+    (1, "fewer than two matched token positions"),
+])
+def test_run_refuses_unscorable_alignment_before_any_upstream_work(env, tmp_path, monkeypatch,
+                                                                   n_matched, msg):
+    """An included row needs one pair to score and the first needs two for the null derangement."""
+    cfg, e7, calls, runner = env
+    real_align = driver.align
+
+    def short_alignment(*args, **kwargs):
+        rec, s_ids, r_ids, pairs = real_align(*args, **kwargs)
+        if not rec.excluded:
+            pairs = pairs[:n_matched]
+            rec = replace(rec, n_matched=n_matched)
+        return rec, s_ids, r_ids, pairs
+
+    monkeypatch.setattr(driver, "align", short_alignment)
+    with pytest.raises(RuntimeError, match=msg):
+        driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    assert calls == []
+
+
+def test_plain_run_refuses_to_overwrite_a_complete_report(env, tmp_path):
+    cfg, e7, calls, runner = env
+    driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    calls.clear()
+    with pytest.raises(RuntimeError, match="complete report already exists"):
+        driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    assert calls == []
+
+
 def test_prefix_invariance_control_halts_above_tolerance(env, tmp_path):
     """Entry 0025: the identity control cannot fail on the box (one dump twice); the prefix control
     can, and does when the S+1 dump's rows deviate from the S dump beyond the registered tolerance."""
@@ -240,8 +273,12 @@ def test_align_only_writes_alignments_and_coverage_without_the_gate(env, tmp_pat
 
 
 @pytest.mark.parametrize("old,new,msg", [
-    ("tau_agent_K = 0.4371020133925453", "tau_agent_K = 0.2", "tau_agent_K"),
+    # `tau_agent_K = 0.2` -- BELOW config/e9.toml's tau_K -- used to belong on this list. Entry 0041
+    # ruled that the tau_K < tau_agent_K ordering was never registered (0025 registers the derivation
+    # and says tau_agent_K "is applied to nothing else"), so it no longer refuses and is asserted to
+    # LOAD by the test below instead. What must still refuse is a value that is not a tolerance at all.
     ("tau_agent_K = 0.4371020133925453", "tau_agent_K = 1.0", "tau_agent_K"),
+    ("tau_agent_K = 0.4371020133925453", "tau_agent_K = 0.0", "tau_agent_K"),
     ("min_block_len = 4", "min_block_len = 0", "min_block_len"),
     ("prefix_invariance_max_delta = 1e-4", "prefix_invariance_max_delta = 0", "prefix_invariance"),
     ("bootstrap_reps = 2000", "bootstrap_reps = 10", "bootstrap")])
@@ -254,6 +291,22 @@ def test_config_refuses_malformed_0025_parameters(tmp_path, old, new, msg):
     p.write_text(src.replace(old, new), encoding="utf-8")
     with pytest.raises(ValueError, match=msg):
         load_e9_config(p, tmp_path)
+
+
+def test_tau_agent_K_below_tau_K_loads_and_is_not_a_refusal(tmp_path):
+    """Entry 0041: the ordering was never registered, so a tau_agent_K BELOW tau_K must load.
+
+    This is the positive half of the case removed from the refusal list above. It is the behaviour the
+    Llama family needs (its arm (b) held-out R^2 came out above arm (a)'s) and it must be pinned, or a
+    later tidy-up could quietly restore a refusal that no entry ever registered."""
+    from linear_ceiling import REPO_ROOT
+    from linear_ceiling.config import load_e9_config
+    src = (REPO_ROOT / "config" / "e9.toml").read_text(encoding="utf-8")
+    p = tmp_path / "e9.toml"
+    p.write_text(src.replace("tau_agent_K = 0.4371020133925453", "tau_agent_K = 0.2"), encoding="utf-8")
+    cfg = load_e9_config(p, tmp_path)
+    assert float(cfg.rule["tau_agent_K"]) == 0.2 < float(cfg.rule["tau_K"]), \
+        "the stand-in must actually invert the ordering, or this proves nothing"
 
 
 def test_identity_control_halts_the_run(env, tmp_path):

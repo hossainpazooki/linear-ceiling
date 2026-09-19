@@ -28,6 +28,40 @@
   working tree was clean for every path E8 invokes (`scripts/dump_kv.py`, `scripts/score_mapper.py`,
   `kvt/`) and `e8.assert_ready` re-checks that before each run; other paths there carried
   unrelated local edits (the operator's acknowledged one-time drift), which E8 never reads.
+- **Llama family pin, commit `06f8d555` (P) — LANDED ON A FORK, NOT YET ON THE UPSTREAM:**
+  pushed 2026-09-18 to `emersony99/kv-transfer-replication` branch `llama-3-pair`, parented directly on
+  `063f4023`; proposed to the upstream as hossainpazooki/kv-transfer-replication**#1**, which asks for a merge
+  **without squash or rebase** so the sha survives as the pin. The full 40-hex value is recorded in
+  `config/e8f.toml`, `config/e9f.toml` and `config/e9fl.toml`, which is where `upstream_gate` reads it; it is
+  written here in short form because `tests/test_imports.py` reserves the one full sha in this file for
+  `linear_ceiling.UPSTREAM_SHA` (entry 0026's pin, which E0 records and which this does not move).
+  **Until #1 merges, every box clones the FORK at `06f8d555`** and `check_upstream` is satisfied by a local
+  checkout detached at it. If Hossain squashes or rebases, the sha changes and all four references must be
+  updated in one commit before anything runs.
+  -- commit **P**, one dict entry in `kvt/pairs.py` registering the second model family's pair
+  `llama3.2-3b-to-llama3.1-8b` (meta-llama/Llama-3.2-3B -> meta-llama/Llama-3.1-8B). The pair is matched-KV
+  (8 KV heads x 128 head dim on both sides; the receiver declares no `head_dim` and `kv_shape` reaches 128 by
+  `hidden_size // num_attention_heads`), so `check_matched_kv` passes unrelaxed and no estimator, scorer or dump
+  format changes: the diff is one entry and no behaviour. The specification the operator lands is
+  `docs/2026-09-18-llama-upstream-patch-spec.md`; it is written against this repo's read-only rule and nothing
+  here writes to the upstream tree. **P must be based on `063f4023`** ("RoPE spec from the model's rotary
+  embedding"; the tip of `origin/main`, a descendant of the pin above and of `d5786df9`), not on the checkout's
+  current `d5786df9`: both models declare `rope_scaling.rope_type = "llama3"`, whose low-frequency rescaling a
+  plain-theta strip does not undo, so at `d5786df` every dump of this pair would be stripped silently wrong. At
+  `063f4023` `KVDump` strips with each dump's own recorded `RopeSpec`, halt-checked at every dumped position.
+  The two sides carry *different* llama3 `factor` values (3.2: 32.0; 3.1: 8.0), which is expected and legal --
+  the mapper is fitted in content space after each side is stripped with its own spec -- so any RoPE-identity
+  assertion over a Llama run is scoped per model role, never across roles. **Known limitation carried by P:**
+  `kvt/mapper.py::apply_mapper` still rotates from the two recorded theta floats, which is wrong for any
+  `rope_type != "default"`; it is off the E8/E9 path (its only non-test callers are `kvt/hellaswag.py` and
+  `scripts/compose_mapper.py`), so `eval_hellaswag.py` and `compose_mapper.py` must not be run on this pair
+  without a fix first. While the single checkout sits at P the Qwen configs refuse at their gates; that is
+  existing practice, not a regression (today, detached at `d5786df9`, `config/e9l.toml` and `config/e9s.toml`
+  both pin `063f4023`, a descendant of HEAD, and already refuse, and `config/e8.toml` pins `71df4504`).
+  Re-summarizing a Qwen cell means `git -C ../kv-transfer-replication checkout --detach <that cell's pin>` first.
+  Do **not** split into a second clone: `config.py::_resolve` expands only the literal `${upstream}`, so a
+  second root cannot resolve and `seal.find_mapper_artifacts` would fail closed on it, while with one clone the
+  four existing `artifact_roots` patterns already cover the Llama mapper and `config/seal.toml` needs no edit.
 - Local path (used by `config/seal.toml` as `${upstream}`): `../kv-transfer-replication`
 - Rule: nothing in this repo writes into the upstream tree, imports `kvt`, or copies its
   code. Fitting, injection, and evaluation are invoked there (W2+), by subprocess, in the
@@ -52,4 +86,7 @@
 | matched-position KV scoring (`--same-src --same-tgt --cross-src --mapper --pairs --out`; per-layer/per-head SSE+SST alongside R² so moments reproduce every figure) | `scripts/score_positions.py` @ `7e41f792` (entry 0019) | `src/linear_ceiling/e9.py::score_pairs`, `summarize_e9` |
 | per-token record (`--per-token`: squares `[n, L, n_kv]` float32 for same/cross x K/V plus the receiver's own norms; the recorded per-head SSE is the float64 sum of exactly these squares) | `scripts/score_positions.py`, `scripts/score_mapper.py`, `kvt/pertoken.py` @ the 0023 pin | `src/linear_ceiling/e9.py::score_pairs`, `summarize_e9` (sum check, f*, profiles), `summarize_e9.calibrate_tau` |
 | A5-pooled-over-heads per-layer R² as a labelled diagnostic beside the head-averaged figure | `kvt/pertoken.py::pooled_r2` @ the 0023 pin | entry 0023 (the 0.6917 vs 0.6814 line) |
+| pair registry entry for `llama3.2-3b-to-llama3.1-8b` (cross-release, so the key names both sides; the upstream short form would name a receiver that does not exist) | `kvt/pairs.py::PAIRS` @ **P** (pending, above) | `src/linear_ceiling/pairs.py::EXTRA_PAIRS`; `config/e8f.toml`, `config/e9f.toml`, `config/e9fl.toml` `pair` |
+| matched-KV check, and the KV-shape fallback `hidden_size // num_attention_heads` for a config that declares no `head_dim` (the Llama-3.1-8B case) | `kvt/pairs.py::check_matched_kv,kv_shape` @ **P** (unchanged from the pin above; P adds no code) | `tools/preflight_pair.py`; `src/linear_ceiling/weights.py::spec_from_config` |
+| per-dump RoPE spec read from the model's own `rotary_emb.inv_freq` and `attention_scaling`, halt-checked at every dumped position at `ROPE_CHECK_ATOL = 1e-5`, and recorded into each dump's `meta.json` beside `max_position_embeddings` | `kvt/rope.py`, `kvt/data.py` @ `063f4023` | `src/linear_ceiling/e9.py` (per-dump rope meta into `report.json`), `summarize_e9` (the native-window and per-role RoPE-identity controls that replace E9-long's configuration bridge for a native receiver) |
 | dump layout consumed by `--tokens` (`[n_seqs, seq_len]` int64) and `--out` (writes `meta.json` with `n_seqs`, `stride`) | `scripts/dump_kv.py`, `kvt/data.py::dump_kv` | `src/linear_ceiling/e8_text.py::write_tokens`, `e8.py::dump_agent` |

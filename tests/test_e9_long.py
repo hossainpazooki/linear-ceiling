@@ -194,6 +194,25 @@ def test_resume_keeps_hash_matching_scores_and_the_bridge(env, tmp_path):
         driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words, resume=True)
 
 
+def test_resume_redoes_first_handoff_when_a_control_artifact_is_damaged(env, tmp_path):
+    cfg, e7, calls, runner = env
+    _write_long(tmp_path, "b", 40)
+    _write_long(tmp_path, "c", 20)
+    cfg = _long_cfg(cfg, keep_n=0)
+    with pytest.raises(RuntimeError, match="box reclaimed"):
+        driver.run(cfg, e7, repo_root=tmp_path, runner=_crash_on(_stem(B_ID), calls), encoder=words)
+    checkpoint = json.loads((cfg.results_dir / "report.json").read_text(encoding="utf-8"))
+    damaged = cfg.results_dir / "controls" / checkpoint["controls"]["prefix"]["tokens_file"]
+    damaged.write_bytes(b"damaged")
+    calls.clear()
+    out = driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words, resume=True)
+    resumed = json.loads(out.read_text(encoding="utf-8"))
+    assert resumed["complete"] and resumed["resumed_from"]["controls"] is False
+    assert C_ID not in resumed["resumed_from"]["scored"]
+    dump_outs = [c[c.index("--out") + 1].replace("\\", "/") for c in calls if c[1].endswith("dump_kv.py")]
+    assert any(_stem(C_ID) in path for path in dump_outs) and any(_stem(B_ID) in path for path in dump_outs)
+
+
 def test_close_partial_needs_the_registration_a_prefix_and_names_the_unscored(env, tmp_path):
     cfg, e7, calls, runner = env
     _write_long(tmp_path, "b", 40)
