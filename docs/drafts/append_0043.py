@@ -125,6 +125,10 @@ recs = {r["handoff_id"]: r for r in cov["alignments"]}
 order = cov["run_order"]
 included = sorted(h for h, r in recs.items() if not r["excluded"])
 assert sorted(order) == included and len(order) == cov["coverage"]["included"] > 0
+assert all(int(recs[h]["n_matched"]) >= 1 for h in order), \
+    "an included handoff has no matched positions, so score_positions cannot run"
+assert int(recs[order[0]]["n_matched"]) >= 2, \
+    "the first run-order handoff has fewer than two matched positions, so the null control cannot run"
 expected_order = sorted(included, key=lambda h: (recs[h]["n_sender"], h))
 assert order == expected_order, "run order must be |S| ascending with ties broken by handoff id"
 ns = [recs[h]["n_sender"] for h in order]

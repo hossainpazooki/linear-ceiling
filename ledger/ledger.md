@@ -2510,3 +2510,79 @@ only (0012); a cross-release pair whose two sides carry different llama3 RoPE fa
 not a result. The matched-KV premise rests on the preflight record cited above and on nothing else.
 
 prior-entries-sha256: 0c8bc66ba38a207ba5d01b8cc98a4f318f26aac4b089af78b4affdfb4393d725
+
+### 0040 — 2026-09-18 — E8 ran on the second model family `[BASELINE, DESCRIPTIVE]`: llama3.2-3b-to-llama3.1-8b; the pair's own τ stated; no cell moves
+
+**Provenance.** Registered by 0039 before any fit; `config/e8f.toml` and this ledger committed
+unmodified; upstream at the pin `06f8d55` (the one-line `PAIRS` entry on top of the
+RoPE-spec commit), clean for every invoked path; entry 0039's no-seal ruling re-verified AFTER the fit:
+no `ledger/predictions/llama3.2-3b-to-llama3.1-8b.*` sidecar exists, so no post-fit prediction is presented as pre-fit.
+RunPod secure A40 48GB, pod 4cxydvpwbyr1ix, machine 9abgo2ybpf3t; launched 2026-09-18T15:47:09Z, finished 2026-09-18T18:13:29Z. Source meta-llama/Llama-3.2-3B, receiver meta-llama/Llama-3.1-8B. Every figure
+below is `summarize_e8 --config config/e8f.toml`'s, from a run that passed all of its checks: the upstream
+scorer re-run on the fingerprinted dumps, arm (a) cross-checked against the archived `r2.json` for every k
+(at the verdict k: archived 0.713867 vs recomputed 0.713867), the mapper
+bytes re-hashed (k = 1: `k1.json` 6cbfad42b6b0,
+`k1.safetensors` fe77166a8ff4), the agent token file and its manifest re-hashed
+(agent_n50_len1024_seed8.npy, sha256 4e02d14af008).
+
+**What ran.** 0009's instrument with 0016's amendment, unchanged and re-registered by 0039: the mapper
+is fit on generic calibration text and scored on agent-trace text; arm (a) is the generic held-out arm,
+arm (b) the agent arm; the figure is held-out pooled R² (definition A5, per head, averaged over heads then
+layers). The sampling RULE is 0016's byte-for-byte — seed 8, n = 50,
+len = 1024, suites tau2-bench, swe-bench, window "first", holdout 0.2,
+stride 4 — and the DRAW is this pair's own, re-made under the Llama-3 BPE. Parameter count per
+read-out p = k · n_kv · d_h against n_train = 10,240.
+
+| k | arm (a) generic K / V | arm (b) agent K / V | drop K / V | band K / V |
+|---|---|---|---|---|
+| 1 (verdict-bearing, K and V separately) | 0.7139 / 0.4711 | 0.7311 / 0.4599 | -0.0172 / +0.0111 | HOLDS / HOLDS |
+| 4 (reported only) | 0.6183 / 0.2909 | 0.6219 / 0.2265 | -0.0036 / +0.0644 | HOLDS / UNRESOLVED |
+| 8 (reported only) | -0.0591 / -0.9696 | -0.1333 / -1.3388 | +0.0742 / +0.3692 | UNRESOLVED / DEGRADES |
+
+Band (entry 0009, unchanged): HOLDS if the drop ≤ 0.05, DEGRADES if the drop ≥
+0.15, UNRESOLVED between; verdict k = 1 fixed at registration, K
+and V read separately and neither alone (0009) → K **HOLDS** / V **HOLDS**. **This is a
+DESCRIPTIVE reading of the band on a second pair. H-E8's cell was decided by entry 0020 on the Qwen pair
+under the registered 0016 protocol; it does not move, this entry carries no `verdict:` line, and no figure
+here is pooled with a Qwen figure.**
+
+**This pair's τ, stated here and written nowhere yet.** τ per read-out is 1 − this pair's archived
+held-out R² at the verdict k, and it is the only calibration the family's E9 cells may use: **τ_K =
+1 − 0.7139 = 0.2861**, τ_V = 1 − 0.4711 =
+0.5289, and the alongside agent-text tolerance τ_agent_K = 1 − 0.7311 =
+0.2689 (entry 0025's arm (b) reading, verdict-bearing for nothing).
+
+**Disclosure: the agent draw repeats windows, and the registered hold-out is two of them.** The arm (b) draw is 50 sequences but only **42 distinct windows**: rows 41–49 are byte-identical, one window appearing **9 times**. `score_mapper` holds out the LAST ceil(0.2 × 50) = 10 sequences, so arm (b)'s registered held-out R² — and therefore τ_agent_K — is computed on **2 distinct windows**, one of them weighted 9×. The repeated window is the opening of 9 DIFFERENT trajectories — 3 from `20250415_openhands` (astropy__astropy-14309, astropy__astropy-14365, astropy__astropy-14369); 6 from `20250616_Skywork-SWE-32B` (astropy__astropy-13398, astropy__astropy-13579, astropy__astropy-14309, astropy__astropy-14369, astropy__astropy-14508, astropy__astropy-14539) — which share a ≥ 1024-token preamble under the Llama-3 BPE, and `[e8.text] window = "first"` takes the FIRST window of each. Entry 0016 §4's rule was followed byte-for-byte and is not changed here; this is a property of the draw it produces on this corpus with this tokenizer. The generic draw is unaffected (checked: all distinct). **No figure in this entry is adjusted for it.** A reading over every agent sequence, or over distinct windows only, requires arm (b) rescored at `agent_holdout_frac = 1.0` with per-sequence records — the shape entry 0030 registered for the Qwen pair — and enters by its own numbered entry, not this one.  **τ_agent_K sits BELOW τ_K on the registered held-out set** (τ_K = 0.2861, τ_agent_K = 0.2689). **This is not stated as a property of the pair.** The registered arm (b) hold-out is the last ceil(0.2 x 50) = 10 sequences of the agent draw, and those 10 rows carry only TWO DISTINCT WINDOWS (see the disclosure above), one of them nine times, so the comparison rests on two windows rather than ten. What the inversion is a property of -- this pair, or this draw -- is not decided by this entry and no rule is changed after seeing it. `load_e9_config` refuses any E9 config carrying these two values, because `config.py` requires `tau_K < tau_agent_K < 1`. **That ordering is registered by no entry.** Entry 0025 registers τ_agent_K's derivation (1 − arm (b)'s held-out K R², recomputed and refused on disagreement) and states that it “is a K tolerance and is applied to nothing else” and that “the band reads τ_K only”; it fixes no ordering. The check predates this family, and its own message calls τ_agent_K “the LOOSER agent-text tolerance from entry 0020 arm (b)” — it encodes what 0020 MEASURED on the Qwen pair. So `config/e9f.toml` and `config/e9fl.toml` cannot load until a numbered entry rules on that check. **Nothing is edited into a config, and no guard is relaxed, to make them load.** These three come
+from the arm (a) and arm (b) numbers in the table above, which the summarizer re-derived from the tensors;
+they are not carried over from anything. `config/e9f.toml` and `config/e9fl.toml` still carry their
+refusing `UNRESOLVED::` markers at this entry (checked by the script that appended it): the next entry
+writes these values in and `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report results/e8f/report.json`
+then recomputes them from the archived mapper independently and refuses on any disagreement. **A Qwen τ appears nowhere in
+this family's configs and never will.** **Corrections to immutable entry 0039** (append-only; neither
+changes a registered rule or value, and both are errors of prose in 0039, not of the configs, which
+were and are correct): **(i)** 0039 said five τ-derived keys were unresolved. Only `tau_K`, `tau_V` and
+`tau_agent_K` carried markers; `tau_ladder = [0.10, 0.03]` and `prefix_invariance_max_delta = 1e-4`
+were already literal, registered values. **(ii)** 0039's paragraph (2) registers
+`prefix_invariance_max_delta` as "ABSOLUTE 1e-4, identical to config/e9.toml" and then says "It must
+NOT inherit the Qwen cells' value." Those two clauses contradict each other. The registered value is
+**1e-4, deliberately identical to `config/e9.toml`'s** — it is a float32 kernel-noise floor, a property
+of the arithmetic and the attention kernel rather than of how well a mapper fitted, so it does not
+scale with τ and has no reason to differ between families. The trailing clause is a leftover from the
+superseded framing in which the key was a function of τ_K, and is void. `config/e9f.toml` and
+`config/e9fl.toml` carry 1e-4 and always did.
+
+**What this establishes, stated narrowly.** On meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B, a matched-KV cross-release pair, with
+a k = 1 linear KV mapper fit on 50 generic calibration windows and scored
+on 50 agent-trace windows drawn under 0016's rule from tau2-bench, swe-bench, how much held-out
+pooled R² the mapper loses under the content distribution shift, at the k values in the table. **Not
+established:** anything about H-E8, which is a Qwen claim and is unchanged; anything about on-policy agent
+behaviour (the traces are off-policy for Llama-3 exactly as they were for Qwen) or about a real
+mid-trajectory switch point; anything pooled across the two pairs; generation quality after reuse.
+`eval_hellaswag.py` and `compose_mapper.py` are out of scope for this pair (upstream `apply_mapper`
+re-applies with a plain θ and is wrong for `rope_type "llama3"`; entry 0039).
+
+**Scope.** All of 0009's, 0016's and 0039's limits: one new pair, one direction, one mapper, one
+alignment-free calibration corpus, off-policy text for Llama-3, visible messages only (0012). No
+hypothesis cell changes with this entry.
+
+prior-entries-sha256: cabb1b15ba3c508ab35124b3121e1f193af265fa3d7fa8d8281f8d85c97692fb

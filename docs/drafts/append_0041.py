@@ -38,7 +38,9 @@ from linear_ceiling.pairs import pair_models
 NUM, PREV = "0041", "0040"
 FAMILY = f"{int(NUM) - 2:04d}"      # the family registration entry (0039 as staged); shifts with NUM
 TAU_TOL = 1e-9
-BOX_R2_TOL = 1e-6                    # registered cross-platform scorer tolerance (entry 0028)
+BOX_R2_TOL = 1e-6                    # OPERATIONAL, not registered. 0028 fixes 1e-05/1e-02 for the
+                                     # keep-subset PER-TOKEN re-score, a different comparison; no entry
+                                     # fixes a tolerance for a scorer-level held-out R^2 across machines.
 ap = argparse.ArgumentParser()
 ap.add_argument("--date", default=dt.date.today().isoformat())
 ap.add_argument("--preview", action="store_true")
@@ -86,7 +88,8 @@ box_tau = {"tau_K": 1.0 - float(e8_rep["per_k"][kv]["generic"]["K"]),
            "tau_V": 1.0 - float(e8_rep["per_k"][kv]["generic"]["V"]),
            "tau_agent_K": 1.0 - float(e8_rep["per_k"][kv]["agent"]["K"])}
 # K/V in the E8 report were reduced on the GPU box. The config deliberately takes the HOME re-score
-# emitted by tools/emit_tau.py; entry 0028 permits cross-platform scorer jitter through 1e-6. The
+# emitted by tools/emit_tau.py. 1e-6 is this script's operational bound, NOT an entry's: 0028
+# registers 1e-05/1e-02 for the keep-subset per-token re-score only. The
 # calibration record below is another home re-score and must agree with the config at the tighter 1e-9.
 for key in ("tau_K", "tau_V"):
     v = box_tau[key]
@@ -124,6 +127,10 @@ recs = {r["handoff_id"]: r for r in cov["alignments"]}
 order = cov["run_order"]
 included = sorted(h for h, r in recs.items() if not r["excluded"])
 assert sorted(order) == included and len(order) == cov["coverage"]["included"] > 0, "run order must cover exactly the included set"
+assert all(int(recs[h]["n_matched"]) >= 1 for h in order), \
+    "an included handoff has no matched positions, so score_positions cannot run"
+assert int(recs[order[0]]["n_matched"]) >= 2, \
+    "the first run-order handoff has fewer than two matched positions, so the null control cannot run"
 keep = cov["keep_subset"]
 assert len(keep) == cfg.keep_n and set(keep) <= set(order)
 by_reason = {}
