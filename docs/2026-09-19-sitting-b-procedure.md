@@ -66,12 +66,32 @@ so** instead of filling the disk. Nothing on the box is deleted while it is paus
 ## 2. Rent
 
 ```bash
-.venv/bin/python tools/runpod/rp.py price --gpu "NVIDIA A100 80GB PCIe"     # or H100 PCIe
+# re-query BOTH clouds immediately before creating; stock and price move
+.venv/bin/python tools/runpod/rp.py price --gpu "NVIDIA A100 80GB PCIe"
 .venv/bin/python tools/runpod/rp.py up --gpu "<id from price>" --price <$/h> \
-    --hours 5.5 --sitting-max 6.55 --disk 250 \
+    --hours 6.0 --sitting-max 7.14 --max-price 1.25 --disk 250 \
     --verify-file ~/.cache/linear-ceiling/e9f-verified.json --dry-run
 # read the dry run, then repeat with --yes
 ```
+
+**The ceiling is `--hours 6.0 / --sitting-max 7.14`, and the reason is the drain, not the bill.**
+Entry 0043 puts the drain at 70% of the sitting ceiling, and a measurement may only move it earlier.
+So the ceiling is what *positions* the drain:
+
+| | at `--sitting-max 6.55` | at **7.14** |
+|---|---|---|
+| drain fires at | 3.85 h | **4.2 h** |
+| P90 compute end | ~3.75 h | ~3.75 h |
+| margin | ~6 min — a healthy slow run is drained into a partial | **~27 min**, and 1.8 h left for the pull tail and the backstop |
+
+Timeline behind those figures (no-token path): create → setup ~10 min → weight upload ~32 min →
+driver starts ≈ 0.75 h → compute 1.9–3.0 h → compute ends 2.65–3.75 h → pull tail 0.4–0.7 h → verify,
+terminate. **A healthy run costs the same either way (~$3.6–5.4);** only a bad run pays for the extra
+headroom. Campaign worst case: $1.44 already spent + $7.14 = **$8.58 against the $10 cap**.
+
+Fallback if the A100 80 GB is unavailable: A100 SXM community, then A100 PCIe secure. A fallback that
+needs `--max-price` above 1.25 is **not** a silent retry — it is a decision to take back to the
+operator.
 
 **80 GB card, not 48.** Measured, not guessed: `docs/probes/2026-09-18-llama-8b-fp32-prefill-memory.md`
 — Llama-3.1-8B fp32 OOMs at T = 32,768 on a 44.43 GiB card, peak 43.2 GiB.
@@ -79,6 +99,10 @@ so** instead of filling the disk. Nothing on the box is deleted while it is paus
 **Never pass `--terminate-after`.** It is a provider-side hard kill that cannot be extended without
 editing the pod, which at `volumeInGb 0` wipes `/workspace` mid-run. A sitting B that overruns would
 be destroyed rather than closed under the registered partial rule.
+
+**Pushed sha at the last rehearsal:** `659c5d6`. `config/e9f.toml` sha256 `2e7cade40489`, coverage
+`6a8dc1242300`, gate `0019/0023/0025/0027/0042/0043`. Re-run §0f after any change to the config — the
+gate checks it is committed unmodified and the coverage is bound to its sha.
 
 ## 3. Arm the net — IMMEDIATELY, before the driver
 
@@ -109,6 +133,22 @@ unwatched for five minutes.
 
 The launcher runs the R2 probe before any weights and **refuses below 70 GiB of usable VRAM**. Stop if
 it refuses; that refusal is the measurement replacing §3.4's extrapolation.
+
+**The weight upload, and the deletion that frees the home disk (§1a).** `sitting_b.sh` validates the
+archive (hub/ only, no token file, no escaping link) and then re-runs `cache_complete` on both models.
+Confirm every shard on the box before deleting anything at home:
+
+```bash
+.venv/bin/python tools/runpod/rp.py ssh \
+  'find /workspace/hf/hub -name "*.safetensors" -exec sha256sum {} + | sort'
+# compare against home, then -- only if all six lines match:
+( cd ~/Desktop/linear-ceiling && du -sh box-cache && rm -rf box-cache ) \
+  | tee -a ~/.cache/linear-ceiling/freed-bytes.log
+```
+
+Six shards: 3B has 2, 8B has 4 (§1). Both models are re-downloadable from the Hub with the ambient
+login, which is what makes this deletion reversible. Log the freed bytes — the puller's pre-create
+gate was passed on the promise of them.
 
 ## 5. Pull, from the moment the driver starts
 
@@ -156,9 +196,19 @@ earlier if the puller's measurement (outstanding GiB ÷ measured GiB/h, written 
 leftover budget. A measurement can only move the drain **earlier**, never later — `outstanding_gib`
 cannot see the handoff in flight. `--no-drain` turns it off and costs you that handoff.
 
-> **Go/no-go at handoff 5.** By then the measured per-handoff wall clock is real. Project
-> `t_remaining = (28 − n) × median(t_handoff)`. If that lands past the TTL, **drain now** (§7) rather
-> than at the ceiling: a drained partial is a registered outcome, a hard kill is a salvage.
+> **Go/no-go at handoff 5.** By then the measured per-handoff wall clock is real, and the assumed
+> load cost is no longer load-bearing. Read the five timestamps out of `report.json`, then:
+>
+> ```
+> t_remaining = (28 − n) × median(t_handoff)          # n = 5
+> t_end       = now + t_remaining + pull_tail         # pull_tail from the drain hint
+> ```
+>
+> **GO** if `t_end` is before the drain at 4.2 h. **DRAIN NOW** if it is not — deliberately, at §7's
+> step 1, rather than waiting for the ceiling to do it worse. A drained partial is a registered
+> outcome under entry 0042; a hard kill is a salvage. The handoffs run shortest-sender-first, so
+> handoff 5 is on the *fast* end and `median(t_handoff)` over the first five **underestimates** the
+> rest — treat a marginal projection as a fail.
 
 ## 7. How it ends — the three ways, and only these
 
@@ -183,6 +233,19 @@ superseded file as evidence), and the close stamps that prefix.
 home.** It is a genuine driver checkpoint and a prefix of the registered order — never an edited
 report. If nothing verifies whole, there is no close: H-E9F stays `unresolved`, and that is the
 finding, not a problem to work around.
+
+## 7a. Aborts — what to do, literally, when each thing fails
+
+| failure | do this |
+|---|---|
+| **SSH never comes up** (`wait-ssh` times out, default 12 min) | `rp.py` terminates on its own timeout — confirm with `rp.py ps`, then `rp.py spend`. An account with no `PUBLIC_KEY` yields a permanently unreachable pod; check that before re-creating. Nothing was staged, so there is nothing to salvage. |
+| **CUDA smoke test fails / < 70 GiB VRAM** | The launcher refuses **before any weights** and exits non-zero; nothing downloaded, no dump written. `rp.py terminate --force` (there is no receipt to interlock on, and nothing to lose). Record the card actually delivered — a refusal here is §3.4's extrapolation being replaced by measurement, and it belongs in the closing brief. |
+| **Weight archive or shard sha mismatch** | The launcher refuses at the archive validation or at `cache_complete`. Do **not** re-upload blindly: re-hash `box-cache` at home first and compare against §1's figures, because a mismatch means either the upload truncated or the home copy is wrong, and those need different fixes. **Do not delete `box-cache`** until a check passes. |
+| **`SITTING_B_FAILED`** | The puller exits **5** with the status quoted. The run cannot complete, but what is mirrored may still be a closeable prefix: §7's drain-partial path from step 3. Paste the box log verbatim into the closing brief — never summarise a failure. |
+| **The drain signal does not land** | The watchdog says so and retries each poll. The ceiling still terminates at `--sitting-max`, and the close then falls back to the last verified snapshot — scenario 3, which the rehearsal covers. |
+| **Home network drops mid-run** | The watchdog alerts and **keeps polling** (a home outage is not a runaway pod), with a 45-minute backstop terminate. The puller resumes on its own; nothing on the box is deleted while it cannot verify. |
+
+In every case: **`rp.py ps` must list nothing** before you stop paying attention.
 
 ## 8. Prove it is gone
 
