@@ -611,7 +611,10 @@ def close_partial(cfg: E9Config) -> Path:
     rep["partial"] = {"closed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                       "n_scored": len(scored), "n_registered": len(order), "unscored": order[len(scored):]}
     rep["complete"] = True
-    out.write_text(json.dumps(rep, indent=1), encoding="utf-8")
+    # Atomic, like every other write of this file: a torn close would destroy the very prefix the
+    # stopping rule exists to preserve, and this runs at the end of a sitting when there is nothing
+    # left to re-derive it from.
+    _write_checkpoint(out, rep)
     print(f"E9 partial close: {len(scored)} of {len(order)} scored; unscored named in report.json")
     return out
 

@@ -267,6 +267,12 @@ def validate_complete_report(report: dict, *, config: Path, exp: str, pair: str)
     validate_checkpoint_report(report, config=config, exp=exp, pair=pair)
     if report.get("complete") is not True:
         raise ValueError("report is not complete")
+    # A report closed by `e9 --close-partial` also carries complete = true; it is NOT a complete run
+    # and has no final manifest to check against. Say so, rather than failing below on the run_order
+    # comparison with a message that reads like corruption.
+    if report.get("partial"):
+        raise ValueError("this is a CLOSED PARTIAL, not a complete run: it is verified by "
+                         "--final-partial (before the close), never by the complete path")
     scores, order = report["scores"], report["run_order"]
     if list(scores) != order:
         raise ValueError("complete report scores are not exactly run_order")
@@ -532,7 +538,15 @@ def validate_runpod_binding(state: dict, *, expected_name: str) -> None:
 
 
 def write_receipt(runpod_state: dict, *, exp: str, pair: str, report_sha: str,
-                  manifest_sha: str, checked: int, total_bytes: int) -> Path:
+                  manifest_sha: str | None, checked: int, total_bytes: int,
+                  partial: dict | None = None) -> Path:
+    """Write the nonce- and pod-bound receipt that makes `rp.py terminate` safe.
+
+    `manifest_sha` is None and `partial` is set on the REGISTERED PARTIAL path (`--final-partial`).
+    There is no final manifest in that case by construction: the launcher writes it only after a
+    complete run's writers stop, and a partial exists precisely because they did not. What stands in
+    its place is `partial`, which names the basis checkpoint and the scored prefix it covers, so a
+    reader can tell a complete receipt from a partial one without opening the mirror."""
     verify = Path(runpod_state["verify_file"]).expanduser()
     receipt = {
         "schema": RECEIPT_SCHEMA,
@@ -547,6 +561,8 @@ def write_receipt(runpod_state: dict, *, exp: str, pair: str, report_sha: str,
         "files_verified": checked,
         "bytes_verified": total_bytes,
     }
+    if partial is not None:
+        receipt["partial"] = partial
     if verify.exists():
         old = _load_json(verify)
         for key in ("schema", "verify_nonce", "pod_id", "created_utc", "report_sha256"):
@@ -554,6 +570,170 @@ def write_receipt(runpod_state: dict, *, exp: str, pair: str, report_sha: str,
                 raise ValueError(f"existing verification receipt belongs to another result ({key})")
     _atomic_json(verify, receipt, mode=0o600)
     return verify
+
+
+# ---------------------------------------------------------------------------------------------
+# B4: the terminal path for a REGISTERED PARTIAL CLOSE (entry 0042's stopping rule).
+#
+# Everything above serves a run that finishes. A run stopped at the budget ceiling -- drained on
+# purpose, or hard-killed -- produces no `report.complete`, no final manifest and no SITTING_B_OK,
+# so every acceptance path above refuses it and the sitting has no way to end. That is what this
+# section supplies, and it is deliberately a HOME-SIDE operation on the verified mirror: after a
+# hard kill the pod and its disk are already gone, so anything that needed the box could not run.
+#
+# The rule it implements, which is registered BEFORE the run and not chosen after seeing scores:
+# the closing basis is the LAST checkpoint whose every named artifact is sha-verified at home. It
+# is a genuine driver checkpoint and a prefix of the registered run order -- never an edited
+# report. `e9 --close-partial` then stamps `partial{...}` on exactly that file.
+# ---------------------------------------------------------------------------------------------
+
+def align_requirements(report: dict) -> set[str]:
+    """The alignment records `summarize_e9` re-derives its numbers from.
+
+    They are not fingerprinted in `report.json` (the driver writes them before it scores anything),
+    so they are required to be PRESENT rather than hash-checked here. Their absence would make the
+    partial unsummarizable, which is the same defect as a missing kept dump."""
+    out = {"align/coverage.json"}
+    for row in report.get("alignments") or []:
+        hid = row.get("handoff_id")
+        if not isinstance(hid, str) or not hid:
+            raise ValueError("alignment row has no handoff_id")
+        stem = hid.replace("/", "__").replace("#", "_sw")
+        out.update((f"align/{stem}.json", f"align/{stem}.npz"))
+    return out
+
+
+def partial_candidates(local: Path) -> list[Path]:
+    """Every file that could serve as a closing basis, best candidate first.
+
+    Ranked by how much of the registered order it covers, because the rule closes on the LAST good
+    checkpoint. `report.json` wins an exact tie: it is the driver's own file, and a B5 snapshot of
+    the same prefix is a copy of it."""
+    live = local / "report.json"
+    cands = [live] if live.is_file() else []
+    snaps = local / "checkpoints"
+    if snaps.is_dir():
+        cands += sorted(x for x in snaps.glob("report.*.json") if x.is_file())
+    ranked = []
+    for c in cands:
+        try:
+            rep = _load_json(c)
+            scores = rep.get("scores")
+            n = len(scores) if isinstance(scores, dict) else -1
+        except (OSError, ValueError, json.JSONDecodeError):
+            continue                                   # a torn or unreadable file is simply not a basis
+        if n > 0:
+            ranked.append((n, c))
+    ranked.sort(key=lambda t: (-t[0], t[1] != live, t[1].name))
+    return [c for _, c in ranked]
+
+
+def choose_partial_basis(local: Path, *, config: Path, exp: str, pair: str):
+    """Return (path, report, n_checked, n_bytes) for the last FULLY VERIFIED checkpoint.
+
+    Fully verified means: it validates as a checkpoint (prefix of the registered order, controls
+    present, config/pin/pair bound), every artifact it fingerprints is byte-identical here, and
+    every alignment record the summarizer needs is present. A checkpoint that names a kept dump
+    still in flight when the pod died fails this and the next one down is tried."""
+    local = local.resolve()
+    tried: list[str] = []
+    for cand in partial_candidates(local):
+        rep = _load_json(cand)
+        name = cand.name if cand.parent == local else f"{cand.parent.name}/{cand.name}"
+        try:
+            validate_checkpoint_report(rep, config=config, exp=exp, pair=pair)
+        except ValueError as e:
+            tried.append(f"{name}: {e}")
+            continue
+        if rep.get("complete") is True:
+            tried.append(f"{name}: the run is COMPLETE; close it by the normal final path, not as a partial")
+            continue
+        bad, checked, nbytes = verify_artifacts(local, report_artifacts(rep))
+        if bad:
+            tried.append(f"{name}: {len(bad)} artifact(s) unverified here, first: {bad[0]}")
+            continue
+        absent = sorted(rel for rel in align_requirements(rep) if not (local / rel).is_file())
+        if absent:
+            tried.append(f"{name}: {len(absent)} alignment record(s) absent, first: {absent[0]}")
+            continue
+        return cand, rep, checked, nbytes
+    detail = "; ".join(tried) if tried else "no checkpoint or snapshot exists at home"
+    raise ValueError(f"no closing basis is fully verified at home ({detail})")
+
+
+def require_driver_stopped(runpod_state: dict, *, expected_name: str, remote_work: str, exp: str) -> str:
+    """Refuse to choose a closing basis while the driver could still append to it.
+
+    Two ways this is satisfied, and no third: the pod is gone from the account (a hard kill, so
+    nothing can be running), or the pod is reachable and its recorded driver pid is dead. An
+    unreachable API is neither -- it is refused rather than assumed, because guessing wrong here
+    closes a partial one handoff short of what actually exists."""
+    try:
+        live = rp.pods()
+    except (Exception, SystemExit) as e:                # gql() reports API failure as SystemExit
+        raise ValueError("cannot establish that the driver stopped: the RunPod API is unreachable "
+                         f"({e}). Re-run when it answers; do not assume.") from e
+    if not any(pod.get("id") == runpod_state["pod_id"] for pod in live):
+        return f"pod {runpod_state['pod_id']} is absent from the account listing, so no driver is running"
+    tx = Transport(runpod_state["pod_id"], expected_name)
+    work = shlex.quote(remote_work.rstrip("/"))
+    probe = (f'p=$(tr -cd "0-9" < {work}/{shlex.quote(exp)}.pid 2>/dev/null); '
+             f'if [ -n "$p" ] && kill -0 "$p" 2>/dev/null; then echo "ALIVE $p"; '
+             f'else echo "STOPPED ${{p:-nopid}}"; fi')
+    answer = tx.run_bytes(probe, timeout=60).decode("utf-8", "replace").strip()
+    if not answer.startswith("STOPPED"):
+        raise ValueError(f"the E9 driver is still running on the pod ({answer}); stop it first "
+                         "(the registered stop is a signal between handoffs, which leaves the last "
+                         "checkpoint intact)")
+    return f"pod {runpod_state['pod_id']} is up and its driver pid is dead ({answer})"
+
+
+def final_partial(a, runpod_state: dict) -> int:
+    """`--final-partial`: verify a registered partial at home and write its terminate receipt.
+
+    This writes NO `partial` stamp of its own and edits no report. It proves a basis and installs it
+    as `report.json` if a snapshot outranks the live file; the close itself is
+    `python -m linear_ceiling.e9 --close-partial --config config/<exp>.toml`, which is the one place
+    allowed to mark a run closed."""
+    local = Path(a.local).expanduser().resolve()
+    config = Path(a.config)
+    try:
+        how = require_driver_stopped(runpod_state, expected_name=a.expected_pod_name,
+                                     remote_work=a.remote_work, exp=a.exp)
+        print(f"driver stopped: {how}", flush=True)
+        basis, report, checked, nbytes = choose_partial_basis(local, config=config, exp=a.exp, pair=a.pair)
+    except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as e:
+        print(f"FINAL-PARTIAL REFUSED: {e}; no receipt written", flush=True)
+        return 4
+
+    order, scored = report["run_order"], list(report["scores"])
+    live = local / "report.json"
+    if basis != live:
+        # Install the snapshot as the report the closer will read. The superseded file is KEPT: it is
+        # the evidence for why this basis was chosen over it, and deleting it would make the decision
+        # unreviewable.
+        if live.exists():
+            kept = live.with_name(f"report.superseded-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}.json")
+            live.replace(kept)
+            print(f"  superseded report.json kept as {kept.name}", flush=True)
+        _atomic_json(live, report)
+        print(f"  installed {basis.parent.name}/{basis.name} as report.json", flush=True)
+
+    report_sha = sha256(live)
+    partial = {
+        "basis": basis.name if basis.parent == local else f"{basis.parent.name}/{basis.name}",
+        "n_scored": len(scored),
+        "n_registered": len(order),
+        "unscored": order[len(scored):],
+        "driver_stopped": how,
+    }
+    receipt = write_receipt(runpod_state, exp=a.exp, pair=a.pair, report_sha=report_sha,
+                            manifest_sha=None, checked=checked, total_bytes=nbytes, partial=partial)
+    print(f"FINAL-PARTIAL VERIFIED: {len(scored)} of {len(order)} scored, {checked} hash checks, "
+          f"{nbytes:,} B. Terminate receipt: {receipt}", flush=True)
+    print(f"  unscored ({len(partial['unscored'])}): {', '.join(partial['unscored']) or 'none'}", flush=True)
+    print(f"  NEXT: .venv/bin/python -m linear_ceiling.e9 --close-partial --config {config}", flush=True)
+    return 0
 
 
 def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
@@ -708,6 +888,10 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--delete-verified", action="store_true",
                     help="after raw-byte verification, delete that one kept remote tree to free pod disk")
+    ap.add_argument("--final-partial", action="store_true",
+                    help="terminal path for a REGISTERED PARTIAL (entry 0042): with the driver stopped, "
+                         "prove the last fully verified checkpoint at home and write its terminate "
+                         "receipt. Pulls nothing; `e9 --close-partial` does the close afterwards.")
     return ap
 
 
@@ -771,6 +955,11 @@ def main(argv: list[str] | None = None) -> int:
         validate_runpod_binding(runpod_state, expected_name=a.expected_pod_name)
     except ValueError as e:
         raise SystemExit(f"pull_verify_b REFUSED: {e}") from e
+    if a.final_partial:
+        # Deliberately ahead of the free-space refusal and of any pull state: this path downloads
+        # nothing, and after a hard kill it is the only path left, so it must not be gated on a floor
+        # that exists to protect a pull that is no longer going to happen.
+        return final_partial(a, runpod_state)
     require_free_space(Path(a.local).expanduser(), a.min_free_gib, blocking=False)
     pull_state_path = Path(a.state).expanduser()
     state = _load_json(pull_state_path) if pull_state_path.exists() else {

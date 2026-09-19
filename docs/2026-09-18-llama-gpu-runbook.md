@@ -296,12 +296,28 @@ Card **80 GB**. The verdict-bearing cell.
    less a real margin** — §3.4's 45.2 GiB is an extrapolation and this is the measurement that replaces it.
 6. **`run.sh`** (R4: `python -u`, detached, log rotated, exit code to `~/e9f.rc`). Expect **no** `[bridge]` lines —
    this cell registers no bridge — then `[i/N] <hid>: same K …` in the registered order. Record the launch time.
-7. **`pull.py e9f` at home** (R5): each kept handoff verified against `report.json`'s fingerprints, then deleted on
-   the box; small records and box logs every round. At 12.4 GB per handoff this is what keeps the root from filling.
-8. **No cutoff for this cell.** `config/e9f.toml` does not register `[e9.order] allow_partial = true`, so
-   `e9 --close-partial --config config/e9f.toml` refuses. If the run is interrupted, resume it in the same
-   registered order until `report.json` is complete; if it cannot finish, H-E9F remains `unresolved` and entry
-   0042 is not appended. Only the descriptive long cell in §9 registers a partial close.
+7. **`tools/runpod/pull_verify_b.py --delete-verified` at home** (R5), started right after the driver: each kept
+   handoff verified against `report.json`'s fingerprints, then deleted on the box; small records and box logs every
+   round. At 12.4 GB per handoff this is what keeps the root from filling. Every checkpoint whose every named
+   artifact verifies here is also snapshotted to `results/e9f/checkpoints/report.<n>.json` — that snapshot is what a
+   hard kill leaves behind, and §8.8 closes on it.
+8. **The cutoff, and how a stopped run ends.** Entry 0042 registers the stopping rule for this cell:
+   `[e9.order] by = "n_sender_asc"`, `allow_partial = true`, so a run stopped at the budget ceiling closes on a
+   **prefix** of the registered order. The order matters and none of it is a choice made after seeing scores:
+
+   1. Prefer the graceful stop. At the drain threshold the driver is stopped **by signal**, which leaves the last
+      checkpoint intact and lets the puller finish the tensors already written.
+   2. **`pull_verify_b.py --final-partial`** — home-side, pulls nothing. It refuses unless the driver is provably
+      stopped (the pod is gone from the account, or it is reachable and its recorded pid is dead), then picks the
+      **last checkpoint whose every named artifact is sha-verified here** (`report.json` if it verifies, else the
+      highest `checkpoints/report.<n>.json`), installs it as `report.json` if a snapshot outranks the live file
+      (the superseded file is kept, never deleted), and writes the terminate receipt with `partial{n_scored}`.
+   3. **`e9 --close-partial --config config/e9f.toml`** — the only thing allowed to stamp a run closed. It needs
+      `report.json` and nothing else, so it works after the pod is gone.
+   4. Then §10/§11 as usual, and `summarize_e9` reads the closed prefix.
+
+   A basis is never an edited report: it is a genuine driver checkpoint and a prefix of the registered order. If no
+   checkpoint verifies whole at home, there is no close — H-E9F stays `unresolved` and that is the finding.
 9. **Release (§10), backup (§11), then at home `summarize_e9 --config config/e9f.toml`** — the only reader (R11).
    A refusal is pasted verbatim into the closing brief and investigated, never worked around. Then the figures
    entry's own script, in-process, reading every number from `results/e9f/summary.json`.

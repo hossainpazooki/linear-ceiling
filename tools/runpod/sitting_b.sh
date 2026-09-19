@@ -28,7 +28,11 @@
 #   no report       -> plain E9 run
 #   incomplete      -> --resume, but only after the recorded controls still hash correctly
 #   complete:true   -> skip the driver and only produce terminal state + the final small-file manifest
-# There is intentionally no partial-close path: the loaded config must have allow_partial=false.
+# A partial close IS registered for this cell (entry 0042, [e9.order] allow_partial = true) but it
+# never happens on the box: box disk is ephemeral, and after a hard kill it is gone exactly when a
+# close is needed. The close is home-side on the verified mirror -- `pull_verify_b.py --final-partial`
+# proves the last fully verified checkpoint and writes the terminate receipt, then `e9 --close-partial`
+# stamps it. A report arriving HERE already carrying a partial is therefore out of order and refused.
 set -euo pipefail
 
 PAIR="${PAIR:?PAIR is required}"
@@ -488,7 +492,9 @@ if not report.exists():
     print("plain")
     raise SystemExit
 r = json.loads(report.read_text(encoding="utf-8"))
-assert not r.get("partial"), "short-cell report carries a partial close; this config forbids it"
+assert not r.get("partial"), (
+    "this checkpoint is an already-CLOSED partial; a closed run is not resumable, and the close is "
+    "home-side by design (pull_verify_b --final-partial, then e9 --close-partial)")
 assert r.get("config_sha256") == sha256_text_file(cfg_path), "checkpoint was written under another config"
 assert r.get("upstream_sha") == up_sha, "checkpoint was written under another upstream pin"
 if r.get("complete") is True:
@@ -681,8 +687,8 @@ import json, sys
 r = json.load(open(sys.argv[1], encoding="utf-8"))
 assert r.get("complete") is True, "driver returned zero without complete:true"
 # A COMPLETE report cannot also be partial -- that is a contradiction, not a policy. Entry 0042
-# registers partial closes for this cell; they arrive by `e9 --close-partial` on a NON-zero
-# driver exit and never through this block, which only validates rc == 0 / complete: true.
+# registers partial closes for this cell, but they are stamped AT HOME on the verified mirror and
+# never through this block, which only validates a driver rc == 0 / complete: true.
 assert not r.get("partial"), "a report claiming complete:true also carries a partial close"
 assert list(r.get("scores", {})) == list(r.get("run_order", [])), \
     "complete report scores are not exactly the registered order"
@@ -730,7 +736,7 @@ printf '%s\n' "$pid" > "$PID_FILE"
 printf '[%s] pid=%s mode=%s lc=%s up=%s\n' "$(date -u +%FT%TZ)" "$pid" "$RUN_MODE" "$LC_SHA" "$UP_SHA" \
   >> "$LAUNCH_LOG"
 say "SITTING_B_LAUNCHED pid=$pid mode=$RUN_MODE log=$RUN_LOG status=$STATUS_FILE"
-say "  resume is automatic; never use --close-partial for this short verdict cell"
+say "  resume is automatic; a budget stop closes at HOME (--final-partial, then e9 --close-partial)"
 say "  this script will never terminate the pod; home pull+verify owns termination"
 atomic_line "$SETUP_STATUS" "SITTING_B_LAUNCHED pid=$pid mode=$RUN_MODE"
 : > "$READY_FILE"
