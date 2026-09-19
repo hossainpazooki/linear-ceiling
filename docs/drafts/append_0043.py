@@ -1,211 +1,185 @@
-"""Append entry 0043 -- the E9 short cell of the second model family RAN; the H-E9F verdict, written ONLY
-from an in-process `summarize_e9 --config config/e9f.toml` run (it refuses on anything wrong and nothing is
-written then). Sets the H-E9F cell by its `verdict:` line.
+"""Append entry 0043 -- a PRE-PREFILL AMENDMENT to the E9 short cell of the second model family (0042).
 
-Ordering guard: 0042 on the ledger, 0043 absent, the H-E9F row present and still `unresolved`. The band
-outcome maps to the ledger vocabulary (HOLDS -> HELD, DEGRADES -> NOT CONFIRMED, UNRESOLVED -> unresolved).
-Run facts the summarizer cannot know come as arguments and are refused when missing:
+DESCRIPTIVE: no hypothesis row, no `verdict:` line, no cell moves, no figure. It registers two things
+BEFORE any prefill, following the 0025/0026/0027 precedent:
 
-  --box "<instance type, GPU, region, instance id>"   --launched <UTC>   --finished <UTC>
-  [--tau-ceiling-applies {yes,no}] --tau-ceiling-note "<provenance note about entry 0039's ceiling>"
-  --date <YYYY-MM-DD>   (defaults to --finished's date)
+  (a) the driver's checkpoint write is now ATOMIC (temp file, fsync, rename). Entry 0042 recorded that
+      the driver "gained refusals only"; this changed it again, after that entry and before any run.
+      Nothing computed changes -- the bytes written are identical -- but it is the registered
+      instrument, so it is stated rather than left to a commit message.
+
+  (b) THE STOP PROTOCOL, which is the reason (a) was needed and the thing that must not be chosen after
+      seeing scores: when the driver is stopped, how, and which prefix a stopped run closes on.
+
+Ordering guard: 0042 on the ledger, 0043 absent, and R1 -- NOTHING of this cell may exist yet. No
+`results/e9f/report.json`, no score file, no token record, no kept dump. The alignments and the
+calibration may exist (0042 required them at registration) and are checked to be the committed ones.
+
+Every claim about the instrument is ASSERTED AGAINST THE SOURCE, not typed: the entry cannot describe
+an atomic write, a drain, or a home-side partial close that the tooling does not implement.
+
+  --date <YYYY-MM-DD>   (defaults to today; the entry is dated the day it is appended)
   --preview             (print, do not append)
 
-The tau ceiling is not optional: entry 0039 registered, before the fit, that tau_K > 0.45 makes this
-cell UNRESOLVED BY CONSTRUCTION (a mapper that transfers badly enough makes f*(tau_K) trivially small
-for everything, and a HOLDS read off it would mean nothing). The script derives whether the ceiling
-applies from the summarizer's tau_K. `--tau-ceiling-applies`, when supplied, is an auditable assertion
-about that derived result and is refused on disagreement; it never selects the verdict. The required
-free-text note records provenance only and likewise cannot alter the verdict.
-
-Per entry 0042: coverage "n scored of N registered" travels with every number; nothing is pooled with
-entry 0029's handoffs; f* is read on a floor (0027). Runs `ledger_check` after appending. Delete once
-appended, chained to the append with `&&`."""
+Runs `ledger_check` after appending. Delete once appended, chained to the append with `&&`.
+"""
 import argparse
+import ast
+import datetime as dt
 import json
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 from linear_ceiling import REPO_ROOT
-from linear_ceiling.config import load_e7_config, load_e9_config
-from linear_ceiling.e7_manifest import manifest_path, manifest_sha256
-from linear_ceiling.ledger_check import VERDICTS, _ENTRIES_HEAD, chain_hash
+from linear_ceiling.config import load_e9_config
+from linear_ceiling.hashing import sha256_text_file
+from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash
 from linear_ceiling.pairs import pair_models
-from linear_ceiling.summarize_e9 import summarize
 
 NUM, PREV = "0043", "0042"
-FAMILY = f"{int(NUM) - 3:04d}"      # the family registration entry (0039 as staged); shifts with NUM
-E8FIG = f"{int(NUM) - 2:04d}"       # the E8 figures entry, which reported the fit this mapper came from
-TAU_K_CEILING = 0.45                 # entry 0039; asserted against the committed entry below
+FAMILY = "0039"      # the family registration entry, APPENDED 2026-09-18 -- a fixed number now
+SHORT = "0042"       # this cell's registration entry, the one being amended; APPENDED, fixed
+
 ap = argparse.ArgumentParser()
-ap.add_argument("--box", required=True)
-ap.add_argument("--launched", required=True)
-ap.add_argument("--finished", required=True)
-ap.add_argument("--tau-ceiling-applies", choices=("yes", "no"), default=None,
-                help="optional assertion only; derived from summary tau_K > entry 0039's 0.45")
-ap.add_argument("--tau-ceiling-note", required=True,
-                help="provenance note only; cannot select whether the ceiling applies")
-ap.add_argument("--date", default=None)
+ap.add_argument("--date", default=dt.date.today().isoformat())
 ap.add_argument("--preview", action="store_true")
 a = ap.parse_args()
-a.date = a.date or a.finished[:10]
 assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.date), "--date must be YYYY-MM-DD (the ledger heading's form)"
 
 LEDGER = REPO_ROOT / "ledger" / "ledger.md"
 text = LEDGER.read_text(encoding="utf-8").replace("\r\n", "\n")
 assert f"### {PREV} " in text and f"### {NUM} " not in text, f"ordering: {PREV} present, {NUM} absent"
-family_start = text.index(f"### {FAMILY} ")
-family_end = text.find("\n### ", family_start + 1)
-family_entry = text[family_start: family_end if family_end >= 0 else len(text)]
-assert re.search(r"\*\*τ_K ceiling\*\*.*?short cell is UNRESOLVED by\s+construction.*?\n0\.45\.",
-                 family_entry, re.S), \
-    f"entry {FAMILY} no longer registers the expected tau_K > {TAU_K_CEILING:g} ceiling"
+
 cfg = load_e9_config(REPO_ROOT / "config" / "e9f.toml", REPO_ROOT)
-e7 = load_e7_config(REPO_ROOT / "config" / "e7.toml", REPO_ROOT)
-manifest = manifest_sha256(manifest_path(e7))
 src_id, tgt_id = pair_models(cfg.pair)
+assert cfg.allow_partial and cfg.order_by == "n_sender_asc", \
+    f"{SHORT} registered by = n_sender_asc with allow_partial; the config no longer says so"
+# This amendment is enforced, not merely stated: the gate must require it, for the same reason
+# config/e9.toml's gate requires 0026 and 0027. A protocol that decides which prefix a stopped run
+# closes on cannot be registered after the driver has run under it.
+assert NUM in cfg.required_entries, \
+    f"config/e9f.toml's [e9.gate] does not require {NUM}; this amendment would not bind the driver"
+assert list(cfg.required_entries) == ["0019", "0023", "0025", "0027", SHORT, NUM], \
+    f"the gate list is not {SHORT}'s extended by exactly this entry: {list(cfg.required_entries)}"
 
-summarize(cfg)                                              # refuses on anything wrong; nothing is written then
-f = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
-rep = json.loads((cfg.results_dir / "report.json").read_text(encoding="utf-8"))
-assert rep["complete"] and rep["upstream_sha"] == cfg.upstream_sha
-assert f["rope"] is None and f["bridge"] is None and f["length_profiles"] is None, \
-    "this cell registers no rope, no bridge and no length profiles; the summary carries one"
-assert not f.get("partial"), "config/e9f.toml does not allow a partial close; the report claims one"
+# ---- R1: this is PRE-prefill, and that is checked, not asserted in prose -------------------------
+res = cfg.results_dir
+assert not (res / "report.json").exists(), "results/e9f/report.json exists; this is no longer pre-prefill"
+for sub in ("scores", "tokens", "controls", "scratch", "checkpoints"):
+    d = res / sub
+    assert not (d.exists() and any(d.iterdir())), f"{d} is not empty; this is no longer pre-prefill"
+cov = res / "align" / "coverage.json"
+assert cov.is_file(), f"{cov} is missing; {SHORT} registered the run order from it"
+# The count below is READ from the registered coverage, never typed: a hand-written 28 in a ledger
+# entry is a number no summarizer recomputed, which this repo does not permit anywhere.
+coverage = json.loads(cov.read_text(encoding="utf-8"))
+N_REG = len(coverage["run_order"])
+assert N_REG == coverage["coverage"]["included"] and N_REG > 0, \
+    "coverage.json's run_order and coverage.included disagree"
+assert coverage["config_sha256"] == sha256_text_file(REPO_ROOT / "config" / "e9f.toml"), \
+    "the coverage file was written under another config"
+assert coverage["order_by"] == cfg.order_by, "coverage.json was written under another run order"
 
-BAND_TO_VERDICT = {"HOLDS": "HELD", "DEGRADES": "NOT CONFIRMED", "UNRESOLVED": "unresolved"}
-band_verdict = BAND_TO_VERDICT[f["band_outcome"]]
-tau = f["tau"]
-ceiling = float(tau["K"]) > TAU_K_CEILING
-if a.tau_ceiling_applies is not None:
-    asserted_ceiling = a.tau_ceiling_applies == "yes"
-    assert asserted_ceiling == ceiling, \
-        (f"--tau-ceiling-applies {a.tau_ceiling_applies} disagrees with the registered rule: "
-         f"tau_K {float(tau['K']):.6g} > {TAU_K_CEILING:g} is "
-         f"{'true' if ceiling else 'false'}; the operator assertion cannot select the verdict")
-VERDICT = "unresolved" if ceiling else band_verdict
-assert VERDICT in VERDICTS, f"{VERDICT!r} is not one of ledger_check.VERDICTS"
+# ---- the amendment must describe the tooling that exists ---------------------------------------
+E9_SRC = (REPO_ROOT / "src" / "linear_ceiling" / "e9.py").read_text(encoding="utf-8")
+PULL_SRC = (REPO_ROOT / "tools" / "runpod" / "pull_verify_b.py").read_text(encoding="utf-8")
+RP_SRC = (REPO_ROOT / "tools" / "runpod" / "rp.py").read_text(encoding="utf-8")
 
-# The two controls that stand in for entry 0035's configuration bridge on a natively long receiver.
-rope = f["dump_rope"]
-assert rope and rope.get("recorded"), \
-    ("the run's dumps carry no RoPE spec, so neither the native-window nor the frequency-identity control "
-     "ran; the pin must be the RoPE-spec commit or a descendant of it")
-roles = ", ".join(f"{role} ({r['n_dumps']} dumps, max_position_embeddings {r['max_position_embeddings']:,}, "
-                  f"inv_freq {str(r['inv_freq_sha256'])[:12]}, attention factor {r['attention_scaling']})"
-                  for role, r in rope["by_role"].items())
-n_roles = len(rope["by_role"])
+tree = ast.parse(E9_SRC)
+fn = next((n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "_write_checkpoint"), None)
+assert fn is not None, "e9.py has no _write_checkpoint; (a) would describe a function that does not exist"
+body = ast.get_source_segment(E9_SRC, fn) or ""
+for needed in (".tmp", "fsync", "os.replace"):
+    assert needed in body, f"_write_checkpoint does not {needed}; the write this entry registers is not atomic"
+assert "_write_checkpoint(out, rep)" in E9_SRC, "close_partial does not use the atomic write"
 
-sent = lambda t: t.strip().rstrip(".") + "."      # operator free text, punctuated once  # noqa: E731
-s = lambda d, nd=4: f"{d['median']:.{nd}f} (p10 {d['p10']:.{nd}f}, p90 {d['p90']:.{nd}f})"   # noqa: E731
-fs, cov, cc = f["fstar"], f["coverage"], f["coverage_comparison"]
-boot, pre, ra = f["median_fstar_same_K_bootstrap"], f["prefix_control"], f["rescore_agreement"]
-ratio, br, lad = f["cross_over_same_median_delta"], f["bridge_r2"], f["fstar_ladder"]
-agent, rule = f["fstar_at_tau_agent"], f["rule"]
-n_sc, n_reg = cov["scored"], cov["registered"]
-COVER = f"{n_sc} scored of {n_reg} registered"
-cross_band = ("beyond the DEGRADES edge" if fs["cross_K"]["median"] >= rule["degrades_min"] else
-              "inside the HOLDS edge" if fs["cross_K"]["median"] <= rule["holds_max"] else "between the edges")
-ladder_txt = "; ".join(f"τ = {float(k):g}: same K {s(lad['same_K'][k])} / V {s(lad['same_V'][k])}"
-                       for k in sorted(lad["same_K"], key=lambda k: -float(k)))
-seam = " · ".join(f"{r['bin']}: {r['median']:.3f} (n={r['n_tokens']})"
-                  for r in f["seam_profile_left_pooled"]["same_K"] if r["median"] is not None)
-dn = f["delta_null"]
-kept_scored = len(ra["per_handoff"])
-rescore_txt = (f"the {kept_scored} kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under "
-               f"0028's tolerance (every square within {ra['max_rel_square']:.1e} relative, max |f* diff| "
-               f"{ra['max_fstar_abs_diff']:.1e})" if kept_scored else
-               "NO kept handoff was scored, so the keep-subset re-score has nothing to read (stated, never a zero)")
-blocks = f["fstar_blocks_ge_min"]["same_K"]
-first = ((f"**UNRESOLVED BY CONSTRUCTION (entry {FAMILY}'s registered τ_K ceiling).** τ_K for "
-          f"this pair is {tau['K']:.4f} > {TAU_K_CEILING:.2f}. Operator provenance note "
-          f"(non-verdict-bearing): {sent(a.tau_ceiling_note)} The band word below is computed and stated, but the cell is set to "
-          f"`unresolved`: a recompute fraction read against a tolerance this loose does not distinguish a receiver "
-          f"that agrees with itself from one that does not, and that reading was fixed before the fit, not after "
-          f"this number was seen.\n\n") if ceiling else
-         (f"**The registered τ_K ceiling does not bite (entry {FAMILY}).** τ_K = {tau['K']:.4f} ≤ "
-          f"{TAU_K_CEILING:.2f}, so the band below is read as the rule writes it. Operator provenance note "
-          f"(non-verdict-bearing): {sent(a.tau_ceiling_note)}\n\n"))
+for name in ("choose_partial_basis", "require_driver_stopped", "final_partial", "write_drain_hint"):
+    assert f"def {name}(" in PULL_SRC, f"pull_verify_b.py has no {name}; the stop protocol is not implemented"
+assert '"--final-partial"' in PULL_SRC, "pull_verify_b.py exposes no --final-partial"
+for name in ("drain_threshold", "send_drain_signal", "read_drain_hint"):
+    assert f"def {name}(" in RP_SRC, f"rp.py has no {name}; the drain this entry registers does not exist"
+m = re.search(r"^DRAIN_FALLBACK_FRACTION = ([0-9.]+)$", RP_SRC, re.M)
+assert m, "rp.py does not define DRAIN_FALLBACK_FRACTION"
+FALLBACK = float(m.group(1))
+assert "kill -TERM" in RP_SRC, "the drain does not signal; it would have to terminate, which loses the handoff"
 
-ENTRY = f"""### {NUM} — {a.date} — E9 short cell ran on the second model family `[BASELINE]`; H-E9F {VERDICT} ({COVER})
+CFG_SHA = sha256_text_file(REPO_ROOT / "config" / "e9f.toml")
+COV_SHA = sha256_text_file(cov)
 
-{first}**Setup, as registered ({PREV}).** {a.box}; linear-ceiling at the commit carrying {PREV} and
-`config/e9f.toml` (gate: entries {'/'.join(cfg.required_entries)}), upstream pin `{cfg.upstream_sha[:7]}`
-(the one-line `PAIRS` entry on top of the RoPE-spec commit). Pair {cfg.pair}: receiver {tgt_id}, source
-{src_id}, **neither scaled** — no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling` on any dump; the
-k = {cfg.mapper_k} mapper this family's E8 sitting fitted (entry {E8FIG}) for the cross arm, by sha. Launched
-{a.launched}, finished {a.finished}. Complete: {COVER}, in the registered `{cfg.order_by}` order. Of
-{cov['observed']} observed handoffs: {n_reg} included (|S| and |R| both within {cfg.context_cap:,} tokens
-under this pair's own tokenizer), {cc['n']['excluded_long']} above the cap, {cc['n']['excluded_empty_r']}
-with an empty receiver prompt. Every figure below is `summarize_e9 --config config/e9f.toml`'s, from a run
-that passed all of its checks: alignments re-derived from the raw traces under the cap; every R²
-recomputed from recorded moments; per-token squares summed against the moments; {rescore_txt}; τ
-recomputed from the archived mapper and checked against the config; controls checked.
+ENTRY = f"""### {NUM} — {a.date} — Pre-prefill amendment to {SHORT}: the driver's checkpoint write is atomic, and the stop protocol for a budget-limited sitting is registered; descriptive, no cell moves
 
-**The two controls that replace entry 0035's configuration bridge.** This receiver is natively long, so
-there is no scaled arm to compare and no bridge to run; what stands in its place is read off the dumps
-themselves, from the `RopeSpec` the upstream recorded off each loaded model's own rotary embedding and
-halt-checked against the model at every dumped position (worst |diff| {rope['spec_check_max_abs']:.1e}
-against atol {rope['spec_check_atol']:.0e}), over all {rope['n_dumps']} dumps of the run. **(i) Native
-window:** the registered cap {cfg.context_cap:,} sat inside EVERY dump's own recorded
-`max_position_embeddings` — no dump asked either model for a position its configuration does not declare,
-which is the positive "no extrapolation happened" statement. **(ii) Frequency identity, scoped by model
-role:** {roles}. The {n_roles} roles are compared separately and MUST be: this pair's two sides carry
-different llama3 scaling factors and build different inverse-frequency vectors by construction, so an
-unscoped equality assert would refuse every correct run. Every dump recorded an attention factor of 1.0,
-the only positive evidence that the box applied no scaling the registration does not describe.
+**What this is.** An amendment to entry {SHORT}, appended **before any prefill of this cell**, on the
+0025/0026/0027 precedent: the registered instrument changed after its registering entry, and a change to
+the instrument is stated before the run, never explained after it. Nothing here moves a cell, states a
+figure, or touches τ, the rule, the band, the ladder, the cap, the keep draw or the run order. Pair
+{cfg.pair} ({src_id} → {tgt_id}), `config/e9f.toml` sha256 `{CFG_SHA[:12]}`, run order and coverage from
+`results/e9f/align/coverage.json` sha256 `{COV_SHA[:12]}`, both committed and unmodified. At the moment of
+writing, `results/e9f/` holds no report, no score file, no token record and no kept dump.
 
-**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run
-order: max centered per-token δ {pre['max_token_delta']:.3e} over {pre['n_positions']:,} positions
-(tolerance {pre['tolerance']:.0e}, this pair's own value — entry {FAMILY}'s pre-registered function of
-τ_K, never the Qwen cells'). δ_null same K / V token-mean median {dn['same_K']['median_token_mean']:.3f} /
-{dn['same_V']['median_token_mean']:.3f}; equal-token null pairs {f['delta_null_equal_token_fraction']:.4f}.
-Matched fraction |M|/|R| (a floor): {s(f['matched_fraction'])}.
+**(a) The checkpoint write is atomic.** Entry {SHORT} recorded that the driver "gained refusals only".
+That is no longer the whole of it: `e9._write_checkpoint` now writes `report.json` to a temporary file,
+`fsync`s it, and `os.replace`s it into place, and `e9.close_partial` writes through the same function.
+**Nothing computed changes** — the same bytes are produced from the same inputs, and no number, refusal
+or control is affected. The reason it changed is (b): the registered stop stops the driver **by signal**,
+and a signal that lands during a plain `write_text` leaves a truncated `report.json`. Under the rule
+below the closing basis is a checkpoint, so a torn checkpoint does not cost one handoff — it costs the
+prefix. The change is recorded here because it is the registered instrument, not because it is large.
 
-**The rule (0023, carried verbatim by {PREV}) and the figure it reads.** Per scored handoff, E9-same, K
-read-out: f*(τ_K) = the fraction of matched tokens an oracle must recompute before the mean centered
-deviation of the rest is at or below τ_K = {tau['K']:.4f}; median over scored handoffs; HOLDS ≤
-{rule['holds_max']}, DEGRADES ≥ {rule['degrades_min']}, UNRESOLVED between. τ_K is 1 − THIS pair's own
-held-out R² ({f['calibration']['heldout']['K_r2_layer_mean']:.4f} over
-{f['calibration']['heldout']['n_tokens']:,} tokens), recomputed here and refused on disagreement.
+**(b) The stop protocol.** This cell runs under a hard dollar ceiling, so how it stops decides which
+prefix entry {SHORT} closes on — and that must be fixed before any score exists, exactly as {SHORT}
+fixed the order for the same reason.
 
-- **median f*(τ_K), E9-same K: {s(fs['same_K'])}** over {fs['same_K']['n']} handoffs ({COVER}). Seeded
-  bootstrap of the median (seed {boot['seed']}, {boot['reps']} reps; reported, not read):
-  [{boot['lower_2.5']:.4f}, {boot['upper_97.5']:.4f}].
-- f*(τ_V = {tau['V']:.4f}), E9-same V (alongside): {s(fs['same_V'])}.
-- τ ladder (descriptive): {ladder_txt}.
-- f*(τ_agent_K = {f['tau_agent_K']:.4f}) (alongside): same K {s(agent['same_K'])}; cross K {s(agent['cross_K'])}.
-- f*(τ_K) over matched blocks of length ≥ {f['min_block_len']}: same K {s(blocks) if blocks else 'NOT COMPUTABLE'}.
-- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: {seam}.
+1. **A healthy run closes on all {N_REG} included handoffs.** A partial is a registered outcome, never
+   the preferred one and never a rescue.
+2. **Drain before the ceiling.** The home watchdog stops the **driver** before the spend ceiling
+   terminates the **pod**, by `SIGTERM` to the driver's recorded pid (never a self-matching pattern —
+   protocol R4). The pod stays up so the home puller can finish the tensors already written. The ceiling
+   remains unchanged behind this, as the backstop.
+3. **When.** At `{FALLBACK:.0%}` of the sitting ceiling by default, or **earlier** if the puller's own
+   measurement — bytes still outstanding ÷ the rate it is actually achieving — says the remaining pull
+   needs more than the leftover budget. A measurement may only move the drain earlier, never later: the
+   outstanding figure counts the kept dumps a checkpoint already names and cannot see the handoff in
+   flight, so an uncapped measurement reads "nothing outstanding" at the moment the most is at risk.
+4. **The closing basis after ANY abnormal end** — drained, hard-killed, crashed, or a pod lost outright
+   — is the **last checkpoint whose every named artifact is sha-verified at home**: the small records and
+   the kept directories of the scored prefix, each byte-for-byte against that checkpoint's own
+   fingerprints. It is a genuine driver checkpoint and a prefix of the registered `{cfg.order_by}` order.
+   **It is never an edited report.** If no checkpoint verifies whole at home, there is no close, and
+   H-E9F stays `unresolved` — that is the finding, not a problem to be worked around.
+5. **Where.** The close happens **at home, on the verified mirror**, never on the box: box storage is
+   ephemeral, so after a hard kill it is already gone at exactly the moment a close is needed.
+   `tools/runpod/pull_verify_b.py --final-partial` refuses unless the driver is provably stopped, proves
+   the basis, and writes the termination receipt; `e9 --close-partial --config config/e9f.toml` then
+   stamps it and needs nothing but `report.json`.
+6. **What the closing entry must carry.** The cutoff reason, the coverage as "n scored of N registered"
+   beside every number, and every unscored handoff named by id — as entry 0036 did for the long half.
 
-**Band outcome, against the rule as written: {f['band_outcome']}** — on this pair's {n_sc} scored
-handoffs, **never pooled with entry 0029's**: the same numeric cap over a different tokenizer selects a
-different set of handoffs, and the two cells are compared in prose or not at all.
-{"Not one scored handoff has a single matched token whose centered deviation exceeds τ_K on the same-model arm." if fs['same_K']['median'] == 0 and fs['same_K']['p90'] == 0 else ""}
+**(c) The gate, and one regenerated artifact.** `config/e9f.toml`'s `[e9.gate]` now requires
+`{'/'.join(cfg.required_entries)}` — entry {SHORT}'s list extended by this entry and nothing else — so
+`e9 --check` refuses until this amendment is committed on the ledger. Enforcement, not decoration: a
+protocol deciding which prefix a stopped run closes on must bind the driver, and {SHORT} recorded the
+gate as it stood then. Adding one entry changed the file's sha256 to `{CFG_SHA[:12]}`, and
+`results/e9f/align/coverage.json` and `results/e9f/calibration/tau.json` are recorded under that sha, so
+both were regenerated by `e9 --align-only` and `summarize_e9 --calibrate-tau`. **The coverage file
+differs in exactly one key, `config_sha256`**: the {N_REG} included handoffs, the `{cfg.order_by}` run
+order, the keep draw, the exclusion counts and every alignment are identical, and τ_K, τ_V and τ_agent_K
+are unchanged to every digit. No registered quantity moved; the file now records the sha of the file that
+actually governs it. No other config is touched.
 
-**Read on a floor (0027, bound to this cell).** f*(τ) is an oracle LOWER BOUND on the recompute fraction
-(oracle selection, recompute in isolation); this cell reads "no more than the mapper, on a floor", never
-that an achievable scheme reaches it.
+**Why this is an amendment and not a note.** Under {SHORT} the scored set of a stopped run is a prefix of
+a registered order, which fixes *which* handoffs a partial keeps. It did not fix *when* the run stops or
+*which* checkpoint is then closed on, and both are choices that could otherwise be made with the scores
+already visible. Registering them here removes that freedom before there is anything to see.
 
-**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through this pair's own
-k = {cfg.mapper_k} mapper: median f*(τ_K) = {s(fs['cross_K'])} and f*(τ_V) = {s(fs['cross_V'])}; against
-the same edges the transfer arm sits {cross_band}. Cross/same median-δ ratio K / V: {s(ratio['K'], 1)} /
-{s(ratio['V'], 1)}. Bridge R² (A5 across the handoff; decides nothing): same K {s(br['same_K'])}, same V
-{s(br['same_V'])}, cross K {s(br['cross_K'])}, cross V {s(br['cross_V'])}.
+**What this does NOT touch.** The H-E8, H-E9, H-E9L and H-E9F cells and every verdict; τ_K, τ_V,
+τ_agent_K, the rule, the band edges, the ladder, `prefix_invariance_max_delta`, the cap, the seeds, the
+keep draw, the run order, the coverage figures themselves; every other cell's config and results. Entry {FAMILY}'s τ_K ceiling of 0.45 and entry
+0041's report-only ordering both stand as written.
 
-**What this establishes, stated narrowly.** On {tgt_id} re-rendering {n_sc} real SWE-bench
-`{cfg.agent}` handoffs whose sender and receiver prompts both fit {cfg.context_cap:,} tokens under this
-pair's own tokenizer, with 0019's alignment and 0023's per-token rule and τ calibrated on THIS pair's
-k = {cfg.mapper_k} mapper, the same-model oracle recompute floor is as stated above. **Not established:**
-anything about the {cc['n']['excluded_long']} handoffs above the cap or the
-{cc['n']['excluded_empty_r']} with an empty receiver prompt; any achievable recompute scheme; anything
-about the Qwen cells, which are a different pair and are unchanged; one pair, one direction, one mapper,
-one alignment method; generation quality after reuse. `eval_hellaswag.py` and `compose_mapper.py` remain
-out of scope for this pair (entry {FAMILY}).
-
-verdict: H-E9F = {VERDICT}
-e7-manifest-sha256: {manifest}
+**Scope.** One pair ({src_id} → {tgt_id}), one cell, one sitting's stopping behaviour. Nothing here is
+evidence about KV reuse, and nothing here may be cited as a finding.
 
 prior-entries-sha256: PLACEHOLDER
 """
@@ -214,16 +188,12 @@ if a.preview:
     print(ENTRY)
     raise SystemExit(0)
 
-row = re.compile(rf"^(\| H-E9F \|.*\| E9-family \(entry {PREV}\) \|) unresolved (\|\s*)$", re.M)
-assert len(row.findall(text)) == 1, "H-E9F row not found in its expected shape (registered `unresolved` by " + PREV + ")"
-text = row.sub(lambda m: f"{m.group(1)} {VERDICT} {m.group(2)}", text)
-
 new = text + ("" if text.endswith("\n") else "\n") + "\n" + ENTRY
 head = _ENTRIES_HEAD.search(new)
 digest = chain_hash(new, new.index(f"### {NUM} "), head.start())
 new = new.replace("prior-entries-sha256: PLACEHOLDER", f"prior-entries-sha256: {digest}")
 LEDGER.write_text(new, encoding="utf-8", newline="\n")
-print(f"appended {NUM} (H-E9F = {VERDICT}); chain", digest[:12])
+print(f"appended {NUM}; chain", digest[:12])
 r = subprocess.run([sys.executable, "-m", "linear_ceiling.ledger_check"], cwd=REPO_ROOT, capture_output=True, text=True)
 print(r.stdout.strip() or r.stderr.strip())
 raise SystemExit(r.returncode)

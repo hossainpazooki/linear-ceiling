@@ -222,15 +222,23 @@ def test_e9fl_refuses_a_bridge_block_because_it_has_no_scaled_arm(tmp_path):
 
 # ---- the rest of both files is well formed: everything but the calibration is ready ---------------------
 
-@pytest.mark.parametrize("name,cap,floor,keep_n,last", [("e9f", 32768, 0, 8, "0042"), ("e9fl", 81920, 32768, 3, "0044")])
-def test_the_resolved_config_loads_as_a_native_llama_cell(tmp_path, name, cap, floor, keep_n, last):
+# `gate` is the WHOLE registered list, not just the last number: the verdict cell's gate carries its
+# registration (0042) AND its pre-prefill amendment (0043), the way config/e9.toml's carries 0025/0026/0027.
+# Spelling it out is the point -- a test that only checked the tail would have passed while the amendment
+# quietly fell out of the gate, which is exactly the enforcement the amendment exists to provide.
+@pytest.mark.parametrize("name,cap,floor,keep_n,gate", [
+    ("e9f", 32768, 0, 8, ("0042", "0043")),
+    ("e9fl", 81920, 32768, 3, ("0045",)),
+])
+def test_the_resolved_config_loads_as_a_native_llama_cell(tmp_path, name, cap, floor, keep_n, gate):
+    last = gate[-1]
     c = _resolved_cfg(tmp_path, name)
     assert c.pair == PAIR and pair_models(c.pair) == MODELS
     assert c.context_cap == cap and c.context_floor == floor and c.keep_n == keep_n and c.keep_seed == 9
     assert c.rope is None and c.bridge is None          # native receiver: no scaling, hence nothing to bridge
     assert c.results_dir.name == name and c.scratch_dir.name == "scratch"
     assert c.mapper_k == 1 and c.mapper_space == "content"
-    assert c.required_entries == ("0019", "0023", "0025", "0027", last)
+    assert c.required_entries == ("0019", "0023", "0025", "0027") + gate
     assert e9_driver.required_markers(c)[-1] == f"### {last} " and e9_driver.entry_list(c).endswith(f"/{last}")
     assert e9_driver.rope_args(c) == []                 # no --rope-scaling reaches any upstream dump
     # tau is recalibrated from THIS pair's E8 report, never from the Qwen one

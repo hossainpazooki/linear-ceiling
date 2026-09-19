@@ -53,7 +53,9 @@ e8_report = "results/e8f/report.json"   # tau is 1 - THIS pair's mapper's held-o
                                      # defaults to results/e8/report.json and would calibrate against Qwen's
 
 [e9.gate]                            # entries the committed ledger must carry (the driver's REQUIRED_ENTRIES per config)
-required_entries = ["0019", "0023", "0025", "0027", "0044"]   # 0044 = this cell's registration. PROVISIONAL, exactly
+required_entries = ["0019", "0023", "0025", "0027", "0045"]   # 0045 = this cell's registration (was 0044 before the
+                                     # pre-prefill amendment took 0043 and moved the staged drafts up one).
+                                     # PROVISIONAL, exactly
                                      # as config/e9f.toml's list is: numbers are allocated by docs/drafts/README.md at
                                      # staging time and the committed ledger ends at 0038. The predecessors are
                                      # enforced transitively by the append scripts' ordering guards.

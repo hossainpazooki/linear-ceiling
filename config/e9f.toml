@@ -55,7 +55,15 @@ upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # commit P: the kvt/
 e8_report = "results/e8f/report.json"
 
 [e9.gate]                            # entries the committed ledger must carry (the driver's REQUIRED_ENTRIES per config)
-required_entries = ["0019", "0023", "0025", "0027", "0042"]   # 0042 = this cell's registration. PROVISIONAL: entry
+required_entries = ["0019", "0023", "0025", "0027", "0042", "0043"]   # 0042 = this cell's registration, 0043 its
+                                     # PRE-PREFILL AMENDMENT (atomic checkpoint write + the stop protocol). 0043 is in
+                                     # the gate for the same reason 0026 and 0027 are in config/e9.toml's: an amendment
+                                     # that decides which prefix a stopped run closes on must be on the ledger BEFORE the
+                                     # driver runs, or the driver could run under a protocol registered afterwards.
+                                     # Adding it changed this file's sha256, so results/e9f/align/coverage.json and
+                                     # results/e9f/calibration/tau.json were regenerated under it; both reproduce
+                                     # byte-for-byte apart from the recorded config sha, which entry 0043 asserts.
+                                     # PROVISIONAL: entry
                                      # numbers are allocated only by docs/drafts/README.md at staging time, in
                                      # staging order, and the committed ledger ends at 0038. The family registration
                                      # and the E8 figures it depends on are enforced transitively -- the staged
