@@ -146,7 +146,11 @@ fi
 export OMP_NUM_THREADS="$LC_THREADS" OPENBLAS_NUM_THREADS="$LC_THREADS" \
        MKL_NUM_THREADS="$LC_THREADS" NUMEXPR_NUM_THREADS="$LC_THREADS" \
        VECLIB_MAXIMUM_THREADS="$LC_THREADS"
-say "  thread cap: $LC_THREADS (from the cgroup CPU quota, NOT nproc=$(nproc 2>/dev/null || echo '?'))"
+if [ -r /sys/fs/cgroup/cpu.max ] || [ -r /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]; then
+  say "  thread cap: $LC_THREADS (from the cgroup CPU quota, NOT nproc=$(nproc 2>/dev/null || echo '?'))"
+else
+  say "  thread cap: $LC_THREADS (NO cgroup quota readable here -- fell back; on the box it is cgroup-derived)"
+fi
 say "  NOTE: BLAS threading changes float32 reduction order at the last ULP -- the class entry 0028"
 say "        registered a cross-platform tolerance for. No registered parameter changes."
 say "sitting B pair=$PAIR exp=$EXP"
@@ -184,10 +188,23 @@ step "pinned virtual environments"
 if ! command -v uv >/dev/null 2>&1; then
   python3 -m pip install --quiet uv
 fi
+# The pinned stack is torch 2.11.0+cu128, which has wheels only for manylinux/win -- so a REHEARSAL on
+# any other platform (a macOS laptop, say) cannot build it and would stop here, before the traces,
+# mapper and gate checks that the rehearsal exists to exercise. In rehearsal mode the torch pin is
+# therefore relaxed to whatever the platform has.
+# THIS IS A REAL NARROWING, stated rather than hidden: a rehearsal does NOT validate the pinned CUDA
+# build. What validates that is the CUDA smoke test on the real box, which runs before the weight pull
+# and refuses a card under 70 GiB. Everything else -- shas, clone integrity, RoPE ancestry, tau
+# binding, traces vs the committed manifest, the mapper by sha, and the E9 gate -- is exercised for
+# real, on freshly cloned bytes.
+TORCH_PIN=(--index-url https://download.pytorch.org/whl/cu128 'torch==2.11.0')
+if [ "$REHEARSAL" = "1" ]; then
+  TORCH_PIN=('torch')
+  say "  REHEARSAL: torch pin relaxed to the platform default; the pinned cu128 build is NOT validated here"
+fi
 ( cd "$UP_DIR"
   [ -x .venv/bin/python ] || uv venv --python 3.12 .venv >/dev/null
-  uv pip install --quiet --python .venv/bin/python \
-    --index-url https://download.pytorch.org/whl/cu128 'torch==2.11.0'
+  uv pip install --quiet --python .venv/bin/python "${TORCH_PIN[@]}"
   uv pip install --quiet --python .venv/bin/python -e . \
     'transformers==5.15.1' 'numpy==2.5.2' )
 ( cd "$LC_DIR"
@@ -247,7 +264,11 @@ assert cfg.pair == pair, f"config pair {cfg.pair!r} != requested {pair!r}"
 assert cfg.upstream_sha == up_sha, f"config upstream pin {cfg.upstream_sha} != requested exact pin {up_sha}"
 assert cfg.mapper_k == 1, f"Sitting B requires its registered verdict mapper k=1, got {cfg.mapper_k}"
 assert cfg.context_floor == 0, f"short cell must have context_floor=0, got {cfg.context_floor}"
-assert not cfg.allow_partial, "short verdict cell must not register allow_partial"
+# Entry 0042 REGISTERS the stopping rule for this cell, so the opposite is now required: without
+# it a budget kill yields no verdict at all. This assertion was written when the short cell
+# forbade a partial close and would refuse the correctly-registered config outright.
+assert cfg.allow_partial, "entry 0042 registers allow_partial for this cell; the config does not"
+assert cfg.order_by == "n_sender_asc", f"entry 0042 registers n_sender_asc; config has {cfg.order_by!r}"
 assert cfg.rope is None and cfg.bridge is None, "native short cell must register neither rope nor bridge"
 cal = json.loads(cal_path.read_text(encoding="utf-8"))
 assert cal.get("pair") == pair, f"calibration is for {cal.get('pair')!r}, not {pair!r}"
@@ -297,7 +318,9 @@ printf '%s  %s\n' "$MAPPER_ST_SHA" "$MD/k1.safetensors" | sha256sum -c -
 # refuses BEFORE the weights rather than dying mid-run with a half-written dump.
 need_free_gib() {                       # need_free_gib <gib> <why>
   local want="$1" why="$2" have
-  have=$(df -PBG "$WORK" | awk 'NR==2{gsub(/G/,"",$4); print $4}')
+  # `df -B` is GNU-only and fails on BSD/macOS, so this used to crash the rehearsal. POSIX `df -Pk`
+  # works on both; convert 1K blocks to GiB in awk.
+  have=$(df -Pk "$WORK" | awk 'NR==2{printf "%d", $4/1048576}')
   say "  free space: ${have} GiB (need ${want} GiB for $why)"
   [ "${have:-0}" -ge "$want" ] || refuse "only ${have} GiB free at $WORK; $why needs ${want} GiB"
 }
@@ -657,7 +680,10 @@ if [ "$rc" -eq 0 ]; then
 import json, sys
 r = json.load(open(sys.argv[1], encoding="utf-8"))
 assert r.get("complete") is True, "driver returned zero without complete:true"
-assert not r.get("partial"), "short cell must not carry a partial close"
+# A COMPLETE report cannot also be partial -- that is a contradiction, not a policy. Entry 0042
+# registers partial closes for this cell; they arrive by `e9 --close-partial` on a NON-zero
+# driver exit and never through this block, which only validates rc == 0 / complete: true.
+assert not r.get("partial"), "a report claiming complete:true also carries a partial close"
 assert list(r.get("scores", {})) == list(r.get("run_order", [])), \
     "complete report scores are not exactly the registered order"
 assert r.get("bridge") is None, "native short cell unexpectedly recorded a bridge"
