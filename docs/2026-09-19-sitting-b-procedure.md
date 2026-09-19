@@ -107,9 +107,15 @@ gate checks it is committed unmodified and the coverage is bound to its sha.
 ## 3. Arm the net — IMMEDIATELY, before the driver
 
 ```bash
-nohup bash tools/runpod/watchdog_supervised.sh > /dev/null 2>&1 &
+nohup bash tools/runpod/watchdog_supervised.sh \
+    > ~/.cache/linear-ceiling/supervisor.out 2>&1 & disown
+ps -o pid=,ppid=,command= -p $!        # confirm it is detached before you trust it
 tail -f ~/.cache/linear-ceiling/watchdog-supervisor.log
 ```
+
+`disown` and the `ps` check are not decoration: sitting A's first watchdog was a child of the agent
+session that started it and died with it, and a pod billed unwatched for five minutes. Every home-side
+process below gets its own log and the same treatment.
 
 It restarts `rp.py watchdog` on any non-zero exit, forever, and stands down only when two consecutive
 polls see nothing billing. On 2026-09-18 a single watchdog died on an SSL EOF and a pod billed
@@ -153,10 +159,14 @@ gate was passed on the promise of them.
 ## 5. Pull, from the moment the driver starts
 
 ```bash
-nohup .venv/bin/python tools/runpod/pull_verify_b.py --delete-verified \
+nohup .venv/bin/python tools/runpod/pull_verify_b.py --delete-verified --terminate-on-receipt \
     --reclaimable ~/Desktop/linear-ceiling/box-cache \
-    > ~/.cache/linear-ceiling/pull-e9f.log 2>&1 &
+    > ~/.cache/linear-ceiling/pull-e9f.log 2>&1 & disown
+ps -o pid=,ppid=,command= -p $!
 ```
+
+`--terminate-on-receipt` is what makes the sitting finish **unattended**, and it is not optional here:
+without it the run stops at the receipt and the pod bills until someone looks.
 
 Every handoff: verify against `report.json`'s fingerprints → delete that tree on the box → snapshot
 the checkpoint to `results/e9f/checkpoints/report.<n>.json` if every artifact it names verifies here.
@@ -209,6 +219,21 @@ cannot see the handoff in flight. `--no-drain` turns it off and costs you that h
 > outcome under entry 0042; a hard kill is a salvage. The handoffs run shortest-sender-first, so
 > handoff 5 is on the *fast* end and `median(t_handoff)` over the first five **underestimates** the
 > rest — treat a marginal projection as a fail.
+
+## 6a. What happens if nobody is watching
+
+Both agent sessions hit their limit at 23:35 on 2026-09-18 and went dark for three hours. Assume that
+can happen mid-run.
+
+| terminal state | unattended? |
+|---|---|
+| **`SITTING_B_OK`** | **Yes.** Final pull → verify → receipt → terminate (through rp.py's interlock, never `--force`) → absence proved by 12 polls. The supervisor then sees two empty listings and exits 0. |
+| **Drain at the ceiling** | **Yes**, and it is the same path as the next row: the drain SIGTERMs the driver, the driver exits 143, and the launcher writes `SITTING_B_FAILED rc=143`. |
+| **`SITTING_B_FAILED`** | **Yes.** The round that notices it still pulls (the launcher's last writes are on a disk the terminate is about to destroy), then two more sweeps, then `--final-partial`, the receipt, the terminate. If no basis verifies it says so and terminates anyway — nothing further can come from that pod, and H-E9F stays `unresolved`. |
+| **The supervisor or puller process dies** | **No — this is the residual risk.** The supervisor restarts the watchdog forever, but nothing restarts the supervisor, and `--terminate-after` is deliberately forbidden for B, so there is no provider-side backstop. `rp.py watchdog` re-execs under `caffeinate -dimsu`, so a sleeping Mac is covered; a dead supervisor is not. **The check: if `~/.cache/linear-ceiling/watchdog-supervisor.log` stops advancing, restart it.** |
+
+Only `e9 --close-partial` is left for a human afterwards, and it costs nothing while it waits — the pod
+is already gone by then.
 
 ## 7. How it ends — the three ways, and only these
 
