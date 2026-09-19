@@ -248,3 +248,61 @@ def test_a_live_driver_and_an_unreachable_api_are_both_refusals(mirror, tmp_path
     monkeypatch.setattr(pull_b, "Transport", DeadTx)
     assert pull_b.final_partial(a, runpod_state) == 0
     assert json.loads(verify.read_text(encoding="utf-8"))["partial"]["n_scored"] == 2
+
+
+# ---------------------------------------------------------------------------------------------
+# M3 / M4: the two ways a correct sitting still costs money after it has stopped being useful.
+# ---------------------------------------------------------------------------------------------
+
+def test_a_failed_launcher_stops_the_loop_instead_of_polling_a_completion_that_cannot_arrive(mirror):
+    """SITTING_B_FAILED is terminal: the launcher removes the final manifest and exits, so
+    report.complete never appears. Polling on regardless bills the card for nothing while the
+    operator believes the run is working."""
+    local, _ = mirror
+    box = local / "logs" / "box"
+    box.mkdir(parents=True)
+    status = box / f"{EXP}.status"
+
+    status.write_text("RUNNING mode=plain started=2026-09-19T00:00:00Z\n", encoding="utf-8")
+    assert pull_b.check_box_status(local, EXP).startswith("RUNNING")
+    status.write_text("SITTING_B_OK\n", encoding="utf-8")
+    assert pull_b.check_box_status(local, EXP) == "SITTING_B_OK"
+
+    status.write_text("SITTING_B_FAILED rc=95\n", encoding="utf-8")
+    with pytest.raises(pull_b.BoxFailed, match="rc=95"):
+        pull_b.check_box_status(local, EXP)
+
+
+def test_terminate_on_receipt_is_opt_in_and_never_forces_past_the_interlock(monkeypatch, capsys):
+    """M4 closes the window between 'verified' and whenever the operator next looks. It must not
+    close it by bypassing the check that makes destroying ephemeral disk safe."""
+    seen = {}
+
+    def fake_terminate(ns):
+        seen["force"] = getattr(ns, "force", "ABSENT")
+        seen["pod"] = getattr(ns, "pod", "ABSENT")
+        return 0
+
+    monkeypatch.setattr(pull_b.rp, "cmd_terminate", fake_terminate)
+
+    off = pull_b.build_parser().parse_args([])
+    pull_b.terminate_on_receipt(off, "test")
+    assert not seen, "it must do nothing at all unless asked"
+    assert "STILL BILLING" in capsys.readouterr().out
+
+    on = pull_b.build_parser().parse_args(["--terminate-on-receipt"])
+    pull_b.terminate_on_receipt(on, "test")
+    assert seen["force"] is False, "the receipt must be re-validated by rp.py, never forced past"
+    assert seen["pod"] is None
+
+
+def test_a_terminate_that_fails_says_so_loudly_rather_than_looking_successful(monkeypatch, capsys):
+    """gql reports API failure as SystemExit, which is not an Exception subclass -- the exact trap
+    that killed the watchdog. Here it would silently leave a pod billing after a 'done' message."""
+    def boom(_ns):
+        raise SystemExit("rp REFUSED: RunPod API unreachable")
+
+    monkeypatch.setattr(pull_b.rp, "cmd_terminate", boom)
+    pull_b.terminate_on_receipt(pull_b.build_parser().parse_args(["--terminate-on-receipt"]), "test")
+    out = capsys.readouterr().out
+    assert "TERMINATE FAILED" in out and "STILL BILLING" in out

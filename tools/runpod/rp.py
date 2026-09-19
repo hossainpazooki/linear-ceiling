@@ -551,6 +551,7 @@ def cmd_watchdog(a) -> int:
           f"warn ${warn_at:.2f}, poll {a.every}s. Ctrl-C stops the NET, not the pod.", flush=True)
     warned = False
     unreachable = 0
+    empty_polls = 0
     while True:
         try:
             sit, camp, bal = spend_now(st)
@@ -581,8 +582,20 @@ def cmd_watchdog(a) -> int:
         print(f"  sitting ${sit:.4f} campaign ${camp:.4f} balance ${bal:.4f} pods {len(ps)} "
               f"up {hours:.2f}h", flush=True)
         if not ps:
-            print("watchdog: nothing billing; exiting")
+            # TWO consecutive empty listings, never one. Exiting removes the only home-side spend
+            # ceiling, and a single empty answer is not proof: the account listing is eventually
+            # consistent and can omit a pod that is still billing (it can also answer with a partial
+            # page during a control-plane blip). Requiring the next poll to agree costs one interval
+            # and turns a transient omission into a retry instead of an unwatched pod.
+            empty_polls += 1
+            if empty_polls < 2:
+                print(f"  watchdog: listing shows nothing billing ({empty_polls}/2); "
+                      f"confirming before I stand down", flush=True)
+                time.sleep(a.every)
+                continue
+            print("watchdog: nothing billing on two consecutive polls; exiting")
             return 0
+        empty_polls = 0
         if sit >= limit or camp >= a.kill:
             return _terminate_until_gone(f"sitting ${sit:.4f} / campaign ${camp:.4f}")
         if hours >= float(ttl):

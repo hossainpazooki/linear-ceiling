@@ -400,6 +400,33 @@ def verify_final_manifest(manifest_path: Path, *, local: Path, exp: str,
     return checked, total, manifest
 
 
+class BoxFailed(RuntimeError):
+    """The launcher recorded a terminal failure. Polling for a completion that cannot arrive is the
+    worst thing this tool can do: the pod bills the whole time and the operator believes it is
+    working. Raised so `main` can exit on it distinctly, with the status line quoted."""
+
+
+def box_status(local: Path, exp: str) -> str | None:
+    """The launcher's own terminal state, as mirrored here. None until the box writes one."""
+    path = local / "logs" / "box" / f"{exp}.status"
+    if not path.is_file():
+        return None
+    return path.read_text(encoding="utf-8", errors="replace").strip()
+
+
+def check_box_status(local: Path, exp: str) -> str | None:
+    """Refuse to keep waiting on a run the box has already given up on.
+
+    SITTING_B_FAILED is terminal by construction: the launcher writes it, removes the final manifest
+    and exits, so `report.complete` will never appear. What is already mirrored here may still be a
+    closeable prefix -- that is `--final-partial`'s job -- but this loop has nothing left to wait for.
+    A RUNNING or SITTING_B_OK status, or none yet, is not a failure and returns normally."""
+    status = box_status(local, exp)
+    if status and status.split()[0:1] == ["SITTING_B_FAILED"]:
+        raise BoxFailed(status)
+    return status
+
+
 class Transport:
     """One cached target using rp.py's mapped SSH options; no independent cloud authority."""
 
@@ -733,7 +760,35 @@ def final_partial(a, runpod_state: dict) -> int:
           f"{nbytes:,} B. Terminate receipt: {receipt}", flush=True)
     print(f"  unscored ({len(partial['unscored'])}): {', '.join(partial['unscored']) or 'none'}", flush=True)
     print(f"  NEXT: .venv/bin/python -m linear_ceiling.e9 --close-partial --config {config}", flush=True)
+    terminate_on_receipt(a, "the registered partial is verified here")
     return 0
+
+
+def terminate_on_receipt(a, why: str) -> None:
+    """M4: close the billing window the instant the receipt exists, when asked to.
+
+    Opt-in (`--terminate-on-receipt`), because this tool holds no cloud authority by default and a
+    human ending their own sitting is a reasonable way to work. But the gap it closes is real money:
+    between "verified" and whenever the operator next looks, the pod bills at the full card rate, and
+    that window is unbounded overnight.
+
+    It goes through `rp.py terminate` WITHOUT --force, so the receipt this round just wrote is
+    re-validated by rp.py's own interlock before anything is destroyed. A terminate that the
+    interlock refuses is a bug worth surfacing, not something to force past."""
+    if not getattr(a, "terminate_on_receipt", False):
+        print("  NOT terminating: --terminate-on-receipt was not passed. The pod is STILL BILLING "
+              "until you run `rp.py terminate`.", flush=True)
+        return
+    print(f"  terminating now ({why}); the receipt is re-checked by rp.py's interlock", flush=True)
+    try:
+        rc = rp.cmd_terminate(argparse.Namespace(pod=None, force=False))
+    except (Exception, SystemExit) as e:    # gql reports API failure as SystemExit (BaseException)
+        print(f"\a  TERMINATE FAILED ({e}). THE POD IS STILL BILLING -- run `rp.py terminate` now.",
+              flush=True)
+        return
+    if rc:
+        print(f"\a  terminate returned {rc}; verify with `rp.py ps` -- the pod may still be billing",
+              flush=True)
 
 
 def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
@@ -744,6 +799,7 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
     logs = [x.format(exp=a.exp) for x in FINAL_LOGS] + [f"{a.exp}.final.sha256"]
     n_small = mirror_small(tx, a.remote_results, local, state["small_seen"])
     n_logs = mirror_workspace_files(tx, a.remote_work, logs, local / "logs" / "box", state["log_seen"])
+    check_box_status(local, a.exp)          # M3: a failed launcher is terminal; stop waiting on it
     report_path = local / "report.json"
     if not report_path.exists():
         print(f"no report.json yet ({n_small} result files, {n_logs} logs refreshed)", flush=True)
@@ -861,6 +917,7 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
                             total_bytes=report_bytes + final_bytes)
     print(f"COMPLETE: report {report_sha}; {n_report + n_final} hash checks, "
           f"{report_bytes + final_bytes:,} B. Terminate receipt: {receipt}", flush=True)
+    terminate_on_receipt(a, "the run is complete and every byte is verified here")
     return True
 
 
@@ -888,6 +945,9 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--delete-verified", action="store_true",
                     help="after raw-byte verification, delete that one kept remote tree to free pod disk")
+    ap.add_argument("--terminate-on-receipt", action="store_true",
+                    help="terminate the pod as soon as a receipt is written (via rp.py's own "
+                         "interlock, never --force). Closes the bill-while-nobody-is-looking window.")
     ap.add_argument("--final-partial", action="store_true",
                     help="terminal path for a REGISTERED PARTIAL (entry 0042): with the driver stopped, "
                          "prove the last fully verified checkpoint at home and write its terminate "
@@ -994,6 +1054,11 @@ def main(argv: list[str] | None = None) -> int:
         try:
             if run_round(a, tx, state, runpod_state):
                 return 0
+        except BoxFailed as e:
+            print(f"\a BOX FAILED: {e}. The launcher will not produce a complete run, so this loop "
+                  f"has nothing left to wait for. What is mirrored here may still be a closeable "
+                  f"prefix: stop the pod, then `--final-partial`.", flush=True)
+            return 5
         except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as e:
             print(f"round failed safely ({type(e).__name__}: {e}); nothing unverified was deleted", flush=True)
         if a.once:
