@@ -22,13 +22,21 @@ The three endings, which are the three the runbook and entry 0042 contemplate:
                           B5 snapshot, and `e9 --close-partial` stamps that prefix.
 
 WHAT IS AND IS NOT VERBATIM. LocalTransport runs the puller's own command strings through bash. Two
-of them use GNU primaries this Mac does not have (`stat -c` and `find -printf`); those two are
-translated to their BSD equivalents, and the translation ASSERTS the command's shape first, so a
-production command that changes form fails the rehearsal loudly instead of quietly diverging. The
-final manifest is built by sitting_b.sh's own find expression, lifted from the launcher.
+of them use GNU primaries macOS does not have (`stat` formats and `find -printf`), so ON DARWIN ONLY
+those two are translated to BSD equivalents, with the command's shape asserted first so a production
+command that changes form fails loudly instead of quietly diverging. On Linux the commands are passed
+through UNTOUCHED, which makes CI the Linux rehearsal this machine cannot be.
+
+THAT DISTINCTION IS NOT PEDANTRY -- it was a live blocker. The translation was originally
+unconditional, and BSD `stat -f` interprets backslash escapes while GNU `stat -c` does NOT. So the Mac
+rehearsal silently made a broken command work: on the real box `stat -c '%s\t...'` returns a literal
+backslash-t, the parser raises "not enough values to unpack" on the first workspace file, and EVERY
+round of the puller dies -- no kept dump ever comes home. A translation layer that is more capable
+than the thing it stands in for does not hide a bug, it manufactures a pass.
 """
 import json
 import os
+import platform
 import re
 import shlex
 import subprocess
@@ -62,7 +70,8 @@ class LocalTransport:
     # reproducing what it actually does: the loop exits 1 on the absent final manifest and every
     # mid-run round dies. Matching both forms makes the rehearsal reproduce the bug rather than
     # merely notice the edit. Everything else about the command is pinned.
-    GNU_STAT = re.compile(r"^for f in (.*); do \[ -f \"\$f\" \] && stat -c '%s\\t%Y\\t%n' \"\$f\"( \|\| true)?; done$")
+    GNU_STAT = re.compile(r"^for f in (.*); do \[ -f \"\$f\" \] && "
+                          r"stat --printf '%s\\t%Y\\t%n\\n' \"\$f\"( \|\| true)?; done$")
     GNU_FIND = re.compile(r"^cd (\S+) 2>/dev/null && find \. -type f -printf '%s\\t%T@\\t%P\\0' \|\| true$")
 
     def __init__(self, box: Path) -> None:
@@ -70,11 +79,14 @@ class LocalTransport:
         self.seen: list[str] = []
 
     def _translate(self, command: str) -> str:
-        """BSD equivalents for the two GNU-only commands, asserting the shape before rewriting.
+        """On Darwin, BSD equivalents for the two GNU-only commands, shape asserted before rewriting.
 
-        The assertion is the point: if `mirror_workspace_files` or `remote_small_listing` is ever
-        rewritten, this stops matching and the rehearsal fails, rather than testing a command the
-        tool no longer sends."""
+        On Linux the command is returned UNCHANGED: CI is then running the genuine GNU commands, which
+        is the only place that happens before the box. The shape assertion is the point on Darwin: if
+        `mirror_workspace_files` or `remote_small_listing` is ever rewritten, this stops matching and
+        the rehearsal fails, rather than testing a command the tool no longer sends."""
+        if platform.system() != "Darwin":
+            return command
         m = self.GNU_STAT.match(command)
         if m:
             tail = m.group(2) or ""
@@ -438,3 +450,23 @@ def test_the_terminal_sweep_rescues_what_the_launcher_wrote_last(world, monkeypa
         f"the terminal round pulled nothing ({n_before} -> {n_after}); h3 would have died with the pod"
     assert (w.local / "checkpoints" / "report.3.json").is_file(), \
         "and it must snapshot that prefix, which is what the close will run on"
+
+
+def test_the_workspace_listing_uses_printf_because_stat_c_does_not_interpret_escapes():
+    """GNU `stat -c/--format` does NOT interpret backslash escapes; only `--printf` does.
+
+    With `-c '%s\\t%Y\\t%n'` the box returns a LITERAL backslash-t, `line.split("\\t", 2)` raises
+    "not enough values to unpack" on the first workspace file, and every round of the puller dies --
+    so no kept dump ever comes home and a drain closes on nothing. It shipped that way and was
+    invisible here, because the Darwin shim rewrote it to BSD `stat -f`, which DOES interpret escapes.
+
+    Pinned as source text rather than behaviour on purpose: this machine cannot execute the GNU form,
+    so the only check available here is that the command asks for escape interpretation. Linux CI runs
+    the real thing (the shim is Darwin-only)."""
+    src = (ROOT / "tools" / "runpod" / "pull_verify_b.py").read_text(encoding="utf-8")
+    listing = [ln for ln in src.splitlines() if "stat" in ln and "%s" in ln and not ln.lstrip().startswith("#")]
+    assert listing, "the workspace listing command has moved; re-pin it here"
+    for ln in listing:
+        assert "stat --printf" in ln, f"stat format without escape interpretation: {ln.strip()}"
+        assert "stat -c" not in ln and "stat --format" not in ln, f"-c/--format cannot expand \\t: {ln.strip()}"
+        assert "\\\\n" in ln, f"--printf adds no trailing newline, so the format must: {ln.strip()}"

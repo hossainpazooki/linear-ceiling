@@ -518,7 +518,14 @@ def mirror_workspace_files(tx: Transport, remote_work: str, names: list[str], lo
     # 1 and run_bytes raise. The final manifest is in this list and does not exist until the run ends,
     # so EVERY mid-run round died before pulling a single kept dump. `|| true` per iteration fixes it;
     # absence is the normal case here, not an error.
-    cmd = f"for f in {quoted}; do [ -f \"$f\" ] && stat -c '%s\\t%Y\\t%n' \"$f\" || true; done"
+    #
+    # `--printf`, NOT `-c`. GNU stat's `-c/--format` does NOT interpret backslash escapes -- only
+    # `--printf` does (coreutils: "--printf=FORMAT  like --format, but interpret backslash escapes").
+    # With `-c` the box returns a LITERAL backslash-t and the split below raises "not enough values to
+    # unpack" on the very first workspace file, killing every round of the puller, so no kept dump ever
+    # comes home and a drain closes on nothing. `--printf` also supplies no trailing newline, hence the
+    # explicit \n. Tab-separated rather than space-separated on purpose: %n is a full path.
+    cmd = f"for f in {quoted}; do [ -f \"$f\" ] && stat --printf '%s\\t%Y\\t%n\\n' \"$f\" || true; done"
     listing: dict[str, list[object]] = {}
     for line in tx.run_bytes(cmd).decode("utf-8").splitlines():
         size, mtime, absolute = line.split("\t", 2)
