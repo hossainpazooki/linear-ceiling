@@ -183,7 +183,14 @@ Sitting A: source dump 12,800 x 114,688 = **1.47 GB**, target dump 12,800 x 131,
 336 MB at k = 8 and the float64 Gram at 8192^2 x 8 = 537 MB — trivial at n = 50.
 
 Sitting B, per handoff, fp16 on disk at the cap: `same_src` 4.30 + `same_tgt` 4.30 + `cross_src` 3.76 =
-**12.4 GB**. With `[e9.keep] n = 8` the kept tensors alone can reach ~100 GB. Sitting C at its cap: 10.74 + 10.74 +
+**12.4 GB**. That is the box-side WRITE at |S| = 32,768; it is not what the puller moves. **Corrected
+2026-09-19** — the "~100 GB of kept tensors" this paragraph used to state was the cap figure times
+`n = 8`, and the real handoffs are shorter than the cap. Recomputed from the committed
+`results/e9f/align/coverage.json` (`n_sender x 245,760 + n_receiver x 131,072`, the formula
+`pull_verify_b.outstanding_gib` uses): the largest included handoff's kept bytes are **8.57 GiB**, the
+whole 8-handoff keep subset is **50.12 GiB**, and all 28 would be 168.93 GiB, which is never resident
+because the driver deletes each non-kept set after scoring. 50.12 GiB is the number that sizes the
+HOME disk; 12.4 GB per handoff is the number that sizes the box's. Sitting C at its cap: 10.74 + 10.74 +
 9.39 = **30.9 GB** per handoff. **R5 (pull, verify against `report.json`, then delete, per handoff) is not
 optional at this scale** — it is what keeps the box's 250 GB root from filling mid-run.
 
@@ -298,7 +305,9 @@ Card **80 GB**. The verdict-bearing cell.
    this cell registers no bridge — then `[i/N] <hid>: same K …` in the registered order. Record the launch time.
 7. **`tools/runpod/pull_verify_b.py --delete-verified` at home** (R5), started right after the driver: each kept
    handoff verified against `report.json`'s fingerprints, then deleted on the box; small records and box logs every
-   round. At 12.4 GB per handoff this is what keeps the root from filling. Every checkpoint whose every named
+   round. The box writes up to 12.4 GB of dumps per handoff and the puller moves the kept ones (50.12 GiB
+   over the 8-handoff keep subset, at most 8.57 GiB each — §3.5); this is what keeps the root from filling.
+   Every checkpoint whose every named
    artifact verifies here is also snapshotted to `results/e9f/checkpoints/report.<n>.json` — that snapshot is what a
    hard kill leaves behind, and §8.8 closes on it.
 8. **The cutoff, and how a stopped run ends.** Entry 0042 registers the stopping rule for this cell:
@@ -404,7 +413,7 @@ before the long command, `unset` and revoke after.
 | R2 budget the forward | §3, and the **fixed** `probe_e9l.py` on the real card — §3.4 is extrapolation and may not authorize a launch by itself |
 | R3 everything by sha | §5; nothing starts with one of its own rows unfilled |
 | R4 launch detached, rotate, never self-match | `run.sh` with `python -u`; liveness from `~/<exp>.rc` and `report.json`, never the log, never a self-matching `pgrep` |
-| R5 pull, verify, delete | `pull.py <exp>`; mandatory here — 12.4 GB (B) and 30.9 GB (C) per handoff |
+| R5 pull, verify, delete | `tools/runpod/pull_verify_b.py` (B); mandatory here — the box writes up to 12.4 GB (B) / 30.9 GB (C) per handoff, and B's measured keep subset is 50.12 GiB over 8 handoffs (§3.5) |
 | R6 nothing only on the box | `verify_mirror.py <exp>` from raw bytes before any deletion |
 | R7 release | §10 |
 | R8 backup | §11, **including the upstream inputs** |

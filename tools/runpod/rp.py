@@ -661,8 +661,11 @@ def main() -> int:
     p.add_argument("--hours", type=float, required=True)
     # Real use is ~50 GB (22.5 GB bf16 weights + ~8 GB venvs + ~10 GB pull set + caches). 120 leaves
     # headroom without narrowing the host pool: minDisk is a filter, and stock is already "Low".
-    # 250 GB for sitting B: per-handoff dumps reach ~12.4 GB and the keep subset is 8, against
-    # sitting A's ~50 GB peak. Sized from the measured budget, not guessed.
+    # 250 GB for sitting B: the box WRITES up to ~12.4 GB of dumps per handoff at the cap, and the
+    # 8-handoff keep subset it must hold until the puller takes it is 50.12 GiB -- recomputed
+    # 2026-09-19 from the committed coverage.json rather than from the cap figure times 8. Peak is
+    # ~95 GiB of 250 (weights 22.5 + venvs ~8 + repos/traces ~2 + working handoff <= 12.4 + 50.1),
+    # against sitting A's ~50 GB. Sized from the measured budget, not guessed.
     p.add_argument("--disk", type=int, default=250, help="container disk GB (ephemeral; no volume)")
     # 48 GB, measured not guessed: kvt/models.load_model calls from_pretrained(dtype=float32) with NO
     # device_map and only then .to(device), so the whole fp32 model materialises in host RAM first --
