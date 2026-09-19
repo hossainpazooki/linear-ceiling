@@ -238,19 +238,19 @@ finding, not a problem to work around.
 
 | failure | do this |
 |---|---|
-| **SSH never comes up** (`wait-ssh` times out, default 12 min) | `rp.py` terminates on its own timeout — confirm with `rp.py ps`, then `rp.py spend`. An account with no `PUBLIC_KEY` yields a permanently unreachable pod; check that before re-creating. Nothing was staged, so there is nothing to salvage. |
+| **SSH never comes up** (`wait-ssh` times out, default 12 min) | `rp.py` terminates on its own timeout — confirm with `rp.py status`, then `rp.py spend`. An account with no `PUBLIC_KEY` yields a permanently unreachable pod; check that before re-creating. Nothing was staged, so there is nothing to salvage. |
 | **CUDA smoke test fails / < 70 GiB VRAM** | The launcher refuses **before any weights** and exits non-zero; nothing downloaded, no dump written. `rp.py terminate --force` (there is no receipt to interlock on, and nothing to lose). Record the card actually delivered — a refusal here is §3.4's extrapolation being replaced by measurement, and it belongs in the closing brief. |
 | **Weight archive or shard sha mismatch** | The launcher refuses at the archive validation or at `cache_complete`. Do **not** re-upload blindly: re-hash `box-cache` at home first and compare against §1's figures, because a mismatch means either the upload truncated or the home copy is wrong, and those need different fixes. **Do not delete `box-cache`** until a check passes. |
 | **`SITTING_B_FAILED`** | The puller exits **5** with the status quoted. The run cannot complete, but what is mirrored may still be a closeable prefix: §7's drain-partial path from step 3. Paste the box log verbatim into the closing brief — never summarise a failure. |
 | **The drain signal does not land** | The watchdog says so and retries each poll. The ceiling still terminates at `--sitting-max`, and the close then falls back to the last verified snapshot — scenario 3, which the rehearsal covers. |
 | **Home network drops mid-run** | The watchdog alerts and **keeps polling** (a home outage is not a runaway pod), with a 45-minute backstop terminate. The puller resumes on its own; nothing on the box is deleted while it cannot verify. |
 
-In every case: **`rp.py ps` must list nothing** before you stop paying attention.
+In every case: **`rp.py status` must end in `(none — nothing is billing)`** before you stop paying attention.
 
 ## 8. Prove it is gone
 
 ```bash
-.venv/bin/python tools/runpod/rp.py ps        # must list nothing
+.venv/bin/python tools/runpod/rp.py status    # must end in "(none — nothing is billing)"
 .venv/bin/python tools/runpod/rp.py spend
 ```
 
