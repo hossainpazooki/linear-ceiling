@@ -66,19 +66,24 @@ so** instead of filling the disk. Nothing on the box is deleted while it is paus
 ## 2. Rent
 
 ```bash
-# re-query BOTH clouds immediately before creating; stock and price move
-.venv/bin/python tools/runpod/rp.py price --gpu "NVIDIA A100 80GB PCIe"
-.venv/bin/python tools/runpod/rp.py up --gpu "<id from price>" --price <$/h> \
-    --hours 6.0 --sitting-max 7.14 --max-price 1.25 --disk 250 \
+# re-query BOTH clouds immediately before creating; stock and price move.
+# `price` takes FLOORS, not a card name (--gpu is not an argument and exits 2). It lists both
+# clouds and ends with the cheapest adequate row spelled as the exact `up` flags to paste.
+.venv/bin/python tools/runpod/rp.py price --min-gb 80 --limit 14
+.venv/bin/python tools/runpod/rp.py up --gpu "NVIDIA A100 80GB PCIe" --cloud COMMUNITY --price 1.19 \
+    --hours 6.0 --max-price 1.25 --disk 250 \
     --verify-file ~/.cache/linear-ceiling/e9f-verified.json --dry-run
 # read the dry run, then repeat with --yes
 ```
 
-**The ceiling is `--hours 6.0 / --sitting-max 7.14`, and the reason is the drain, not the bill.**
+**The ceiling is `--hours 6.0` at $1.19/h, and the reason is the drain, not the bill.** There is no
+`--sitting-max` flag on `up`: the sitting ceiling is DERIVED as `price × hours` and stored in state,
+so 1.19 × 6.0 = **$7.14** is what the watchdog then enforces. Changing `--hours` moves the ceiling,
+and therefore moves the drain with it.
 Entry 0043 puts the drain at 70% of the sitting ceiling, and a measurement may only move it earlier.
 So the ceiling is what *positions* the drain:
 
-| | at `--sitting-max 6.55` | at **7.14** |
+| | at a $6.55 ceiling (`--hours 5.5`) | at **$7.14** (`--hours 6.0`) |
 |---|---|---|
 | drain fires at | 3.85 h | **4.2 h** |
 | P90 compute end | ~3.75 h | ~3.75 h |
@@ -267,7 +272,7 @@ finding, not a problem to work around.
 | **CUDA smoke test fails / < 70 GiB VRAM** | The launcher refuses **before any weights** and exits non-zero; nothing downloaded, no dump written. `rp.py terminate --force` (there is no receipt to interlock on, and nothing to lose). Record the card actually delivered — a refusal here is §3.4's extrapolation being replaced by measurement, and it belongs in the closing brief. |
 | **Weight archive or shard sha mismatch** | The launcher refuses at the archive validation or at `cache_complete`. Do **not** re-upload blindly: re-hash `box-cache` at home first and compare against §1's figures, because a mismatch means either the upload truncated or the home copy is wrong, and those need different fixes. **Do not delete `box-cache`** until a check passes. |
 | **`SITTING_B_FAILED`** | The puller exits **5** with the status quoted. The run cannot complete, but what is mirrored may still be a closeable prefix: §7's drain-partial path from step 3. Paste the box log verbatim into the closing brief — never summarise a failure. |
-| **The drain signal does not land** | The watchdog says so and retries each poll. The ceiling still terminates at `--sitting-max`, and the close then falls back to the last verified snapshot — scenario 3, which the rehearsal covers. |
+| **The drain signal does not land** | The watchdog says so and retries each poll. The ceiling still terminates at `price × hours`, and the close then falls back to the last verified snapshot — scenario 3, which the rehearsal covers. |
 | **Home network drops mid-run** | The watchdog alerts and **keeps polling** (a home outage is not a runaway pod), with a 45-minute backstop terminate. The puller resumes on its own; nothing on the box is deleted while it cannot verify. |
 
 In every case: **`rp.py status` must end in `(none — nothing is billing)`** before you stop paying attention.
