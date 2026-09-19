@@ -525,6 +525,98 @@ def _terminate_until_gone(reason: str) -> int:
         time.sleep(30)
 
 
+# ---------------------------------------------------------------------------------------------
+# The DRAIN: stop the compute while the evidence is still retrievable.
+#
+# A spend ceiling that only terminates converts "out of budget" into "lost the sitting". Terminating
+# destroys ephemeral disk, so a kill fired mid-handoff leaves a report naming tensors that never came
+# home, and the whole partial with it. Draining stops the DRIVER, not the pod: the last checkpoint
+# stays intact (the driver's checkpoint write is atomic -- temp file, fsync, rename), the puller
+# finishes what is already written, and the run then closes on a prefix under entry 0042's stopping
+# rule. The kill ceiling stays exactly where it was, as the backstop behind this.
+#
+# WHEN. Early enough that the puller can finish. That depends on what is still outstanding and how
+# fast it is actually moving, neither of which this process measures -- so the puller writes both to a
+# hint file each round and this reads it. With no hint, or a stale one, the fallback is 70% of the
+# ceiling: a fixed fraction that is wrong in detail but never later than a measurement would put it.
+# ---------------------------------------------------------------------------------------------
+
+DRAIN_HINT = Path.home() / ".cache" / "linear-ceiling" / "drain-hint.json"
+DRAIN_HINT_MAX_AGE_S = 900          # 15 min: older than a few poll intervals is not a measurement
+DRAIN_FALLBACK_FRACTION = 0.70
+
+
+def read_drain_hint(path: Path | None = None) -> dict | None:
+    """The puller's measurement of what is left to move and how fast it is moving.
+
+    The default is resolved HERE, not bound as a default argument: a default argument captures the
+    module attribute at import time, so a test that points DRAIN_HINT somewhere safe would still read
+    the real file in the operator's home cache -- and one did."""
+    path = DRAIN_HINT if path is None else path
+    try:
+        hint = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(hint, dict):
+        return None
+    try:
+        age = time.time() - float(hint["updated_epoch"])
+        if age > DRAIN_HINT_MAX_AGE_S or age < -60:
+            return None
+        if float(hint["rate_gib_per_h"]) <= 0:
+            return None
+        float(hint["outstanding_gib"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return hint
+
+
+def drain_threshold(limit: float, rate_per_hour: float, hint: dict | None) -> tuple[float, str]:
+    """Dollars at which to stop the driver, and the one-line reason to print.
+
+    `rate_per_hour` is the pod's own $/h, so hours of remaining pull convert straight into dollars of
+    ceiling that must be left unspent. The floor at half the ceiling is deliberate: a hint claiming a
+    pull slower than the whole sitting would otherwise drain before the run has produced anything, and
+    a drain at handoff zero is not a partial -- it is a wasted card."""
+    fallback = DRAIN_FALLBACK_FRACTION * limit
+    if hint is not None and rate_per_hour > 0:
+        hours_left = float(hint["outstanding_gib"]) / float(hint["rate_gib_per_h"])
+        reserve = hours_left * rate_per_hour
+        # The measurement may only pull the drain EARLIER. Capped at the fallback, because
+        # `outstanding_gib` counts the kept dumps the checkpoint already names -- the handoff actually
+        # in flight is not in it, and neither is whatever the driver writes next. An uncapped
+        # measurement therefore reads "nothing outstanding" at exactly the moment the most is at risk,
+        # and puts the drain AT the ceiling, where it protects nothing. (Observed, first run.)
+        at = min(limit - reserve, fallback)
+        if at >= 0.5 * limit:
+            return at, (f"measured: {hint['outstanding_gib']:.1f} GiB outstanding at "
+                        f"{hint['rate_gib_per_h']:.2f} GiB/h = {hours_left:.2f} h = ${reserve:.2f} "
+                        f"reserved, capped at the {DRAIN_FALLBACK_FRACTION:.0%} fallback")
+        return (0.5 * limit,
+                f"measured reserve ${reserve:.2f} would drain before half the ceiling; floored at 50%")
+    return fallback, f"no fresh pull measurement; fallback {DRAIN_FALLBACK_FRACTION:.0%} of the ceiling"
+
+
+def send_drain_signal(exp: str) -> tuple[bool, str]:
+    """SIGTERM the recorded driver pid. The pod keeps running so the puller can finish.
+
+    SIGTERM and not SIGKILL, and the pid file and not a pattern: `pkill -f` on a self-matching pattern
+    is the trap protocol R4 names, and this command's own ssh string would match it."""
+    try:
+        ip, port = _ssh_target()
+    except SystemExit as e:
+        return False, f"no ssh target ({e})"
+    probe = (f'p=$(tr -cd "0-9" < /workspace/{exp}.pid 2>/dev/null); '
+             '[ -n "$p" ] || { echo NOPID; exit 0; }; '
+             'kill -TERM "$p" 2>/dev/null && echo "TERM $p" || echo "GONE $p"')
+    out = subprocess.run(["ssh", *SSH_OPTS, "-p", port, f"root@{ip}", probe],
+                         capture_output=True, timeout=60)
+    answer = out.stdout.decode("utf-8", "replace").strip()
+    if out.returncode:
+        return False, f"ssh rc={out.returncode}: {out.stderr.decode('utf-8', 'replace')[-200:]}"
+    return answer.startswith("TERM"), answer or "(no answer)"
+
+
 def cmd_watchdog(a) -> int:
     """Home-side net, independent of the pod.
 
@@ -552,6 +644,11 @@ def cmd_watchdog(a) -> int:
     warned = False
     unreachable = 0
     empty_polls = 0
+    drained = False
+    # The same rate spend_now bills at, by the same expression: `price` is what was quoted and
+    # `cost_per_hr_actual` what the pod reported, and a drain computed off the smaller one would
+    # reserve too little.
+    rate_per_hour = max(float(st.get("price") or 0.0), float(st.get("cost_per_hr_actual") or 0.0))
     while True:
         try:
             sit, camp, bal = spend_now(st)
@@ -596,6 +693,18 @@ def cmd_watchdog(a) -> int:
             print("watchdog: nothing billing on two consecutive polls; exiting")
             return 0
         empty_polls = 0
+        if not drained and not a.no_drain:
+            at, why = drain_threshold(limit, rate_per_hour, read_drain_hint())
+            if sit >= at:
+                ok, answer = send_drain_signal(a.exp)
+                drained = ok
+                print(f"\a  watchdog: DRAIN at ${sit:.4f} >= ${at:.2f} ({why}). "
+                      f"Signalled the driver: {answer}. The pod stays UP so the puller can finish; "
+                      f"the ${limit:.2f} ceiling is still the backstop.", flush=True)
+                if not ok:
+                    print("  watchdog: the drain signal did not land; retrying next poll. If it never "
+                          "lands the ceiling terminates, and the close falls back to the last verified "
+                          "snapshot.", flush=True)
         if sit >= limit or camp >= a.kill:
             return _terminate_until_gone(f"sitting ${sit:.4f} / campaign ${camp:.4f}")
         if hours >= float(ttl):
@@ -644,7 +753,12 @@ def cmd_pull(a) -> int:
     return subprocess.call(["tar", "-xzf", "-", "-C", a.local], stdin=p1.stdout)
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """Separated from `main` so tests can build REAL args instead of hand-written Namespaces.
+
+    A hand-written Namespace silently omits whatever flag was added last, and the test then passes
+    against a command that would crash in production -- which is exactly how the guardrail terminate
+    paths came to be missing `force` at the moment they were supposed to stop the meter."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("balance").set_defaults(fn=cmd_balance)
@@ -726,6 +840,9 @@ def main() -> int:
                    help="minutes of unreachability after which to ALERT (no longer terminates)")
     p.add_argument("--unreachable-backstop-after", type=float, default=45.0,
                    help="minutes after which to terminate anyway; a home outage must not trip this")
+    p.add_argument("--exp", default="e9f", help="experiment whose driver pid the drain signals")
+    p.add_argument("--no-drain", action="store_true",
+                   help="never signal the driver; the ceiling terminates outright (loses an in-flight handoff)")
     p.add_argument("--every", type=int, default=60); p.set_defaults(fn=cmd_watchdog)
 
     p = sub.add_parser("ssh"); p.add_argument("rest", nargs="*"); p.set_defaults(fn=cmd_ssh)
@@ -733,7 +850,11 @@ def main() -> int:
     p.set_defaults(fn=cmd_put)
     p = sub.add_parser("pull"); p.add_argument("remote"); p.add_argument("local")
     p.add_argument("--force-tar", action="store_true"); p.set_defaults(fn=cmd_pull)
-    a = ap.parse_args()
+    return ap
+
+
+def main() -> int:
+    a = build_parser().parse_args()
     return a.fn(a)
 
 

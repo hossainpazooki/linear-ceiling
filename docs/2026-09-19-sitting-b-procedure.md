@@ -17,7 +17,7 @@ entry **0042**, which also registers the stopping rule (`by = "n_sender_asc"`, `
 | b | **upstream commit P exists at the pin** | `06f8d55592570deae70c3feb9f84a75c4044fb03` — currently on `emersony99/kv-transfer-replication`, pending `hossainpazooki/kv-transfer-replication#1`. That PR must merge **without squash or rebase** or the sha dies and `e9 --check` refuses |
 | c | `e9 --check --config config/e9f.toml` prints ready from a **fresh clone** | the registering entry is committed and pushed |
 | d | `summarize_e9 --calibrate-tau --config config/e9f.toml --e8-report results/e8f/report.json` **has run** | the gate never looks at `tau.json`; skipping this is how 2026-09-14's card was released before the summarizer refused |
-| e | weights staged | `box-cache/hub/` holds both models, `*.json` + `*.safetensors` + `tokenizer*` only, tarred to `hf-cache.tar.gz` |
+| e | weights staged | **done 2026-09-19.** `~/Desktop/linear-ceiling/box-cache/hub/` — Llama-3.2-3B 5.99 GiB (2 shards) + Llama-3.1-8B 14.97 GiB (4 shards), `*.json` + `*.safetensors` + `tokenizer*` only, **0 token files**, and it passes `sitting_b.sh`'s own `cache_complete` for both. Tar to `hf-cache.tar.gz` for the no-token path |
 | f | **the three-scenario rehearsal passes** | `pytest -q tests/test_sitting_b_rehearsal.py` |
 
 ## 1. The inputs, by sha
@@ -30,6 +30,38 @@ entry **0042**, which also registers the stopping rule (`by = "n_sender_asc"`, `
 
 Source: `~/e9-repro/kv-transfer-replication/mappers/llama3.2-3b-to-llama3.1-8b/`. Irreplaceable
 without renting another card.
+
+## 1a. The home disk, and why the order matters
+
+Staging the weights took `/Users` to **57 GiB free**, which is under the puller's 65 GiB pre-create
+gate. That gate is not wrong and must not be lowered — the kept dumps really do need 50.12 GiB. What
+is wrong is asking "is there room now" when the question is "will there be room when the first kept
+dump lands". The 21 GiB of staged weights is dead the moment the box has verified them.
+
+So the sequence is fixed, and the puller is told about it rather than lied to:
+
+1. Upload `hf-cache.tar.gz` (§4).
+2. The box's sha check passes on **every shard** — `sitting_b.sh` extracts, validates the archive
+   (hub/ only, no token files, no escaping links) and then re-runs `cache_complete`.
+3. **Delete `~/Desktop/linear-ceiling/box-cache` at home and log the freed bytes.** Both models are
+   re-downloadable from the Hub with the ambient login, which is the operator's stated condition for
+   clearing anything off this disk.
+4. Only then can the first kept dump land. It is at run position 4 (3.9 GiB), roughly 35 billed
+   minutes in, so step 3 has time — but it is not automatic.
+
+Start the puller with the promise named, so the gate is honest and auditable:
+
+```bash
+tools/runpod/pull_verify_b.py --delete-verified     --reclaimable ~/Desktop/linear-ceiling/box-cache
+```
+
+`--reclaimable` counts **only** in the pre-create check. The running floor stays
+*outstanding + 10 GiB of real free space*, so if step 3 never happens the puller **pauses and says
+so** instead of filling the disk. Nothing on the box is deleted while it is paused.
+
+> Also reclaimable, ~6.0 GiB: `~/.cache/huggingface/hub/models--meta-llama--Llama-3.2-3B`, a
+> duplicate of what was staged. Not needed to pass the gate (57 + 21 = 78 ≥ 65), so it is left alone;
+> it is the next thing to clear if the margin tightens.
 
 ## 2. Rent
 
@@ -82,6 +114,7 @@ it refuses; that refusal is the measurement replacing §3.4's extrapolation.
 
 ```bash
 nohup .venv/bin/python tools/runpod/pull_verify_b.py --delete-verified \
+    --reclaimable ~/Desktop/linear-ceiling/box-cache \
     > ~/.cache/linear-ceiling/pull-e9f.log 2>&1 &
 ```
 
@@ -115,6 +148,13 @@ re-derived every round — never a constant, which froze the puller against its 
 **Time.** ~85 model loads (28 handoffs × 3 dumps, plus the controls on the first). The load cost is
 the **one assumed term** in this model and everything else follows from it; `--hours 5.5` with
 `--sitting-max 6.55` is set against the assumption that it holds.
+
+**The drain.** The watchdog stops the DRIVER before the ceiling terminates the pod, so the last
+checkpoint survives and the puller can finish. It drains at 70% of the sitting ceiling by default, or
+earlier if the puller's measurement (outstanding GiB ÷ measured GiB/h, written to
+`~/.cache/linear-ceiling/drain-hint.json` each round) says the remaining pull needs more than the
+leftover budget. A measurement can only move the drain **earlier**, never later — `outstanding_gib`
+cannot see the handoff in flight. `--no-drain` turns it off and costs you that handoff.
 
 > **Go/no-go at handoff 5.** By then the measured per-handoff wall clock is real. Project
 > `t_remaining = (28 − n) × median(t_handoff)`. If that lands past the TTL, **drain now** (§7) rather

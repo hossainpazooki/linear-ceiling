@@ -241,6 +241,8 @@ def world(tmp_path):
         "--local", str(local), "--config", str(cfg),
         "--remote-results", str(box / "linear-ceiling" / "results" / EXP),
         "--remote-work", str(box), "--delete-verified",
+        # never the operator's real cache: the default path is a live file the watchdog reads
+        "--drain-hint", str(tmp_path / "drain-hint.json"),
     ])
     driver = StubDriver(box, cfg)
     # The home mirror carries its own alignments (the box verifies against them); copy them across so

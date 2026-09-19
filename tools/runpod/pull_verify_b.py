@@ -764,6 +764,37 @@ def final_partial(a, runpod_state: dict) -> int:
     return 0
 
 
+def write_drain_hint(state: dict, local: Path, report: dict | None, *, path: Path | None = None) -> None:
+    """Tell the watchdog what is left to move and how fast it is actually moving.
+
+    The watchdog decides WHEN to stop the driver, and that decision is only as good as its estimate of
+    how long the puller still needs. It cannot measure either quantity -- it never looks at the mirror
+    -- so the measurement is made here and left where it can read it. A stale or missing hint is not an
+    error: the watchdog falls back to a fixed fraction of the ceiling, which is wrong in detail but
+    never later than a measurement would put it.
+
+    The rate is bytes verified over wall clock since this puller started, which is the honest figure:
+    it includes the verification and the waiting, not just the transfer, because those are equally part
+    of how long the remaining tensors will take."""
+    now = time.time()
+    started = state.setdefault("rate_started_epoch", now)
+    seen = float(state.get("bytes_verified_total", 0.0))
+    hours = max((now - float(started)) / 3600.0, 1.0 / 3600.0)
+    rate = (seen / 2**30) / hours
+    hint = {
+        "schema": "linear-ceiling.runpod.drain-hint.v1",
+        "updated_epoch": now,
+        "updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
+        "outstanding_gib": outstanding_gib(local, report),
+        "rate_gib_per_h": rate,
+        "gib_verified": seen / 2**30,
+        "hours_running": hours,
+    }
+    target = Path(path) if path else rp.DRAIN_HINT
+    target.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_json(target, hint)
+
+
 def terminate_on_receipt(a, why: str) -> None:
     """M4: close the billing window the instant the receipt exists, when asked to.
 
@@ -831,17 +862,18 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
               flush=True)
     any_kept_bad = False
     for label, kept_dir, items in kept_groups(report):
-        bad, checked, _ = verify_artifacts(local, items)
+        bad, checked, _kept_bytes = verify_artifacts(local, items)
         if bad:
             print(f"  pulling kept {label}: {len(bad)}/{len(items)} absent or mismatched", flush=True)
             parent, leaf = str(PurePosixPath(kept_dir).parent), PurePosixPath(kept_dir).name
             remote_parent = f"{a.remote_results.rstrip('/')}/{parent}" if parent != "." else a.remote_results
             tx.stream_tar(remote_parent, [leaf], local / parent)
-            bad, checked, _ = verify_artifacts(local, items)
+            bad, checked, _kept_bytes = verify_artifacts(local, items)
         if bad:
             any_kept_bad = True
             print(f"  REFUSED kept {label}: {bad[0]}; remote bytes retained", flush=True)
             continue
+        state["bytes_verified_total"] = float(state.get("bytes_verified_total", 0.0)) + _kept_bytes
         print(f"  verified kept {label}: {checked} files", flush=True)
         if a.delete_verified and not bad_small:
             # Always issue the exact idempotent remove after *this round's* raw verification. A resumed
@@ -873,6 +905,7 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
             print(f"  snapshot: checkpoints/report.{n_scored}.json (every named artifact verified here)",
                   flush=True)
 
+    write_drain_hint(state, local, report, path=Path(a.drain_hint).expanduser())
     state_path = Path(a.state).expanduser()
     _atomic_json(state_path, state, mode=0o600)
     if report.get("complete") is not True:
@@ -945,6 +978,12 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--delete-verified", action="store_true",
                     help="after raw-byte verification, delete that one kept remote tree to free pod disk")
+    ap.add_argument("--reclaimable", action="append", default=[], metavar="PATH",
+                    help="a path you will delete before the first kept dump lands (repeatable). Counted "
+                         "ONLY by the pre-create check, never by the running floor, which stays real "
+                         "free space -- so an unkept promise pauses the pull instead of filling the disk.")
+    ap.add_argument("--drain-hint", default=str(rp.DRAIN_HINT),
+                    help="where to write the watchdog's drain measurement (outstanding bytes + pull rate)")
     ap.add_argument("--terminate-on-receipt", action="store_true",
                     help="terminate the pod as soon as a receipt is written (via rp.py's own "
                          "interlock, never --force). Closes the bill-while-nobody-is-looking window.")
@@ -985,7 +1024,44 @@ def outstanding_gib(local: Path, report: dict | None) -> float:
     return total / 2**30
 
 
-def require_free_space(local: Path, floor: float, *, blocking: bool) -> None:
+def dir_gib(path: Path) -> float:
+    """Bytes on disk under `path`, following no symlinks out of it."""
+    total = 0
+    for f in path.rglob("*"):
+        try:
+            if f.is_file() and not f.is_symlink():
+                total += f.stat().st_size
+        except OSError:                                   # raced away mid-walk; it is not our space
+            continue
+    return total / 2**30
+
+
+def reclaimable_gib(paths: list[str]) -> tuple[float, list[str]]:
+    """Space the operator has COMMITTED to free before the pull needs it, named path by path.
+
+    This exists because the honest pre-create question is not "is there room now" but "will there be
+    room when the first kept dump lands". The staged weight cache is the case: it must exist at home
+    to be uploaded, it is dead the moment the on-box sha check passes, and it is bigger than the
+    margin. Counting it makes the gate true; ignoring it would refuse a sitting that fits, and
+    lowering the floor instead would let a sitting start that does NOT fit.
+
+    It is counted ONLY here, in the pre-create check. The blocking floor during the run stays
+    (outstanding + headroom) of REAL free space, so if the promised deletion never happens the puller
+    pauses and says so rather than filling the disk."""
+    total, lines = 0.0, []
+    for raw in paths:
+        path = Path(raw).expanduser()
+        if not path.exists():
+            lines.append(f"    {raw}: ABSENT (already freed, or never there)")
+            continue
+        gib = dir_gib(path) if path.is_dir() else path.stat().st_size / 2**30
+        total += gib
+        lines.append(f"    {raw}: {gib:.1f} GiB")
+    return total, lines
+
+
+def require_free_space(local: Path, floor: float, *, blocking: bool,
+                       reclaimable: list[str] | None = None) -> None:
     """Refuse before the run, PAUSE during it. Never silently fill the disk.
 
     A pull that runs out of space part-way through a kept tensor leaves a short file whose hash will
@@ -997,6 +1073,17 @@ def require_free_space(local: Path, floor: float, *, blocking: bool) -> None:
         return
     msg = (f"only {have:.1f} GiB free at {local}, below the {floor:.1f} GiB floor "
            f"(this cell's kept dumps need ~50.1 GiB)")
+    if not blocking and reclaimable:
+        extra, lines = reclaimable_gib(reclaimable)
+        print(f"  {have:.1f} GiB free plus {extra:.1f} GiB you have committed to free:", flush=True)
+        for line in lines:
+            print(line, flush=True)
+        if have + extra >= floor:
+            print(f"  pre-create check PASSES at {have + extra:.1f} GiB. That is a PROMISE, not space: "
+                  f"delete those paths once the on-box sha check passes, and log the freed bytes. "
+                  f"Until then the running floor is real free space and this will pause.", flush=True)
+            return
+        msg += f"; even with {extra:.1f} GiB reclaimable that is {have + extra:.1f} GiB"
     if not blocking:
         raise SystemExit(f"pull_verify_b REFUSED: {msg}")
     while free_gib(local) < floor:
@@ -1020,7 +1107,8 @@ def main(argv: list[str] | None = None) -> int:
         # nothing, and after a hard kill it is the only path left, so it must not be gated on a floor
         # that exists to protect a pull that is no longer going to happen.
         return final_partial(a, runpod_state)
-    require_free_space(Path(a.local).expanduser(), a.min_free_gib, blocking=False)
+    require_free_space(Path(a.local).expanduser(), a.min_free_gib, blocking=False,
+                       reclaimable=a.reclaimable)
     pull_state_path = Path(a.state).expanduser()
     state = _load_json(pull_state_path) if pull_state_path.exists() else {
         "schema": "linear-ceiling.runpod.pull-b.v1",

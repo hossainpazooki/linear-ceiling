@@ -54,9 +54,7 @@ def test_one_empty_listing_does_not_stand_the_watchdog_down(rp, monkeypatch, cap
                                                    "sitting_max": 6.55, "hours": 5.5, "warn": 2.5})
     monkeypatch.setattr(rp.time, "sleep", lambda *_: None)
     monkeypatch.setattr(rp.os.environ, "get", lambda k, d=None: "1" if k == "RP_CAFFEINATED" else d)
-    args = rp.argparse.Namespace(warn=None, kill=9.0, sitting_max=None, ttl=None,
-                                 unreachable_terminate_after=10.0, unreachable_backstop_after=45.0,
-                                 every=1)
+    args = rp.build_parser().parse_args(["watchdog", "--kill", "9.0", "--every", "1"])
     assert rp.cmd_watchdog(args) == 0
     out = capsys.readouterr().out
     assert "1/2" in out, "the first empty listing must be reported as unconfirmed, not acted on"

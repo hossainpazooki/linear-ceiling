@@ -94,8 +94,7 @@ def test_the_watchdog_loop_keeps_polling_through_a_gql_systemexit(rp, monkeypatc
     monkeypatch.setattr(rp.time, "sleep", lambda *_: None)
     monkeypatch.setattr(rp.os.environ, "get", lambda k, d=None: "1" if k == "RP_CAFFEINATED" else d)
 
-    args = rp.argparse.Namespace(warn=None, kill=9.0, sitting_max=None, ttl=None,
-                                 unreachable_terminate_after=10.0, every=1)
+    args = rp.build_parser().parse_args(["watchdog", "--kill", "9.0", "--every", "1"])
     assert rp.cmd_watchdog(args) == 0, "the watchdog must exit 0 only because nothing is billing"
     assert state["polls"] >= 3, "it must have kept polling after the SystemExits"
     assert "unreachable" in capsys.readouterr().out
