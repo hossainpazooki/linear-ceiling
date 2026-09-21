@@ -5,6 +5,17 @@ nothing here is scheduled. Written in answer to the operator's question "do you 
 for the pivot?" after the review of the 2026-09-11 v3 seed (`docs/paper/2026-09-11-seed-lcfm-v3.md`).
 Every number cited below is quoted from the ledger entry beside it at repo HEAD `d0b91db`.
 
+> **Amendment, 2026-09-20 — two errors in this document, found by an outside review on 2026-09-12 and
+> confirmed against the ledger; the text below is left as written.** (1) "The six E9-long kept
+> directories" (items 2 and 3) are not six long handoffs. 0035 keeps **three** long handoffs by a seeded
+> draw (n = 3, seed 9); the other three directories are the configuration-bridge control, the three
+> shortest of 0029's kept handoffs prefilled native and scaled and scored at (p, p). They are not
+> long-cell observations, and the rescorer needs a source dump plus both receiver dumps per handoff.
+> Usable kept handoffs: eight short, three long. (2) The sentence above is false for three figures in
+> item 2: **57 GB**, **31.56 GiB** and **~2 h**. None is in the ledger (the "0036" beside 31.56 GiB is not a
+> ledger citation); the memory figure is from the operational protocol, the runtime is a projection, and
+> neither sizes a cache-injection workload. Record: `docs/2026-09-20-astra_review.md` §4.
+
 ## The answer
 
 **No run is needed for the pivot itself.** The pivot reframes the paper around the quantity E9 already measures

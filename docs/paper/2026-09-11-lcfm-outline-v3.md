@@ -125,7 +125,8 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
 ## 4. Instrument (≈ 0.4 page; v2 §3, plus the ladder's definition)
 
 - Alignment: difflib matching blocks over token ids, a floor on |M| [0019]; matched fraction |M|/|R| median 0.9344
-  (p10 0.8838, p90 0.9783) [0029, FROZEN]. Three stride-1 dumps per handoff, fp32 [0026].
+  (p10 0.8838, p90 0.9783) [0029, FROZEN]. Three stride-1 dumps per handoff, stored fp16 [0025]; the forward pass that writes them is fp32
+  [0026]. *(corrected 2026-09-20: this line said the dumps were fp32.)*
 - Controls: pipeline identity; prefix invariance; δ_null (deranged pairing) token-mean median 2.009 / 1.962 K / V
   [0029]; for the long half, the configuration bridge and length profiles [0035].
 - **The τ ladder, defined here and read in §5 beside each HOLDS:** f*(τ) at τ ∈ {0.3186, 0.10, 0.03}, descriptive
@@ -149,6 +150,7 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
   [0029].
 - Seam profile b⁻(t), pooled median δ_K: 0: 0.236 (n = 2,278) · 1: 0.127 · 2–3: 0.081 · 4–7: 0.062 · 8–15: 0.063 ·
   16+: 0.019 (n = 139,290) [0029, FROZEN]; 139,290 of 155,257 matched tokens (89.7%) sit ≥ 16 from any seam.
+  *(noted 2026-09-20: 89.7% is this outline's arithmetic on the two ledger counts, not a ledger figure.)*
 - Cross arm in one sentence with App. A: fit on generic text, does not hold on agent text at rest (K +0.1106 dead
   band, V +0.1903 DEGRADES at k = 1) [0020, 0031, FROZEN]; under n = 420 moves toward the floor (0.8106 vs 0.9352 on
   the 8 kept handoffs) and stays beyond DEGRADES [0034, FROZEN]. Attribution to the map, not the handoff.
@@ -158,7 +160,9 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
 
 - Setup, bridge, table, controls, position profile, |S| bins, seam profile and cross arm exactly as v2 §4.2
   (|S| 34,974–80,111, median 50,916; bridge native-vs-scaled f*(τ_K) 0.0000 on all three, bridge R² 0.8992 / 0.8821
-  / 0.8932 → CARRIED; same-model 0.0000, bootstrap [0.0000, 0.0000]; cross 0.9640 (0.9043, 0.9904); prefix
+  / 0.8932 *(noted 2026-09-20: the median |S| and the three bridge R² values are summary-file figures that
+  no ledger entry states; 0036 records the bridge's f* and median δ only. Enter them or cut them before reuse.)*
+  → CARRIED; same-model 0.0000, bootstrap [0.0000, 0.0000]; cross 0.9640 (0.9043, 0.9904); prefix
   invariance 0.000e+00 over 34,974; δ_null 2.015 / 1.975; |M|/|R| median 0.9606).
 - **Ladder beside the HOLDS:** τ = 0.10 → 0.0119 (p90 0.3876); τ = 0.03 → **0.5255** (p90 0.9037), against 0.0000 /
   0.1433 on the short half [0029]. Floor still zero at the registered tolerance; far less headroom under it. The

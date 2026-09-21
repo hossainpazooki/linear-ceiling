@@ -33,8 +33,10 @@ flowchart LR
 ## What the experiments found
 
 - **Same-model reuse survived the tested handoffs.** For the 25 shorter handoffs that fit the
-  model's native context limit, the old and rebuilt caches were within the registered tolerance at
-  every matched token (entry 0029). The same held for the 35 longer handoffs, 35K to 80K tokens,
+  model's native context limit, the old and rebuilt caches were within the registered tolerance in
+  the mean over each handoff's matched tokens: an oracle would have to recompute none of them to
+  bring that mean inside the tolerance (entry 0029). Individual tokens do exceed it; entry 0038
+  states the fraction. The same held for the 35 longer handoffs, 35K to 80K tokens,
   once the model's context window was extended to reach them (entry 0036), though with much less
   room to spare: deviation grows several-fold for tokens that sat beyond the native window. This is
   an ideal lower bound, not a working cache-reuse system.
@@ -135,15 +137,18 @@ and two structural events change one factor each.
 | weights | a policy update under an in-flight rollout in async RL | **E-RL** | **designed, unregistered** (`docs/2026-09-02-e-rl-design.md`); the paper's contrasting direction, no figure |
 
 One yardstick for both axes: per matched token, the centered deviation between two KV states in the
-units of a cross-model mapper's R²; a token needs recompute above τ_K = 0.3186, the k = 1 mapper's
-own held-out shortfall; f*(τ_K) is the fraction an oracle would recompute; HOLDS ≤ 0.15, DEGRADES
-≥ 0.50 (0023). E7 supplies the handoffs and is the paper's corpus paragraph; E8 explains the cross
+units of a cross-model mapper's R²; τ_K = 0.3186 is the k = 1 mapper's own held-out shortfall;
+f*(τ) is the smallest fraction of matched tokens an oracle must recompute before the MEAN deviation
+of the rest is at or below τ — a statement about the mean, not about each token; HOLDS ≤ 0.15,
+DEGRADES ≥ 0.50 (0023). E7 supplies the handoffs and is the paper's corpus paragraph; E8 explains the cross
 arm in one sentence and an appendix table.
 
 **Two conditions decide what the paper contains, and neither is a framing choice:**
 
-1. E9 stays in only if the co-author refutation of entries 0025–0029 is recorded before submission
-   (0032's condition, carried unchanged by 0035). Not recorded at the time of writing.
+1. E9 stays in only if the co-author refutation of entries 0025–0029 was recorded by 0032's
+   numbers-freeze gate (EOD 2026-09-08; carried unchanged by 0035). It was not, and it is not recorded
+   at the time of writing. 0032's consequence is that E9's figures are withheld; only a numbered
+   entry changes that.
 2. E9-long enters only from a passing `summarize_e9 --config config/e9l.toml`, by its own entry,
    with "n scored of 35 registered" beside every number, never pooled with E9's 25.
 
@@ -161,12 +166,14 @@ from the summarizer only. Commands: `CLAUDE.md`. Runbooks and protocol R1–R12:
 | H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** (0.20% of spend vs a 10% cutoff, registered reading) | 0015, 0018, 0022, 0024 |
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** (no public format records it where it could occur) | 0015 |
 | H-E8 — the fitted cross-model map survives agent-text content shift | **NOT CONFIRMED** (V DEGRADES, K dead band at k = 1; V calibration-sensitive under n = 420, 0034) | 0020, 0031, 0034 |
-| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on a floor: f* = 0 at every matched token of every included handoff; cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027) |
+| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on a floor: median f*(τ_K) = 0.0000 over the 25 included handoffs (p10 and p90 0.0000) — a statement about each handoff's mean deviation, not about every token; cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027) |
 | H-E9L — the same claim on the long half under a scaled receiver | `HELD` (35 scored of 35; read on a floor; bridge CARRIED) | 0036 |
 | H-S1…H-S4 (pre-fit screen line) | `SHELVED` / H-S2 first clause `NOT CONFIRMED` | 0003–0006 |
 
 **What HELD means here.** The claim is same-model: the receiver's own KV at the re-rendered positions
-agrees with its KV at the original positions within the mapper's tolerance at every matched token.
+agrees with its KV at the original positions within the mapper's tolerance in the mean over each
+handoff's matched tokens. Individual tokens exceed it (0038 states the fraction), so this is not a
+per-token bound.
 It is read on a floor (0027): f* assumes an oracle that knows which tokens deviate and recomputes
 them in isolation, so HELD says "no more than the mapper, on a floor", not that a system achieves
 it. Scope: one pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the shorter 25 of 68
