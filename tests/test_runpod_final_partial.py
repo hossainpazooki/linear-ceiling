@@ -190,7 +190,7 @@ def test_final_partial_installs_the_snapshot_keeps_the_superseded_file_and_recei
     verify = tmp_path / "verified.json"
     runpod_state = {"pod_id": "pod123", "verify_nonce": "n" * 32, "created_utc": "2026-09-19T00:00:00Z",
                     "verify_file": str(verify), "name": f"{rp.NAME_PREFIX}sitting-b"}
-    monkeypatch.setattr(pull_b.rp, "pods", lambda: [])            # the pod is gone: a hard kill
+    monkeypatch.setattr(pull_b.rp, "pods", lambda: [])            # two empty listings: a hard kill
 
     a = pull_b.build_parser().parse_args(["--local", str(local), "--config", str(cfg)])
     assert pull_b.final_partial(a, runpod_state) == 0
@@ -248,6 +248,21 @@ def test_a_live_driver_and_an_unreachable_api_are_both_refusals(mirror, tmp_path
     monkeypatch.setattr(pull_b, "Transport", DeadTx)
     assert pull_b.final_partial(a, runpod_state) == 0
     assert json.loads(verify.read_text(encoding="utf-8"))["partial"]["n_scored"] == 2
+
+
+def test_one_empty_pod_listing_is_not_proof_the_driver_stopped(monkeypatch):
+    listings = iter([[], [{"id": "pod123", "name": f"{rp.NAME_PREFIX}sitting-b"}]])
+    monkeypatch.setattr(pull_b.rp, "pods", lambda: next(listings))
+
+    class FakeTx:
+        def __init__(self, *_a, **_k): pass
+        def run_bytes(self, cmd, **_k): return b"ALIVE 4242\n"
+
+    monkeypatch.setattr(pull_b, "Transport", FakeTx)
+    state = {"pod_id": "pod123"}
+    with pytest.raises(ValueError, match="still running"):
+        pull_b.require_driver_stopped(state, expected_name=f"{rp.NAME_PREFIX}sitting-b",
+                                      remote_work="/workspace", exp=EXP)
 
 
 # ---------------------------------------------------------------------------------------------

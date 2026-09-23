@@ -492,10 +492,17 @@ def _fake_cfg(cap=100, floor=0, rope=None):
 
 
 def _rep_with(*recs, controls=None):
-    """One scored handoff carrying `recs` as its three dumps, plus an optional prefix-control record."""
-    rep = {"scores": {"h#0": {"dump_rope": {f"d{i}": r for i, r in enumerate(recs)}}}}
-    if controls is not None:
-        rep["controls"] = {"prefix": {"dump_rope": controls}}
+    """One scored handoff carrying a complete three-role block and prefix-control record."""
+    if len(recs) == 1:
+        block = {"same_src": recs[0], "same_tgt": recs[0], "cross_src": recs[0]}
+    elif len(recs) == 2:
+        block = {"same_src": recs[1], "same_tgt": recs[0], "cross_src": recs[1]}
+    elif len(recs) == 3:
+        block = dict(zip(("same_src", "same_tgt", "cross_src"), recs))
+    else:
+        raise AssertionError("test helper expects one to three RoPE records")
+    rep = {"scores": {"h#0": {"dump_rope": block}}}
+    rep["controls"] = {"prefix": {"dump_rope": controls or recs[0]}}
     return rep
 
 
@@ -542,9 +549,11 @@ def test_rope_identity_is_scoped_by_model_role():
     cfg = _fake_cfg()
     s9._check_rope_meta(cfg, _rep_with(_rope_rec("target"), _rope_rec("source", inv="b" * 64)), ["h#0"])
     with pytest.raises(ValueError, match="frequencies moved mid-run"):
-        s9._check_rope_meta(cfg, _rep_with(_rope_rec("target"), _rope_rec("target", inv="c" * 64)), ["h#0"])
+        s9._check_rope_meta(cfg, _rep_with(_rope_rec("source"), _rope_rec("target"),
+                                           _rope_rec("target", inv="c" * 64)), ["h#0"])
     with pytest.raises(ValueError, match="frequencies moved mid-run"):
-        s9._check_rope_meta(cfg, _rep_with(_rope_rec("target"), _rope_rec("target", mpe=32768)), ["h#0"])
+        s9._check_rope_meta(cfg, _rep_with(_rope_rec("source"), _rope_rec("target"),
+                                           _rope_rec("target", mpe=32768)), ["h#0"])
 
 
 def test_refuses_mixed_or_partial_rope_evidence():
@@ -557,6 +566,19 @@ def test_refuses_mixed_or_partial_rope_evidence():
     with pytest.raises(ValueError, match="carry none"):
         s9._check_rope_meta(cfg, rep, ["h#0", "h#1"])
     assert s9._check_rope_meta(cfg, {"scores": {"h#0": {"n_pairs": 3}}}, ["h#0"]) is None
+
+
+def test_refuses_an_incomplete_role_block_or_missing_prefix_rope_record():
+    cfg = _fake_cfg()
+    rec = _rope_rec("target")
+    incomplete = {"scores": {"h#0": {"dump_rope": {"same_tgt": rec}}},
+                  "controls": {"prefix": {"dump_rope": rec}}}
+    with pytest.raises(ValueError, match="must contain exactly"):
+        s9._check_rope_meta(cfg, incomplete, ["h#0"])
+    no_prefix_record = _rep_with(rec)
+    del no_prefix_record["controls"]["prefix"]["dump_rope"]
+    with pytest.raises(ValueError, match="prefix control is missing"):
+        s9._check_rope_meta(cfg, no_prefix_record, ["h#0"])
 
 
 def test_the_rope_less_long_cell_refuses_dumps_that_carry_no_spec():

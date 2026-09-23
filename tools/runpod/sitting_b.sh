@@ -68,6 +68,7 @@ SETUP_STATUS="$WORK/sitting_b.setup.status"
 LAUNCH_LOG="$WORK/sitting_b.launches.log"
 PID_FILE="$WORK/$EXP.pid"
 READY_FILE="$WORK/$EXP.launch.ready"
+GO_FILE="$WORK/$EXP.driver.go"
 FINAL_MANIFEST="$WORK/$EXP.final.sha256"
 EVIDENCE_DIR="$WORK/sitting_b.evidence"
 
@@ -665,6 +666,7 @@ fi
 step "immutable evidence capture"
 mkdir -p "$EVIDENCE_DIR"
 cp -- "$0" "$EVIDENCE_DIR/sitting_b.sh"
+cp -- "$LC_DIR/tools/runpod/driver_child.sh" "$EVIDENCE_DIR/driver_child.sh"
 cp -- "$LC_DIR/tools/ec2/setup.sh" "$EVIDENCE_DIR/ec2_setup.reference.sh"
 cp -- "$LC_DIR/tools/ec2/run.sh" "$EVIDENCE_DIR/ec2_run.reference.sh"
 cp -- "$LC_DIR/tools/ec2/probe_e9l.py" "$EVIDENCE_DIR/probe_e9l.reference.py"
@@ -688,14 +690,14 @@ for spec in "$RUN_LOG|log" "$RC_FILE|rc" "$STATUS_FILE|status"; do
   IFS='|' read -r old ext <<< "$spec"
   [ ! -e "$old" ] || mv -- "$old" "$WORK/$EXP.$timestamp.halt.$ext"
 done
-rm -f -- "$READY_FILE" "$FINAL_MANIFEST"
+rm -f -- "$READY_FILE" "$GO_FILE" "$PID_FILE" "$FINAL_MANIFEST"
 
-# The child waits on READY_FILE so setup.log and launches.log have reached their final bytes before
-# it can eventually hash them. On success, its last write to stdout is SITTING_B_OK; manifest
-# generation is silent, atomic, and therefore hashes a closed log.
+# The supervisor waits on READY_FILE, publishes the distinct driver PID, and the driver then waits on
+# GO_FILE until setup.log and launches.log have reached their final bytes. On success, its last write
+# to stdout is SITTING_B_OK; manifest generation is silent, atomic, and therefore hashes a closed log.
 setsid nohup bash -c '
 set -uo pipefail
-work=$1; exp=$2; mode=$3; lc_py=$4; ready=$5
+work=$1; exp=$2; mode=$3; lc_py=$4; ready=$5; go=$6; pid_file=$7
 status="$work/$exp.status"; rc_file="$work/$exp.rc"; manifest="$work/$exp.final.sha256"
 for _ in $(seq 1 600); do [ -f "$ready" ] && break; sleep 0.1; done
 if [ ! -f "$ready" ]; then
@@ -708,15 +710,7 @@ rm -f -- "$ready"
 printf "RUNNING mode=%s started=%s\n" "$mode" "$(date -u +%FT%TZ)" > "$status"
 cd "$work/linear-ceiling" || exit 98
 rc=0
-if [ "$mode" = plain ]; then
-  "$lc_py" -u -m linear_ceiling.e9 --config "config/$exp.toml" || rc=$?
-elif [ "$mode" = resume ]; then
-  "$lc_py" -u -m linear_ceiling.e9 --config "config/$exp.toml" --resume || rc=$?
-elif [ "$mode" = complete ]; then
-  echo "[$(date -u +%FT%TZ)] report already complete; E9 driver skipped"
-else
-  echo "unknown run mode: $mode" >&2; rc=96
-fi
+tools/runpod/driver_child.sh "$pid_file" "$go" "$mode" "$lc_py" "config/$exp.toml" || rc=$?
 if [ "$rc" -eq 0 ]; then
   "$lc_py" - "$work/linear-ceiling/results/$exp/report.json" <<"PY" || rc=95
 import json, sys
@@ -765,16 +759,19 @@ printf "EXIT=%s\n" "$rc" > "$rc_file"
 printf "SITTING_B_FAILED rc=%s final-manifest\n" "$rc" > "$status"
 echo "[$(date -u +%FT%TZ)] SITTING_B_FAILED rc=$rc final-manifest"
 exit "$rc"
-' _ "$WORK" "$EXP" "$RUN_MODE" "$LC_PY" "$READY_FILE" \
+' _ "$WORK" "$EXP" "$RUN_MODE" "$LC_PY" "$READY_FILE" "$GO_FILE" "$PID_FILE" \
   > "$RUN_LOG" 2>&1 < /dev/null &
-pid=$!
-printf '%s\n' "$pid" > "$PID_FILE"
+wrapper_pid=$!
+: > "$READY_FILE"
+for _ in $(seq 1 600); do [ -s "$PID_FILE" ] && break; sleep 0.1; done
+[ -s "$PID_FILE" ] || refuse "driver pid was not published (wrapper pid $wrapper_pid)"
+pid="$(tr -cd '0-9' < "$PID_FILE")"
 printf '[%s] pid=%s mode=%s lc=%s up=%s\n' "$(date -u +%FT%TZ)" "$pid" "$RUN_MODE" "$LC_SHA" "$UP_SHA" \
   >> "$LAUNCH_LOG"
 say "SITTING_B_LAUNCHED pid=$pid mode=$RUN_MODE log=$RUN_LOG status=$STATUS_FILE"
 say "  resume is automatic; a budget stop closes at HOME (--final-partial, then e9 --close-partial)"
 say "  this script will never terminate the pod; home pull+verify owns termination"
 atomic_line "$SETUP_STATUS" "SITTING_B_LAUNCHED pid=$pid mode=$RUN_MODE"
-: > "$READY_FILE"
+: > "$GO_FILE"
 trap - EXIT
 exit 0

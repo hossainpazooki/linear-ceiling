@@ -310,6 +310,19 @@ def verify_artifacts(local: Path, artifacts: Iterable[Artifact]) -> tuple[list[s
     return bad, checked, total
 
 
+def credit_newly_verified(state: dict, local: Path, artifacts: Iterable[Artifact]) -> int:
+    """Credit each verified path+digest once, even when later polling rounds re-check it."""
+    seen = state.setdefault("verified_kept", {})
+    added = 0
+    for item in artifacts:
+        key = f"{item.rel}:{item.digest}"
+        if key not in seen:
+            added += (local / item.rel).stat().st_size
+            seen[key] = True
+    state["bytes_verified_total"] = float(state.get("bytes_verified_total", 0.0)) + added
+    return added
+
+
 def parse_manifest(path: Path) -> dict[str, str]:
     out: dict[str, str] = {}
     for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -494,6 +507,19 @@ def remote_small_listing(tx: Transport, remote_results: str) -> dict[str, list[o
         if parts[0] == "scratch" or (parts[0] == "bridge" and len(parts) >= 3):
             continue
         out[rel] = [int(size), mtime]
+    return out
+
+
+def remote_file_sizes(tx: Transport, remote_results: str) -> dict[str, int]:
+    """Sizes measured by the puller from the remote tree, including scratch tensors."""
+    cmd = (f"cd {shlex.quote(remote_results)} 2>/dev/null && "
+           "find . -type f -printf '%s\\t%T@\\t%P\\0' || true")
+    out: dict[str, int] = {}
+    for raw in tx.run_bytes(cmd).split(b"\0"):
+        if not raw:
+            continue
+        size, _mtime, rel = raw.decode("utf-8").split("\t", 2)
+        out[safe_rel(rel, what="remote result path")] = int(size)
     return out
 
 
@@ -708,7 +734,15 @@ def require_driver_stopped(runpod_state: dict, *, expected_name: str, remote_wor
         raise ValueError("cannot establish that the driver stopped: the RunPod API is unreachable "
                          f"({e}). Re-run when it answers; do not assume.") from e
     if not any(pod.get("id") == runpod_state["pod_id"] for pod in live):
-        return f"pod {runpod_state['pod_id']} is absent from the account listing, so no driver is running"
+        try:
+            confirm = rp.pods()
+        except (Exception, SystemExit) as e:
+            raise ValueError("cannot confirm that the driver stopped: the second RunPod listing failed "
+                             f"({e}). Re-run when it answers; do not assume.") from e
+        if not any(pod.get("id") == runpod_state["pod_id"] for pod in confirm):
+            return (f"pod {runpod_state['pod_id']} is absent from two consecutive account listings, "
+                    "so no driver is running")
+        live = confirm
     tx = Transport(runpod_state["pod_id"], expected_name)
     work = shlex.quote(remote_work.rstrip("/"))
     probe = (f'p=$(tr -cd "0-9" < {work}/{shlex.quote(exp)}.pid 2>/dev/null); '
@@ -771,7 +805,8 @@ def final_partial(a, runpod_state: dict) -> int:
     return 0
 
 
-def write_drain_hint(state: dict, local: Path, report: dict | None, *, path: Path | None = None) -> None:
+def write_drain_hint(state: dict, local: Path, report: dict | None, remote_sizes: dict[str, int],
+                     *, path: Path | None = None) -> None:
     """Tell the watchdog what is left to move and how fast it is actually moving.
 
     The watchdog decides WHEN to stop the driver, and that decision is only as good as its estimate of
@@ -788,16 +823,22 @@ def write_drain_hint(state: dict, local: Path, report: dict | None, *, path: Pat
     seen = float(state.get("bytes_verified_total", 0.0))
     hours = max((now - float(started)) / 3600.0, 1.0 / 3600.0)
     rate = (seen / 2**30) / hours
+    target = Path(path) if path else rp.DRAIN_HINT
+    try:
+        outstanding = outstanding_gib(local, report, remote_sizes)
+    except ValueError as e:
+        target.unlink(missing_ok=True)
+        print(f"  drain hint unavailable ({e}); watchdog will use its conservative fallback", flush=True)
+        return
     hint = {
         "schema": "linear-ceiling.runpod.drain-hint.v1",
         "updated_epoch": now,
         "updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
-        "outstanding_gib": outstanding_gib(local, report),
+        "outstanding_gib": outstanding,
         "rate_gib_per_h": rate,
         "gib_verified": seen / 2**30,
         "hours_running": hours,
     }
-    target = Path(path) if path else rp.DRAIN_HINT
     target.parent.mkdir(parents=True, exist_ok=True)
     _atomic_json(target, hint)
 
@@ -891,7 +932,7 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
             any_kept_bad = True
             print(f"  REFUSED kept {label}: {bad[0]}; remote bytes retained", flush=True)
             continue
-        state["bytes_verified_total"] = float(state.get("bytes_verified_total", 0.0)) + _kept_bytes
+        credit_newly_verified(state, local, items)
         print(f"  verified kept {label}: {checked} files", flush=True)
         if a.delete_verified and not bad_small:
             # Always issue the exact idempotent remove after *this round's* raw verification. A resumed
@@ -923,7 +964,8 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
             print(f"  snapshot: checkpoints/report.{n_scored}.json (every named artifact verified here)",
                   flush=True)
 
-    write_drain_hint(state, local, report, path=Path(a.drain_hint).expanduser())
+    sizes = remote_file_sizes(tx, a.remote_results)
+    write_drain_hint(state, local, report, sizes, path=Path(a.drain_hint).expanduser())
     state_path = Path(a.state).expanduser()
     _atomic_json(state_path, state, mode=0o600)
     if terminal and report.get("complete") is not True:
@@ -1021,7 +1063,7 @@ def free_gib(path: Path) -> float:
     return st.f_bavail * st.f_frsize / 2**30
 
 
-def outstanding_gib(local: Path, report: dict | None) -> float:
+def outstanding_gib(local: Path, report: dict | None, remote_sizes: dict[str, int]) -> float:
     """Bytes the checkpoint still expects to land here, in GiB.
 
     The floor must track what is LEFT to pull, not a constant: the pulled tensors consume the very
@@ -1031,16 +1073,13 @@ def outstanding_gib(local: Path, report: dict | None) -> float:
     if not report:
         return 0.0
     total = 0
-    for _hid, rec in (report.get("scores") or {}).items():
-        kept = rec.get("kept_dumps")
-        if not kept:
+    for item in report_artifacts(report):
+        if not item.rel.startswith("scratch/") or (local / item.rel).is_file():
             continue
-        kdir = rec.get("kept_dir") or ""
-        for dump, files in kept.items():
-            for rel in files:
-                if not (local / kdir / dump / rel).is_file():      # not yet home
-                    total += int(rec.get("kept_bytes", {}).get(dump, 0)) or 0
-                    break
+        if item.rel not in remote_sizes:
+            raise ValueError(f"cannot measure outstanding bytes: {item.rel} is absent both locally "
+                             "and from the remote size listing")
+        total += int(remote_sizes[item.rel])
     return total / 2**30
 
 
@@ -1157,7 +1196,13 @@ def main(argv: list[str] | None = None) -> int:
             _rep = _load_json(local_root / "report.json") if (local_root / "report.json").exists() else None
         except Exception:                                          # a torn checkpoint mid-write
             _rep = None
-        _need = outstanding_gib(local_root, _rep) + a.headroom_gib
+        _sizes = remote_file_sizes(tx, a.remote_results) if _rep else {}
+        try:
+            _need = outstanding_gib(local_root, _rep, _sizes) + a.headroom_gib
+        except ValueError as e:
+            print(f"outstanding-byte measurement unavailable ({e}); retaining the conservative "
+                  f"pre-create floor {a.min_free_gib:.1f} GiB", flush=True)
+            _need = a.min_free_gib
         require_free_space(local_root, _need, blocking=True)
         try:
             if run_round(a, tx, state, runpod_state):

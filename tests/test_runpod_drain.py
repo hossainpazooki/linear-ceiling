@@ -108,15 +108,40 @@ def test_the_puller_measures_what_the_watchdog_cannot(tmp_path):
     verification and waiting included, because those are equally part of how long the rest will take."""
     local = tmp_path / "mirror"
     local.mkdir()
-    report = {"scores": {"h1": {"kept_dir": "scratch/h1", "kept_dumps": {"d": {"kv.npz": "x" * 64}},
-                                "kept_bytes": {"d": 8 * 2**30}}}}
+    report = {"scores": {"h1": {"score_file": "h1.json", "score_sha256": "a" * 64,
+                                "tokens_file": "h1.npz", "tokens_sha256": "b" * 64,
+                                "kept_dir": "scratch/h1",
+                                "kept_dumps": {"d": {"kv.npz": "c" * 64}}}}}
     state = {"rate_started_epoch": time.time() - 3600, "bytes_verified_total": 20.0 * 2**30}
     out = tmp_path / "hint.json"
-    pull_b.write_drain_hint(state, local, report, path=out)
+    pull_b.write_drain_hint(state, local, report, {"scratch/h1/d/kv.npz": 8 * 2**30}, path=out)
     hint = json.loads(out.read_text(encoding="utf-8"))
     assert hint["outstanding_gib"] == pytest.approx(8.0), "the kept dump is not home yet"
     assert hint["rate_gib_per_h"] == pytest.approx(20.0, rel=1e-3)
     assert rp.read_drain_hint(out) is not None, "the watchdog must accept what the puller writes"
+
+
+def test_verified_bytes_are_credited_once_across_repeated_polling_rounds(tmp_path):
+    local = tmp_path / "mirror"
+    body = b"verified tensor bytes"
+    rel = "scratch/h1/same_src/kv.npz"
+    path = local / rel
+    path.parent.mkdir(parents=True)
+    path.write_bytes(body)
+    item = pull_b.Artifact("kept h1", rel, "a" * 64)
+    state = {}
+    assert pull_b.credit_newly_verified(state, local, [item]) == len(body)
+    assert pull_b.credit_newly_verified(state, local, [item]) == 0
+    assert state["bytes_verified_total"] == len(body)
+
+
+def test_outstanding_measurement_refuses_an_unlisted_remote_file(tmp_path):
+    report = {"scores": {"h1": {"score_file": "h1.json", "score_sha256": "a" * 64,
+                                "tokens_file": "h1.npz", "tokens_sha256": "b" * 64,
+                                "kept_dir": "scratch/h1",
+                                "kept_dumps": {"d": {"kv.npz": "c" * 64}}}}}
+    with pytest.raises(ValueError, match="absent both locally and from the remote"):
+        pull_b.outstanding_gib(tmp_path, report, {})
 
 
 # ---------------------------------------------------------------------------------------------

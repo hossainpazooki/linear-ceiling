@@ -313,16 +313,25 @@ def _rope_records(rep: dict, scored: list) -> tuple[dict, list]:
     the control -- and folding them in would make the identity clause refuse every correct scaled run.
     Returns (records by label, the scored handoffs carrying no block at all)."""
     recs, missing = {}, []
+    required = {"same_src", "same_tgt", "cross_src"}
     for hid in scored:
         block = (rep.get("scores") or {}).get(hid, {}).get("dump_rope")
         if not block:
             missing.append(hid)
             continue
+        absent = sorted(required - set(block))
+        extra = sorted(set(block) - required)
+        if absent or extra:
+            raise ValueError(f"per-dump RoPE record: {hid} must contain exactly same_src, same_tgt, "
+                             f"and cross_src (missing {absent or 'none'}, extra {extra or 'none'})")
         for name, rec in sorted(block.items()):
             recs[f"{hid} {name}"] = rec
-    pre = ((rep.get("controls") or {}).get("prefix") or {}).get("dump_rope")
+    prefix = (rep.get("controls") or {}).get("prefix")
+    pre = (prefix or {}).get("dump_rope")
     if pre:
         recs["controls prefix (same_src_plus1)"] = pre
+    elif recs and prefix is not None:
+        raise ValueError("per-dump RoPE record: prefix control is missing its dump_rope record")
     return recs, missing
 
 
