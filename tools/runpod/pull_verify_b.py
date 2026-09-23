@@ -964,8 +964,13 @@ def run_round(a, tx: Transport, state: dict, runpod_state: dict) -> bool:
             print(f"  snapshot: checkpoints/report.{n_scored}.json (every named artifact verified here)",
                   flush=True)
 
-    sizes = remote_file_sizes(tx, a.remote_results)
-    write_drain_hint(state, local, report, sizes, path=Path(a.drain_hint).expanduser())
+    try:
+        sizes = remote_file_sizes(tx, a.remote_results)
+    except (OSError, RuntimeError, subprocess.SubprocessError) as e:
+        print(f"  remote size listing failed ({type(e).__name__}); drain hint withheld this round", flush=True)
+        Path(a.drain_hint).expanduser().unlink(missing_ok=True)
+    else:
+        write_drain_hint(state, local, report, sizes, path=Path(a.drain_hint).expanduser())
     state_path = Path(a.state).expanduser()
     _atomic_json(state_path, state, mode=0o600)
     if terminal and report.get("complete") is not True:
@@ -1196,10 +1201,10 @@ def main(argv: list[str] | None = None) -> int:
             _rep = _load_json(local_root / "report.json") if (local_root / "report.json").exists() else None
         except Exception:                                          # a torn checkpoint mid-write
             _rep = None
-        _sizes = remote_file_sizes(tx, a.remote_results) if _rep else {}
         try:
+            _sizes = remote_file_sizes(tx, a.remote_results) if _rep else {}
             _need = outstanding_gib(local_root, _rep, _sizes) + a.headroom_gib
-        except ValueError as e:
+        except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as e:
             print(f"outstanding-byte measurement unavailable ({e}); retaining the conservative "
                   f"pre-create floor {a.min_free_gib:.1f} GiB", flush=True)
             _need = a.min_free_gib
