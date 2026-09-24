@@ -157,6 +157,13 @@ class E8Config:
     # (`mappers/<pair>/<tag>/k<k>`, `results/mapper/<pair>/<tag>/r2.json`, fit_mapper.py --tag); None = the
     # untagged n = 50 artifacts of 0016/0020. The report fingerprints the mapper files it scored with.
     mapper_tag: str | None = None
+    # ---- a second model family (registration entry NNNN, provisional; config/e8f.toml). Both fields default
+    # to E8's own behaviour, so config/e8.toml, e8a.toml and e8c.toml -- whose shas are recorded in their
+    # reports -- parse and run exactly as before.
+    gate: tuple[str, ...] = ()        # [e8.gate] required_entries: ledger markers ADDED to the driver's
+                                      # REQUIRED_ENTRIES (0009/0016), never replacing them; () = the default gate
+    scope_note: str | None = None     # [e8] scope_note: what the report records as "scope"; None = e8.py's
+                                      # 0009/0016 literal, so the Qwen reports stay byte-identical
 
 
 def load_e8_config(path: Path, repo_root: Path) -> E8Config:
@@ -168,10 +175,10 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
                           ("band", ("holds_max_drop", "degrades_min_drop"))):
         missing = [k for k in keys if k not in e8.get(section, {})]
         if missing:
-            raise ValueError(f"config/e8.toml [e8.{section}] is missing {missing}; the registered "
+            raise ValueError(f"{path.name} [e8.{section}] is missing {missing}; the registered "
                              "parameters (ledger entries 0009/0016) must be complete before E8 runs")
     if e8["mappers"]["verdict_k"] not in e8["mappers"]["report_k"]:
-        raise ValueError("config/e8.toml: verdict_k must be one of report_k")
+        raise ValueError(f"{path.name}: verdict_k must be one of report_k")
     root = Path(repo_root)
     arms = e8["arms"]
     agent_frac = float(arms["agent_holdout_frac"]) if "agent_holdout_frac" in arms else None
@@ -189,6 +196,14 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
             raise ValueError("config e8 [e8.amendment] entry must be a four-digit ledger entry number as a string")
         if int(amendment["bootstrap_reps"]) < 1:
             raise ValueError("config e8 [e8.amendment] bootstrap_reps must be >= 1")
+    # ---- entry NNNN fields, each validated only when present (absent -> E8's own behaviour)
+    gate = tuple(str(x) for x in e8.get("gate", {}).get("required_entries", ()))
+    if any(not (len(x) == 4 and x.isdigit()) for x in gate):
+        raise ValueError(f"{path.name} [e8.gate] required_entries must be four-digit entry numbers")
+    scope_note = e8.get("scope_note")
+    if scope_note is not None and not (isinstance(scope_note, str) and scope_note.strip()):
+        raise ValueError(f"{path.name} [e8] scope_note must be a non-empty string: it REPLACES the scope the "
+                         "report records, and an empty one would erase the only statement of what the run covers")
     return E8Config(
         pair=e8["pair"], results_dir=root / e8["results_dir"], tokens_dir=root / e8["tokens_dir"],
         upstream_path=(root / e8["upstream_path"]).resolve(), upstream_sha=str(e8["upstream_sha"]),
@@ -198,7 +213,7 @@ def load_e8_config(path: Path, repo_root: Path) -> E8Config:
         text=dict(e8["text"]), band=dict(e8["band"]), config_path=path,
         agent_holdout_frac=agent_frac,
         reuse_agent_dumps_from=(root / arms["reuse_agent_dumps_from"]) if "reuse_agent_dumps_from" in arms else None,
-        amendment=amendment, mapper_tag=tag,
+        amendment=amendment, mapper_tag=tag, gate=gate, scope_note=scope_note,
     )
 
 
@@ -229,6 +244,11 @@ class E9Config:
     allow_partial: bool = False                  # `e9 --close-partial` may close an unfinished run (prefix of the registered order)
     bridge: dict | None = None                   # {"handoffs": [...], "reading_max_fstar": x}: native-vs-scaled receiver control
     profiles: dict | None = None                 # {"s_len_edges": [...], "s_pos_edges": [...]}: descriptive length profiles
+    # ---- a second model family (registration entry NNNN, provisional; config/e9f.toml, config/e9fl.toml).
+    # The E8 report whose held-out R^2 the summarizer recomputes tau from: tau is 1 - the R^2 of THIS pair's
+    # mapper, so a second family must not recalibrate against results/e8/report.json. None = summarize_e9's
+    # own default (the Qwen report), which keeps config/e9.toml, e9l.toml and e9s.toml untouched.
+    e8_report: Path | None = None
 
 
 _ROPE_KEYS = ("rope_type", "factor", "original_max_position_embeddings")
@@ -246,24 +266,45 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
                                         "bootstrap_seed", "bootstrap_reps"))):
         missing = [k for k in keys if k not in e9.get(section, {})]
         if missing:
-            raise ValueError(f"config/e9.toml [e9.{section}] is missing {missing}; the registered "
+            raise ValueError(f"{path.name} [e9.{section}] is missing {missing}; the registered "
                              "parameters (ledger entries 0019/0023/0025) must be complete before E9 runs")
+    rule, ctl = e9["rule"], e9["controls"]
+    # The three calibrated tolerances must be REAL NUMBERS in (0, 1), and they belong to the config's own pair:
+    # tau is 1 - that pair's archived held-out R^2 (`summarize_e9 --calibrate-tau` -> results/<cell>/calibration/
+    # tau.json). A cell whose E8 run has not happened yet carries an "UNRESOLVED::tau_K@<pair>::..." marker in
+    # its place; it must refuse HERE, naming the missing calibration, rather than fall through to a bare float()
+    # conversion two checks below -- and no tau may ever be defaulted, inherited or carried over from another pair.
+    for key in ("tau_K", "tau_V", "tau_agent_K"):
+        t = rule[key]
+        if isinstance(t, bool) or not isinstance(t, (int, float)) or not (0.0 < float(t) < 1.0):
+            raise ValueError(f"{path.name} [e9.rule] {key} must be a calibrated number in (0, 1), got {t!r}; it is "
+                             "1 - the archived held-out R^2 of THIS pair's mapper (summarize_e9 --calibrate-tau), "
+                             "never a default and never another pair's value")
     ladder = e9["rule"]["tau_ladder"]
     if (not isinstance(ladder, list) or not ladder
             or any(not isinstance(t, (int, float)) or not (0 < float(t) < float(e9["rule"]["tau_K"])) for t in ladder)
             or any(float(a) <= float(b) for a, b in zip(ladder, ladder[1:]))):
-        raise ValueError("config/e9.toml [e9.rule] tau_ladder must be a strictly decreasing list of values in "
-                         "(0, tau_K): the ladder reads how far INSIDE the registered tolerance f* sits (entry 0025)")
-    rule, ctl = e9["rule"], e9["controls"]
-    if not (float(rule["tau_K"]) < float(rule["tau_agent_K"]) < 1.0):
-        raise ValueError("config/e9.toml [e9.rule] tau_agent_K must sit in (tau_K, 1): it is the LOOSER agent-text "
-                         "tolerance from entry 0020 arm (b), reported alongside (entry 0025)")
+        raise ValueError(f"{path.name} [e9.rule] tau_ladder must be a strictly decreasing list of values in "
+                         "(0, tau_K): the ladder reads how far INSIDE the registered tolerance f* sits (entry 0025). "
+                         "It is tau-derived: an uncalibrated cell carries an UNRESOLVED marker here and refuses")
+    # ORDERING_NOT_REGISTERED (entry 0041). This used to REFUSE unless tau_K < tau_agent_K < 1. No entry
+    # registers that ordering: 0025 registers tau_agent_K's DERIVATION, says it "is a K tolerance and is
+    # applied to nothing else", and says "The band reads tau_K only". The refusal encoded what entry 0020
+    # MEASURED on the Qwen pair -- an observation -- and it could stop a whole cell from loading on a
+    # quantity the ledger says decides nothing. It is now a recorded fact, reported wherever the two
+    # values are, and refuses nothing. What is still REQUIRED is that tau_agent_K be a tolerance at all:
+    # outside (0, 1) it is not one.
+    if not (0.0 < float(rule["tau_agent_K"]) < 1.0):
+        raise ValueError(f"{path.name} [e9.rule] tau_agent_K must lie in (0, 1): it is 1 - a held-out R^2 "
+                         "(entry 0025) and a value outside the unit interval is not a tolerance")
     if not (isinstance(rule["min_block_len"], int) and rule["min_block_len"] >= 1):
-        raise ValueError("config/e9.toml [e9.rule] min_block_len must be an integer >= 1 (entry 0025)")
+        raise ValueError(f"{path.name} [e9.rule] min_block_len must be an integer >= 1 (entry 0025)")
     if not (isinstance(ctl["prefix_invariance_max_delta"], (int, float)) and 0 < float(ctl["prefix_invariance_max_delta"]) < 1):
-        raise ValueError("config/e9.toml [e9.controls] prefix_invariance_max_delta must be in (0, 1) (entry 0025)")
+        raise ValueError(f"{path.name} [e9.controls] prefix_invariance_max_delta must be in (0, 1) (entry 0025); "
+                         "it too is tau-derived -- three orders below tau_K -- so an uncalibrated cell carries an "
+                         "UNRESOLVED marker here and refuses rather than inheriting another pair's value")
     if not (isinstance(ctl["bootstrap_reps"], int) and ctl["bootstrap_reps"] >= 100 and isinstance(ctl["bootstrap_seed"], int)):
-        raise ValueError("config/e9.toml [e9.controls] bootstrap_seed must be an int and bootstrap_reps an int >= 100 (entry 0025)")
+        raise ValueError(f"{path.name} [e9.controls] bootstrap_seed must be an int and bootstrap_reps an int >= 100 (entry 0025)")
     root = Path(repo_root)
     # ---- E9-long fields (entry 0035), each validated only when present
     cap = int(e9["handoffs"]["context_cap"])
@@ -288,16 +329,23 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
     if order_by not in ("id", "n_sender_asc"):
         raise ValueError(f"{path.name} [e9.order] by must be 'id' or 'n_sender_asc' (entry 0035)")
     allow_partial = bool(order.get("allow_partial", False))
+    # An ABSENT [e9.rope] is a registered state, not an omission: a receiver whose native window already covers
+    # the cap is dumped unscaled, and such a cell must load cleanly (entry NNNN's long cell, provisional -- a
+    # natively-131,072 receiver at a registered length threshold). What it must NOT do is carry a bridge: the
+    # bridge's entire content is scaled-receiver vs native-receiver (entry 0035), and with no scaled arm there is
+    # nothing to compare, so the control would be vacuous rather than passing. The coupling is therefore checked
+    # BEFORE the bridge's own fields, so the refusal names the premise instead of a downstream symptom.
     bridge = e9.get("bridge")
     if bridge is not None:
+        if rope is None:
+            raise ValueError(f"{path.name} [e9.bridge] needs [e9.rope]: the bridge compares the scaled receiver "
+                             "with the native one, and a natively-long receiver has no scaled arm to compare")
         bridge = dict(bridge)
         hs = bridge.get("handoffs")
         if not (isinstance(hs, list) and hs and all(isinstance(h, str) for h in hs) and len(set(hs)) == len(hs)):
             raise ValueError(f"{path.name} [e9.bridge] handoffs must be a non-empty list of distinct handoff ids (entry 0035)")
         if not (isinstance(bridge.get("reading_max_fstar"), (int, float)) and 0 < float(bridge["reading_max_fstar"]) < 1):
             raise ValueError(f"{path.name} [e9.bridge] reading_max_fstar must be in (0, 1) (entry 0035)")
-        if rope is None:
-            raise ValueError(f"{path.name} [e9.bridge] needs [e9.rope]: the bridge compares the scaled receiver with the native one")
     profiles = e9.get("profiles")
     if profiles is not None:
         profiles = dict(profiles)
@@ -306,6 +354,17 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
             if (not isinstance(edges, list) or not edges or any(not isinstance(x, int) for x in edges)
                     or any(a >= b for a, b in zip(edges, edges[1:])) or edges[0] < lo or edges[-1] >= cap):
                 raise ValueError(f"{path.name} [e9.profiles] {key} must be strictly increasing ints inside [{max(lo, 0)}, cap) (entry 0035)")
+    # ---- entry NNNN: the E8 report tau is recalibrated against, repo-relative. It must stay inside this repo:
+    # the summarizer refuses on any disagreement with it, and a path outside the tree is a number no reader of
+    # results/<cell>/ can check.
+    e8_report = e9.get("e8_report")
+    if e8_report is not None:
+        if not (isinstance(e8_report, str) and e8_report.strip()) or Path(e8_report).is_absolute():
+            raise ValueError(f"{path.name} [e9] e8_report must be a non-empty repo-relative path to an E8 report.json")
+        e8_report = root / e8_report
+        if not e8_report.resolve().is_relative_to(root.resolve()):
+            raise ValueError(f"{path.name} [e9] e8_report {e9['e8_report']!r} resolves outside the repo root; tau "
+                             "must be recomputed from an E8 report this repo records, not from an outside file")
     return E9Config(
         pair=e9["pair"], results_dir=root / e9["results_dir"], scratch_dir=root / e9["scratch_dir"],
         upstream_path=(root / e9["upstream_path"]).resolve(), upstream_sha=str(e9["upstream_sha"]),
@@ -315,7 +374,7 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         keep_seed=int(e9["keep"]["seed"]), keep_n=int(e9["keep"]["n"]),
         rule=dict(e9["rule"]), controls=dict(e9["controls"]), config_path=path,
         context_floor=floor, rope=rope, required_entries=req, order_by=order_by, allow_partial=allow_partial,
-        bridge=bridge, profiles=profiles,
+        bridge=bridge, profiles=profiles, e8_report=e8_report,
     )
 
 

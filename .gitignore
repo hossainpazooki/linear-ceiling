@@ -26,3 +26,7 @@ data/
 
 # E7 trajectories: acquired locally, never committed (numbers reach the record via summarizers)
 traces/
+
+# macOS Finder droppings. ledger/.DS_Store in particular sits inside an append-only,
+# hash-chained directory and would abort the R7 release sweep on an unnamed file.
+.DS_Store

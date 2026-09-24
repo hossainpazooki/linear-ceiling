@@ -12,8 +12,10 @@ on R, source on S), then `score_positions.py` over the aligned position pairs ->
 per-head SSE/SST and R² for E9-same and E9-cross, PLUS the per-token record (0023:
 `--per-token`, squares [n, L, H] per read-out and arm, from which every 0023 figure is
 recomputed on CPU). Dumps are deleted after scoring except for the seeded keep-subset, whose
-dumps are fingerprinted so a CPU summarizer can re-score them from tensors. The report is
-checkpointed after every handoff, so a reclaimed GPU box loses one handoff, not the run.
+dumps are fingerprinted so a CPU summarizer can re-score them from tensors. Every dump's recorded
+RoPE spec (`dump_rope`) is kept for every handoff, kept or not, since that is the only trace a
+deleted dump leaves of what the box actually applied. The report is checkpointed after every
+handoff, so a reclaimed GPU box loses one handoff, not the run.
 
 Two pre-batch controls (0023) run on the first included handoff's dumps, before it is scored:
 the pipeline identity (R := S, pairs (p, p): every per-token square must be exactly zero; a
@@ -25,6 +27,8 @@ through `summarize_e9` and a numbered entry.
 """
 import argparse
 import json
+import os
+import re
 import shutil
 import subprocess
 import time
@@ -39,7 +43,7 @@ from linear_ceiling.e9_align import align, load_handoffs, write_alignment
 from linear_ceiling.e9_pertoken import null_pairs
 from linear_ceiling.e8 import upstream_python
 from linear_ceiling.e8_text import qwen_encoder
-from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
+from linear_ceiling.hashing import hash_json_obj, sha256_file_bytes, sha256_text_file
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.rng import make_rng
 from linear_ceiling.e9_pertoken import centered_delta as _centered_delta, token_mean as _token_mean
@@ -129,6 +133,49 @@ def dump_fingerprint(d: Path) -> dict[str, str]:
     return {p.relative_to(d).as_posix(): sha256_file_bytes(p) for p in sorted(d.rglob("*")) if p.is_file()}
 
 
+def dump_rope_meta(d: Path, which: str) -> dict:
+    """The RoPE the box ACTUALLY applied in one dump, read from the upstream's meta.json (`kvt/data.py`
+    at 063f4023 writes `meta["rope"] = RopeSpec.to_json()` plus `check_max_abs`, `check_atol` and the
+    model's `max_position_embeddings`; borrowed fact, {kv-transfer-replication, kvt/data.py, 063f4023}).
+
+    Recorded beside the fingerprint for EVERY dump, not only the kept subset: the unkept dumps are
+    deleted as soon as they are scored, so without this the report holds nothing a summarizer could
+    assert the RoPE controls against. Two of them: the context cap sat inside every dump's own window
+    (`context_cap <= max_position_embeddings`), and the frequencies never moved mid-run. For a family
+    whose receiver is natively long -- no `[e9.rope]`, and therefore no bridge control to run -- that
+    pair of asserts is the whole of the native-window evidence, which is why it is recorded even when
+    `cfg.rope` is null.
+
+    `which` is the dump's model role as `dump_kv.py` was called ("target" = receiver, "source" = the
+    sender's model), and any identity assert must be scoped BY it. A cross-release pair may carry
+    different RoPE scaling on its two sides (Llama-3.2-3B declares llama3 factor 32.0, Llama-3.1-8B
+    factor 8.0), so receiver dumps agree with receiver dumps and source dumps with source dumps --
+    never across. That is a matched-KV pair all the same: `check_matched_kv` tests n_kv and d_h only.
+
+    `inv_freq` travels as a digest, not as d_h/2 floats per dump per handoff; the assert needs equality
+    across dumps, and equality of the canonical-JSON hash is equality of the vector. `parameters` is the
+    config's rope block as the upstream copied it and is NOT the authority: under transformers 4 a config
+    with `rope_scaling` but no `rope_parameters` records only `rope_theta` there, while `inv_freq`, read
+    from the model's own rotary embedding, still carries the scaling it applied. A dump written under a
+    pin older than 063f4023 (E9's own 0026 pin) has no rope block at all; that is RECORDED as
+    `recorded: false` rather than refused, so those runs still score and still summarize.
+    """
+    meta = json.loads((Path(d) / "meta.json").read_text(encoding="utf-8"))
+    rec = {"which": which, "model": meta.get("model"), "rope_theta": meta.get("rope_theta"),
+           "recorded": bool(meta.get("rope"))}
+    r = meta.get("rope")
+    if not r:
+        return rec
+    params = dict(r.get("parameters") or {})
+    inv = [float(x) for x in (r.get("inv_freq") or [])]
+    rec.update({"rope_type": params.get("rope_type"), "parameters": params,
+                "attention_scaling": r.get("attention_scaling"),
+                "inv_freq_sha256": hash_json_obj(inv), "n_inv_freq": len(inv),
+                "max_position_embeddings": r.get("max_position_embeddings"),
+                "check_max_abs": r.get("check_max_abs"), "check_atol": r.get("check_atol")})
+    return rec
+
+
 def score_pairs(cfg: E9Config, hdir: Path, pairs_npz: Path, score_path: Path, tokens_path: Path,
                 *, cross: bool, same_tgt: str = "same_tgt", runner=subprocess.run) -> dict:
     """One score_positions call (with --per-token) -> the record the report keeps for it."""
@@ -209,6 +256,10 @@ def run_bridge(cfg: E9Config, handoffs: list, enc, runner=subprocess.run) -> dic
         brec.update({"handoff_id": hid, "n_sender": n_s, "pairs_file": pairs_file.name,
                      "pairs_sha256": sha256_file_bytes(pairs_file),
                      "kept_dumps": {name: dump_fingerprint(hdir / name) for name in ("same_src", "scaled")},
+                     # both dumps are the receiver; here the two specs differ BY DESIGN (that difference
+                     # IS the control), which is why these records sit under bridge and never join the
+                     # per-handoff ones a cross-dump identity assert reads.
+                     "dump_rope": {name: dump_rope_meta(hdir / name, "target") for name in ("same_src", "scaled")},
                      "kept_dir": hdir.resolve().relative_to(cfg.results_dir.resolve()).as_posix()})
         out["handoffs"][hid] = brec
         print(f"[bridge] {hid}: native vs scaled receiver, same K R² {brec['same_K_r2_layer_mean']:.4f} over {n_s} positions")
@@ -260,11 +311,15 @@ def run_controls(cfg: E9Config, hid: str, hdir: Path, s_ids: np.ndarray, r_ids: 
         raise RuntimeError(f"E9 REFUSED: prefix-invariance dump did not produce {plus_dir}/meta.json")
     pre = score_pairs(cfg, hdir, id_pairs, cdir / "prefix.json", cdir / "prefix.tokens.npz",
                       cross=False, same_tgt="same_src_plus1", runner=runner)
+    pre_rope = dump_rope_meta(plus_dir, "target")     # read BEFORE the rmtree below: the only trace this dump leaves
     shutil.rmtree(plus_dir, ignore_errors=True)
     worst = prefix_invariance_max_delta(cdir / "prefix.json", cdir / "prefix.tokens.npz", n_s)
     tol = float(cfg.controls["prefix_invariance_max_delta"])
     pre.update({"max_token_delta": worst, "tolerance": tol, "extra_token": int(r_ids[0]),
-                "pairs_file": id_pairs.name, "pairs_sha256": sha256_file_bytes(id_pairs)})
+                "pairs_file": id_pairs.name, "pairs_sha256": sha256_file_bytes(id_pairs),
+                # a fourth RECEIVER dump, transient and deleted above; recorded so the summarizer's
+                # "the frequencies never moved mid-run" assert covers the control prefill too.
+                "dump_rope": pre_rope})
     if worst > tol:
         raise RuntimeError(f"E9 HALTED: prefix-invariance control exceeds tolerance (max centered delta "
                            f"{worst:.3e} > {tol:.1e}); the box does not reproduce a prefix under one extra token")
@@ -293,6 +348,7 @@ def score_handoff(cfg: E9Config, stem: str, s_ids: np.ndarray, r_ids: np.ndarray
     tdir.mkdir(parents=True, exist_ok=True)
     rec = score_pairs(cfg, hdir, pairs_npz, cfg.results_dir / "scores" / f"{stem}.json",
                       tdir / f"{stem}.tokens.npz", cross=True, runner=runner)
+    rec["dump_rope"] = {name: dump_rope_meta(hdir / name, which) for name, (_, which) in dumps.items()}
     if keep:
         rec["kept_dumps"] = {name: dump_fingerprint(hdir / name) for name in dumps}
         rec["kept_dir"] = hdir.resolve().relative_to(cfg.results_dir.resolve()).as_posix()
@@ -340,6 +396,26 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
     return p
 
 
+def _write_checkpoint(out: Path, report: dict) -> None:
+    """Write report.json ATOMICALLY: temp file in the same directory, fsync, then rename.
+
+    The checkpoint is the only record of which handoffs are scored, and the registered stopping rule
+    (entry 0042) closes a partial run on the PREFIX it names -- so a torn report.json costs the whole
+    partial, not one handoff. A plain write_text is a read-modify-truncate-write: a process killed
+    inside it leaves a truncated file that json.load refuses. That is not hypothetical here, because
+    the home-side wind-down stops the driver by signalling it.
+
+    rename(2) within a directory is atomic, so a reader sees either the previous checkpoint or the new
+    one and never a partial one. This changes NOTHING computed -- same bytes, same order, same
+    schema -- only when they become visible.
+    """
+    tmp = out.with_name(out.name + ".tmp")
+    tmp.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    with open(tmp, "rb") as fh:
+        os.fsync(fh.fileno())
+    os.replace(tmp, out)
+
+
 def run_order(records: list, included: list[str], order_by: str) -> list[str]:
     """The registered order the driver scores in (entry 0035 stopping rule): by id (E9), or by |S|
     ascending with the id as tie-break (E9-long), so a run stopped at the cutoff has scored a PREFIX."""
@@ -367,13 +443,76 @@ def _resumable(report: dict, cfg: E9Config) -> dict:
     return kept
 
 
+def _recorded_artifact_matches(root: Path, rec: dict, file_key: str, sha_key: str) -> bool:
+    """True only for a plain filename whose bytes still match the checkpoint record."""
+    name, digest = rec.get(file_key), rec.get(sha_key)
+    if not isinstance(name, str) or not name or Path(name).name != name:
+        return False
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        return False
+    path = root / name
+    return path.is_file() and sha256_file_bytes(path) == digest
+
+
+def _resumable_controls(report: dict, cfg: E9Config, first_hid: str, kept_scores: dict) -> dict | None:
+    """Retain controls only when every recorded input/output artifact is still byte-identical.
+
+    ``_resumable`` validates handoff score and per-token files. Controls have their own three score,
+    per-token and pairs records; trusting the JSON alone could silently carry a damaged control across
+    a paid relaunch. Returning ``None`` makes ``run`` redo the first handoff and all controls.
+    """
+    controls = report.get("controls")
+    if not isinstance(controls, dict) or controls.get("handoff_id") != first_hid or first_hid not in kept_scores:
+        return None
+    root = cfg.results_dir / "controls"
+    for label in ("identity", "prefix", "null"):
+        rec = controls.get(label)
+        if not isinstance(rec, dict):
+            return None
+        for file_key, sha_key in (("score_file", "score_sha256"),
+                                  ("tokens_file", "tokens_sha256"),
+                                  ("pairs_file", "pairs_sha256")):
+            if not _recorded_artifact_matches(root, rec, file_key, sha_key):
+                return None
+    return controls
+
+
 def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
         encoder=None, resume: bool = False) -> Path:
     assert_ready(cfg, repo_root)
+    out = cfg.results_dir / "report.json"
+    if out.exists() and not resume:
+        old = json.loads(out.read_text(encoding="utf-8"))
+        if old.get("complete"):
+            raise RuntimeError("E9 REFUSED: a complete report already exists; refusing to overwrite a finished run "
+                               "(archive and delete it explicitly to rerun)")
+        raise RuntimeError("E9 REFUSED: an unfinished report exists; relaunch with --resume to keep its scored handoffs, "
+                           "or delete it to start over (a rotated log first, R4)")
     src_id, _ = pair_models(cfg.pair)
     enc = encoder or qwen_encoder(snapshot(src_id))
     counter = lambda t, ct="assistant": 0     # noqa: E731  (texts only; token counts unused here)
     handoffs = load_handoffs(submission_dirs(e7, cfg), counter)
+    # A configured bridge handoff that does not exist in the corpus is a CONFIG typo, and checking it
+    # is a dict lookup -- so it is checked here, before any alignment, rather than inside the bridge
+    # run far downstream. Cheapest failure first, the same reason the box script puts its gates before
+    # the weight pull: otherwise a mistyped id is reported only after every handoff has been aligned,
+    # and (as the alignment guards below now show) it can be pre-empted entirely by a data-level
+    # refusal that tells the operator nothing about the actual mistake. `bridge_run` re-checks
+    # membership itself; this does not replace that, it just finds it sooner.
+    # The bridge is a REGISTERED control that `bridge_run` executes before the first scored handoff,
+    # "so a late failure cannot lose it". Both of its refusals are therefore validated here, ahead of
+    # the alignment guards below -- otherwise a new data-level guard (no included handoff / no matched
+    # positions) pre-empts them and reports something that says nothing about the actual mistake, which
+    # is what happened when those guards were added. `bridge_run` re-checks both itself; this only
+    # finds them sooner, and costs at most len(bridge) alignments.
+    if cfg.bridge:
+        _by_id = {h.handoff_id: h for h in handoffs}
+        for _hid in cfg.bridge["handoffs"]:
+            if _hid not in _by_id:
+                raise RuntimeError(f"E9 REFUSED: bridge handoff {_hid} is not among the observed handoffs")
+            _rec, *_ = align(_by_id[_hid], enc, cfg.context_cap)   # no floor: bridge handoffs sit below it
+            if _rec.excluded:
+                raise RuntimeError(f"E9 REFUSED: bridge handoff {_hid} is excluded at the cap ({_rec.reason})")
     align_dir = cfg.results_dir / "align"
     records, aligned = [], {}
     for h in handoffs:
@@ -384,18 +523,26 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
             aligned[h.handoff_id] = (s_ids, r_ids, pairs)
     included = sorted(aligned)
     order = run_order(records, included, cfg.order_by)
+    if not order:
+        raise RuntimeError("E9 REFUSED: alignment produced no included handoff")
+    by_hid = {r.handoff_id: r for r in records}
+    empty = [hid for hid in order if by_hid[hid].n_matched < 1]
+    if empty:
+        raise RuntimeError("E9 REFUSED: included handoff(s) have no matched token positions: " + ", ".join(empty))
+    if by_hid[order[0]].n_matched < 2:
+        raise RuntimeError(f"E9 REFUSED: first run-order handoff {order[0]} has fewer than two matched token positions; "
+                           "the registered derangement null control is not computable")
     keep = keep_subset(included, cfg.keep_seed, cfg.keep_n)
     cfg.results_dir.mkdir(parents=True, exist_ok=True)
-    out = cfg.results_dir / "report.json"
-    prior_scores, prior = {}, None
+    prior_scores, prior, prior_controls = {}, None, None
     if resume:
         if not out.exists():
             raise RuntimeError("E9 REFUSED: --resume without a checkpoint report")
         prior = json.loads(out.read_text(encoding="utf-8"))
         prior_scores = _resumable(prior, cfg)
-    elif out.exists() and not json.loads(out.read_text(encoding="utf-8")).get("complete"):
-        raise RuntimeError("E9 REFUSED: an unfinished report exists; relaunch with --resume to keep its scored handoffs, "
-                           "or delete it to start over (a rotated log first, R4)")
+        prior_controls = _resumable_controls(prior, cfg, order[0], prior_scores)
+        if prior_controls is None:
+            prior_scores.pop(order[0], None)       # controls and the first score are one resumable unit
     report = {
         "config_sha256": sha256_text_file(cfg.config_path),   # newline-normalized: the box writes LF, home checks out CRLF
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
@@ -405,24 +552,22 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
                      "excluded": len(records) - len(included)},
         "alignments": [asdict(r) for r in records],
         "run_order": order, "order_by": cfg.order_by,
-        "keep_subset": keep, "bridge": None, "controls": None, "scores": {}, "complete": False,
+        "keep_subset": keep, "bridge": None, "controls": prior_controls, "scores": {}, "complete": False,
         "resumed_from": {"scored": sorted(prior_scores), "bridge": bool(prior and prior.get("bridge")),
-                         "controls": bool(prior and prior.get("controls"))} if resume else None,
+                         "controls": prior_controls is not None} if resume else None,
         "note": "f*, medians and the H-E9 verdict travel only through summarize_e9 and a numbered entry",
     }
     if prior and prior.get("bridge"):
         report["bridge"] = prior["bridge"]
     elif cfg.bridge:
         report["bridge"] = run_bridge(cfg, handoffs, enc, runner)
-        out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint: the bridge survives a later crash
-    if prior and prior.get("controls") and prior["controls"]["handoff_id"] == order[0] and order[0] in prior_scores:
-        report["controls"] = prior["controls"]
+        _write_checkpoint(out, report)   # checkpoint: the bridge survives a later crash
     for i, hid in enumerate(order):
         stem = _stem(hid)
         s_ids, r_ids, pairs = aligned[hid]
         if hid in prior_scores and (i > 0 or report["controls"] is not None):
             report["scores"][hid] = prior_scores[hid]
-            out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+            _write_checkpoint(out, report)
             print(f"[{i + 1}/{len(order)}] {hid}: kept from the checkpoint (score and per-token files match their hashes)")
             continue
         t0 = time.time()
@@ -433,11 +578,11 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
             report["controls"] = controls
         report["scores"][hid] = rec
         report["scores"][hid]["seconds"] = time.time() - t0
-        out.write_text(json.dumps(report, indent=1), encoding="utf-8")   # checkpoint per handoff
+        _write_checkpoint(out, report)   # checkpoint per handoff
         print(f"[{i + 1}/{len(order)}] {hid}: same K "
               f"{report['scores'][hid]['same_K_r2_layer_mean']:.4f} in {report['scores'][hid]['seconds']:.0f}s")
     report["complete"] = True
-    out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+    _write_checkpoint(out, report)
     return out
 
 
@@ -466,7 +611,10 @@ def close_partial(cfg: E9Config) -> Path:
     rep["partial"] = {"closed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                       "n_scored": len(scored), "n_registered": len(order), "unscored": order[len(scored):]}
     rep["complete"] = True
-    out.write_text(json.dumps(rep, indent=1), encoding="utf-8")
+    # Atomic, like every other write of this file: a torn close would destroy the very prefix the
+    # stopping rule exists to preserve, and this runs at the end of a sitting when there is nothing
+    # left to re-derive it from.
+    _write_checkpoint(out, rep)
     print(f"E9 partial close: {len(scored)} of {len(order)} scored; unscored named in report.json")
     return out
 

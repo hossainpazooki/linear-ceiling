@@ -60,6 +60,23 @@ def test_refuses_when_the_scorer_now_disagrees(ran):
         summarize(cfg, runner=drifted)
 
 
+def test_archived_crosscheck_allows_registered_cross_platform_tolerance(ran):
+    cfg, rp, runner = ran
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["archived_crosscheck"]["1"]["K_r2_heldout_layer_mean"]["recomputed"] += 5e-7
+    _write(rp, rep)
+    summarize(cfg, runner=runner)
+
+
+def test_archived_crosscheck_refuses_beyond_registered_tolerance(ran):
+    cfg, rp, runner = ran
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rep["archived_crosscheck"]["1"]["K_r2_heldout_layer_mean"]["recomputed"] += 2e-6
+    _write(rp, rep)
+    with pytest.raises(ValueError, match="archived cross-check"):
+        summarize(cfg, runner=runner)
+
+
 def test_refuses_changed_dump_bytes(ran):
     cfg, _, runner = ran
     (cfg.agent_dumps / "source" / "K.bin").write_bytes(b"tampered")

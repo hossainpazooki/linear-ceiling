@@ -92,8 +92,16 @@ def summarize(cfg: E8Config, runner=subprocess.run) -> str:
         g = score(cfg, k, dumps["generic"]["source"], dumps["generic"]["target"], scratch / f"generic_k{k}.json", runner,
                   per_token=gpt)
         chk = crosscheck(k, g, archived_r2(cfg, k))
-        if chk != rep["archived_crosscheck"].get(str(k)):
+        recorded_chk = rep["archived_crosscheck"].get(str(k))
+        if not isinstance(recorded_chk, dict) or set(recorded_chk) != set(chk):
             raise ValueError(f"k={k}: archived cross-check differs from the recorded one")
+        for metric, values in chk.items():
+            recorded_values = recorded_chk.get(metric)
+            if not isinstance(recorded_values, dict) or set(recorded_values) != set(values):
+                raise ValueError(f"k={k}: archived cross-check differs from the recorded one")
+            for role, value in values.items():
+                if not _close(float(value), float(recorded_values[role])):
+                    raise ValueError(f"k={k}: archived cross-check differs from the recorded one")
         a = score(cfg, k, dumps["agent"]["source"], dumps["agent"]["target"], scratch / f"agent_k{k}.json", runner,
                   holdout_frac=agent_holdout_frac(cfg), per_token=apt)
         if cfg.amendment:

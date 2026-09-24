@@ -59,7 +59,7 @@ def analyze_pair(src: WeightReader, tgt: WeightReader, reg_sweep, rule: dict) ->
             "median": float(np.median(delta)), "frac_positive": float(np.mean([d > 0 for d in delta])),
         }
     return {
-        "pair": pair_name(src.spec.model_id, tgt.spec.model_id) if src.spec.model_id.startswith("Qwen/") else f"{src.spec.model_id}-to-{tgt.spec.model_id}",
+        "pair": pair_name(src.spec.model_id, tgt.spec.model_id),
         "source": src.spec.model_id, "target": tgt.spec.model_id, "n_tokens": int(X.shape[0]),
         "hidden_src": src.spec.hidden, "hidden_tgt": tgt.spec.hidden, "n_layers_tgt": L,
         "by_lambda": by_lambda, "verdict": decide_pair(by_lambda, rule),

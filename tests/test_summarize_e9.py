@@ -375,7 +375,9 @@ def _fake_archive(tmp_path, cfg, k_r2=0.75, v_r2=0.6, n=8, L=2, H=2):
     _write(up / "results" / "mapper" / PAIR / "r2.json",
            {"k": {"1": {"K_r2_heldout_layer_mean": k_r2, "V_r2_heldout_layer_mean": v_r2}}})
     e8 = tmp_path / "e8_report.json"
-    _write(e8, {"dumps": {"generic": fps}, "per_k": {"1": {"generic": {"K": k_r2, "V": v_r2},
+    _write(e8, {"pair": PAIR,                                             # e8.py:221 records it; the calibration
+                                                                          # refuses a report that names another pair
+                "dumps": {"generic": fps}, "per_k": {"1": {"generic": {"K": k_r2, "V": v_r2},
                                                           "agent": {"K": k_r2 - 0.1, "V": v_r2 - 0.1}}}})   # 0025: arm (b)
 
     def runner(cmd, cwd, capture_output):
@@ -470,3 +472,158 @@ def test_rescore_agreement_tolerates_platform_jitter_and_refuses_real_drift():
     drift["cross_V"] *= (1 + 1e-4)
     with pytest.raises(ValueError, match="per-head sums beyond"):
         _rescore_agreement(box, drift, "h")
+
+
+# ------------------------------- the per-dump RoPE record (entry 0035; the native receiver's control)
+# The driver keeps one record per dump (e9.dump_rope_meta) because the unkept dumps are deleted as soon
+# as they are scored. For a receiver that is natively long there is no [e9.rope] and therefore no bridge,
+# and these records are the whole of the control in its place.
+
+def _rope_rec(which="target", *, inv="a" * 64, mpe=131072, att=1.0, params=None, model=None, chk=1e-7):
+    return {"which": which, "model": model or ("R" if which == "target" else "S"), "rope_theta": 500000.0,
+            "recorded": True, "rope_type": "llama3", "attention_scaling": att,
+            "parameters": dict(params if params is not None else {"rope_type": "llama3", "rope_theta": 500000.0}),
+            "inv_freq_sha256": inv, "n_inv_freq": 64, "max_position_embeddings": mpe,
+            "check_max_abs": chk, "check_atol": 1e-5}
+
+
+def _fake_cfg(cap=100, floor=0, rope=None):
+    return types.SimpleNamespace(context_cap=cap, context_floor=floor, rope=rope)
+
+
+def _rep_with(*recs, controls=None):
+    """One scored handoff carrying a complete three-role block and prefix-control record."""
+    if len(recs) == 1:
+        block = {"same_src": recs[0], "same_tgt": recs[0], "cross_src": recs[0]}
+    elif len(recs) == 2:
+        block = {"same_src": recs[1], "same_tgt": recs[0], "cross_src": recs[1]}
+    elif len(recs) == 3:
+        block = dict(zip(("same_src", "same_tgt", "cross_src"), recs))
+    else:
+        raise AssertionError("test helper expects one to three RoPE records")
+    rep = {"scores": {"h#0": {"dump_rope": block}}}
+    rep["controls"] = {"prefix": {"dump_rope": controls or recs[0]}}
+    return rep
+
+
+def _stamp_rope(cfg, report, recs):
+    """Give every scored handoff (and the prefix control) the same recorded RoPE block."""
+    rep = json.loads(report.read_text(encoding="utf-8"))
+    for rec in rep["scores"].values():
+        rec["dump_rope"] = {"same_src": dict(recs[0]), "same_tgt": dict(recs[0]), "cross_src": dict(recs[1])}
+    rep["controls"]["prefix"]["dump_rope"] = dict(recs[0])
+    _write(report, rep)
+    return rep
+
+
+def test_rope_record_absent_or_unrecorded_still_summarizes_the_short_cell(ran):
+    """config/e9.toml pins a commit whose dumps carry no RoPE spec at all; the short cell registered no
+    native-window control and must not be refused for lacking one -- but the summary must SAY so."""
+    cfg, e7, report, runner = ran
+    md = summarize(cfg, runner=runner, encoder=words, e7=e7)
+    fig = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    assert fig["dump_rope"]["recorded"] is False and "did not run" in md
+
+
+def test_rope_record_states_the_window_and_the_per_role_frequencies(ran):
+    cfg, e7, report, runner = ran
+    _stamp_rope(cfg, report, (_rope_rec("target"), _rope_rec("source", inv="b" * 64)))
+    md = summarize(cfg, runner=runner, encoder=words, e7=e7)
+    fig = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    dr = fig["dump_rope"]
+    assert dr["recorded"] is True and set(dr["by_role"]) == {"target", "source"}
+    assert dr["by_role"]["target"]["inv_freq_sha256"] != dr["by_role"]["source"]["inv_freq_sha256"]
+    assert "inside every dump's recorded window" in md and "NATIVE receiver" in md
+
+
+def test_refuses_a_cap_outside_a_dump_s_recorded_window(ran):
+    cfg, e7, report, runner = ran
+    _stamp_rope(cfg, report, (_rope_rec("target", mpe=64), _rope_rec("source", inv="b" * 64)))
+    with pytest.raises(ValueError, match="outside the window"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+
+
+def test_rope_identity_is_scoped_by_model_role():
+    """Two dumps of one role must agree; the two ROLES may differ -- a cross-release pair carries
+    different RoPE on its two sides, and an unscoped assert would refuse every correct run of one."""
+    cfg = _fake_cfg()
+    s9._check_rope_meta(cfg, _rep_with(_rope_rec("target"), _rope_rec("source", inv="b" * 64)), ["h#0"])
+    with pytest.raises(ValueError, match="frequencies moved mid-run"):
+        s9._check_rope_meta(cfg, _rep_with(_rope_rec("source"), _rope_rec("target"),
+                                           _rope_rec("target", inv="c" * 64)), ["h#0"])
+    with pytest.raises(ValueError, match="frequencies moved mid-run"):
+        s9._check_rope_meta(cfg, _rep_with(_rope_rec("source"), _rope_rec("target"),
+                                           _rope_rec("target", mpe=32768)), ["h#0"])
+
+
+def test_refuses_mixed_or_partial_rope_evidence():
+    cfg = _fake_cfg()
+    half = dict(_rope_rec("target"), recorded=False)
+    with pytest.raises(ValueError, match="mixes two upstream pins"):
+        s9._check_rope_meta(cfg, _rep_with(_rope_rec("target"), half), ["h#0"])
+    rep = _rep_with(_rope_rec("target"))
+    rep["scores"]["h#1"] = {"n_pairs": 3}
+    with pytest.raises(ValueError, match="carry none"):
+        s9._check_rope_meta(cfg, rep, ["h#0", "h#1"])
+    assert s9._check_rope_meta(cfg, {"scores": {"h#0": {"n_pairs": 3}}}, ["h#0"]) is None
+
+
+def test_refuses_an_incomplete_role_block_or_missing_prefix_rope_record():
+    cfg = _fake_cfg()
+    rec = _rope_rec("target")
+    incomplete = {"scores": {"h#0": {"dump_rope": {"same_tgt": rec}}},
+                  "controls": {"prefix": {"dump_rope": rec}}}
+    with pytest.raises(ValueError, match="must contain exactly"):
+        s9._check_rope_meta(cfg, incomplete, ["h#0"])
+    no_prefix_record = _rep_with(rec)
+    del no_prefix_record["controls"]["prefix"]["dump_rope"]
+    with pytest.raises(ValueError, match="prefix control is missing"):
+        s9._check_rope_meta(cfg, no_prefix_record, ["h#0"])
+
+
+def test_the_rope_less_long_cell_refuses_dumps_that_carry_no_spec():
+    """The registered exception is narrow: an unrecorded dump passes only where the control was never
+    the registration. With a floor and no [e9.rope] -- the long half of a natively long receiver -- the
+    native-window and identity asserts ARE the control, so no evidence is a refusal."""
+    unrec = {"which": "target", "model": "R", "rope_theta": 500000.0, "recorded": False}
+    rep = _rep_with(unrec, dict(unrec, which="source"))
+    assert s9._check_rope_meta(_fake_cfg(), rep, ["h#0"])["recorded"] is False
+    with pytest.raises(ValueError, match="neither the native-window nor"):
+        s9._check_rope_meta(_fake_cfg(floor=50), rep, ["h#0"])
+
+
+def test_the_rope_less_long_cell_refuses_a_report_with_no_rope_block_at_all():
+    """The absent case, not the unrecorded one: a report whose scored handoffs carry no `dump_rope`
+    key whatsoever. It is the SAME absence of evidence as an all-unrecorded run, so it refuses in the
+    same place -- otherwise `dump_rope: null` would stand for "checked" on the one cell whose only
+    control this is. The rope-less SHORT cell keeps returning None: config/e9.toml pins a commit older
+    than the RoPE spec and never registered this control, so refusing there would refuse the Qwen run."""
+    bare = {"scores": {"h#0": {"n_pairs": 3}}}
+    assert s9._check_rope_meta(_fake_cfg(), bare, ["h#0"]) is None
+    with pytest.raises(ValueError, match="no scored handoff carries a RoPE block at all"):
+        s9._check_rope_meta(_fake_cfg(floor=50), bare, ["h#0"])
+
+
+def test_refuses_a_rope_the_registration_does_not_describe():
+    yarn = {"rope_type": "yarn", "factor": 2.5, "original_max_position_embeddings": 32768}
+    scaled = _rope_rec("target", mpe=81920, att=1.0916, params={**yarn, "rope_theta": 1e6})
+    cfg = _fake_cfg(cap=81920, floor=50, rope=dict(yarn))
+    s9._check_rope_meta(cfg, _rep_with(scaled, dict(scaled)), ["h#0"])
+    wrong = _rope_rec("target", mpe=81920, att=1.0916, params={**yarn, "factor": 3.0, "rope_theta": 1e6})
+    with pytest.raises(ValueError, match="not the registered"):
+        s9._check_rope_meta(cfg, _rep_with(wrong, dict(wrong)), ["h#0"])
+    # with NO [e9.rope] the model's own config supplied the RoPE; the one positive sign that the run
+    # applied none of its own is the attention factor a native RoPE leaves at 1
+    with pytest.raises(ValueError, match="attention_scaling"):
+        s9._check_rope_meta(_fake_cfg(cap=81920), _rep_with(scaled, dict(scaled)), ["h#0"])
+
+
+def test_refuses_a_dump_whose_spec_check_did_not_pass():
+    cfg = _fake_cfg()
+    bad = _rope_rec("target", chk=1e-3)
+    with pytest.raises(ValueError, match="passing spec-vs-model check"):
+        s9._check_rope_meta(cfg, _rep_with(bad), ["h#0"])
+    gone = dict(_rope_rec("target"))
+    gone["max_position_embeddings"] = None
+    with pytest.raises(ValueError, match="nothing to read"):
+        s9._check_rope_meta(cfg, _rep_with(gone), ["h#0"])
