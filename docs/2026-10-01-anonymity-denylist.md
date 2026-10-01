@@ -13,6 +13,7 @@ Pattern: `pazooki|ishmam|farhan|ritvik|aggarwal|emerson|nadathur|vikram|zain asa
 |---|---|
 | `docs/probes/2026-09-04-hf-upload-large-folder-4workers.err` | 50 |
 | `README.md` | 11 |
+| `docs/reviews/2026-09-28-llama-cell-r8-backup-and-recomputation.md` | 11 |  *(added 2026-10-01: merged by PR #6 at `704e4c4`, after this list was generated)*
 | `docs/archive/README-2026-09-09-status.md` | 6 |
 | `docs/reviews/2026-09-14-e9-cold-rescore-second-machine.md` | 5 |
 | `docs/gpu-experiment-protocol.md` | 5 |
@@ -98,3 +99,5 @@ Pattern: `pazooki|ishmam|farhan|ritvik|aggarwal|emerson|nadathur|vikram|zain asa
 ## Which terms actually hit outside the records (files, 2026-10-01)
 
 pazooki 27 (26 as the account `hossainpazooki` in dataset ids and links; one as the surname, `docs/2026-09-02-e-rl-design.md:13`) · algoverse 13 · emerson 10 · farhan 5 · ritvik 2 · ishmam 1 · emmmy 1 · aggarwal, nadathur, vikram, "zain asad", alake, lingyuan: 0. No word collision: every hit is an identifying use. The largest single file is `docs/probes/2026-09-04-hf-upload-large-folder-4workers.err` (50 hits, an upload log naming the account); on the mirror it is dropped as an infrastructure record, not censored.
+
+*Added 2026-10-01 after PR #6 (`704e4c4`): `docs/reviews/2026-09-28-llama-cell-r8-backup-and-recomputation.md` adds one file to `hossainpazooki` (6 hits, dataset ids and the upstream PR link), `emmmy` (3), `ritvik` (1), `aggarwal` (1) and `emerson` (1); no new term. The per-term file counts above are as generated and are not re-derived here.*
