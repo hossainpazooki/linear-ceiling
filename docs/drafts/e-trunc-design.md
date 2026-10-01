@@ -72,7 +72,7 @@ Order by |S| descending within each level so the longest (the only ones L65 chan
 - E9L: 35 handoffs, 1.5-3 min each on an L40S (`docs/2026-09-10-e9l-gpu-runbook.md:139`); peak 31.56 GiB at
   |S| = 80,111 (`:127`).
 - E-TRUNC adds, per handoff, up to three shorter S' prefills (L65 only for the 4 handoffs over 65,536; L49 for the
-  18 over 49,152 — counts from 0036's `s_len` / `s_pos` bins; L32 for all 35) plus FULL. Each S' prefill is at most
+  **19** over 49,152 — recounted 2026-10-01 from `n_sender` in `results/e9l/align/coverage.json`: 0036's `s_len` bins give 18 because their edge is 50,000 and one handoff sits at 49,196; L32 for all 35) plus FULL. Each S' prefill is at most
   the FULL cost and L32 is at most 16.70 GiB / 7.3 s forward (runbook 09-13:96). **Upper bound ≈ 3× the E9L sitting,
   ≈ 4-5 h on an L40S**; realistically under 3 h because most added prefills are the short ones. Memory is bounded by
   FULL (31.56 GiB): an L40S 48 GB fits; a 20 GB slice fits only L32 and L32-native.
