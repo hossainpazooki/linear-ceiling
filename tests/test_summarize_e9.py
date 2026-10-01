@@ -627,3 +627,22 @@ def test_refuses_a_dump_whose_spec_check_did_not_pass():
     gone["max_position_embeddings"] = None
     with pytest.raises(ValueError, match="nothing to read"):
         s9._check_rope_meta(cfg, _rep_with(gone), ["h#0"])
+
+
+def test_refuses_a_rope_recording_run_whose_prefix_control_has_no_rope_record(ran):
+    """Finding 4 (PR 5 review): on a cell whose dumps carry RoPE records, the prefix control must carry one too."""
+    cfg, e7, report, runner = ran
+    rep = _stamp_rope(cfg, report, (_rope_rec("target"), _rope_rec("source", inv="b" * 64)))
+    del rep["controls"]["prefix"]["dump_rope"]
+    _write(report, rep)
+    with pytest.raises(ValueError, match="prefix control is missing its dump_rope record"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+
+
+def test_refuses_an_absent_prefix_control_even_on_a_rope_recording_run(ran):
+    cfg, e7, report, runner = ran
+    rep = _stamp_rope(cfg, report, (_rope_rec("target"), _rope_rec("source", inv="b" * 64)))
+    del rep["controls"]["prefix"]
+    _write(report, rep)
+    with pytest.raises(ValueError, match="prefix-invariance control missing|prefix control is missing"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
