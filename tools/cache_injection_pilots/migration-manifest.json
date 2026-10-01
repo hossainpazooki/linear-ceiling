@@ -1,0 +1,209 @@
+{
+  "source_repo": "https://github.com/neuriv/cache-injection",
+  "source_commit": "8e8417a6a6186d4a4164c3477836e25892fdf046",
+  "destination_directory": "tools/cache_injection_pilots",
+  "scope": "All tracked files at the source commit; no Git history, downloaded weights, caches, or regenerated results.",
+  "historical_results": "The original per-example outputs were deleted. results/historical-summary.json is preserved verbatim as previously reported aggregates, not newly verified GPU evidence.",
+  "files": [
+    {
+      "source_path": ".gitignore",
+      "destination_path": "tools/cache_injection_pilots/.gitignore",
+      "source_sha256": "52104bc17589236c83d02d7a88926601a80337a17b7a4ee40e525526934dc94b",
+      "destination_sha256": "52104bc17589236c83d02d7a88926601a80337a17b7a4ee40e525526934dc94b",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "README.md",
+      "destination_path": "tools/cache_injection_pilots/README.md",
+      "source_sha256": "0b7cf8e58b24a522cfc0ddad79df625720aba6a6983b9ae05987310db8bfa079",
+      "destination_sha256": "3494c17bbfb29815eb81be6064a3120e405f83e6c0f94c7b30d150e43af2fed3",
+      "status": "modified",
+      "change": "Add migration provenance, historical-only status, isolated environment and pilot scope. Clarify archive-alias protection and downloader replacement behavior."
+    },
+    {
+      "source_path": "audit_records.py",
+      "destination_path": "tools/cache_injection_pilots/audit_records.py",
+      "source_sha256": "419ff91567666adaafad1d46106b4e01ff62ca679bdb34bec6b25fa426c25164",
+      "destination_sha256": "d0a33d0d22a87bc5358d77c5e52cd7263e6a0cf457c735980c67273b3dab518c",
+      "status": "modified",
+      "change": "Convert explanatory docstrings to comments; calculations unchanged."
+    },
+    {
+      "source_path": "common.py",
+      "destination_path": "tools/cache_injection_pilots/common.py",
+      "source_sha256": "fc843d9711419e6e1d3cc991d67019881a4d89731853a72731de051b6568d037",
+      "destination_sha256": "713c0270e1157f9c103169d53cc914277527ffb4395cd74e3c8193509a080f91",
+      "status": "modified",
+      "change": "Synchronize the selected CUDA device as well as MPS; retain CPU no-op."
+    },
+    {
+      "source_path": "continuations.py",
+      "destination_path": "tools/cache_injection_pilots/continuations.py",
+      "source_sha256": "259d998119cc6e4903b9efe660819a44ac9fa0fcc7ba53a9598059d21ebe0e44",
+      "destination_sha256": "259d998119cc6e4903b9efe660819a44ac9fa0fcc7ba53a9598059d21ebe0e44",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "docs/index.html",
+      "destination_path": "tools/cache_injection_pilots/docs/index.html",
+      "source_sha256": "9f37c661ee27348e2c07be0cc4096712f8978a09f79bcbbaf2cf49adc61e1ac9",
+      "destination_sha256": "9f37c661ee27348e2c07be0cc4096712f8978a09f79bcbbaf2cf49adc61e1ac9",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "docs/protocols.html",
+      "destination_path": "tools/cache_injection_pilots/docs/protocols.html",
+      "source_sha256": "e06b8b920dda5c4b80d0cd7c09ce5be3c0ed4471df95ed6acb1b541fa5eb1a15",
+      "destination_sha256": "ef6b39b3b5e5c1e50e308937b3c7ef46a034f1a260df500eff922bc97f751581",
+      "status": "modified",
+      "change": "Describe the historical control as within-block source-position permutation."
+    },
+    {
+      "source_path": "docs/refutations.html",
+      "destination_path": "tools/cache_injection_pilots/docs/refutations.html",
+      "source_sha256": "aff87e2fb70f445820af7975055bae809dbb6a73da8ce2043a0b5aa383db2787",
+      "destination_sha256": "a198675826de38479df72c697972515db5359d606ba7becc632f539162042542",
+      "status": "modified",
+      "change": "Correct the blanket claim that f* lower-bounds practical recomputation. Distinguish the historical 1,204-comparison report from the later verified key-error audit."
+    },
+    {
+      "source_path": "docs/replicate.html",
+      "destination_path": "tools/cache_injection_pilots/docs/replicate.html",
+      "source_sha256": "5026e6d6de4c12bda11192fc752d18e669124b6555496b323be0809151eef7ad",
+      "destination_sha256": "c5534feb738d31ee5e0de9e72950edd6f36cf192430839500a528ab471dc7391",
+      "status": "modified",
+      "change": "Use the migrated working directory and distinguish historical pins from the main environment."
+    },
+    {
+      "source_path": "docs/results.html",
+      "destination_path": "tools/cache_injection_pilots/docs/results.html",
+      "source_sha256": "27156796a886e8885dacdde05e93510f84bf386ecbe177ceaad4e26af5fbac2d",
+      "destination_sha256": "3767045e1a00109acac12527424057ce836a2cefbf5e46f7978aa4fdd002cee8",
+      "status": "modified",
+      "change": "Label token-removal and same-model key findings precisely; describe permutation within copied blocks."
+    },
+    {
+      "source_path": "download_models.py",
+      "destination_path": "tools/cache_injection_pilots/download_models.py",
+      "source_sha256": "7769378603ffdbff5c0c6f12dce6b18278d6ad43f7c3b0339f0cdffaf4ab0d58",
+      "destination_sha256": "7769378603ffdbff5c0c6f12dce6b18278d6ad43f7c3b0339f0cdffaf4ab0d58",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "experiment-manifest.json",
+      "destination_path": "tools/cache_injection_pilots/experiment-manifest.json",
+      "source_sha256": "2a280c5e89a4b49b54597593dc9e63c1069c73034156e40fb6f3102165f33f6a",
+      "destination_sha256": "2a280c5e89a4b49b54597593dc9e63c1069c73034156e40fb6f3102165f33f6a",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "factorial.py",
+      "destination_path": "tools/cache_injection_pilots/factorial.py",
+      "source_sha256": "6cc217c57c3b75c3cfa7b90d8ff6da9ff9fe02c65b9f34bdf1312b60a6e8892e",
+      "destination_sha256": "e7b1f75cc4a4baa0be082739e5b8db0cf21b995110da0fc5fbd60525da4ef16f",
+      "status": "modified",
+      "change": "Convert explanatory docstrings to comments and remove redundant copies of loaded arrays."
+    },
+    {
+      "source_path": "fetch_records.py",
+      "destination_path": "tools/cache_injection_pilots/fetch_records.py",
+      "source_sha256": "7d1715d86602b9a5d04d7350be79e561244b3277896b286b75ddd59bb52adec2",
+      "destination_sha256": "7d1715d86602b9a5d04d7350be79e561244b3277896b286b75ddd59bb52adec2",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "history_ablation.py",
+      "destination_path": "tools/cache_injection_pilots/history_ablation.py",
+      "source_sha256": "57e5d66c72b8b7a43f6051bb13d9ce644230cce36e3141d16012074b27b8d00a",
+      "destination_sha256": "57e5d66c72b8b7a43f6051bb13d9ce644230cce36e3141d16012074b27b8d00a",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "local_experiments.py",
+      "destination_path": "tools/cache_injection_pilots/local_experiments.py",
+      "source_sha256": "03738337cab38eaa15ed20857ca42be107cdc3da294980c7471dd083bc9b565f",
+      "destination_sha256": "6b15e5b18081c5e5954350f8505e7a1889c2e8716a49798088867297ccbd35ce",
+      "status": "modified",
+      "change": "Remove waits on downloader log text; pinned local model loading fails directly."
+    },
+    {
+      "source_path": "math_recheck.py",
+      "destination_path": "tools/cache_injection_pilots/math_recheck.py",
+      "source_sha256": "a975aa6cd36e00dd524613555586454135559b171796543e4901e6deabd1d176",
+      "destination_sha256": "a975aa6cd36e00dd524613555586454135559b171796543e4901e6deabd1d176",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "math_run.py",
+      "destination_path": "tools/cache_injection_pilots/math_run.py",
+      "source_sha256": "4515e86610003b24b7a4824fe2db8fe145276371ff9c9e21c677ef5002fdbc85",
+      "destination_sha256": "4515e86610003b24b7a4824fe2db8fe145276371ff9c9e21c677ef5002fdbc85",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "practical.py",
+      "destination_path": "tools/cache_injection_pilots/practical.py",
+      "source_sha256": "f4ffb4ef1d1aaf82fe68d01ff11754fa7135d3b71879777fa143e62ac331a868",
+      "destination_sha256": "2199bf16f9ccf8fc4e87e84d2c19a1d3f9e84d076e4801d1d40a029ae1dd9d37",
+      "status": "modified",
+      "change": "Identify the historical native-RoPE question-wrapper scope in a module comment."
+    },
+    {
+      "source_path": "prepare_handoffs.py",
+      "destination_path": "tools/cache_injection_pilots/prepare_handoffs.py",
+      "source_sha256": "641713d3f9cebed598e161b8aad94f6e4d75a6c3274478e499c8baa1cf4b0bd4",
+      "destination_sha256": "641713d3f9cebed598e161b8aad94f6e4d75a6c3274478e499c8baa1cf4b0bd4",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "prepare_inputs.py",
+      "destination_path": "tools/cache_injection_pilots/prepare_inputs.py",
+      "source_sha256": "c108b886c1463d4cd385d1a3e2c38070b20b27eaf37c980a882bfca9f47ecbc0",
+      "destination_sha256": "d2ec15fde49c3876901f04e9d1b47db180f132fe8bfd35e88a11a1b798c78148",
+      "status": "modified",
+      "change": "Refuse to replace existing archive data; reuse only expected symlinks."
+    },
+    {
+      "source_path": "prepare_math.py",
+      "destination_path": "tools/cache_injection_pilots/prepare_math.py",
+      "source_sha256": "4df20dd315512ec6d858b0379e72d8e270e14d2f1d81ddfd3c3e979a0fc249b6",
+      "destination_sha256": "b541fed80c09d41d542fa33b01b7789acaed99f914d4efcb3b568ccdc9a88545",
+      "status": "modified",
+      "change": "Remove an unused import and indefinite downloader wait."
+    },
+    {
+      "source_path": "probe.py",
+      "destination_path": "tools/cache_injection_pilots/probe.py",
+      "source_sha256": "f9279cb89b1fc1004e9e72ab2b144ec1b2c3c04df2d23a17625de9bf0ee60bda",
+      "destination_sha256": "ad66bc69a29beed37701c43c07e4ea8f10175b12b20ed45ffe5a6a93deb088be",
+      "status": "modified",
+      "change": "Remove the indefinite downloader wait; pinned local model loading fails directly."
+    },
+    {
+      "source_path": "requirements.txt",
+      "destination_path": "tools/cache_injection_pilots/requirements.txt",
+      "source_sha256": "03111929668bd793d926ffa20d8b40ed7abf874f3fd1e7e393b4b971b4ceae14",
+      "destination_sha256": "61e40efa4d60ed111d81340ebadb03ab321546ab0a5f3f6f220c219947322513",
+      "status": "modified",
+      "change": "Mark unchanged dependency pins as the historical pilot environment."
+    },
+    {
+      "source_path": "results/historical-summary.json",
+      "destination_path": "tools/cache_injection_pilots/results/historical-summary.json",
+      "source_sha256": "a7629b51f7bd738d7502d718eb8fa49bb12f5efbfdfea40220a507ff7f271cb6",
+      "destination_sha256": "a7629b51f7bd738d7502d718eb8fa49bb12f5efbfdfea40220a507ff7f271cb6",
+      "status": "unchanged"
+    },
+    {
+      "source_path": "summarize.py",
+      "destination_path": "tools/cache_injection_pilots/summarize.py",
+      "source_sha256": "17fce7b8456bf641ff095fe6e99cab74ba35c1cb001a7a9c89861415664388f6",
+      "destination_sha256": "17fce7b8456bf641ff095fe6e99cab74ba35c1cb001a7a9c89861415664388f6",
+      "status": "unchanged"
+    }
+  ],
+  "added_files": [
+    "tools/cache_injection_pilots/migration-manifest.json",
+    "tests/test_cache_injection_pilots.py"
+  ]
+}
