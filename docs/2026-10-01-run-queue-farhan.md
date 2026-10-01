@@ -3,6 +3,18 @@
 **Date:** 2026-10-01 · **HEAD at write:** `0a51275` (= `origin/main`, 0/0) · **Last entry on the ledger: 0044** ·
 gates green (`ledger_check`, `lint_scope`, `seal verify`).
 
+**Update, 2026-10-01:** the original queue below describes a broader MLSys proposal. The focused
+cache-injection follow-up is Task C's fresh/reuse comparison with correctness controls, with Task B
+optional on the same GPU. This update corrects those designs; it does not register them, adopt
+quality thresholds, schedule the other campaigns, or authorize renting a box. The revised E-BEH
+and E-TAIL drafts retain the pending registration and distinguish prediction sensitivity from
+coding-task quality.
+
+**Completed fork follow-up:** the separate `exp/cache-behavior` change measured all 35
+long handoffs on an H100, including fixed-text predictions and the last 32 receiver
+queries' fresh attention. Its runbook records the descriptive scope. This does not
+register the queue below or supply its unrun truncation and repair-budget results.
+
 **Dates.** Internal review **week of Oct 12** · draft to a PI by **Oct 15** · **MLSys 2027 deadline Oct 30 2026,
 12:00 PDT**. The NeurIPS/LCFM workshop paper is already accepted (non-archival), so nothing here is needed for that;
 this is the MLSys push plus the camera-ready text.
@@ -25,8 +37,8 @@ in one reply.
 | # | task | needs from me first | code that must land first | min card | time | deliverable |
 |---|---|---|---|---|---|---|
 | **A** | **E-TRUNC** — isolate length by head-truncating the same senders (W2) | rulings 1, 2, 3 + registration | `sender_head_truncate` config key; paired reader | **48 GB** | ≈3 h | tail/paired figures + a drafted entry |
-| **B** | E-TAIL **Part B** — attention-weighted deviation (W3) | rulings 5 + registration, incl. a verbatim Prop. 4 quote | chunked eager hook **+ its own probe** | **20 GB** | <1 h | per-handoff w figures + drafted entry |
-| **C** | E-BEH — behavioral check of τ_K (W1) | ruling 6 + registration of the injection splice | cache injection upstream; continuation extractor | **48 GB** | ≈3 h | KL/top-1 per arm + drafted entry |
+| **B** | Optional E-TAIL **Part B** — fresh-attention-weighted error (W3) | descriptive scope, query selection, checks + registration | chunked reductions **+ their own probe** | reuse C's **80 GB** allocation; smaller card only after probe | measure in probe | per-query w and matched mass + drafted entry |
+| **C** | E-BEH — prediction sensitivity to practical reuse (W1) | ruling 6 + registration of core arms and controls | cache injection; pinned continuation extractor | **80 GB recommended**; 40 GB marginal | measure in probe | per-token KL/top-1, controls + drafted entry |
 | **D** | *Optional:* a third pair, Llama-3.2-1B → 3B | ruling 9 (just the go/no-go) | nothing — one CPU preflight | **none** | seconds | preflight output, pass or fail |
 | **E** | Llama **LONG** cell, 0046/0047 (W7) | ruling 10 + the numbering ruling 11 | nothing; drafts are staged | **80 GB** | ≈2 h | run the staged drafts' cell |
 
@@ -121,49 +133,58 @@ cells.
 
 ---
 
-## 3. Task B — E-TAIL Part B (second choice: cheapest card, least ready tooling)
+## 3. Task B — E-TAIL Part B (optional mechanism analysis)
 
-**Quantity.** `w_i(l,h) = Σ_{j∈M} a_ij(l,h) · δ_K(j,l,h)` with `a` the **fresh** receiver's attention weights.
-Report mean and p90 of w, the share of attention mass landing on matched tokens with δ_K > τ_K, and a per-token
-attention-weighted δ — always **beside** µ and δ_max, never instead.
+**Quantity.** `w_i(l,h) = Σ_{j∈M, j≤i} a_ij(l,h) · δ_K(j,l,g(h))` with `a` the **fresh** receiver's attention
+weights and `g(h)` mapping query head h to its GQA KV head. Report w, matched attention mass m, and w/m when m>0
+(undefined otherwise). Also report attention mass on the Part A tail set defined by token-average δ_K>τ_K,
+always beside µ and δ_max. A small w can reflect little attention to M; mass makes that distinction visible.
 
-**What the entry must seal:** that `a` is the fresh receiver's attention (the reused cache's attention is a
-different, post-hoc quantity); the attention **backend pin**, with the admission that δ comes from SDPA dumps while
-`a` comes from eager; the **tolerance** at which eager K/V must match the archived dumps or the run refuses; and the
-Proposition 4 attribution **quoted verbatim** — the design says that statement is not readable on this machine, so
-the entry must carry it before the quantity is tied to it.
+**What the entry must seal:** the fresh-attention choice, exact query positions/sampling, GQA mapping, causal
+mask, numerical checks, and backend. Preserve SDPA where possible and reconstruct selected-query attention in
+chunks; if eager replaces it, bridge states/logits within declared tolerances. Fresh attention is one endpoint,
+whereas Proposition 4 uses attention along an interpolation path and additional norm/variance assumptions.
+These summaries do not establish that bound, validate τ_K under YaRN, or prove unchanged generation quality.
 
-**Code first.** A chunked eager-attention hook: query chunks of 2,048, reducing against δ on the fly, **never**
-materializing `[heads, |R|, |R|]` — at p90 |R| = 19,853 with 16 query heads that is ~25 GB *per layer*. Plus its own
-probe. `probe_e9l.py` is already generalised (`EXP` / `MAX_S` / `LADDER`, native-RoPE path) but it measures a
-`load_model` **prefill**, so it cannot size this hook; a sibling (`tools/ec2/probe_tailb.py`) does not exist.
+**Code first.** Reduce selected-query attention against δ without materializing full all-position matrices;
+at |R|=19,853 with 16 query heads one FP32 matrix is about 25 GB per layer. Check GQA mapping and chunked
+reductions against a small explicit causal-attention reference, then probe the actual largest case.
+The existing prefill probe does not establish this new path's memory requirement.
 
-**Card and time.** **20 GB** (weights 6.41 GiB + ≈2.6 GB per chunk). The only row that fits a 1g.20gb slice.
-**< 1 h** for the 35.
+**Card and time.** The earlier 20 GB / sub-hour figures were unmeasured estimates for this path. Prefer C's
+existing A100/H100 80 GB allocation if available; choose a smaller card only after a memory/time probe.
+Retain per-query reductions and masses, not only cohort means. Do not rerun prefills for the completed CPU Part A.
 
 ---
 
-## 4. Task C — E-BEH (third: most informative, least ready)
+## 4. Task C — E-BEH (focused fresh-versus-reuse follow-up)
 
-**Question.** Does reusing the receiver's own K/V for matched tokens change what it predicts on the recorded
-continuation, versus a fresh prefill — and by how much relative to a size-matched random perturbation?
+**Question.** How much does reading an assembled cache with reused same-model KV change next-token
+predictions on the recorded continuation, relative to fresh prefill?
 
-**Five arms, and two are controls:** FRESH · REUSE-ALL · REUSE-ORACLE-τ · CACHEBLEND-10/-20 · **NULL** (matched K/V
-replaced by fresh + a perturbation whose δ equals the measured δ). **NULL is mandatory**, and FRESH-vs-FRESH must
-come out **exactly zero** or the run refuses — without both, the KL numbers are uninterpretable.
+**Core:** FRESH and REUSE-ALL, with fresh-repeat, no-reuse/full-fresh, exact-prefix, and rotary-relocation
+checks. A random perturbation can test error direction beyond matched magnitude; it is not needed to interpret
+fresh-vs-reuse KL. Oracle-ranked recomputation at 10%/20% or the tau-ladder counts is optional, still requires
+fresh-reference information for selection, and must not be named CacheBlend.
 
-**What the entry must seal:** the arms exactly; the two controls as refusal conditions; determinism (SDPA, fp32);
-the |C| cap; the coverage rule for handoffs whose continuation is missing from the trace; and that the continuation
-was produced by a proprietary model, so this measures a representation effect on **held-fixed text**, not
-generation quality. Bands are ruling 6.
+**What the entry must seal:** exact archived M, arms, controls/tolerances, backend/precision/version pins,
+continuation extraction and cap, missing/short-continuation coverage, and scoring alignment. Build the entire
+receiver cache, preserving all M; feed C[0] as conditioning and score C[1:]. The first continuation token is
+unscored. The text came from a proprietary model, so this measures **prediction sensitivity on fixed text**,
+not Qwen coding-task quality. Ruling 6 proposes descriptive reporting without a fabricated quality gate.
 
-**Code first, and this is why it is last.** The **cache-injection splice** on upstream `kvt/cache.py` — a mixed
-cache (reused K/V at `p_S` re-rotated to `p_R` for M, fresh elsewhere) under a Qwen3 GQA `[28 layers, 8 KV heads]`
-layout, plus in-situ recompute of a chosen subset. `0023:1367` requires this be **pinned by an entry before it
-runs**. Then a continuation extractor out of `traces/`, and a correctness probe: recompute-ALL-in-situ must
-reproduce FRESH **bit-for-bit**. A card rented before that exists would idle at hourly rates.
+**Code first.** Port the block-wise cache construction and pinned continuation extraction into this repository;
+the upstream `kv-transfer-replication` clone remains read-only. Source/destination must use the same fixed YaRN
+schedule and amplitude for a pure `(p_R-p_S)` rotation with scaled `inv_freq`; do not apply the amplitude twice.
+Reject unsupported configuration differences. The separate implementation/runbook pins the executable path.
+Fresh repeats can be exact, but chunk/backend/version bridges use declared finite-precision tolerances and
+report errors. A failed control stops expansion; it does not justify weakening the tolerance after the run.
 
-**Card and time.** **48 GB** (S prefill 31.56 GiB; a 3g.40gb slice is marginal, 20 GB does not fit). ≈3 h.
+**Card and time.** Prefer **one A100 80 GB or H100 80 GB**. The measured 31.56 GiB S prefill does not bound
+simultaneous source/fresh/assembled caches. A **40 GB slice is marginal**; 48 GB or 40 GB requires a successful
+largest-case probe of the actual port. Synchronize CUDA around timings. Measure the core workload before
+estimating duration; the old three-hour estimate was not an upper bound. Reuse verified baselines and preserve
+new per-example records. Deleted pilot outputs cannot be recovered by labeling a fresh run a reproduction.
 
 ---
 
@@ -224,10 +245,14 @@ grounded on 0034 today.
 R5 (pull → verify → delete) load-bearing rather than tidy; and there is no instance metadata, so R7's read-back
 comes from the API.
 
-**Environment.** Two clones, two venvs: upstream `kv-transfer-replication` **detached at the cell's pin** (for every
+**Environment for the existing E9 drivers.** Two clones, two venvs: upstream `kv-transfer-replication` **detached at the cell's pin** (for every
 Llama cell, `06f8d55`) with torch cu128, and `linear-ceiling` CPU-only. `setup.sh` builds both idempotently, places
 the mapper by sha, checks the traces tarball against its manifest, runs `e9 --check` and `--align-only`, and arms a
 24 h self-halt.
+
+The new E-BEH/attention port has its own pinned environment and runbook. Do not mix Transformers 4.57 pilot
+caches with a 5.x scoring path without an explicit numerical bridge, or assume the commands below already
+implement Tasks B/C. No new environment is required merely to re-read completed CPU summaries.
 
 ```bash
 # HOME, BEFORE the box exists. The gate does NOT check this and the summarizer refuses later without it.
@@ -256,7 +281,7 @@ entry script:
 |---|---|---|
 | A — E-TRUNC | a **new** paired reader (intersection + paired levels), fail-closed, inputs sha-pinned | `e9 --check --config config/<level>.toml`, then the reader → exit 0 |
 | B — E-TAIL B | `e9_tail`'s surface extended, or a sibling; the eager-vs-SDPA identity check is part of it | reader exit 0 **and** identity within the entry's stated tolerance |
-| C — E-BEH | a new reader over the per-position KL/argmax summaries | reader exit 0, identity arm exactly 0, NULL present |
+| C — E-BEH | a new reader over per-position KL/argmax, input hashes, and control records | reader exit 0; declared controls within fixed tolerances; exact scored subset named |
 | E — Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0047.py` | `.venv/bin/python -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
 | any R8 mirror | — | `.venv/bin/python tools/hf_verify_backup.py <repo_id> <local_root>` → **exit 0 only when every file matches both directions** (`HF_TOKEN` in the env only) |
 | the repo | — | `ledger_check && lint_scope && seal verify` |
@@ -306,14 +331,18 @@ entry script:
 **Order:** task **A** (E-TRUNC) → task **B** → task **D** if you want it (it costs seconds) → task **C** and task
 **E** as post-deadline. A is the only GPU row plausibly *entered* by Oct 30.
 
+That was the original broader scheduling proposal. For the focused cache-injection follow-up described in
+the dated update above, prepare **C's core comparison first**, with B optional on the same allocation.
+This does not schedule A, D, E, or the optional repair campaign.
+
 **What the draft says for an unrun row** — the rule, not a case-by-case call: **name it as designed and unrun, cite
 the design document, and state what it would decide.** Never pending-but-expected, and never let a reader infer a
 result. For example: "E-TRUNC (designed, unregistered, unrun) isolates length within a handoff by head-truncating
 the same senders; it would attribute the residual short↔long gap to length or to the handoffs." A designed-unrun row
 is **not** `[BASELINE]`. If a row is dropped for time, say so in a clause rather than omitting it silently.
 
-And the standing sentence that only an entry reporting a number may retire: **"No downstream-quality number is
-claimed."** It stands until E-BEH's entry lands. Don't soften it.
+**"No downstream task-quality number is claimed" remains true after teacher-forced E-BEH.** A completed
+E-BEH entry can add prediction-divergence results; coding-task quality requires a separate task outcome.
 
 ---
 
@@ -332,11 +361,12 @@ Recommended default in **bold**. None is implemented.
 4. **E-TAIL Part A's carrier entry** — now that Part A is run, does its table ride the owed corrective f* entry? →
    **Default: yes, one entry — the corrective one, widened** to carry the tail counts, the per-handoff maximum, the
    seam-bin **means**, and the |R| row. They are all re-reads of the same verified records.
-5. **E-TAIL Part B** — band or descriptive? → **Default: descriptive for MLSys**, reported beside µ and δ_max. A
-   band on a quantity whose attribution statement isn't yet readable is premature.
-6. **E-BEH bands and verdict words** — the design proposes top-1 ≥ 0.95 HOLDS-B / < 0.90 DEGRADES-B. →
-   **Default: accept both numbers, and reuse the existing band words with a new hypothesis row** rather than
-   teaching `ledger_check.VERDICTS` the `-B` suffix.
+5. **E-TAIL Part B** — **Default: descriptive**, reported beside µ, δ_max, and matched attention mass.
+   Fresh weights do not establish Proposition 4's pathwise assumptions or a quality threshold.
+6. **E-BEH scope and readout** — **Default: descriptive FRESH/REUSE-ALL with correctness controls**.
+   The earlier 0.95/0.90 band proposal is withdrawn; those numbers have no established task-quality meaning.
+   Fix the continuation cap/coverage rule, numerical controls, and stopping rule before registration. No new
+   hypothesis row or verdict vocabulary is proposed by this update.
 7. **W5 entry count** — one entry for the bin means or two? → **Default: one**, folded into ruling 4's entry.
 8. **The Qwen3 short cell (the 25 of 0029)** — may it appear in MLSys tables? → **Default: no pooled row; a separate
    table only, labelled a separate cell**, until Condition 1's admission outcome is recorded in a numbered entry.
