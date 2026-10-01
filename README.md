@@ -85,8 +85,10 @@ every file is checked in both directions before it counts.
 | [`hossainpazooki/linear-ceiling-n420-2026-09-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-n420-2026-09-08) | the larger calibration set behind the cross-model map's sensitivity check (entries 0033–0034) |
 | [`hossainpazooki/linear-ceiling-e9l-2026-09-10`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9l-2026-09-10) | the long-context run on the 35 longer handoffs (entries 0035–0036) |
 | [`hossainpazooki/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9s-2026-09-13) | the 25 shorter handoffs re-run under the long run's scaled receiver (entries 0037–0038) |
+| [`emmmy/linear-ceiling-e8f-2026-09-18`](https://huggingface.co/datasets/emmmy/linear-ceiling-e8f-2026-09-18) | the second model family's E8 calibration (Llama-3.2-3B → Llama-3.1-8B; entry 0040): generic and agent dumps, the k = 1/4/8 mappers, `r2.json` |
+| [`emmmy/linear-ceiling-e9f-2026-09-19`](https://huggingface.co/datasets/emmmy/linear-ceiling-e9f-2026-09-19) | the second model family's E9 short cell (entries 0042–0044): the record, 28 score and token files, controls, the 8 kept handoffs' dumps |
 
-All four datasets are public (the first three as of 2026-09-11, the fourth created public on 2026-09-14; `private: false`, `gated: false` from the Hub API);
+All six datasets are public (the first three as of 2026-09-11, the fourth created public on 2026-09-14, the two Llama datasets pushed public from the co-author's machine that holds their home mirror on 2026-09-30; `private: false`, `gated: false` from the Hub API);
 no read token is needed to fetch them. Protocol R8 allows public datasets (operator ruling,
 2026-09-11). Restore and verify: R8 in
 `docs/gpu-experiment-protocol.md`, checked by `tools/hf_verify_backup.py <repo_id> <local_root>`.
@@ -210,6 +212,8 @@ Tokens are scoped, expiring, environment-only, and revoked once pasted anywhere.
 | `hossainpazooki/linear-ceiling-e9-2026-09-04` | the E9 record (0026–0029) and the kept full dumps | `results/e9/` plus the mapper in the upstream's layout |
 | `hossainpazooki/linear-ceiling-n420-2026-09-08` | the n = 420 calibration pair (0033/0034), tagged mapper, logs | the upstream's own layout |
 | E9-long's dataset | `hossainpazooki/linear-ceiling-e9l-2026-09-10` (pushed after the sitting; see the runbook) | `results/e9l/` plus the bridge dumps |
+| `emmmy/linear-ceiling-e8f-2026-09-18` | the Llama E8 record (0040), both dumps, the three mappers, probe and sitting logs | `results/e8f/`, `results/mapper/`, `results/probe/`, `mappers/`, generic dumps and tokens in the upstream's `data/` layout |
+| `emmmy/linear-ceiling-e9f-2026-09-19` | the Llama E9 record (0042–0044) and the kept dumps | `results/e9f/` plus the k = 1 mapper and `results/mapper/` |
 
 Restore and verify recipes: `docs/archive/README-2026-09-09-status.md`, "Backups". After a
 restore the gates decide, not the download.
