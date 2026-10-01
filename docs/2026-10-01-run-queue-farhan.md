@@ -1,382 +1,356 @@
-# Run queue for the MLSys experiments — for a co-author with his own GPU compute
+# The ask: MLSys experiments that need a GPU, for a co-author running his own compute
 
-**Date:** 2026-10-01 · **HEAD at write:** `0265290` (= `origin/main`, 0 ahead / 0 behind) · **Last entry: 0044** ·
-**Next free number: 0047** (`docs/drafts/README.md` is the only allocator) · gates green
-(`ledger_check`, `lint_scope`, `seal verify`).
+**Date:** 2026-10-01 · **HEAD at write:** `0a51275` (= `origin/main`, 0/0) · **Last entry on the ledger: 0044** ·
+gates green (`ledger_check`, `lint_scope`, `seal verify`).
 
-**Who this is for.** A co-author who will run outstanding experiments on his own hardware and push findings back.
-It is **not** the operator's copy: every ledger append, every number allocation and every threshold stays with the
-operator, and this document allocates nothing and registers nothing. It is a re-cut of
-`docs/2026-10-01-mlsys-box-plan.md` (written for a rented AWS L40S) for a host that may not be AWS at all.
+**Dates.** Internal review **week of Oct 12** · draft to a PI by **Oct 15** · **MLSys 2027 deadline Oct 30 2026,
+12:00 PDT**. The NeurIPS/LCFM workshop paper is already accepted (non-archival), so nothing here is needed for that;
+this is the MLSys push plus the camera-ready text.
 
-**Dates.** Internal review week of **Oct 12** · draft to a PI by **Oct 15** · MLSys 2027 deadline
-**Oct 30 2026 12:00 PDT**. The NeurIPS/LCFM workshop version is **accepted** (non-archival, camera-ready date not
-announced), so nothing below is needed for that acceptance — this queue is for MLSys plus the camera-ready text.
+**What I am asking for, in one sentence.** Four reviewer weaknesses need experiments; three of them need a GPU and
+one is already done. **E-TRUNC is the one I want run** — it is the highest-value row, needs no upstream change, and
+fits a 48 GB card in about three hours. Everything else below is either context so you don't redo finished work, or
+a clearly-marked second and third choice.
 
-Everything here cites its source rather than re-deriving it: `docs/2026-10-01-mlsys-box-plan.md` (cards, prices,
-probes, release), `docs/2026-09-30-team-status-wednesday.md` (the W1–W8 map and owners),
-`docs/2026-09-30-review-response-map.md` (per-weakness ledger anchors, T1/T2 split),
-`docs/drafts/e-{beh,trunc,tail}-design.md` (the three designs) and `docs/drafts/README.md` with the staged
-`append_0045.py` / `append_0046.py`.
-
----
-
-## 0. Two blockers cleared today, after the box plan was written
-
-Both were open in every document above. Neither has been acted on, and each needs one action from the operator
-before anyone relies on it.
-
-1. **The upstream pin is merged and survived.** `hossainpazooki/kv-transfer-replication` PR #1 ("register the
-   matched-KV Llama pair") was **merged 2026-10-01T03:44:25Z**, and the no-squash/no-rebase request was honored:
-   `compare/06f8d55...main` returns **ahead 7, behind 0**, so commit **P = `06f8d55`** is an ancestor of upstream
-   `main` and remains valid as the pin in `config/e9f.toml`, `config/e9fl.toml` and `config/e8f.toml`.
-   This retires "0045/0046 cannot run: commit P is not merged" (`docs/drafts/README.md`) and unblocks the R12
-   recompute of 0040/0044. **Action:** the local clone `../kv-transfer-replication` still sits at `9ca6258` and does
-   not contain P; someone must fetch and detach it at `06f8d55`. I did not — that clone is read-only to me.
-2. **The e9f mirror is complete on this machine.** `C:\m\e9f` holds **1,054 files, 52 GiB**, matching the Hub
-   dataset's **1,054** files exactly. The e8f mirror was already `BACKUP VERIFIED`. So "0040–0044 is not
-   recomputable from a clean checkout" (`review-response-map.md:46`) is now false in substance.
-   **Caveat, stated rather than glossed:** 1,054 = 1,054 is a *file-count* match. The hash verification needs a read
-   token and has not been run for e9f — see the one-command verify in §4.
-
-Note for the status doc: its task slot "R8 push of `results/e8f`, `results/e9f` to the two empty Hub datasets" is
-**superseded** — the push landed under the pair owner's own account, and the two empty datasets under the operator's
-account are to be deleted.
+**Two hard limits on what you can do without me.** (1) **Ledger appends are the operator's** — you draft an entry,
+never append one, and entry *numbers* are allocated only by `docs/drafts/README.md`. (2) **An experiment is
+registered before it is run**: the entry, with its thresholds, lands *before* any prefill (R1). So every GPU row
+below is blocked on a ruling from me, and §10 is the list of rulings, each with my recommended default, answerable
+in one reply.
 
 ---
 
-## 1. Runnable now, with no ruling pending
+## 0. The ask as a table
 
-Your belief was "text-only items and E-TAIL Part A on CPU". **Confirmed with two corrections**, one narrowing and
-one widening.
+| # | task | needs from me first | code that must land first | min card | time | deliverable |
+|---|---|---|---|---|---|---|
+| **A** | **E-TRUNC** — isolate length by head-truncating the same senders (W2) | rulings 1, 2, 3 + registration | `sender_head_truncate` config key; paired reader | **48 GB** | ≈3 h | tail/paired figures + a drafted entry |
+| **B** | E-TAIL **Part B** — attention-weighted deviation (W3) | rulings 5 + registration, incl. a verbatim Prop. 4 quote | chunked eager hook **+ its own probe** | **20 GB** | <1 h | per-handoff w figures + drafted entry |
+| **C** | E-BEH — behavioral check of τ_K (W1) | ruling 6 + registration of the injection splice | cache injection upstream; continuation extractor | **48 GB** | ≈3 h | KL/top-1 per arm + drafted entry |
+| **D** | *Optional:* a third pair, Llama-3.2-1B → 3B | ruling 9 (just the go/no-go) | nothing — one CPU preflight | **none** | seconds | preflight output, pass or fail |
+| **E** | Llama **LONG** cell, 0045/0046 (W7) | ruling 10 + the numbering ruling 11 | nothing; drafts are staged | **80 GB** | ≈2 h | run the staged drafts' cell |
 
-**Genuinely runnable now, nothing pending:**
-
-| item | why it is free of rulings | where the words come from |
-|---|---|---|
-| **W8** sentence (what HOLDS could have failed against: null pairing, cross arm, τ = 0.03) | every figure is already on the ledger | `0029:1772,1783,1797`; `0036:2191,2201,2216,2218` |
-| **W7** sentence (the cross arm is a reference instrument, not a ceiling on cross-model reuse) | grounded on the n = 420 refit already registered | `0034:2043` |
-| **W6** rewording (drop "predicts"; the bridge control is the evidence) | the bridge's own f* and δ are registered | `0036:2191-2192` |
-| **W4** *abstract clause* (the 35K–80K band is **sender** length; receivers are ~11.5 K; 73 % of tokens sit inside 32 K) | the 73.3 % is arithmetic on a registered count and may print as such | `0036:2206` |
-| **N2** drop the E-RL appendix | the design itself says "not registered"; the decision is editorial | `docs/2026-09-02-e-rl-design.md` |
-| **R12 recompute** of 0040/0044 from the mirror | a *recompute*, not a new finding — it produces no new number | §0 above; §4 |
-| **A 1B→3B pair preflight** (CPU, free, no card) | a go/no-go check is not a registration | §3 |
-
-**Correction 1 — narrowing. The W4/W5 *rows* are not text; they are blocked on an entry.** The abstract *clause*
-is free, but W4's |R| row, W4's native-window mean/median δ, W5's pooled bin means and any W3 tail table are **new
-figures**, and no figure reaches the paper except through a numbered entry produced by a fail-closed reader
-(R11). `review-response-map.md:62-64` lists them as "blocked on an entry" for exactly this reason. Separately,
-Cor. 3 / Remark 1 / Prop. 4 / Remark 2 wording, the appendix lettering, the Lean diff and the template footer are
-**blocked on the submitted tree, which is not on this machine** (`:65-66`). Also: the map refers to a
-`make_figures.py` emitting macros — **that file does not exist in this repo**, so the macro path lives wherever the
-manuscript tree does, not here.
-
-**Correction 2 — widening, and the one thing to coordinate before you touch it.** E-TAIL **Part A** needs no GPU and
-no ruling *to compute*: the 35 per-token records are on the home mirror (`results/e9l/tokens/*.tokens.npz`). But its
-fail-closed reader **is being written right now by another session** — `src/linear_ceiling/e9_tail.py` (208 lines)
-and `tests/test_e9_tail.py` (85 lines) are present and **uncommitted** in the working tree, and `summarize_e9` has
-no `--tail` flag, so the reader is the standalone module `python -m linear_ceiling.e9_tail --config …`. It already
-follows the right discipline (it runs `summarize_e9.summarize` first, then re-reads the sha-pinned squares). **Do
-not start a second implementation and do not edit those two files**; take them when they land. I did not run them.
-
-So: Part A's **numbers** are computable today; Part A's **entry** still waits on ruling 4 below (which entry carries
-the table).
+Nothing in this document allocates a number, registers anything, or edits a design.
 
 ---
 
-## 2. The four GPU rows
+## 1. Already done — do not redo any of this
 
-Common to all four: **registered before requested** — the entry is appended *before* any prefill (R1), thresholds
-fixed in it, and the run obeys R1–R12 of `docs/gpu-experiment-protocol.md` (unchanged since 09-14). Every figure
-comes from a fail-closed reader in-process; no number is typed into an entry script.
+- **E-TAIL Part A is finished** (committed `0a51275`, `src/linear_ceiling/e9_tail.py` + tests). It ran on all three
+  Qwen cells and reproduced every figure the outline carried as PENDING — 16 of 16 comparisons. Outputs are
+  `results/{e9,e9l,e9s}/tail.json` (gitignored). Verified from those files directly, not from a report:
 
-**Minimum card, all four, in one line:** the Qwen3 pair's long cell peaks **31.56 GiB** at |S| = 80,111
-(`09-10 runbook:127`) and **16.70 GiB** at 32,768 with weights 6.41 GiB (`09-13 runbook:96`). So: **48 GB is the
-honest floor for E-TRUNC and E-BEH; 20 GB suffices for E-TAIL Part B.** The Llama pair is a different story — §3.
+  | cell | tokens over τ_K | pooled mean δ_K | per-handoff mean δ_K, median | \|R\| median (p10, p90) |
+  |---|---|---|---|---|
+  | e9 (0029), 25 handoffs | 9,047 / 155,257 = **5.83 %** | 0.0810 | 0.0682 | 6,551 (4,148, 9,165) |
+  | e9s (0038), 25 | 10,336 / 155,257 = **6.66 %** | 0.0986 | 0.0895 | same handoffs as e9 |
+  | e9l (0036), 35 | 30,701 / 387,508 = **7.92 %** | 0.1165 | 0.1106 | 11,462 (7,085, 19,853) |
 
-### 2a. E-TRUNC — length isolation (W2). *Recommended first.*
+- **The short Llama cohort has already run:** entry **0044, H-E9F HELD, 28 scored of 28**, on an A100-SXM4-80GB.
+- **R8 holds for the Llama family:** both mirrors are public under the pair owner's account and verified against
+  every sha pin 0040–0044. The e9f mirror is complete on this machine (1,054 files = the Hub's 1,054).
+- **The upstream pin is merged and reachable.** PR #1 merged 2026-10-01T03:44:25Z without squash or rebase, so
+  commit **P = `06f8d55`** is an ancestor of upstream `main`; the local clone is on `main` at `0d27c68` and
+  **contains P** (`merge-base --is-ancestor` → 0). The "commit P is not merged" blocker in `docs/drafts/README.md`
+  is retired.
+- **Text-only reviewer fixes** (W6, W7, W8 sentences and W4's abstract clause) are grounded on the ledger and are
+  being handled on the paper side — not yours.
 
-| | |
-|---|---|
-| **Waits on you** | the §5 **margin** (how close L32 must come to 0.0381 to read as "length"); the **L32-native** scope ruling; registration |
-| **The entry must seal** | the four levels (FULL / L65 / L49 / L32) and that R is unchanged within a row; the **common matched subset M_∩** rule and the shrinkage gate (a handoff whose M_∩ is below a stated fraction of M_FULL is **void** for the comparison); the statistics (mean δ_K, p(τ_K), f*(τ_K), f*(0.03), 16+ seam bin, p_S'-rebinned profile); bootstrap seed/reps; the stopping rule and partial-close shape; that it is **descriptive** and moves no cell |
-| **Code first** | `config.py` must accept `sender_head_truncate = L` (does not exist); per-level configs; the common-subset intersection and paired comparison in a new fail-closed reader. No upstream change, no injection |
-| **Min card** | **48 GB** (FULL peaks 31.56 GiB). A 20 GB card runs only L32 / L32-native |
-| **Time** | ≤ 3 h realistic, 4–5 h upper bound |
-| **Correction to the design** | §8 says L49 differs for "the 18 over 49,152". It is **19** — recomputed from `results/e9l/align/coverage.json`; one handoff sits at \|S\| = **49,196**, and 18 is the count above the `s_len` bin edge **49,999**. Fix before registration; hours unaffected |
+### One new fact from Part A that changes how the paper reads, and how A must be registered
 
-### 2b. E-TAIL Part B — attention-weighted deviation (W3). *Cheapest.*
+**Pooled seam-bin means run far above the medians the ledger reports.** On the long cell, same-K, verified from
+`results/e9l/tail.json`:
 
-| | |
-|---|---|
-| **Waits on you** | registration; the **Proposition 4 attribution quoted verbatim** (the design says the statement is not readable on this machine, so the entry must carry it before the quantity is tied to it); whether a band is registered or it stays descriptive |
-| **The entry must seal** | that `a_ij` is the **fresh** receiver's attention (the reused cache's attention is a different, post-hoc quantity); the attention **backend pin** and the admission that δ comes from SDPA dumps while `a` comes from eager; the **identity tolerance** at which eager K/V must match the archived dumps or the run refuses; that w is reported *beside* µ and δ_max, never instead |
-| **Code first** | a chunked eager-attention hook (query chunks of 2,048, reduce against δ on the fly, **never** materialize `[heads, \|R\|, \|R\|]` — that is ~25 GB per layer at p90 \|R\|); plus its own probe, `tools/ec2/probe_tailb.py`, which does not exist. `probe_e9l.py` is already generalised (`EXP`/`MAX_S`/`LADDER`) but measures a `load_model` **prefill**, not the hook — it cannot size Part B |
-| **Min card** | **20 GB** (weights 6.41 GiB + ≈2.6 GB per chunk). The only row that would fit a 1g.20gb slice |
-| **Time** | **< 1 h** for the 35 |
+| seam bin | n tokens | **mean** | median |
+|---|---:|---:|---:|
+| 0 | 4,050 | **0.4285** | 0.2603 |
+| 16+ (far from seam) | 359,203 | **0.1105** | 0.0629 |
 
-### 2c. E-BEH — behavioral check of τ_K (W1). *Most informative, least ready — run last.*
+That is reviewer teFN's Corollary 3 objection made concrete: a restatement on means prints numbers ~1.7× the
+medians the paper printed. **It also matters for task A**, because E-TRUNC's registered reading is written against
+the far-from-seam figures, and those figures depend on which statistic you pick. I recomputed 0038's configuration
+share both ways from the tail files:
 
-| | |
-|---|---|
-| **Waits on you** | the **bands** (the design proposes top-1 ≥ 0.95 HOLDS-B / < 0.90 DEGRADES-B, all `???`); whether `ledger_check.VERDICTS` learns the `-B` words or the entry reuses an existing band with its own hypothesis row; the minimum scored prefix that may report a verdict; the \|C\| cap |
-| **The entry must seal** | the five arms exactly (FRESH / REUSE-ALL / REUSE-ORACLE-τ / CACHEBLEND-10,-20 / NULL) and that **NULL is mandatory**; the **FRESH-vs-FRESH identity control must be exactly zero** or the run refuses; determinism (SDPA, fp32); that the continuation was produced by a proprietary model, so this measures a representation effect on held-fixed text, **not generation quality**; the coverage rule for handoffs whose continuation is missing from the trace |
-| **Code first** | the **cache-injection splice** on upstream `kvt/cache.py` — mixed cache (reused K/V at p_S re-rotated to p_R for M, fresh elsewhere) under a Qwen3 GQA `[28, 8]` layout plus in-situ recompute of a chosen subset. `0023:1367` requires this be **pinned by an entry before it runs**. Then the continuation extractor out of `traces/`, and the §9 correctness probe: recompute-ALL-in-situ must reproduce FRESH **bit-for-bit** |
-| **Min card** | **48 GB** (S prefill 31.56 GiB; a 3g.40gb slice is marginal, 20 GB does not fit) |
-| **Time** | ≈ 3 h |
+- on **medians**: native 0.019497 → scaled 0.038085 → long 0.062873, share **0.4285** — reproducing entry 0038 exactly;
+- on **means**: native 0.070807 → scaled 0.088973 → long 0.110493, share **0.4577**.
 
-### 2d. The Qwen3 short cell (the 25 of 0029) — **not yours to release**
-
-`docs/2026-09-14-condition-1-status.md:177`: **Condition 1 (0032) is open** — that board does not release 0029's
-figures, and the admission outcome must be recorded in a later numbered entry. Until the operator records it, the
-short half is a **separate cell** that enters no registered verdict and is never pooled with the 35. The scaled
-short cell (0038) is already closed and backed up, so **no GPU work is owed here**: the only open item is a ruling,
-plus the owed co-author refutation of 0025–0029 (Path A) that Condition 1 hangs on.
-
-Do not add the 25 to any E-TRUNC or E-TAIL table as a pooled row. A *separate* table is allowed and says so.
+Good news: the share is robust to the statistic (0.43 vs 0.46). But the *levels* nearly double, so a margin stated
+as a bare number is ambiguous — ±0.005 is 13 % of the median 0.0381 and only 5.6 % of the mean 0.0890. **Ruling 1
+therefore names its statistic.**
 
 ---
 
-## 3. The second model family (W7) — and a correction on "1B→3B"
+## 2. Task A — E-TRUNC (the main ask)
 
-**The registered second family is `llama3.2-3b-to-llama3.1-8b` — Llama-3.2-**3B** → Llama-3.1-**8B**.** There is no
-1B→3B pair: `src/linear_ceiling/pairs.py:93` carries exactly one Llama entry, and `LLAMA_LADDER` is the two-model
-cross-release ladder 3B → 8B. If you meant the registered pair, read on. If you meant a genuinely new 1B→3B pair,
-skip to "a third pair" at the end — it is a different proposal with a real advantage and a real risk.
+**Question.** The short↔long gap is confounded: different handoffs *and* different configuration. Entry 0038 split
+off the configuration part (share 0.4285); the residual is unattributed because the cohorts are different handoffs.
+E-TRUNC varies length **within** a handoff and attributes the residual.
 
-**What the pair owners have already landed** (all on `main`, all recomputable once the clone is at P):
+**Why head truncation.** Under causal attention a matched token's K/V depends only on `S[:p_S(t)]`, so *tail*
+truncation changes nothing. The treatment is **head** truncation: `S'_L = S[−L:]`, which shortens every matched
+token's causal prefix and lowers its sender position.
 
-- **0039** family registration (τ_K ceiling 0.45 registered *before* the fit; ladder and prefix bound taken absolute
-  from `config/e9.toml`), **0040** E8 figures (τ_K = **0.2861** = 1 − the pair's own k=1 generic held-out K R² of
-  0.7139), **0041** the τ-ordering ruling (τ_agent_K < τ_K for this pair, the opposite of Qwen; `config.py`'s
-  refusal became report-only), **0042** short-cell registration, **0043** pre-prefill amendment (atomic checkpoint,
-  drain/stop protocol), **0044** **H-E9F HELD, 28 scored of 28 registered**.
-- Tooling: `tools/runpod/` (29 commits) — a container-host box path beside `tools/ec2/`, with campaign cost
-  ceilings, a drain supervisor and `pull_verify_b.py --final-partial`.
-- R8: both mirrors are public under the pair owner's account and were verified against every sha pin 0040–0044
-  (784/784 kept-dump files); e8f is `BACKUP VERIFIED`, e9f is complete by file count (§0).
-- PR 5 merged `3902a16`.
+**Cells.** FULL (= E9L re-run under this entry's pin, the control) · L65 · L49 · L32, all with R unchanged and the
+YaRN receiver; plus optionally **L32-native** (ruling 3), the only cell where native vs YaRN is comparable on the
+same tokens.
 
-**So the short Llama cohort has already run.** Your question "is a short-cohort Llama cell worth running first on
-smaller hardware" is already answered twice over, and both answers are no:
+**What the entry must seal, before any prefill:**
+- the four levels and that **R is unchanged within a row** (the YaRN cells share one receiver prefill per handoff);
+- the **common matched subset** rule: compare δ only on `M_∩`, the tokens matched under *every* level, and report
+  `|M_∩| / |M_FULL|` per handoff **before** any verdict is read, with a shrinkage gate (ruling 2) below which a
+  handoff is **void** for the comparison — this is the design's own weak point, so it is gated, not hoped;
+- the statistics: mean δ_K, p(τ_K), f*(τ_K), f*(0.03), the 16+ seam bin **naming mean or median** (ruling 1), and
+  the sender-position profile re-binned on `p_S'`; bootstrap seed/reps as 0025's unless re-registered;
+- the pre-registered reading: near the scaled-short far-from-seam figure ⇒ **length**; near FULL's ⇒ **the
+  handoffs**; between ⇒ **unattributed, say so**;
+- the run order (longest |S| first, so the only handoffs L65 changes are scored first), checkpoint per
+  (handoff, level), and the partial-close shape;
+- that it is **descriptive** and moves no hypothesis cell.
 
-1. It **ran** — 0044, 28/28, on an **A100-SXM4-80GB** at $1.59/h, driver 17:14:41Z → 18:18:30Z (≈ 64 min).
-2. It **could not have run on smaller hardware.** A measured probe (`docs/probes/2026-09-18-llama-8b-fp32-prefill-memory.md`)
-   put Llama-3.1-8B, fp32, `sdpa_repeat_kv`, native RoPE, on a 44.43 GiB A40:
+**Code first.** `config.py` must accept `sender_head_truncate = L` — it does not exist today. Then per-level configs
+and a new fail-closed reader for the intersection and the paired comparison, with its inputs sha-pinned. **No
+upstream change, no injection.**
 
-   | T | peak GiB | outcome |
-   |---:|---:|---|
-   | 16,384 | 37.56 | ok |
-   | 24,576 | 41.38 | ok |
-   | **32,768** | **43.2** | **CUDA OUT OF MEMORY** |
+**Card and time.** FULL peaks **31.56 GiB** at |S| = 80,111, so **48 GB**. A 20 GB card runs only L32 and
+L32-native. ≈3 h realistic, 4–5 h upper bound.
 
-   32,768 *is* `config/e9f.toml`'s registered cap, and that is the easiest case — one model, one forward, no driver
-   holding the receiver while it takes three stride-1 dumps plus the identity, null and prefix-invariance controls.
+**One correction to the design doc, found by recomputing.** `e-trunc-design.md` §8 says L49 differs for "the 18 over
+49,152". It is **19** — one handoff sits at |S| = **49,196**, and 18 is the count above the `s_len` bin edge
+**49,999**. Hours unaffected; fix it before the entry is written, since the entry states it as a fact about its own
+cells.
 
-**Which Llama cells fit a 48 GB card: none of them.** Not the long cell, not the short cell, not a re-run. The 3B
-source side is never the constraint (23.51 GiB at 32,768) — it is the 8B **receiver** that OOMs below its own cap.
-Any Llama GPU work on this pair needs **80 GB**.
+---
 
-**The LONG cell, per the staged drafts** (`append_0045.py` registration, `append_0046.py` figures — staged, unrun,
-**numbers provisional until appended**; `config/e9fl.toml` already lists 0045 in `[e9.gate]`):
+## 3. Task B — E-TAIL Part B (second choice: cheapest card, least ready tooling)
 
-- Cap **81,920** and floor **32,768** in Llama-3 tokens — the floor equals the short cell's cap, so the two Llama
-  cells **partition** their handoffs; 0045 asserts that the ids it excludes under the floor are *exactly* the short
-  cell's included set, with the residual above the cap named and counted. The partition is audited, not asserted.
+**Quantity.** `w_i(l,h) = Σ_{j∈M} a_ij(l,h) · δ_K(j,l,h)` with `a` the **fresh** receiver's attention weights.
+Report mean and p90 of w, the share of attention mass landing on matched tokens with δ_K > τ_K, and a per-token
+attention-weighted δ — always **beside** µ and δ_max, never instead.
+
+**What the entry must seal:** that `a` is the fresh receiver's attention (the reused cache's attention is a
+different, post-hoc quantity); the attention **backend pin**, with the admission that δ comes from SDPA dumps while
+`a` comes from eager; the **tolerance** at which eager K/V must match the archived dumps or the run refuses; and the
+Proposition 4 attribution **quoted verbatim** — the design says that statement is not readable on this machine, so
+the entry must carry it before the quantity is tied to it.
+
+**Code first.** A chunked eager-attention hook: query chunks of 2,048, reducing against δ on the fly, **never**
+materializing `[heads, |R|, |R|]` — at p90 |R| = 19,853 with 16 query heads that is ~25 GB *per layer*. Plus its own
+probe. `probe_e9l.py` is already generalised (`EXP` / `MAX_S` / `LADDER`, native-RoPE path) but it measures a
+`load_model` **prefill**, so it cannot size this hook; a sibling (`tools/ec2/probe_tailb.py`) does not exist.
+
+**Card and time.** **20 GB** (weights 6.41 GiB + ≈2.6 GB per chunk). The only row that fits a 1g.20gb slice.
+**< 1 h** for the 35.
+
+---
+
+## 4. Task C — E-BEH (third: most informative, least ready)
+
+**Question.** Does reusing the receiver's own K/V for matched tokens change what it predicts on the recorded
+continuation, versus a fresh prefill — and by how much relative to a size-matched random perturbation?
+
+**Five arms, and two are controls:** FRESH · REUSE-ALL · REUSE-ORACLE-τ · CACHEBLEND-10/-20 · **NULL** (matched K/V
+replaced by fresh + a perturbation whose δ equals the measured δ). **NULL is mandatory**, and FRESH-vs-FRESH must
+come out **exactly zero** or the run refuses — without both, the KL numbers are uninterpretable.
+
+**What the entry must seal:** the arms exactly; the two controls as refusal conditions; determinism (SDPA, fp32);
+the |C| cap; the coverage rule for handoffs whose continuation is missing from the trace; and that the continuation
+was produced by a proprietary model, so this measures a representation effect on **held-fixed text**, not
+generation quality. Bands are ruling 6.
+
+**Code first, and this is why it is last.** The **cache-injection splice** on upstream `kvt/cache.py` — a mixed
+cache (reused K/V at `p_S` re-rotated to `p_R` for M, fresh elsewhere) under a Qwen3 GQA `[28 layers, 8 KV heads]`
+layout, plus in-situ recompute of a chosen subset. `0023:1367` requires this be **pinned by an entry before it
+runs**. Then a continuation extractor out of `traces/`, and a correctness probe: recompute-ALL-in-situ must
+reproduce FRESH **bit-for-bit**. A card rented before that exists would idle at hourly rates.
+
+**Card and time.** **48 GB** (S prefill 31.56 GiB; a 3g.40gb slice is marginal, 20 GB does not fit). ≈3 h.
+
+---
+
+## 5. Task D — *optional*: a third pair, Llama-3.2-1B → 3B
+
+This is the one item I'd call genuinely optional, and it is cheap enough to settle this week for nothing.
+
+Your "1B→3B" doesn't match the repo, and the correction cuts both ways. **The registered second family is
+3.2-3B → 3.1-8B**, and its short cohort has already run — 0044, H-E9F HELD 28/28, on an A100 80GB. So "worth running
+a short Llama cell first on smaller hardware" is answered twice: it ran, and it couldn't have run smaller — a
+measured probe puts Llama-3.1-8B fp32 at **OOM at T = 32,768 on a 44.43 GiB A40**, and 32,768 is that cell's own
+registered cap. **No Llama cell on this pair fits 48 GB**; it's the 8B *receiver*, not the 3B source
+(23.51 GiB at 32,768).
+
+But if you really meant a **new** 1B→3B pair, it has a genuine advantage: the receiver would be the 3B, which
+measured 23.51 GiB at 32,768, so it **would** fit 48 GB. The likely blocker is `check_matched_kv`, which requires
+per-head dim equality and is called unconditionally on every dump — the 3B side is 128 and the 1B side is plausibly
+64. **I could not verify that today:** `meta-llama/Llama-3.2-1B` is gated (401 on its raw `config.json`) and there's
+no local snapshot, so **don't take my 64 as fact**. `tools/preflight_pair.py` settles it in a second, CPU-only and
+free — that's ruling 9's default.
+
+If it passes, it is still a **new pair**: its own E8 fit, its own τ, and a pair/family registration entry before any
+E9 cell — a new campaign, not an add-on. Worth it only if a cheap card matters more than the four weeks left.
+
+---
+
+## 6. Task E — the Llama LONG cell (W7), if a 80 GB card is already in hand
+
+The drafts are **staged and unrun**: `append_0045.py` (registration) and `append_0046.py` (figures), with
+`config/e9fl.toml` committed. **Their numbers are provisional and may move — see ruling 11.**
+
+- Cap **81,920**, floor **32,768** in Llama-3 tokens. The floor equals the short cell's cap, so the two Llama cells
+  **partition** their handoffs, and 0045 asserts that the ids it excludes under the floor are *exactly* the short
+  cell's included set, with the residual above the cap named and counted. Audited, not asserted.
 - **Neither side is scaled** (both natively 131,072): no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling`. 0035's
-  configuration-bridge reading is declared **inapplicable**, and two dump-derived controls stand in its place
-  (native-window and a role-scoped RoPE identity — the two sides carry different llama3 factors, 32.0 and 8.0, so an
+  configuration-bridge reading is declared **inapplicable**; two dump-derived controls replace it — a native-window
+  assertion and a **role-scoped** RoPE identity (the sides carry different llama3 factors, 32.0 and 8.0, so an
   unscoped assertion would refuse every correct run).
-- It **cannot move, support or refute H-E9L**, and is **never pooled** with 0036's 35. 0046 reads
-  `results/e9l/summary.json` only to state 0036's figures *beside* these, with non-comparability spelled out
-  (different models, tokenizers, handoff sets, mappers, τ — and one receiver scaled past its pretraining window).
-- **Card: 80 GB**, and it is a longer cell than the short one at an 81,920 cap. Budget on the 0044 sitting's rate,
-  not on the Qwen numbers.
+- It **cannot move, support or refute H-E9L** and is **never pooled** with 0036's 35. 0046 reads
+  `results/e9l/summary.json` only to state 0036's figures *beside* these, with non-comparability spelled out.
+- **Card: 80 GB.** Not a 48 GB job, per §5.
+- **What R8 must hold before the entry:** every kept dump and record of `results/e9fl/` pushed; the push **two-way
+  verified** (every local file on the Hub *and* every Hub file local; LFS by `lfs.sha256`, non-LFS downloaded and
+  hashed) with **exit 0**; and the existing e8f/e9f mirrors still verified, so 0040–0044 stay recomputable. Prefer
+  the pair owner's account, which already holds both verified datasets.
 
-**What R8 must hold before the LONG cell's entry.** R8 is transport, not evidence, so it never substitutes for a
-verified home mirror — but the entry should not land until: every kept dump and record of `results/e9fl/` is pushed;
-the push is **two-way verified** (every local file on the Hub *and* every Hub file local, LFS files by `lfs.sha256`,
-non-LFS downloaded and hashed) with **exit 0**; and the existing e8f/e9f mirrors stay verified so 0040–0044 remain
-recomputable. Prefer the pair owner's account, which already holds the two verified datasets. The two **empty**
-datasets under the operator's account should be deleted rather than filled, so there is one home per cell.
-
-**A third pair (1B→3B), if that is what you meant.** Not covered by 0045/0046 and not what W7 asks for — W7 asks for
-a second *family*, which exists. As a proposal it has one real advantage and one likely blocker:
-
-- *Advantage:* the receiver would be Llama-3.2-3B, measured at **23.51 GiB at 32,768** — so unlike 3B→8B, a 1B→3B
-  short cell **would fit a 48 GB card**, and probably much less.
-- *Blocker:* `check_matched_kv` requires `num_key_value_heads` equal **and per-head dim equal**, and
-  `scripts/dump_kv.py` calls it unconditionally on every dump — a mismatch is not a mapper question, it is "no dump
-  exists". The 3B side is head_dim 128; the 1B side's per-head dim is **plausibly 64**, which would fail outright.
-  **I could not verify this today** — `meta-llama/Llama-3.2-1B` is gated (`401` on its raw `config.json`) and no
-  local snapshot exists. **Do not take my 64 as fact.**
-- *Settle it for free, in a second, before anyone rents anything:* `tools/preflight_pair.py` is CPU-only,
-  network-free, weights-free — it opens four JSON files and checks pair resolution, provenance (community
-  re-uploads are **not** the same artifact), matched-KV with both the declared and derived head dim printed per
-  side, and vocab equality. A `*.json`-only snapshot is enough.
-- *If it passes:* it is still a new pair needing its own E8 fit, its own τ, and a family/pair registration entry
-  before any E9 cell — i.e. a new campaign, not an add-on. Worth it only if the cheap card matters more than the
-  four weeks left.
+My recommendation is **not** to schedule this before Oct 30 (ruling 10): W7's camera-ready sentence is already
+grounded on 0034 today.
 
 ---
 
-## 4. Per row: environment, probe, run, reader, one-command verify
+## 7. How to run any of it
 
-**Host-agnostic first.** `tools/ec2/box.sh` is AWS-only; everything else is not. On your own box or a container
-host, `setup.sh` / `probe_e9l.py` / `run.sh` / `release_sweep.sh` are the box-side scripts and
-`pull.py` / `verify_mirror.py` are the home-side ones. If you are on a **rented container** (RunPod and friends),
-read `tools/runpod/rp.py`'s header first — four box rules change, and each is a way to lose money or evidence:
+**Host-agnostic.** `tools/ec2/box.sh` is AWS-only; nothing else is. Box-side: `setup.sh`, `probe_e9l.py`, `run.sh`,
+`release_sweep.sh`. Home-side: `pull.py`, `verify_mirror.py`. If you are on a **rented container**, read
+`tools/runpod/rp.py`'s header first — four rules change and each is a way to lose money or evidence:
 `sudo shutdown -h` **does not stop billing**; **stop is not terminate**; **container disk is ephemeral**, which makes
 R5 (pull → verify → delete) load-bearing rather than tidy; and there is no instance metadata, so R7's read-back
-reads the pod id back from the API.
+comes from the API.
 
-**Environment, once.** Two clones and two venvs: upstream `kv-transfer-replication` **detached at the cell's pin**
-(for every Llama cell, `06f8d55`, now reachable per §0) with torch cu128, and `linear-ceiling` CPU-only. `setup.sh`
-builds both idempotently and arms a 24 h self-halt; it also puts the mapper in place by sha and checks the traces
-tarball against its manifest, then runs `e9 --check` and `--align-only`. Box scripts **must be LF** — a Windows
-clone with `core.autocrlf` hands you CRLF copies that fail on the box.
-
-```bash
-# HOME, BEFORE the box exists — the gate does NOT check this and the summarizer refuses later without it (e9s, 09-14)
-.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --calibrate-tau --config config/<exp>.toml
-```
+**Environment.** Two clones, two venvs: upstream `kv-transfer-replication` **detached at the cell's pin** (for every
+Llama cell, `06f8d55`) with torch cu128, and `linear-ceiling` CPU-only. `setup.sh` builds both idempotently, places
+the mapper by sha, checks the traces tarball against its manifest, runs `e9 --check` and `--align-only`, and arms a
+24 h self-halt.
 
 ```bash
-# BOX: probe (R2) before the run, never after. The probe is generalised; give it the RUN's longest prefill,
-# not the config's context_cap (a bound, not the run's number).
-EXP=<exp> MAX_S=<max n_sender/n_receiver from results/<exp>/align/coverage.json> \
-  ~/kv-transfer-replication/.venv/bin/python ~/probe_e9l.py > ~/probe.log 2>&1
-EXP=<exp> LADDER=32768,49152,65536,80111 ~/kv-transfer-replication/.venv/bin/python ~/probe_e9l.py   # E-TRUNC: all levels in one ladder
+# HOME, BEFORE the box exists. The gate does NOT check this and the summarizer refuses later without it.
+.venv/bin/python -m linear_ceiling.summarize_e9 --calibrate-tau --config config/<exp>.toml
 
-# BOX: run detached (R4). Rotates the log, `python -u`, exit code to ~/<exp>.rc
+# BOX, R2 probe — before the run, never after. Give it the RUN's longest prefill, not the config's
+# context_cap (which is a BOUND, not the run's number): take MAX_S from results/<exp>/align/coverage.json.
+EXP=<exp> MAX_S=<max n_sender/n_receiver> ~/kv-transfer-replication/.venv/bin/python ~/probe_e9l.py > ~/probe.log 2>&1
+EXP=<exp> LADDER=32768,49152,65536,80111 ~/kv-transfer-replication/.venv/bin/python ~/probe_e9l.py   # task A: all levels, one ladder
+
+# BOX, R4 — detached, log rotated, python -u, exit code to ~/<exp>.rc
 EXP=<exp> bash ~/run.sh            # or: bash ~/run.sh --resume
 
-# HOME: mirror + verify + delete on the box as each kept dir lands (R5/R6)
-BOX=<user>@<ip> .venv/Scripts/python.exe tools/ec2/pull.py <exp>
-.venv/Scripts/python.exe tools/ec2/verify_mirror.py <exp>
+# HOME, R5/R6 — mirror, verify against report.json, delete on the box per handoff
+BOX=<user>@<ip> .venv/bin/python tools/ec2/pull.py <exp>
+.venv/bin/python tools/ec2/verify_mirror.py <exp>
 
-# BOX: release (R7 steps 0-5), then terminate and read the state back
+# BOX, R7 steps 0-5, then terminate and read the state back
 EXP=<exp> LAUNCH_UTC="<box launch, UTC>" bash ~/release_sweep.sh > ~/release.log 2>&1
 ```
 
-> **Trap, before any sitting:** `release_sweep.sh:7`'s `OURS_FILES` is a **fixed allowlist of the e9l/e9s
-> filenames**. Any new file your sitting puts in `~` — `probe_tailb.py`, a per-level driver, extra configs — is
-> reported `NOT OURS` and the sweep returns `foreign=1` **on a clean box**. Extend `OURS_FILES` in the same change
-> that adds the file. (The `${EXP}.records.sha256` generalisation is already in.)
+**The reader that must produce every figure** — nothing else may be the source (R11), and no number is typed into an
+entry script:
 
-**The fail-closed reader that must produce every figure** — one per row, and nothing else may be the source:
-
-| row | reader (in-process, every figure from its verified output) | one-command verify |
+| task | reader | one-command verify |
 |---|---|---|
-| E-TAIL Part A | `python -m linear_ceiling.e9_tail --config config/e9l.toml` (**in flight, uncommitted**; runs `summarize_e9.summarize` first) | `.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --config config/e9l.toml` → PASSED, then the module on the same records |
-| E-TRUNC | a **new** paired reader (common subset + paired levels), fail-closed like `summarize_e9`, inputs sha-pinned | `.venv/Scripts/python.exe -m linear_ceiling.e9 --check --config config/<level>.toml` then the reader → exit 0 |
-| E-TAIL Part B | the same `e9_tail` surface extended, or a sibling; identity check against the archived dumps is part of it | reader exit 0 **and** the eager-vs-SDPA identity within the entry's stated tolerance |
-| E-BEH | a new reader over the per-position KL/argmax summaries; **FRESH-vs-FRESH identity must be exactly 0** | reader exit 0 with the identity arm at 0 and NULL present |
-| Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0046.py` | `.venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
-| any R8 mirror | — | `.venv/Scripts/python.exe tools/hf_verify_backup.py <repo_id> <local_root>` → **exit 0 only when every file matches in both directions** (needs `HF_TOKEN` read scope in the env only) |
-| the whole repo | — | `.venv/Scripts/python.exe -m linear_ceiling.ledger_check && … lint_scope && … seal verify` |
+| A — E-TRUNC | a **new** paired reader (intersection + paired levels), fail-closed, inputs sha-pinned | `e9 --check --config config/<level>.toml`, then the reader → exit 0 |
+| B — E-TAIL B | `e9_tail`'s surface extended, or a sibling; the eager-vs-SDPA identity check is part of it | reader exit 0 **and** identity within the entry's stated tolerance |
+| C — E-BEH | a new reader over the per-position KL/argmax summaries | reader exit 0, identity arm exactly 0, NULL present |
+| E — Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0046.py` | `.venv/bin/python -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
+| any R8 mirror | — | `.venv/bin/python tools/hf_verify_backup.py <repo_id> <local_root>` → **exit 0 only when every file matches both directions** (`HF_TOKEN` in the env only) |
+| the repo | — | `ledger_check && lint_scope && seal verify` |
 
-For the **R12 recompute** specifically (no new figures, no entry): clone-at-P plus the e9f mirror, then
-`summarize_e9 --config config/e9f.toml` pointed at the mirror — and `hf_verify_backup.py` on
-`C:\m\e9f` first, since §0's 1,054 = 1,054 is only a file count.
+### Traps that have actually cost us time
 
-**Suite note, so a red run does not stop you:** the Windows suite is red on 28 + 26 cases (`os.fsync` on a
-read-only handle at `e9.py:415`, plus tests that exec bash); Linux CI is green from `118d08e`. Run the suite on
-Linux/WSL and treat Windows reds as known.
-
----
-
-## 5. Return path
-
-1. **Code and docs: a PR against `main`.** One concern per commit, explicit paths, no attribution trailers. Gates
-   must pass in the PR: `ledger_check`, `lint_scope`, `seal verify`, and the suite on Linux. Do **not** touch
-   `docs/paper/tex/` (another session's, untracked) or `docs/drafts/README.md` (the allocator — propose the change
-   in the PR body instead of editing it).
-2. **Results: Hub dataset + two-way verify.** Push the cell's `results/<exp>/` (plus the mapper files the entry
-   pins), then run `tools/hf_verify_backup.py <repo_id> <local_root>` and **paste its exit-0 line into the PR**.
-   R8 is transport, not evidence: the verified home mirror is the evidence, and the entry quotes the reader, not the
-   dataset. Public is allowed (operator ruling 2026-09-11). Token in the environment only — **never in a file, a
-   log, or a commit** (R9), and revoke the write token when the push is done.
-3. **Entries: drafted, never appended.** Stage `docs/drafts/append_00NN.py` in the PR; **ledger appends are the
-   operator's**, and so is the number — `docs/drafts/README.md` is the only allocator and assigns at staging time.
-   Treat any number you write as provisional and keep every cross-reference a **literal**, not an offset from your
-   own `NUM` (inserting an entry inside a block is what offsets got wrong). The script must run the reader
-   in-process, refuse out of order, and run `ledger_check` after appending.
-4. **Paper material carries no dataset or account names.** Hub dataset names and the account name are a
-   **de-anonymization** question still open as ruling 6 in `review-response-map.md:82`; `lcfm_anon` is the
-   double-blind copy. Cite entries and figures, never `<account>/<dataset>`.
+1. **`release_sweep.sh:7`'s `OURS_FILES` is a fixed allowlist** of the e9l/e9s filenames. Any new file your sitting
+   puts in `~` — a new probe, a per-level driver, extra configs — is reported `NOT OURS` and the sweep returns
+   `foreign=1` **on a clean box**. Extend it in the same change that adds the file.
+2. **Never hardlink a results tree into a staging dir and then run a reader.** We did, and it bit today: the
+   summarizer rewrote `results/{e9l,e9s}/summary.json` *through* the hardlink (same inode in both paths), so both R8
+   staging trees now differ from their published datasets and `hf_verify_backup.py` would fail on that one file. No
+   figure moved — I diffed the Hub bytes against the live files field by field: **zero values changed**, one key
+   added (`dump_rope`). Copy into a stage, don't link; or delete the stage once the push is verified.
+3. **One clone, one cell at a time.** The config loader resolves the upstream path with no override and the gate runs
+   inside it, so a git worktree does not give you a second concurrent cell. Detach, run, return to `main`.
+4. **Box scripts must be LF.** A Windows clone with `core.autocrlf` hands you CRLF copies that fail on the box.
+5. **Percentiles:** quantiles come from `e7_stats` — **lower nearest-rank, no interpolation**. A `numpy` recompute of
+   a registered p10/p90 disagrees and looks like drift when nothing drifted (|R| p90 is 19,853 nearest-rank vs
+   18,998 interpolated). Use `e7_stats`, or cite the summarizer's field.
+6. **The Windows suite is red** on 28 + 26 cases (`os.fsync` on a read-only handle at `e9.py:415`, plus tests that
+   exec bash); Linux CI is green. Run the suite on Linux/WSL and treat Windows reds as known.
 
 ---
 
-## 6. Priority for the Oct 12 draft — and what the draft says for anything unrun
+## 8. Return path
 
-**In this order**, because it maximizes what the Oct 12 draft can state and defers what needs a card:
+1. **Code and docs: a PR against `main`.** One concern per commit, explicit paths, gates passing in the PR
+   (`ledger_check`, `lint_scope`, `seal verify`, suite on Linux). Do **not** touch `docs/paper/tex/` (another
+   session's) or `docs/drafts/README.md` — it is the number allocator; propose changes in the PR body.
+2. **Results: Hub dataset + two-way verify.** Push `results/<exp>/` plus the mapper files the entry pins, run
+   `tools/hf_verify_backup.py`, and **paste its exit-0 line into the PR**. R8 is transport, not evidence: the
+   verified home mirror is the evidence and the entry quotes the reader, never the dataset. Public is fine (operator
+   ruling 2026-09-11). Token **in the environment only** — never in a file, a log or a commit — and revoked when the
+   push is done.
+3. **Entries: drafted, never appended.** Stage `docs/drafts/append_00NN.py` in the PR. The script runs the reader
+   in-process, refuses out of order, and runs `ledger_check` after appending. Treat your number as **provisional**
+   and write every cross-reference as a **literal**, not an offset from your own `NUM` — inserting an entry inside a
+   block is exactly what offsets get wrong.
+4. **No dataset or account names in paper material.** Hub dataset names and the account name are an open
+   de-anonymization question; `lcfm_anon` is the double-blind copy. Cite entries and figures.
 
-1. **The four grounded sentences** — W8, W7, W6, W4's abstract clause. No card, no ruling, no entry. These are the
-   reviewer-facing wins and they are free today.
-2. **E-TAIL Part A** once the in-flight reader lands — the tail table is the direct answer to W3 ("the mean passes,
-   the tail may not"), costs CPU minutes, and is the one new *figure* that can realistically be entered before
-   Oct 12. Needs ruling 4 for its carrier entry.
-3. **The R12 recompute of 0040/0044**, now unblocked — it makes the second family recomputable from a clean
-   checkout, which is what W7's T2 claim rests on. No new numbers, so no entry.
-4. **E-TRUNC**, if and only if the margin ruling lands early enough — one config key plus a paired reader, no
-   upstream change, ≈3 h on a 48 GB card. The highest-value GPU row per dollar and the only one plausibly *entered*
-   by Oct 30.
-5. **E-TAIL Part B** — cheapest card, but needs a hook and its own probe.
-6. **E-BEH** — start the injection spec now if someone has time, but assume it is post-Oct-30.
-7. **Llama LONG cell** — 80 GB, pin now valid; worth scheduling only if a card is already in hand, since W7's T1
-   sentence does not need it.
+---
 
-**What the draft says for a row still unrun** — the rule, not a case-by-case decision: **name it as designed and
-unrun, cite the design document, and state what it would decide.** Never present it as pending-but-expected, and
-never let a reader infer a result. Concretely: "E-TRUNC (designed, unregistered, unrun) isolates length within a
-handoff by head-truncating the same senders; it would attribute the residual short↔long gap to length or to the
-handoffs." The `[VALIDATED]` / `[BASELINE]` / `[STRETCH]` tags are the repo's existing vocabulary — a designed-unrun
-row is **not** `[BASELINE]`. If a row is dropped for time, say so in one clause rather than silently omitting it;
-the E-RL appendix is being dropped for exactly this reason (N2).
+## 9. Priority, and what the Oct 12 draft says for anything unrun
+
+**Order:** task **A** (E-TRUNC) → task **B** → task **D** if you want it (it costs seconds) → task **C** and task
+**E** as post-deadline. A is the only GPU row plausibly *entered* by Oct 30.
+
+**What the draft says for an unrun row** — the rule, not a case-by-case call: **name it as designed and unrun, cite
+the design document, and state what it would decide.** Never pending-but-expected, and never let a reader infer a
+result. For example: "E-TRUNC (designed, unregistered, unrun) isolates length within a handoff by head-truncating
+the same senders; it would attribute the residual short↔long gap to length or to the handoffs." A designed-unrun row
+is **not** `[BASELINE]`. If a row is dropped for time, say so in a clause rather than omitting it silently.
 
 And the standing sentence that only an entry reporting a number may retire: **"No downstream-quality number is
-claimed."** It stands until E-BEH's entry lands. Do not soften it in the draft.
+claimed."** It stands until E-BEH's entry lands. Don't soften it.
 
 ---
 
-## 7. Rulings — answerable in one reply
+## 10. Rulings — answer these and task A can start
 
-Recommended default in **bold**; each is yours, and I have implemented none of them.
+Recommended default in **bold**. None is implemented.
 
-1. **E-TRUNC margin** — how close must the L32 far-from-seam median come to 0038's scaled-short 0.0381 to read as
-   "length" rather than "the handoffs"? → **Default: register a band of ±0.005 absolute (≈13 % of 0.0381) and
-   report "unattributed" between it and FULL's 0.0629.** Reason: 0037 registered "near/in between" with no
-   threshold, and that gap is what made 0038's share unclassifiable; fix it before prefill this time.
-2. **E-TRUNC shrinkage gate** — the minimum |M_∩| / |M_FULL| below which a handoff is void for the comparison. →
+1. **E-TRUNC margin, and its statistic.** → **Default: ±0.005 absolute on the far-from-seam (16+) same-K
+   *median*, as entry 0038 reports it** (0.0381 scaled-short, 0.0629 long); "unattributed" between the band and
+   FULL's level. Reason: 0037 registered "near / in between" with no threshold, which is why 0038's share came out
+   unclassifiable — and per §1 the mean and median levels differ by ~1.7×, so the statistic must be named.
+2. **E-TRUNC shrinkage gate** — minimum `|M_∩| / |M_FULL|` below which a handoff is void. →
    **Default: 0.80, reported per handoff before any verdict is read.**
-3. **E-TRUNC L32-native** — include the native-receiver cell, and if so, is R re-prefilled natively? →
-   **Default: include it, keep R under YaRN, and state so** — it is the only cell where native vs YaRN is comparable
-   on the same tokens, and keeping R fixed changes one thing at a time.
-4. **E-TAIL Part A's carrier** — does the tail table ride the owed corrective f* entry, or get its own? →
-   **Default: one entry, the corrective one, widened to carry the tail counts, the per-handoff maximum, the bin
-   means and the |R| row.** Reason: they are all re-reads of the same verified records, and the corrective entry is
-   owed anyway (README's H-E9 row still reads "f* = 0 at every matched token").
-5. **E-TAIL Part B** — registered with a band, or descriptive? → **Default: descriptive for MLSys**, reported beside
-   µ and δ_max. A band on a quantity whose attribution statement is not yet readable would be premature.
+3. **E-TRUNC L32-native** — include it, and is R re-prefilled natively? → **Default: include it, keep R under YaRN,
+   and state so** — it is the only same-token native-vs-YaRN comparison, and holding R fixed changes one thing.
+4. **E-TAIL Part A's carrier entry** — now that Part A is run, does its table ride the owed corrective f* entry? →
+   **Default: yes, one entry — the corrective one, widened** to carry the tail counts, the per-handoff maximum, the
+   seam-bin **means**, and the |R| row. They are all re-reads of the same verified records.
+5. **E-TAIL Part B** — band or descriptive? → **Default: descriptive for MLSys**, reported beside µ and δ_max. A
+   band on a quantity whose attribution statement isn't yet readable is premature.
 6. **E-BEH bands and verdict words** — the design proposes top-1 ≥ 0.95 HOLDS-B / < 0.90 DEGRADES-B. →
-   **Default: accept those two numbers, and reuse the existing band words with a new hypothesis row rather than
-   teaching `ledger_check.VERDICTS` the `-B` suffix** — fewer moving parts in the gate.
-7. **W5 entry count** — one entry for the bin means, or two? → **Default: one** (folded into ruling 4's entry).
-8. **Condition 1 / the Qwen3 short cell** — may the 25 appear in MLSys tables? → **Default: no pooled row; a
-   separate table only, labelled as a separate cell**, until the admission outcome is recorded in a numbered entry.
-   This is also the answer to "may the short cell ride along" from the box plan.
-9. **A third pair (1B→3B)** — pursue, or stay on two families? → **Default: run `tools/preflight_pair.py` this week
-   (free, CPU, no card) and decide on its output; do not plan a campaign before it passes matched-KV.** If it fails,
-   the question closes for nothing.
-10. **Llama LONG cell scheduling** — now that the pin is merged, request an 80 GB card before Oct 30? →
-    **Default: no.** W7's T1 sentence is grounded on 0034 today; spend the remaining weeks on E-TRUNC and the tail
-    table, and let the long Llama cell be the first post-deadline sitting.
-11. **Housekeeping** — delete the two empty Hub datasets under the operator's account, and the
-    `lc-e9l-2026-09-10` key pair / `lc-e9l-ssh` group in us-east-1? → **Default: delete the two empty datasets**
-    (one home per cell, and they are what the review map calls "the Hub targets"); **keep the key pair and group**
-    — both free, and the group is the one reviewed ingress rule this lane has.
+   **Default: accept both numbers, and reuse the existing band words with a new hypothesis row** rather than
+   teaching `ledger_check.VERDICTS` the `-B` suffix.
+7. **W5 entry count** — one entry for the bin means or two? → **Default: one**, folded into ruling 4's entry.
+8. **The Qwen3 short cell (the 25 of 0029)** — may it appear in MLSys tables? → **Default: no pooled row; a separate
+   table only, labelled a separate cell**, until Condition 1's admission outcome is recorded in a numbered entry.
+9. **Task D, the 1B→3B pair** — pursue? → **Default: run `tools/preflight_pair.py` this week (free, CPU, no card)
+   and decide on its output.** Don't plan a campaign before it passes matched-KV; if it fails, the question closes
+   for nothing.
+10. **Llama LONG cell** — request an 80 GB card before Oct 30? → **Default: no.** W7's camera-ready sentence is
+    grounded on 0034 today; spend the weeks on task A and the tail table.
+11. **Numbering collision — this one blocks two files.** A corrective-entry draft is proposed to take **0045**,
+    which would push the staged Llama drafts to **0046 and 0047**. That is not two renames: it moves every
+    `NUM`/`PREV` literal in both scripts **and** `config/e9fl.toml`'s `[e9.gate] required_entries`, which currently
+    lists `"0045"` — and that commit must land **before** any `e9 --check`, which verifies the config is committed
+    unmodified. → **Default: let the corrective entry take 0045 and renumber the Llama drafts in one commit**, per
+    the drafts README's own contingency, since the corrective entry can run today and the Llama long cell cannot.
 
-**Not in this document, and not mine to decide:** the camera-ready date email to the workshop organizers, the
-de-anonymization ruling (map:82), the Lean restatement, and the task-slot owners in
-`docs/2026-09-30-team-status-wednesday.md`, which are still `???`.
+**Not mine to decide, and not in this document:** the de-anonymization ruling, the Lean restatement, the
+camera-ready date, and the task-slot owners still marked `???` in `docs/2026-09-30-team-status-wednesday.md`.
