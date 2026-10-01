@@ -1,0 +1,39 @@
+# Descriptive post-acceptance extension; frozen before GPU measurements.
+seed = 20260930
+context_cap = 81920
+chunk_tokens = 256
+dtype = "float32"
+attention = "sdpa"
+tau_K = 0.3186442653116294
+tau_V = 0.4867056499055992
+tau_ladder = [0.03, 0.10]
+bridge_mean_relative_tolerance = 0.01
+bridge_fstar_absolute_tolerance = 0.01
+control_max_delta = 0.0001
+
+[[models]]
+name = "qwen17_bridge"
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+selection = "shortest_middle_longest_each_original_cohort"
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
+
+[[models]]
+name = "qwen4"
+model = "Qwen/Qwen3-4B"
+revision = "1cfa9a7208912126459214e8b04321603b3df60c"
+selection = "all_60_original_handoff_texts"
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
+
+[[models]]
+name = "smollm3"
+model = "HuggingFaceTB/SmolLM3-3B"
+revision = "a07cc9a04f16550a088caea529712d1d335b0ac1"
+selection = "all_60_original_handoff_texts"
+rope_type = "yarn"
+factor = 2.0
+original_max_position_embeddings = 65536
