@@ -64,7 +64,7 @@ to the native 16.72 on the 20 GB slice E9 ran on, so the E9 slice suffices; E9 s
 an outside read after. It enters the paper only with its entry; otherwise §5.2 states the configuration
 difference and makes no length-alone claim (outline v3 §5.2, §6).
 
-**Status 2026-09-13: BUILT, registration STAGED, not run.** `config/e9s.toml`, `src/linear_ceiling/e9_compare.py`,
+**Status 2026-09-13: BUILT, registration STAGED, not run.** *(Status 2026-10-01: RAN 2026-09-13/14 on a rented L40S — registered as 0037, figures in 0038; configuration shares 0.4285 / 0.3916, ledger 2362.)* `config/e9s.toml`, `src/linear_ceiling/e9_compare.py`,
 `tests/test_e9_scaled_short.py`, `docs/drafts/append_0037.py`; the GPU session's seed is
 `docs/2026-09-13-seed-e9-scaled-short-cell.md` (decisions D1–D4, the home and box definitions of done, the
 registered reading). For the camera-ready: the submission deadline (09-14 11:59 UTC) is before any sitting.

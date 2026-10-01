@@ -176,6 +176,7 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
   floor difference (0.019 → 0.063). Every "what length changes" figure is therefore length *and* configuration until
   the scaled short cell is measured (freeze checklist; `docs/2026-09-11-gpu-runs-after-the-pivot.md` item 1). If it
   is not measured before submission, the text says so and makes no claim that length alone explains the difference.
+  *(noted 2026-10-01: the scaled short cell WAS measured before submission — 0037/0038; the submitted abstract reports both cells and the configuration share. This outline is superseded by the submitted PDF and is kept as the planning record.)*
 - Position in the sender context (f*(τ_K) 0.0000 in every bin): 0–32K 0.038 · 32K–49K 0.131 · 49K–65K 0.162 ·
   65K–82K 0.092 (n = 4 handoffs reach it) [0036]. Seam 16+: 0.063 (n = 359,203) vs 0.019 [0029]: seam-local in
   shape, far-from-seam floor three times higher.
