@@ -28,7 +28,7 @@ in one reply.
 | **B** | E-TAIL **Part B** — attention-weighted deviation (W3) | rulings 5 + registration, incl. a verbatim Prop. 4 quote | chunked eager hook **+ its own probe** | **20 GB** | <1 h | per-handoff w figures + drafted entry |
 | **C** | E-BEH — behavioral check of τ_K (W1) | ruling 6 + registration of the injection splice | cache injection upstream; continuation extractor | **48 GB** | ≈3 h | KL/top-1 per arm + drafted entry |
 | **D** | *Optional:* a third pair, Llama-3.2-1B → 3B | ruling 9 (just the go/no-go) | nothing — one CPU preflight | **none** | seconds | preflight output, pass or fail |
-| **E** | Llama **LONG** cell, 0045/0046 (W7) | ruling 10 + the numbering ruling 11 | nothing; drafts are staged | **80 GB** | ≈2 h | run the staged drafts' cell |
+| **E** | Llama **LONG** cell, 0046/0047 (W7) | ruling 10 + the numbering ruling 11 | nothing; drafts are staged | **80 GB** | ≈2 h | run the staged drafts' cell |
 
 Nothing in this document allocates a number, registers anything, or edits a design.
 
@@ -192,17 +192,17 @@ E9 cell — a new campaign, not an add-on. Worth it only if a cheap card matters
 
 ## 6. Task E — the Llama LONG cell (W7), if a 80 GB card is already in hand
 
-The drafts are **staged and unrun**: `append_0045.py` (registration) and `append_0046.py` (figures), with
+The drafts are **staged and unrun**: `append_0046.py` (registration) and `append_0047.py` (figures; renumbered 2026-10-01), with
 `config/e9fl.toml` committed. **Their numbers are provisional and may move — see ruling 11.**
 
 - Cap **81,920**, floor **32,768** in Llama-3 tokens. The floor equals the short cell's cap, so the two Llama cells
-  **partition** their handoffs, and 0045 asserts that the ids it excludes under the floor are *exactly* the short
+  **partition** their handoffs, and 0046 asserts that the ids it excludes under the floor are *exactly* the short
   cell's included set, with the residual above the cap named and counted. Audited, not asserted.
 - **Neither side is scaled** (both natively 131,072): no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling`. 0035's
   configuration-bridge reading is declared **inapplicable**; two dump-derived controls replace it — a native-window
   assertion and a **role-scoped** RoPE identity (the sides carry different llama3 factors, 32.0 and 8.0, so an
   unscoped assertion would refuse every correct run).
-- It **cannot move, support or refute H-E9L** and is **never pooled** with 0036's 35. 0046 reads
+- It **cannot move, support or refute H-E9L** and is **never pooled** with 0036's 35. 0047 reads
   `results/e9l/summary.json` only to state 0036's figures *beside* these, with non-comparability spelled out.
 - **Card: 80 GB.** Not a 48 GB job, per §5.
 - **What R8 must hold before the entry:** every kept dump and record of `results/e9fl/` pushed; the push **two-way
@@ -257,7 +257,7 @@ entry script:
 | A — E-TRUNC | a **new** paired reader (intersection + paired levels), fail-closed, inputs sha-pinned | `e9 --check --config config/<level>.toml`, then the reader → exit 0 |
 | B — E-TAIL B | `e9_tail`'s surface extended, or a sibling; the eager-vs-SDPA identity check is part of it | reader exit 0 **and** identity within the entry's stated tolerance |
 | C — E-BEH | a new reader over the per-position KL/argmax summaries | reader exit 0, identity arm exactly 0, NULL present |
-| E — Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0046.py` | `.venv/bin/python -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
+| E — Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0047.py` | `.venv/bin/python -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
 | any R8 mirror | — | `.venv/bin/python tools/hf_verify_backup.py <repo_id> <local_root>` → **exit 0 only when every file matches both directions** (`HF_TOKEN` in the env only) |
 | the repo | — | `ledger_check && lint_scope && seal verify` |
 
@@ -351,6 +351,8 @@ Recommended default in **bold**. None is implemented.
     lists `"0045"` — and that commit must land **before** any `e9 --check`, which verifies the config is committed
     unmodified. → **Default: let the corrective entry take 0045 and renumber the Llama drafts in one commit**, per
     the drafts README's own contingency, since the corrective entry can run today and the Llama long cell cannot.
+    **Ruled 2026-10-01: default taken.** 0045 is the corrective entry; the Llama drafts are now `append_0046.py` /
+    `append_0047.py`, and `config/e9fl.toml`'s gate ends at 0046 (one commit, before any `e9 --check`).
 
 **Not mine to decide, and not in this document:** the de-anonymization ruling, the Lean restatement, the
 camera-ready date, and the task-slot owners still marked `???` in `docs/2026-09-30-team-status-wednesday.md`.

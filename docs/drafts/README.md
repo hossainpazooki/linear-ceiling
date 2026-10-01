@@ -18,6 +18,12 @@ ruling, the E9 short-cell registration). Their numbers are now permanent, and ev
 them by literal rather than by an offset from its own `NUM` — the offsets were correct only while the whole
 block moved together, and inserting an entry *inside* the block is exactly the case they got wrong.
 
+**State 2026-10-01: 0043 and 0044 are APPENDED (2026-09-19; H-E9F HELD). Numbering ruling 2026-10-01: the
+corrective f* entry takes 0045 (its script `append_0045.py` is NOT yet staged; it reads `results/*/tail.json`), and
+the two Llama long drafts moved up in one commit with `config/e9fl.toml`'s `[e9.gate]`: `append_0046.py`
+(registration, was 0045) and `append_0047.py` (figures, was 0046). Next free number: 0048.** The paragraph below
+is the 2026-09-19 staging record, kept as written.
+
 **Four drafts staged, in this staging order: `append_0043.py`, `append_0044.py`, `append_0045.py`,
 `append_0046.py`.**
 
@@ -34,7 +40,8 @@ block moved together, and inserting an entry *inside* the block is exactly the c
   and then have no verdict entry to write. It now checks the *shape* — a prefix of the registered order
   with the unscored tail named — and requires `--cutoff-reason` on a partial.
 - **`append_0045.py`** — the E9-long registration (was 0044). `config/e9fl.toml`'s `[e9.gate]` moved with it.
-- **`append_0046.py`** — the E9-long figures (was 0045).
+  *(2026-10-01: now `append_0046.py`; the gate now ends at 0046.)*
+- **`append_0046.py`** — the E9-long figures (was 0045). *(2026-10-01: now `append_0047.py`.)*
 
 **Contingency, one commit:** if another session's entry lands first, all four move up together — every
 `NUM`/`PREV` string, `[e8.gate]` in `config/e8f.toml`, and `[e9.gate]` in `config/e9f.toml` and
@@ -42,8 +49,8 @@ block moved together, and inserting an entry *inside* the block is exactly the c
 committed unmodified. The drafts are a chain: each refuses unless its predecessor's heading is already on
 the ledger, each runs `ledger_check` after appending and exits with its return code, and each is deleted in
 the same commit as its append, chained with `&&` (the 0025 lesson). On this checkout the interpreter is
-`.venv/bin/python`. **0044–0046 still cannot run:** the upstream commit P is not yet merged at the pin, and
-none of their cells has run. What each asserts and refuses on:
+`.venv/bin/python`. **0046–0047 still cannot run** (2026-10-01: commit P merged upstream 03:44Z, so the pin is reachable, but
+the long cell has not run). What each asserts and refuses on:
 **`append_0043.py`** (PRE-PREFILL AMENDMENT to 0042; DESCRIPTIVE, no row, no `verdict:` line): the only
 one that can run today. Asserts R1 (`results/e9f/` holds no report, score file, token record or kept dump),
 that the config still registers `n_sender_asc` + `allow_partial`, and that the gate list is exactly 0042's
@@ -60,13 +67,13 @@ refuses a partial close (this config does not allow one) and a run whose dumps c
 τ_K ceiling 0039 registered is derived mechanically from the summary (`tau_K > 0.45` forces the cell to
 `unresolved` whatever the band says). Optional `--tau-ceiling-applies {yes,no}` is an assertion that must
 agree with that derivation and cannot select the verdict; required `--tau-ceiling-note` records provenance only.
-**`append_0045.py`** (E9 long half registration at a NATIVE receiver; DESCRIPTIVE, no row): declares entry
+**`append_0046.py`** (E9 long half registration at a NATIVE receiver; was `append_0045.py` until 2026-10-01; DESCRIPTIVE, no row): declares entry
 0035's D1(a), its configuration bridge and its scaled-receiver reading INAPPLICABLE, and states that the
 cell cannot move, support or refute H-E9L and is never pooled with 0036's handoffs; asserts the floor
 equals the short cell's cap AND that the ids it excludes under that floor are EXACTLY the short cell's
 included set, so the partition is audited rather than asserted, with the residual above the cap — scored by
 neither cell — named and counted; same tau and calibration checks as 0041.
-**`append_0046.py`** (long-half figures; DESCRIPTIVE, no `verdict:` line): `summarize_e9 --config
+**`append_0047.py`** (long-half figures; was `append_0046.py` until 2026-10-01; DESCRIPTIVE, no `verdict:` line): `summarize_e9 --config
 config/e9fl.toml` in-process; `--cutoff-reason` required on a partial close and forbidden otherwise; reads
 `results/e9l/summary.json` only to state 0036's scaled-receiver figures BESIDE these, with the
 non-comparability spelled out (different models, tokenizers, handoff sets, mappers and τ, and one receiver

@@ -228,7 +228,7 @@ def test_e9fl_refuses_a_bridge_block_because_it_has_no_scaled_arm(tmp_path):
 # quietly fell out of the gate, which is exactly the enforcement the amendment exists to provide.
 @pytest.mark.parametrize("name,cap,floor,keep_n,gate", [
     ("e9f", 32768, 0, 8, ("0042", "0043")),
-    ("e9fl", 81920, 32768, 3, ("0045",)),
+    ("e9fl", 81920, 32768, 3, ("0046",)),
 ])
 def test_the_resolved_config_loads_as_a_native_llama_cell(tmp_path, name, cap, floor, keep_n, gate):
     last = gate[-1]

@@ -73,7 +73,7 @@ that is not run time.
 3. **E-BEH** — most informative and least ready.
 
 Nothing above fits an Algoverse 1g.20gb slice except E-TAIL Part B, and a 3g.40gb slice is marginal for FULL-length S.
-The Llama LONG cell (0045/0046) needs 80 GB and is not a g6e job at all.
+The Llama LONG cell (0046/0047 since the 2026-10-01 numbering ruling) needs 80 GB and is not a g6e job at all.
 
 ## 3. Release path (R7), and one trap to fix before any sitting
 
