@@ -1,6 +1,6 @@
 # The Llama second-family cell: R8 backup found absent, then restored and recomputed
 
-*Review and recomputation by Ritvik Aggarwal, 2026-09-01.*
+*Review and recomputation by Ritvik Aggarwal, 2026-10-01.*
 
 **Outcome (2026-10-01):** backups found on the Hub 2026-09-30, checked against the run's own fingerprints and the
 ledger, and both summarizers PASS on a download — see the last section. The sections in between record the
@@ -48,7 +48,8 @@ paper.
 > at the end of this file.** A manifest inside
 > a dataset shows the files agree with it, not where it came from; the ledger pins are the independent anchor,
 > and they cover six files. Both datasets sit under a personal account (`emmmy`), not the project account;
-> accepting that or moving them is the operator's call, and the account name must stay out of paper material.
+> the operator ruled on 2026-10-01 to keep them there (README `5a71df6`) and to delete the two empty
+> project-account datasets. The account name must stay out of paper material.
 
 ## Purpose
 
@@ -182,11 +183,13 @@ not assume either way.
 
 1. ~~**The mirrors are lost, so no push can close this.** Only items 2 and 3 remain.~~ Superseded by
    the 2026-09-30 update above: the datasets exist and match the run's own records and the ledger pins.
-2. **Whether to append a ledger entry.** A provenance entry recording that 0040/0044 have no R8 backup
+2. *(Superseded 2026-10-01: the backups exist and R12 passed, see the last section, so there is no gap left
+   to record.)* **Whether to append a ledger entry.** A provenance entry recording that 0040/0044 have no R8 backup
    would put this on the registered record, where 0021 (dating erratum) and 0041 (an ordering that was
    never registered) are the precedents. It is append-only and chain-hashed, so it is the operator's to
    append; no script is staged for it, and the next free number is 0047 per the 09-25 handoff.
-3. **Whether to fund a re-run as its own registered cell.** Per the Llama runbook §3.4 and the recorded
+3. *(Superseded 2026-10-01 as a remedy for the gap; a re-run stays possible as its own registered cell.)*
+   **Whether to fund a re-run as its own registered cell.** Per the Llama runbook §3.4 and the recorded
    sitting prices, that is a ≥ 40 GB card for Sitting A (peak 30.4 GiB) and an 80 GB card for Sitting B
    (peak 45.2 GiB); the two sittings as run cost $6.20 in total. It would require the entry and configs
    committed before anything ran.
