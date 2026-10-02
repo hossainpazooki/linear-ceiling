@@ -152,8 +152,10 @@ def cell_para(cell: str, entry: str, t: dict, f: dict, ledger_text: str) -> str:
     s_note = f"already stated by {entry}" if f"{ns['median']:,.0f}" in block else "not previously on the ledger for this cell"
     if cell in CONDITION_1:
         scope = (" **Condition 1 (entry 0032) binds this cell: these figures correct a sentence already on the ledger and "
-                 "release nothing; no pooled row with any other cell; nothing enters a paper until the condition is "
-                 "ruled.**")
+                 "release nothing; no pooled row with any other cell; nothing enters a paper until the co-author "
+                 "refutation is merged under `docs/reviews/` with two signatures. (The 2026-09-08 numbers-freeze clause "
+                 "of 0032 applied to the LCFM submission, since accepted; the operator ruled it moot on 2026-10-01 for "
+                 "the camera-ready. The review's substance is what remains.)**")
     elif cell == "e9f":
         scope = " Second model family (0039), its own τ; never pooled with the Qwen3 cells (0044)."
     else:
