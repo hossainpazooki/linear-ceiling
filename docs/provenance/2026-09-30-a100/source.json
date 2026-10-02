@@ -1,0 +1,8 @@
+{
+  "source_repository": "https://github.com/neuriv/linear-ceiling",
+  "source_commit": "2fb44649feb4b0d7b88d2eeca03387ac3b163c08",
+  "source_path": "ledger/ledger.md",
+  "whole_file_sha256": "928cee3a00b9415c0ca412ea4972ecf07eb45895f4a4bd6f52bbb60168895e11",
+  "excerpt_sha256": "7e59f2461932b9d4304032b1e3fcbbd96801b61261387700373fc25e19ba19a5",
+  "note": "Historical fork entries, not appended to the upstream numbered ledger. These numbers now collide with upstream allocations."
+}
