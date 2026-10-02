@@ -1,0 +1,26 @@
+# Proposed descriptive run; no GPU result or registered quality verdict is claimed.
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+transformers = "5.17.0"
+torch = "2.14.0"
+seed = 20261001
+expected_handoffs = 35
+context_cap = 81920
+chunk_tokens = 256
+continuation_tokens = 256
+continuation_chunk = 16
+prefix_control_tokens = 128
+control_max_logit_error = 0.0005
+bridge_absolute_tolerance = 0.001
+bridge_relative_tolerance = 0.01
+tau_K = 0.3186442653116294
+# Fresh attention at the final 32 receiver queries, not every prompt query.
+attention_queries = 32
+attention_query_chunk = 16
+# Optional oracle-informed fixed budgets; no repair-arm campaign by default.
+oracle_fractions = []
+
+[rope]
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
