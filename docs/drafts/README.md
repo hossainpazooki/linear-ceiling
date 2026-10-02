@@ -19,17 +19,18 @@ them by literal rather than by an offset from its own `NUM` — the offsets were
 block moved together, and inserting an entry *inside* the block is exactly the case they got wrong.
 
 **State 2026-10-01: 0043 and 0044 are APPENDED (2026-09-19; H-E9F HELD). Numbering ruling 2026-10-01: the
-corrective f* entry takes 0045 (its script `append_0045.py` is NOT yet staged; it reads `results/*/tail.json`), and
+corrective f* entry takes 0045 (**APPENDED 2026-10-01 at `b3bf7ec`**; script and test retired in the follow-up commit), and
 the two Llama long drafts moved up in one commit with `config/e9fl.toml`'s `[e9.gate]`: `append_0046.py`
 (registration, was 0045) and `append_0047.py` (figures, was 0046). Next free number: 0048.** The paragraph below
 is the 2026-09-19 staging record, kept as written.
 
-**Staged 2026-10-01: `append_0045.py`** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
+**0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
 Reads `results/<cell>/tail.json` written by `e9_tail` (which runs `summarize_e9` first) for `e9l`, `e9`, `e9s`, `e9f`, and
 refuses when tail.json's summary/report pins no longer match the files; every ledger line it cites is located by
 sentence search inside the named entry (refuses on 0 or 2+ hits), never typed. `tests/test_append_0045.py` exercises it on
-the synthetic cell. Run `--preview` first; the four tail.json files exist on the home machine only.
+the synthetic cell. The entry's Condition 1 clause carries the operator's 2026-10-01 ruling that 0032's numbers-freeze is moot for
+the camera-ready and the co-author refutation under `docs/reviews/` is what remains. The four tail.json files exist on the home machine only.
 
 **Four drafts staged, in this staging order: `append_0043.py`, `append_0044.py`, `append_0045.py`,
 `append_0046.py`.**

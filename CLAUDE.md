@@ -79,7 +79,6 @@ LC_REAL_TRACES=1 .venv/Scripts/python.exe -m pytest -q tests/test_e7_sensitivity
 .venv/Scripts/python.exe -m linear_ceiling.e9 --close-partial --config config/e9l.toml   # entry 0035 stopping rule: close an unfinished run at the operator's cutoff; scored set must be a prefix of the registered order; unscored named
 .venv/Scripts/python.exe -m linear_ceiling.summarize_e9 --config config/e9l.toml     # fail-closed as above plus: floor re-derived, run order re-derived, partial prefix checked, bridge re-scored from tensors + its registered reading, length profiles (by |S| bin, by position in S)
 .venv/Scripts/python.exe -m linear_ceiling.e9_tail --config config/<cell>.toml       # runs summarize_e9 first (the gate), then the per-token TAIL from the same pinned records: tokens over each tau, means after removing the top 10/20 %, seam and position bin MEANS beside medians, native-window subset, |R| -> results/<cell>/tail.{json,md}, pinned to summary.json + report.json (W3/W4/W5; the corrective entry reads it)
-.venv/Scripts/python.exe docs/drafts/append_0045.py --preview [--cells e9l,e9,e9s,e9f]   # the staged CORRECTIVE entry: every figure from tail.json/summary.json, refuses on a stale pin, ledger line anchors derived by sentence search; without --preview it appends and runs ledger_check
 ```
 On Linux/web the interpreter is `.venv/bin/python`.
 
@@ -170,4 +169,8 @@ ALONE decides H-E7a and Lane B never resolves anything (0007/0010); unmeasurable
 trace-only cost figure is a LOWER BOUND and headroom is an UPPER BOUND, both labelled (0010/0012).
 `e7.assert_ready` refuses until the registering entries and `config/e7.toml` are committed
 unmodified. Corpus formats and what they omit: `docs/2026-09-01-swe-bench-trace-recon.md`. Real
-trajectories live under `traces/` (gitignored), never in history.
+trajectories live under `traces/` (gitignored), never in history. **0045 (2026-10-01, corrective, descriptive):** f* = 0 is a
+statement about the MEAN within τ_K, not "no token over τ_K" (0029/0036's sentence); the per-token tail per cell from `e9_tail`
+(e9l 7.9 %, e9 5.8 %, e9s 6.7 %, e9f 11.3 % of matched tokens over τ_K, on every handoff; per-handoff maximum mean 0.2692 / 0.2207 /
+0.2255 / 0.2860 against τ_K 0.3186 / 0.2861), the 0025/0029 R² label (0.4371 is 1 − R²; R² = 0.5629), seam-bin MEANS beside the
+medians, and 0044's E7-hash erratum. No cell moves. Next free entry: 0048 (0046/0047 are the staged Llama long drafts).

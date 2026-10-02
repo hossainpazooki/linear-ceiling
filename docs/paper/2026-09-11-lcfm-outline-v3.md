@@ -143,7 +143,7 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
 - v2's table unchanged (same-model 0.0000 (0.0000, 0.0000), bootstrap [0.0000, 0.0000]; cross 0.9286 (0.8579,
   0.9607); bridge R² K 0.9318 / 0.4557). Read it as 0023 defines f*: the mean δ_K over matched tokens is within τ_K on
   every handoff. **Beside it, the per-token tail** (recomputed from the raw token records 2026-09-11 with the
-  summarizer's own functions; **PENDING the corrective entry and a summarizer figure — NOT IN until then**): per-handoff
+  summarizer's own functions; **PENDING the corrective entry and a summarizer figure — NOT IN until then** *(2026-10-01: ENTERED by ledger entry 0045, `b3bf7ec` — the per-token tail per cell from `e9_tail`, with the per-handoff maximum and its margin under τ_K; the Qwen3 short cells stay Condition-1-bound as 0045 states them.)*): per-handoff
   mean δ_K 0.028–0.221; 9,047 of 155,257 matched tokens (5.8%) exceed τ_K, on every one of the 25 handoffs
   (per-handoff fraction median 4.4%, max 28.3%); pooled token p90 0.2305, p99 0.6736.
 - **Ladder beside the HOLDS (moved from an aside):** τ = 0.10 → 0.0000 (p90 0.1563); τ = 0.03 → 0.1433 (p90 0.5823)
@@ -166,7 +166,7 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
   invariance 0.000e+00 over 34,974; δ_null 2.015 / 1.975; |M|/|R| median 0.9606).
 - **Ladder beside the HOLDS:** τ = 0.10 → 0.0119 (p90 0.3876); τ = 0.03 → **0.5255** (p90 0.9037), against 0.0000 /
   0.1433 on the short half [0029]. Floor still zero at the registered tolerance; far less headroom under it. The
-  per-token tail, same status as in 5.1 (**PENDING, NOT IN**): per-handoff mean δ_K 0.043–0.269 (the maximum sits
+  per-token tail, same status as in 5.1 (**PENDING, NOT IN** *(2026-10-01: ENTERED by ledger entry 0045, `b3bf7ec` — the per-token tail per cell from `e9_tail`, with the per-handoff maximum and its margin under τ_K; the Qwen3 short cells stay Condition-1-bound as 0045 states them.)*): per-handoff mean δ_K 0.043–0.269 (the maximum sits
   0.05 under τ_K); 30,701 of 387,508 matched tokens (7.9%) exceed τ_K, on all 35 handoffs (median 5.8%, max 34.1%;
   counted at the registered τ_K = 0.3186442653116294 — a typed 0.3186 over-counts by ten; the co-author's probe
   `docs/probes/2026-09-11-e9l-record-recompute.py` reproduces the same count from the public backup);
@@ -190,7 +190,7 @@ The seed's §2 prose, with the corrections below applied. Paragraph by paragraph
    (`docs/2026-09-11-gpu-runs-after-the-pivot.md`).
 2. **The tolerance is a cross-model anchor, and f* repairs the mean.** τ_K is one map's held-out shortfall; the
    ladder is the sensitivity [0029, 0036]; the DEGRADES edge is a stated judgment [0023]; and f* = 0 says the mean
-   deviation is within τ_K, while a per-token tail above τ_K exists on every handoff (figure pending its entry).
+   deviation is within τ_K, while a per-token tail above τ_K exists on every handoff (figure pending its entry; *2026-10-01: entry 0045*).
 2b. **Receiver configuration differs between the cells** (native vs YaRN), so cross-cell descriptive differences are
    not attributable to length alone until the scaled short cell is measured.
 3. Length and the receiver (v2 §6.1). 4. One pair, one direction, one agent family, one alignment method (v2 §6.2).
@@ -227,7 +227,7 @@ As v2 (A–F), with B carrying the full ladders and profiles for 5.1 and 5.2, an
 | KVCOMM "identifier not confirmed" | in the repo: `docs/2026-09-01-measurement-lane-evidence.md` gives 2510.12872 | cite after one arXiv check |
 | DEGRADES ≥ 0.50 cited beside 0.15 | 0023: "the operator's stated judgment, not a citation" | stated in §1 |
 | (not in the seed) the zero without its control | 0029/0036 prefix-invariance 0.000e+00 is what shows the zero is not a pipeline identity | placed beside the claim in §1 |
-| **"not one matched token of any handoff exceeds τ_K"** (seed §2, v2 §4.1, and this outline's first version) | **FALSE.** 0023 defines f*(τ) on the *mean* of the remaining tokens; f* = 0 means the full-set mean is ≤ τ_K. Recomputed 2026-09-11 from the raw token records with `e9_pertoken.centered_delta/token_mean/f_star` and the summarizer's `_sst`: 5.8% of matched tokens exceed τ_K on the short cell and 7.9% on the long, on every handoff; f* is exactly 0 on all 60 because every per-handoff mean (0.028–0.269) is under 0.3186. 0029's own "inside the tolerance at every matched token of every handoff" sentence over-states its statistic; a corrective entry is in flight from another session (2026-09-11). **This session's first review marked the sentence verified because it matched 0029's text; matching a ledger sentence is not verifying it against the registered definition.** | f* defined as registered in §1; abstract, §1, §5.1, §5.2, §6 rewritten; tail figures marked PENDING/NOT IN |
+| **"not one matched token of any handoff exceeds τ_K"** (seed §2, v2 §4.1, and this outline's first version) | **FALSE.** 0023 defines f*(τ) on the *mean* of the remaining tokens; f* = 0 means the full-set mean is ≤ τ_K. Recomputed 2026-09-11 from the raw token records with `e9_pertoken.centered_delta/token_mean/f_star` and the summarizer's `_sst`: 5.8% of matched tokens exceed τ_K on the short cell and 7.9% on the long, on every handoff; f* is exactly 0 on all 60 because every per-handoff mean (0.028–0.269) is under 0.3186. 0029's own "inside the tolerance at every matched token of every handoff" sentence over-states its statistic; a corrective entry is in flight from another session (2026-09-11) *(2026-10-01: landed as 0045, which also corrects 0036's identical sentence and the 0025/0029 R² label; 0042 never carried the sentence)*. **This session's first review marked the sentence verified because it matched 0029's text; matching a ledger sentence is not verifying it against the registered definition.** | f* defined as registered in §1; abstract, §1, §5.1, §5.2, §6 rewritten; tail figures marked PENDING/NOT IN |
 | (not in the seed) the cells differ in receiver configuration | bridge δ_K 0.071–0.089 [0036] is the size of the cross-cell far-from-seam difference | stated in §5.2 and §6; scaled short cell is the one run worth registering |
 
 Verified as written: 0/68, 0.988, 60 of 2,904; content space per 0023 line 24–25; τ_K = 1 − 0.6814; f* a floor
@@ -248,7 +248,7 @@ on n = 50 [0016]; v2's uncited-attributions note; arXiv 2609.10266 = KVShareAren
 | §2 attributions | seed §6 table, provenance codes | cite-for-existence only at S/R; 2 identifiers confirmed |
 | §1 CacheBlend units / selection rule | one read of CacheBlend | **NOT DONE** — gates the HOLDS-anchor sentence's wording |
 | §1 "none at this length" | max evaluated context of CacheBlend, EPIC, KVShareArena | **NOT DONE** — clause stays out until done |
-| §5.1/5.2 per-token tail (fraction over τ_K, per-handoff mean δ_K) | needs a summarizer figure + the corrective entry (another session, in flight) | **PENDING — NOT IN** until both exist |
+| §5.1/5.2 per-token tail (fraction over τ_K, per-handoff mean δ_K) | needs a summarizer figure + the corrective entry (another session, in flight) | **PENDING — NOT IN** until both exist *(2026-10-01: both exist — `e9_tail` and entry 0045 `b3bf7ec`; the camera-ready may cite 0045; the short cell's rows remain Condition-1-bound)* |
 | §5.2 scaled short cell (0029's 25 under YaRN 2.5) | new config + registration entry + `summarize_e9` + a like-for-like comparison | **NOT RUN**; registration is the operator's call against the 09-14 11:59Z deadline |
 | §7 | none (no figure) | text only; `/honesty-check` on verbs before submission |
 
