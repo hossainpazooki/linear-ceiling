@@ -2987,3 +2987,144 @@ verdict: H-E9F = HELD
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: 53b14a5e89f3a829a115ca9e233a3b52440e8ff1711e45ecda11126a6901bcca
+
+### 0045 — 2026-10-01 — Corrective: f* = 0 is a statement about the MEAN within τ_K, not "no token over τ_K"; the per-token tail counted per cell with the per-handoff maximum; the 0025/0029 R² label; summary-file figures entered — descriptive, no cell moves
+
+**What this entry corrects, and what it does not.** Entry 0029 (line 1788) and entry 0036 (line 2209) state
+their HOLDS reading as "not one … handoff has a single matched token whose centered deviation exceeds τ_K".
+Entry 0023 (line 1275) defines f*(τ) as the smallest fraction of matched tokens whose exact recompute brings the
+MEAN δ_K of the rest to τ; f* = 0 therefore says every included handoff's mean is already at or under τ_K, and
+says nothing about individual tokens. Entries 0038 (line 2342) and 0044 (line 2962) already draw that
+distinction; 0044 adds that the fraction of tokens individually above τ_K was not computed by its summarizer —
+it now is, by `e9_tail`, which runs `summarize_e9` first and refuses on anything it refuses. Registered headings
+and bodies are immutable under the entry chain, so the two sentences stand and this entry records what the
+per-token records say beside them. **No verdict moves**: H-E9, H-E9L and H-E9F keep their cells; the statistic,
+the bands and every τ are untouched. Unit (0023, line 1253): δ is a token's share of the layer-head's
+unexplained variance in R²'s units, its mean over tokens is exactly 1 − R², and it is not a per-token percent
+error. Every statistic below is named mean or median; the two differ on these records.
+
+**(1) The tail, per cell, from `e9_tail` (`results/<cell>/tail.json`, pinned to the `summary.json` and
+`report.json` it was computed beside).**
+
+**e9l (entry 0036; 35 scored handoffs; τ_K = 0.3186, counted at the registered 0.3186442653116294).** Of 387,508
+matched tokens, **30,701 (7.9%) exceed τ_K individually**, on every one of the 35 handoffs (per-handoff fraction
+over τ_K: median 0.0577 (p10 0.0207, p90 0.1776; n = 35), max 34.1%). Pooled per-token δ_K: mean 0.1165, median
+0.0647, p90 0.2856, p99 0.7600, max 2.6700. Per-handoff MEAN δ_K: median 0.1106 (p10 0.0489, p90 0.2023; n =
+35); **maximum 0.2692**, which sits 0.04947 under τ_K — so f* = 0 "on every handoff" means every handoff's mean
+is at or under τ_K (0 of 35 over it), not that no token is. Mean after removing the top 10 % / 20 % of tokens by
+δ_K: 0.0773 / 0.0586 (CacheBlend's selection rule in this paper's units; their figure is in other units under
+another rule and is not compared). Pooled δ_K by causal seam bin b⁻(t), MEAN and MEDIAN both stated because they
+differ by up to 1.76× here: 0: mean 0.428 / median 0.260 (n = 4,050) · 1: mean 0.244 / median 0.153 (n = 2,956)
+· 2-3: mean 0.155 / median 0.089 (n = 4,624) · 4-7: mean 0.127 / median 0.074 (n = 7,224) · 8-15: mean 0.143 /
+median 0.086 (n = 9,451) · 16+: mean 0.110 / median 0.063 (n = 359,203). By sender position: 0-32767: mean 0.093
+/ median 0.038 (n = 284,094) · 32768-49151: mean 0.185 / median 0.131 (n = 40,967) · 49152-65535: mean 0.207 /
+median 0.162 (n = 43,643) · 65536-81919: mean 0.118 / median 0.092 (n = 18,804). Native window (sender position
+< 32,768): 284,094 tokens, 73.3% of matched, mean 0.0926, median 0.0381. |R| over the scored handoffs: median
+11,462 (p10 7,085, p90 19,853; n = 35). Summary-file figures (`summary.json` keys): |S| of the included handoffs
+`coverage_comparison.included.n_sender` median 50,916 (p10 35,692, p90 66,991; n = 35) (not previously on the
+ledger for this cell); `own_norm_delta_gt_1_fraction` K median 0.0000 (p10 0.0000, p90 0.0000; n = 35), V median
+0.0033 (p10 0.0020, p90 0.0070; n = 35) (not previously on the ledger for this cell);
+`depth_profile_median_per_layer.same_K`, median δ_K by layer 0…27: 0.000, 0.010, 0.013, 0.028, 0.023, 0.046,
+0.044, 0.053, 0.074, 0.076, 0.072, 0.070, 0.083, 0.085, 0.100, 0.099, 0.083, 0.089, 0.072, 0.068, 0.067, 0.062,
+0.053, 0.044, 0.042, 0.042, 0.044, 0.047 (the V and cross arms are in the file, not restated). The configuration
+bridge's per-handoff R² (entry 0035 control 4; `summary.json` key `bridge.per_handoff[].r2_K/r2_V`, not
+previously on the ledger; the bridge's f* and median δ are in 0036): `django__django-10999_traj#64` (|S| 13,955)
+K 0.8992 / V 0.8682 · `django__django-11066_traj#36` (|S| 14,269) K 0.8821 / V 0.8489 ·
+`astropy__astropy-14182_traj#68` (|S| 17,935) K 0.8932 / V 0.8603. Pinned: `tail.json` → `report.json`
+084d9480af74, `summary.json` 64e64e9318d4.
+
+**e9 (entry 0029; 25 scored handoffs; τ_K = 0.3186, counted at the registered 0.3186442653116294).** **Condition
+1 (entry 0032) binds this cell: these figures correct a sentence already on the ledger and release nothing; no
+pooled row with any other cell; nothing enters a paper until the co-author refutation is merged under
+`docs/reviews/` with two signatures. (The 2026-09-08 numbers-freeze clause of 0032 applied to the LCFM
+submission, since accepted; the operator ruled it moot on 2026-10-01 for the camera-ready. The review's
+substance is what remains.)** Of 155,257 matched tokens, **9,047 (5.8%) exceed τ_K individually**, on every one
+of the 25 handoffs (per-handoff fraction over τ_K: median 0.0437 (p10 0.0192, p90 0.1418; n = 25), max 28.3%).
+Pooled per-token δ_K: mean 0.0810, median 0.0233, p90 0.2305, p99 0.6736, max 2.2738. Per-handoff MEAN δ_K:
+median 0.0682 (p10 0.0384, p90 0.1570; n = 25); **maximum 0.2207**, which sits 0.09790 under τ_K — so f* = 0 "on
+every handoff" means every handoff's mean is at or under τ_K (0 of 25 over it), not that no token is. Mean after
+removing the top 10 % / 20 % of tokens by δ_K: 0.0435 / 0.0283 (CacheBlend's selection rule in this paper's
+units; their figure is in other units under another rule and is not compared). Pooled δ_K by causal seam bin
+b⁻(t), MEAN and MEDIAN both stated because they differ by up to 3.63× here: 0: mean 0.409 / median 0.236 (n =
+2,278) · 1: mean 0.209 / median 0.127 (n = 1,599) · 2-3: mean 0.129 / median 0.081 (n = 2,571) · 4-7: mean 0.110
+/ median 0.062 (n = 4,039) · 8-15: mean 0.121 / median 0.063 (n = 5,480) · 16+: mean 0.071 / median 0.019 (n =
+139,290). By sender position: 0-32767: mean 0.081 / median 0.023 (n = 155,257). Native window (sender position <
+32,768): 155,257 tokens, 100.0% of matched, mean 0.0810, median 0.0233. |R| over the scored handoffs: median
+6,551 (p10 4,148, p90 9,165; n = 25). Summary-file figures (`summary.json` keys): |S| of the included handoffs
+`coverage_comparison.included.n_sender` median 25,460 (p10 14,269, p90 30,106; n = 25) (already stated by 0029);
+`own_norm_delta_gt_1_fraction` K median 0.0000 (p10 0.0000, p90 0.0000; n = 25), V median 0.0043 (p10 0.0028,
+p90 0.0066; n = 25) (already stated by 0029); `depth_profile_median_per_layer.same_K`, median δ_K by layer 0…27:
+0.000, 0.001, 0.003, 0.006, 0.005, 0.007, 0.007, 0.010, 0.012, 0.019, 0.018, 0.022, 0.031, 0.036, 0.042, 0.044,
+0.039, 0.044, 0.034, 0.033, 0.034, 0.032, 0.026, 0.024, 0.022, 0.023, 0.024, 0.019 (the V and cross arms are in
+the file, not restated). Pinned: `tail.json` → `report.json` 1b2153e31245, `summary.json` ae461db872f2.
+
+**e9s (entry 0038; 25 scored handoffs; τ_K = 0.3186, counted at the registered 0.3186442653116294).**
+**Condition 1 (entry 0032) binds this cell: these figures correct a sentence already on the ledger and release
+nothing; no pooled row with any other cell; nothing enters a paper until the co-author refutation is merged
+under `docs/reviews/` with two signatures. (The 2026-09-08 numbers-freeze clause of 0032 applied to the LCFM
+submission, since accepted; the operator ruled it moot on 2026-10-01 for the camera-ready. The review's
+substance is what remains.)** Of 155,257 matched tokens, **10,336 (6.7%) exceed τ_K individually**, on every one
+of the 25 handoffs (per-handoff fraction over τ_K: median 0.0527 (p10 0.0252, p90 0.1677; n = 25), max 26.1%).
+Pooled per-token δ_K: mean 0.0986, median 0.0414, p90 0.2524, p99 0.7330, max 2.3712. Per-handoff MEAN δ_K:
+median 0.0895 (p10 0.0537, p90 0.1734; n = 25); **maximum 0.2255**, which sits 0.09312 under τ_K — so f* = 0 "on
+every handoff" means every handoff's mean is at or under τ_K (0 of 25 over it), not that no token is. Mean after
+removing the top 10 % / 20 % of tokens by δ_K: 0.0600 / 0.0438 (CacheBlend's selection rule in this paper's
+units; their figure is in other units under another rule and is not compared). Pooled δ_K by causal seam bin
+b⁻(t), MEAN and MEDIAN both stated because they differ by up to 2.34× here: 0: mean 0.428 / median 0.265 (n =
+2,278) · 1: mean 0.224 / median 0.145 (n = 1,599) · 2-3: mean 0.143 / median 0.093 (n = 2,571) · 4-7: mean 0.117
+/ median 0.071 (n = 4,039) · 8-15: mean 0.135 / median 0.075 (n = 5,480) · 16+: mean 0.089 / median 0.038 (n =
+139,290). By sender position: 0-32767: mean 0.099 / median 0.041 (n = 155,257). Native window (sender position <
+32,768): 155,257 tokens, 100.0% of matched, mean 0.0986, median 0.0414. |R| over the scored handoffs: median
+6,551 (p10 4,148, p90 9,165; n = 25). Summary-file figures (`summary.json` keys): |S| of the included handoffs
+`coverage_comparison.included.n_sender` median 25,460 (p10 14,269, p90 30,106; n = 25) (not previously on the
+ledger for this cell); `own_norm_delta_gt_1_fraction` K median 0.0000 (p10 0.0000, p90 0.0000; n = 25), V median
+0.0047 (p10 0.0030, p90 0.0068; n = 25) (not previously on the ledger for this cell);
+`depth_profile_median_per_layer.same_K`, median δ_K by layer 0…27: 0.000, 0.005, 0.007, 0.011, 0.010, 0.014,
+0.018, 0.022, 0.054, 0.052, 0.050, 0.046, 0.060, 0.061, 0.074, 0.076, 0.063, 0.067, 0.052, 0.048, 0.049, 0.045,
+0.038, 0.033, 0.031, 0.031, 0.033, 0.036 (the V and cross arms are in the file, not restated). Pinned:
+`tail.json` → `report.json` abd1e4561966, `summary.json` 859a8c98e1cd.
+
+**e9f (entry 0044; 28 scored handoffs; τ_K = 0.2861, counted at the registered 0.28613264291767326).** Second
+model family (0039), its own τ; never pooled with the Qwen3 cells (0044). Of 169,437 matched tokens, **19,094
+(11.3%) exceed τ_K individually**, on every one of the 28 handoffs (per-handoff fraction over τ_K: median 0.0719
+(p10 0.0247, p90 0.3442; n = 28), max 42.4%). Pooled per-token δ_K: mean 0.0960, median 0.0137, p90 0.3180, p99
+0.9373, max 2.5707. Per-handoff MEAN δ_K: median 0.0801 (p10 0.0315, p90 0.2188; n = 28); **maximum 0.2860**,
+which sits 0.00008 under τ_K — so f* = 0 "on every handoff" means every handoff's mean is at or under τ_K (0 of
+28 over it), not that no token is. Mean after removing the top 10 % / 20 % of tokens by δ_K: 0.0426 / 0.0219
+(CacheBlend's selection rule in this paper's units; their figure is in other units under another rule and is not
+compared). Pooled δ_K by causal seam bin b⁻(t), MEAN and MEDIAN both stated because they differ by up to 8.59×
+here: 0: mean 0.387 / median 0.223 (n = 2,502) · 1: mean 0.208 / median 0.107 (n = 1,777) · 2-3: mean 0.122 /
+median 0.065 (n = 2,853) · 4-7: mean 0.109 / median 0.051 (n = 4,467) · 8-15: mean 0.138 / median 0.053 (n =
+6,030) · 16+: mean 0.087 / median 0.010 (n = 151,808). By sender position: 0-32767: mean 0.096 / median 0.014 (n
+= 169,437). Native window (sender position < 32,768): 169,437 tokens, 100.0% of matched, mean 0.0960, median
+0.0137. |R| over the scored handoffs: median 6,852 (p10 3,945, p90 8,843; n = 28). Summary-file figures
+(`summary.json` keys): |S| of the included handoffs `coverage_comparison.included.n_sender` median 24,707 (p10
+13,465, p90 32,039; n = 28) (not previously on the ledger for this cell); `own_norm_delta_gt_1_fraction` K
+median 0.0004 (p10 0.0003, p90 0.0007; n = 28), V median 0.0071 (p10 0.0028, p90 0.0155; n = 28) (not previously
+on the ledger for this cell); `depth_profile_median_per_layer.same_K`, median δ_K by layer 0…31: 0.000, 0.001,
+0.001, 0.003, 0.003, 0.004, 0.006, 0.008, 0.011, 0.017, 0.014, 0.016, 0.016, 0.027, 0.023, 0.021, 0.018, 0.019,
+0.016, 0.014, 0.014, 0.014, 0.014, 0.014, 0.015, 0.014, 0.014, 0.014, 0.013, 0.015, 0.015, 0.016 (the V and
+cross arms are in the file, not restated). Pinned: `tail.json` → `report.json` f9335c0587ad, `summary.json`
+e1e5feb8aadd.
+
+**(2) The R² label in 0025 and 0029.** Entry 0025 (line 1471) writes "AGENT text at K R² = 0.4371" and entry
+0029 (line 1801) "mapper on agent text (K R² 0.4371)". 0.4371 is 1 − R², the shortfall that 0025 registers as
+τ_agent_K; the R² is **0.5629**, entry 0020's arm (b) K at the verdict k = 1 (line 1114), restated by 0030 as "1
+− 0.5629 = 0.4371" (line 1854). τ_agent_K and every figure computed from it are unchanged; only the label in the
+two sentences is wrong (review record `docs/2026-09-20-astra_review.md`, R1-4).
+
+**(3) What this changes downstream.** The seam-concentration reading ("deviation is local to the seam") rests on
+the bin MEANS above, not on the medians the earlier entries printed; any restatement of the workshop paper's
+per-token bound on these records uses the means and says so. Bridge R² (A5; decides nothing) is already stated
+by each cell's own entry and is not restated here. Nothing here is a new experiment; the `[STRETCH]`
+partial-prefill run and the designs under `docs/drafts/` remain unregistered.
+
+**(4) Entry 0044's E7 report hash.** 0044 (line 2923) records the E7 report regenerated on the box as
+`27dc922e3f7d…`, differing from the `0aba0fbe…` the 2026-09-10 long-run summary recorded, cause not asserted.
+The home-mirror recomputation pinned here (`summary.json` e1e5feb8aadd, key
+`coverage_comparison.e7_report_sha256`) gives `0aba0fbe7aba…`; the clean-clone recomputation record
+`docs/reviews/2026-09-28-llama-cell-r8-backup-and-recomputation.md` reports the same value (cited, not
+recomputed by this script). The box value is the outlier. The cause is still not established and none is
+asserted; the file feeds only the descriptive coverage comparison, as 0044 states.
+
+prior-entries-sha256: 4ce8765046ea6b8fdefcdd4b81e747ed774970296b729431f36db495d3535c74
