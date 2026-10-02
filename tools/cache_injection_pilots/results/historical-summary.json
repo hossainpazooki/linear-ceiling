@@ -1,0 +1,331 @@
+{
+  "recorded_at": "2026-09-23",
+  "platform": "Apple M5 with MPS for scored-answer, scaling, and practical-history runs; CPU float32 for short injection and checkpoint pilots",
+  "saved_run_files": "Original per-example outputs, downloaded model weights, and intermediate caches were removed after the earlier analysis. This file preserves the reported aggregates; replication scripts create fresh run files.",
+  "short_injection": {
+    "model": "Qwen3-1.7B",
+    "sparse": {
+      "cases": 8,
+      "replaced_positions_per_case": 12,
+      "top_next_token_unchanged": 8
+    },
+    "higher_coverage": {
+      "cases": 8,
+      "replaced_prefix_fraction_range": [
+        0.5,
+        0.95
+      ],
+      "top_next_token_unchanged": 8,
+      "maximum_total_variation": 0.0635,
+      "permuted_top_token_changed": 3
+    }
+  },
+  "checkpoint_reuse": {
+    "model": "OLMo-2-0425-1B-RLVR1",
+    "tokens_per_continuation": 32,
+    "all_first_next_tokens_unchanged": 24,
+    "all_registered_fstar_zero_at_tau_0_03": 24,
+    "pairs": [
+      {
+        "writer": 200,
+        "reader": 1200,
+        "cases": 8,
+        "continuations_changed": 2
+      },
+      {
+        "writer": 200,
+        "reader": 2600,
+        "cases": 8,
+        "continuations_changed": 6
+      },
+      {
+        "writer": 1200,
+        "reader": 2600,
+        "cases": 8,
+        "continuations_changed": 3
+      }
+    ],
+    "same_checkpoint_continuation_controls_exact": 8
+  },
+  "gsm8k": {
+    "questions": 64,
+    "seed": 230923,
+    "fresh_correct": 39,
+    "step_200_cache_correct": 38,
+    "fresh_correct_to_reuse_wrong": 4,
+    "fresh_wrong_to_reuse_correct": 3,
+    "complete_response_fresh_correct": 39,
+    "complete_response_reuse_correct": 36,
+    "same_first_generated_token_on_all_seven_correctness_changes": true,
+    "all_seven_correctness_changes_fstar_zero_at_tau_0_03": true,
+    "full_precision_recheck_changed_correctness_on_five_of_seven_flips": 5,
+    "full_precision_recheck_harmful_flips_persisting": 2
+  },
+  "position_scaling_and_context": {
+    "matched_positions_per_handoff": 512,
+    "shared_earlier_tokens_added": 4096,
+    "yarn_factor": 2.5,
+    "values_are_mean_normalized_key_error": true,
+    "order": [
+      "native_original",
+      "scaled_original",
+      "native_extended",
+      "scaled_extended"
+    ],
+    "cases": [
+      {
+        "handoff": "Astropy 7336 #26",
+        "key_error": [
+          0.0324,
+          0.04824,
+          0.02984,
+          0.05963
+        ],
+        "value_error": [
+          0.039591184539260464,
+          0.06277583190602382,
+          0.042203943188591206,
+          0.08564719499752783
+        ],
+        "next_token_contrasts": {
+          "scaling_original": {
+            "kl": 0.051556245810404334,
+            "tv": 0.12636191323254442,
+            "top_same": true,
+            "max_logit_error": 2.02734375
+          },
+          "scaling_extended": {
+            "kl": 0.15968092266697084,
+            "tv": 0.24070926374878263,
+            "top_same": true,
+            "max_logit_error": 3.79296875
+          },
+          "extension_native": {
+            "kl": 0.08001819486513313,
+            "tv": 0.14022656596007196,
+            "top_same": true,
+            "max_logit_error": 5.24609375
+          },
+          "extension_yarn": {
+            "kl": 0.11841087959369212,
+            "tv": 0.18027228179352,
+            "top_same": true,
+            "max_logit_error": 3.48046875
+          }
+        }
+      },
+      {
+        "handoff": "Django 10999 #64",
+        "key_error": [
+          0.09996,
+          0.11136,
+          0.08108,
+          0.09819
+        ],
+        "value_error": [
+          0.11369361555382855,
+          0.1387978193147005,
+          0.09022792806524974,
+          0.114719063833418
+        ],
+        "next_token_contrasts": {
+          "scaling_original": {
+            "kl": 0.0293224576073547,
+            "tv": 0.0840023884483636,
+            "top_same": true,
+            "max_logit_error": 2.00390625
+          },
+          "scaling_extended": {
+            "kl": 0.05139450363008896,
+            "tv": 0.12124693896983793,
+            "top_same": true,
+            "max_logit_error": 2.955078125
+          },
+          "extension_native": {
+            "kl": 0.21751961994321628,
+            "tv": 0.2567269804973599,
+            "top_same": true,
+            "max_logit_error": 4.328125
+          },
+          "extension_yarn": {
+            "kl": 0.1528152470503116,
+            "tv": 0.19857124575516025,
+            "top_same": true,
+            "max_logit_error": 6.5625
+          }
+        }
+      },
+      {
+        "handoff": "Django 11066 #36",
+        "key_error": [
+          0.15911,
+          0.16897,
+          0.1305,
+          0.14368
+        ],
+        "value_error": [
+          0.1848535911515634,
+          0.21680293263990938,
+          0.15637830716705178,
+          0.19625444449065169
+        ],
+        "next_token_contrasts": {
+          "scaling_original": {
+            "kl": 0.06041248157868713,
+            "tv": 0.13682617410681452,
+            "top_same": false,
+            "max_logit_error": 2.19921875
+          },
+          "scaling_extended": {
+            "kl": 0.05007932807998995,
+            "tv": 0.10778671300869809,
+            "top_same": true,
+            "max_logit_error": 2.15625
+          },
+          "extension_native": {
+            "kl": 0.08510806101596878,
+            "tv": 0.12356873967404153,
+            "top_same": true,
+            "max_logit_error": 4.39453125
+          },
+          "extension_yarn": {
+            "kl": 0.1446863731846848,
+            "tv": 0.19015156726226995,
+            "top_same": false,
+            "max_logit_error": 5.9296875
+          }
+        }
+      },
+      {
+        "handoff": "Django 11066 #50",
+        "key_error": [
+          0.08325,
+          0.0949,
+          0.0604,
+          0.07475
+        ],
+        "value_error": [
+          0.09215452637473799,
+          0.11925888728010192,
+          0.07293967258704515,
+          0.11027603171167517
+        ],
+        "next_token_contrasts": {
+          "scaling_original": {
+            "kl": 0.04981118983582798,
+            "tv": 0.13154275641257362,
+            "top_same": false,
+            "max_logit_error": 1.80078125
+          },
+          "scaling_extended": {
+            "kl": 0.07357167690226878,
+            "tv": 0.16812657601021122,
+            "top_same": true,
+            "max_logit_error": 2.65625
+          },
+          "extension_native": {
+            "kl": 0.09219448485579303,
+            "tv": 0.15686624803536955,
+            "top_same": true,
+            "max_logit_error": 4.375
+          },
+          "extension_yarn": {
+            "kl": 0.08536701758584656,
+            "tv": 0.16250697369432715,
+            "top_same": false,
+            "max_logit_error": 6.265625
+          }
+        }
+      }
+    ],
+    "device": "MPS",
+    "dtype": "float16"
+  },
+  "complete_history_reuse": {
+    "cases": [
+      {
+        "handoff": "Astropy 7336 #26",
+        "reused_fraction": 0.937,
+        "fresh_seconds": 4.65,
+        "reuse_seconds": 1.86,
+        "speedup": 2.49
+      },
+      {
+        "handoff": "Django 10999 #64",
+        "reused_fraction": 0.841,
+        "fresh_seconds": 1.89,
+        "reuse_seconds": 1.01,
+        "speedup": 1.88
+      },
+      {
+        "handoff": "Django 11066 #36",
+        "reused_fraction": 0.898,
+        "fresh_seconds": 2.06,
+        "reuse_seconds": 0.77,
+        "speedup": 2.68
+      }
+    ],
+    "questions": 8,
+    "fresh_correct": 5,
+    "reuse_correct": 4,
+    "changed_answers": 1,
+    "exact_prefix_preserved_answer_texts": true,
+    "erase_correct": 0,
+    "shuffle_correct": 5,
+    "sender_cache_build_seconds_range": [
+      5.3,
+      12.0
+    ],
+    "question_included_speedup_range": [
+      1.77,
+      2.29
+    ]
+  },
+  "archive_audit": {
+    "registered_tau_k": 0.3186442653116294,
+    "all_85_observations_fstar_zero": true,
+    "observations": 85,
+    "distinct_handoffs": 60,
+    "checked_hashes": 170,
+    "reproduced_numerical_comparisons": 1204,
+    "tokenwise_exceedance": [
+      {
+        "condition": "native short",
+        "numerator": 9047,
+        "denominator": 155257,
+        "rate": 0.0583
+      },
+      {
+        "condition": "scaled short",
+        "numerator": 10336,
+        "denominator": 155257,
+        "rate": 0.0666
+      },
+      {
+        "condition": "scaled long",
+        "numerator": 30701,
+        "denominator": 387508,
+        "rate": 0.0792
+      }
+    ],
+    "native_short_median_fstar": {
+      "0.3186": 0.0,
+      "0.1": 0.0,
+      "0.03": 0.1433
+    },
+    "counterexample": {
+      "handoff": "Django 10999 trace 54",
+      "tokens_above": 1118,
+      "tokens": 3953,
+      "mean_key_error": 0.220743,
+      "fstar_at_registered_tau": 0.0
+    }
+  },
+  "source_revisions": {
+    "archive_e9": "a45e9ee8c511f5aab738400f06a2462b4fee5391",
+    "archive_e9_long": "0879f5f59db394e5ebf24e8b06f481ece6e4976a",
+    "archive_e9_scaled": "a63e3c272afe914aaf96511ab53ab2c2fdf7c6a8",
+    "gsm8k": "740312add88f781978c0658806c59bc2815b9866",
+    "linear_ceiling_code": "39b13b4dcd4e8d4a51d3a3145bd07c13556f8fb6"
+  }
+}
