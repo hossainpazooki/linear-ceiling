@@ -3128,3 +3128,79 @@ recomputed by this script). The box value is the outlier. The cause is still not
 asserted; the file feeds only the descriptive coverage comparison, as 0044 states.
 
 prior-entries-sha256: 4ce8765046ea6b8fdefcdd4b81e747ed774970296b729431f36db495d3535c74
+
+### 0046 — 2026-10-04 — Same-model extension registered before any operator prefill: the E9 instrument on the original 60 handoff texts replayed through Qwen3-4B and SmolLM3-3B, with a six-case Qwen3-1.7B bridge; a co-author's prior fork run recorded as the pilot; descriptive, no cell moves
+
+**Why, and why now.** Reviewer weakness W7 (`docs/2026-09-30-review-response-map.md`): one model pair. The second
+family (0039–0044) answers it at one more pair. This entry registers the cheapest further answer the instrument
+allows: the SAME 60 handoff texts that decided H-E9L and the scaled short cell (entries 0036 and 0038; 35 long,
+25 short) replayed through two more receivers on the same-model arm only, at the registered Qwen reference τ. It
+asks whether the zero floor is a property of one small Qwen pair. It does not ask about cross-model reuse, length
+(the cohorts are different handoffs), or quality. **No hypothesis row is added and no verdict is read**: a new
+model's mean deviation against another model's mapper tolerance is a descriptive comparison, stated as such.
+
+**What is registered, by hash.** `config/consolidation.toml` (`857cc92320cb…`): models and revisions
+`Qwen/Qwen3-1.7B@70d244cc86cc` (bridge, 6 handoffs: shortest, middle and
+longest sender of each cohort), `Qwen/Qwen3-4B@1cfa9a720891` (60), `HuggingFaceTB/SmolLM3-3B@a07cc9a04f16`
+(60); fp32, SDPA, 256-token chunked prefill with the full causal KV history, cap 81,920; YaRN factor
+2.5 on the Qwen models and 2.0 on SmolLM3 (its rotary-free layers unchanged); τ_K = 0.3186442653116294 and τ_V = 0.4867056499055992,
+**the 0023 Qwen3-0.6B→1.7B mapper's held-out shortfall, used as a common numerical reference and NOT a calibrated
+threshold for either new model**; ladder [0.03, 0.1]; seed 20260930. `config/consolidation-manifest.json`
+(`99185c5891fc…`) pins every input byte: the 60 texts re-tokenized per model (max sender 80,111 / 74,233 tokens, no exclusion),
+each text's sha256 equal to the archived alignment's `text_sha256` (checked here against `results/e9l/align` and
+`results/e9s/align`), and exact ordered token matching by `e9_align.matching_pairs`. Keys are captured after any key
+normalization and before rotation, values after projection; no fp16 serialization.
+
+**Controls and bridge, fixed now.** (1) Per model, before any handoff: a 1,024-token full prefill against the chunked
+prefill of the same prefix plus one later token; maximum normalized token deviation ≤ 0.0001 or the run refuses.
+(2) The bridge: the original receiver re-run on six archived handoffs; relative mean-deviation gap ≤ 0.01 and
+absolute f* gap ≤ 0.01 against the archived records at every τ, or expansion to the new models stops.
+(3) The longest sender runs first as the memory probe and is retained. (4) One raw matched-vector witness per model
+(the shortest included sender) is kept for independent re-scoring; other vectors are transient and removed only after
+their compact record and atomic checkpoint exist. (5) Resume refuses changed code, runtime, device, dtype or inputs,
+and refuses a `complete` flag with missing handoffs. Readout per handoff and arm: per-token δ (0023's unit: a token's
+share of the layer-head's unexplained variance; mean = 1 − R²), its mean, maximum, tail fraction over τ, f*(τ) at τ_K and
+the ladder, all by `e9_pertoken.centered_delta` / `token_mean` / `f_star`.
+
+**Instrument, as committed:** `tools/consolidation/run.py` `87e0efb1502c…`, `capture.py` `2cddd19b1c43…`,
+`prepare.py` `172b1ff66e37…`, `summarize.py` `d9f65ef1333c…` (the fail-closed reader: bundle hashes, report-to-config and
+report-to-manifest pins, every record and witness re-hashed, token deltas recomputed, the mean/R² identity, witnesses
+re-scored from raw tensors, a seeded trajectory-cluster bootstrap with `e7_stats` quantiles), `setup.sh`, the Linux lock,
+and the runbook `docs/2026-09-30-consolidation-runbook.md`. The committed driver differs from the pilot's by the
+resume-identity and cohort checks and comments; its arithmetic is the same functions.
+
+**The pilot, recorded and not credited with a figure.** The co-author who designed this (PRs #8, #9) ran it on a fork:
+registration commit `3cb4bb3` (2026-10-01T02:41:37Z, the fork's own ledger), results commit
+`2fb4464` (2026-10-01T05:28:11Z); the fork's entry says one A100-SXM4-80GB, FP32 prefill, all 60 texts per model scored
+without exclusion, bridge gaps within tolerance; the environment it pins is `requirements-linux.lock` (torch 2.14.0,
+transformers 5.17.0, numpy 2.5.3, CUDA runtime 13.0.96); the exact runtime, GPU name and `code_sha256` are in its
+unpublished reports; driver at the registration commit `run.py` `f544ae874085…`, `capture.py` `b713473055aa…`
+(re-hashed from the fork by the operator's session, 2026-10-04). **Upstream R1 was not met by that run**: the card was
+provisioned before the fork registration and no upstream entry existed. Its evidence (compact records, one witness
+per model, logs) is on the co-author's machine and not on the Hub (R8 not met). Therefore **no figure from the pilot is
+stated here or in any paper**; if its bundle is published and recomputed under `docs/2026-10-03-co-author-run-admission.md`,
+that is a separate, later entry, and the pilot's agreement with the run registered here becomes a cross-platform
+control in the sense of 0028.
+
+**The registered run (the operator's).** Requested only after this entry is committed. Card: an L40S 48 GB is the
+expectation (fp32 weights ≈ 16 GB for the 4B, full-cap KV < 3 GB), confirmed by the protocol's probe before any paid
+forward; a larger card if the probe says so. R2–R8 of `docs/gpu-experiment-protocol.md` apply: fresh output tree,
+detached launch, log rotation, pull → verify → delete per handoff, release checklist, mirror at `results/consolidation/` laid out as
+`summarize.py` reads it (`provenance/`, `a100/inputs/`, `a100/results/<model>/`, `archive/records/{e9s,e9l}`, `SHA256SUMS`;
+the `a100/` directory name is the reader's and does not assert the card), backup to a Hub dataset (public or private,
+operator ruling 2026-10-04) verified by `tools/hf_verify_backup.py` before the figures entry.
+
+**Gate and enforcement.** The driver asserts the config and manifest hashes at start and every input's hash; this
+script refuses if either file differs from the frozen bytes or if any report exists under `results/consolidation` (R1). The figures
+enter by `append_0048.py`, which runs `summarize.py` in-process over the verified mirror, asserts the reports' `code_sha256`
+equal the committed driver files, and refuses on any disagreement; no figure is typed.
+
+**What this does NOT touch.** H-E9, H-E9L, H-E9F and every cell; τ, the rule, the bands, the ladder; entries 0029,
+0036, 0038, 0044 and their records; `config/e9*.toml`; the Llama long drafts (now 0050 / 0051). Nothing here is pooled with
+any Qwen3-0.6B→1.7B figure: the new models are reported separately, beside the original, never in one statistic.
+
+**Scope.** Same-model arm only; one corpus; the original 60 texts, so the long/short difference is a difference of
+handoffs and configuration, not an isolated length effect (W2 is E-TRUNC's); τ is one map's shortfall; nothing about
+generation quality, serving speed, or cross-model transfer is measured. Hardware replicas are never handoffs.
+
+prior-entries-sha256: fe0aff7467ff0a1f7675f37ce047d1a5c0e6dea1320d7e2b39134b24307e8a0b
