@@ -4,7 +4,7 @@ NATIVE receiver. DESCRIPTIVE: no hypothesis row, no `verdict:` line, no cell mov
 INAPPLICABLE here, and states that this cell cannot move, support or refute H-E9L and is never pooled with
 entry 0036's handoffs.
 
-Ordering guard: 0049 present, 0050 absent. Nothing under this entry may exist yet: `results/e9fl/` holds no
+Ordering guard: 0052 present (file order, the 0054 precedent), 0050 absent. Nothing under this entry may exist yet: `results/e9fl/` holds no
 report and no score file (R1). What MUST exist: `config/e9fl.toml` CALIBRATED against THIS pair's own E8
 report and committed; `results/e9fl/calibration/tau.json` (checked here, at registration -- `e9 --check`
 never looks for it); `results/e9fl/align/coverage.json` from `e9 --align-only --config config/e9fl.toml`,
@@ -33,7 +33,7 @@ from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash
 from linear_ceiling.pairs import pair_models
 
-NUM, PREV = "0050", "0049"
+NUM, PREV = "0050", "0052"     # file-order chaining (the 0054 precedent): 0052 is on the ledger; 0048/0049 land later
 FAMILY = "0039"      # the family registration entry, APPENDED 2026-09-18 -- a fixed number now
 SHORT = "0042"      # the short cell's registration entry; APPENDED 2026-09-18, fixed
 VERDICT = "0044"    # the short cell's verdict entry (H-E9F HELD), APPENDED 2026-09-19, fixed; PREV is the
@@ -300,7 +300,7 @@ summarizer, for the reason entry {SHORT} gives.
 **What this does NOT touch.** The H-E8, H-E9, H-E9L and H-E9F cells; entry 0036's figures and its 35
 handoffs; τ, the rule, the band, the ladder and the keep subsets of every other cell; `results/e9/`,
 `results/e9l/`, `results/e9s/`, `results/e9f/`, `results/e8*/`; `config/e9.toml`, `config/e9l.toml`,
-`config/e9s.toml`, `config/e9c.toml`, `config/e9f.toml`. Nothing here is a figure: this cell's enter by
+`config/e9s.toml`, `config/e9c.toml`, `config/e9f.toml`. Nothing here is a figure: this cell's figures enter by
 their own numbered entry, and the paper only from that entry.
 
 **Scope.** One pair ({src_id} → {tgt_id}), one direction, one agent family, the long band of one corpus at
