@@ -199,6 +199,7 @@ prior-entries-sha256: PLACEHOLDER
 """
 
 if a.preview:
+    sys.stdout.reconfigure(encoding="utf-8")   # a cp1252 console dies on the first tau (0050's preview, 2026-10-04)
     print(ENTRY)
     raise SystemExit(0)
 
