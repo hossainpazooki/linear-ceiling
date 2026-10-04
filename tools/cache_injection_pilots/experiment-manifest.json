@@ -1,0 +1,20 @@
+{
+  "repository": "cache-injection",
+  "created_for": "Cache-injection experiment replication",
+  "recorded_run_date": "2026-09-23",
+  "recorded_hardware": "Apple M5",
+  "data_policy": "Source archives and model weights are downloaded at immutable revisions and are not stored in this Git repository.",
+  "requirements": "requirements.txt",
+  "archives": {
+    "e9": {"repo": "hossainpazooki/linear-ceiling-e9-2026-09-04", "revision": "a45e9ee8c511f5aab738400f06a2462b4fee5391"},
+    "e9l": {"repo": "hossainpazooki/linear-ceiling-e9l-2026-09-10", "revision": "0879f5f59db394e5ebf24e8b06f481ece6e4976a"},
+    "e9s": {"repo": "hossainpazooki/linear-ceiling-e9s-2026-09-13", "revision": "a63e3c272afe914aaf96511ab53ab2c2fdf7c6a8"},
+    "gsm8k": {"repo": "openai/gsm8k", "revision": "740312add88f781978c0658806c59bc2815b9866"}
+  },
+  "models": {
+    "qwen3-1.7b": {"repo": "Qwen/Qwen3-1.7B", "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"},
+    "olmo-step-200": {"repo": "allenai/OLMo-2-0425-1B-RLVR1", "revision": "b85a22f7df1c1f4616fa569521236642c78863d8"},
+    "olmo-step-1200": {"repo": "allenai/OLMo-2-0425-1B-RLVR1", "revision": "9f0904d82d97214fded1d537dd7a4aeadb976461"},
+    "olmo-step-2600": {"repo": "allenai/OLMo-2-0425-1B-RLVR1", "revision": "bf37756016867cfaf3d54319ba613aedc9b56f3c"}
+  }
+}

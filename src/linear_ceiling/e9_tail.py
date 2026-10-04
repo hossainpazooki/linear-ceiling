@@ -3,14 +3,14 @@
 Runs `summarize_e9.summarize` FIRST -- it verifies every record and refuses on tamper -- then re-reads the same
 sha-pinned per-token squares and alignment pairs and computes, per handoff and pooled, same-K and same-V:
 delta_max; the fraction of matched tokens over each tau (tau_K, then the registered ladder); the mean after
-removing the top 10 % / 20 % of tokens by delta (CacheBlend's selection rule in THIS paper's units -- no numeric
-comparison with their figure); pooled MEANS (not only medians) per causal seam bin b^-(t) and per sender-position
+removing the top 10 % / 20 % of tokens by delta (oracle-ranked token DELETION in THIS paper's units: not CacheBlend's
+selection rule, not a measured recomputation cost, no numeric comparison with their figure); pooled MEANS (not only medians) per causal seam bin b^-(t) and per sender-position
 bin; the native-window subset (sender position < 32,768); and |R| over the scored handoffs.
 
 Unit (0023): delta is a token's share of the layer-head's unexplained variance, in R^2's own units; its mean over
 tokens is exactly 1 - R^2. It is never a percent error. Nothing here moves a verdict; f* is not restated.
 
-usage: python -m linear_ceiling.e9_tail --config config/e9l.toml
+usage: python -m linear_ceiling.e9_tail --config config/<cell>.toml
 """
 from __future__ import annotations
 
@@ -36,15 +36,14 @@ UNIT = ("delta is a token's share of the layer-head's unexplained variance, in R
         "mean over tokens is exactly 1 - R^2; it is not a per-token percent error")
 
 
-def _mean_after_removing_top(d: np.ndarray, frac: float) -> float:
-    """Mean of the tokens that remain after the ceil(frac * n) largest deviations are removed."""
+def mean_after_removing_top(d: np.ndarray, frac: float) -> float:
     s = np.sort(d)[::-1]
     k = int(math.ceil(frac * len(s)))
     rest = s[k:]
     return float(rest.mean()) if len(rest) else 0.0
 
 
-def _bin_rows(labels, per_bin: list[list[np.ndarray]]) -> list[dict]:
+def bin_statistics(labels, per_bin: list[list[np.ndarray]]) -> list[dict]:
     rows = []
     for i, label in enumerate(labels):
         allv = np.concatenate(per_bin[i]) if per_bin[i] else np.zeros(0)
@@ -54,19 +53,19 @@ def _bin_rows(labels, per_bin: list[list[np.ndarray]]) -> list[dict]:
     return rows
 
 
-def _position_edges(cfg: E9Config) -> list[int]:
+def sender_position_edges(cfg: E9Config) -> list[int]:
     if cfg.profiles and cfg.profiles.get("s_pos_edges"):
         return [int(e) for e in cfg.profiles["s_pos_edges"]]
     return [0]                                               # one bin: every sender position
 
 
-def _position_labels(edges: list[int], cap: int) -> list[str]:
+def sender_position_labels(edges: list[int], cap: int) -> list[str]:
     hi = edges[1:] + [cap]
     return [f"{lo}-{h - 1}" for lo, h in zip(edges, hi)]
 
 
 def tail(cfg: E9Config, **summarize_kwargs) -> dict:
-    """Gate, then compute. Refuses (raises) on anything `summarize` refuses; writes nothing in that case."""
+    # Gate, then compute. Refuses (raises) on anything `summarize` refuses; writes nothing in that case.
     summarize(cfg, **summarize_kwargs)                       # the gate: verifies every record read below
     rdir = cfg.results_dir
     report_path, summary_path = rdir / "report.json", rdir / "summary.json"
@@ -76,8 +75,8 @@ def tail(cfg: E9Config, **summarize_kwargs) -> dict:
     ladder = [float(t) for t in cfg.rule["tau_ladder"]]
     taus = {"K": [tau["K"]] + ladder, "V": [tau["V"]] + ladder}
     scored = list(rep["scores"])
-    edges = _position_edges(cfg)
-    pos_labels = _position_labels(edges, int(cfg.context_cap))
+    edges = sender_position_edges(cfg)
+    pos_labels = sender_position_labels(edges, int(cfg.context_cap))
 
     per_handoff, n_recv = {}, {}
     seam_tokens = [[[] for _ in SEAM_BIN_LABELS] for _ in ARMS]
@@ -114,7 +113,7 @@ def tail(cfg: E9Config, **summarize_kwargs) -> dict:
             per_handoff[hid][arm] = {
                 "mean": float(d.mean()), "delta_max": float(d.max()), "p90": float(np.quantile(d, 0.9)),
                 "fraction_over_tau": {str(t): float((d > t).mean()) for t in taus[key]},
-                "mean_after_removing_top": {f"{f:.2f}": _mean_after_removing_top(d, f) for f in REMOVE_FRACTIONS},
+                "mean_after_removing_top": {f"{f:.2f}": mean_after_removing_top(d, f) for f in REMOVE_FRACTIONS},
                 "native_window_mean": None if not in_native.any() else float(d[in_native].mean()),
             }
             pooled_tokens[ai].append(d)
@@ -133,12 +132,12 @@ def tail(cfg: E9Config, **summarize_kwargs) -> dict:
                        "p90": float(np.quantile(allv, 0.9)), "p99": float(np.quantile(allv, 0.99)),
                        "delta_max": float(allv.max()),
                        "fraction_over_tau": {str(t): float((allv > t).mean()) for t in taus[key]},
-                       "mean_after_removing_top": {f"{f:.2f}": _mean_after_removing_top(allv, f)
+                       "mean_after_removing_top": {f"{f:.2f}": mean_after_removing_top(allv, f)
                                                    for f in REMOVE_FRACTIONS}}
         native_window[arm] = {"n_tokens": int(len(nat)), "mean": None if len(nat) == 0 else float(nat.mean()),
                               "median": None if len(nat) == 0 else float(np.median(nat))}
-        seam_rows[arm] = _bin_rows(SEAM_BIN_LABELS, seam_tokens[ai])
-        pos_rows[arm] = _bin_rows(pos_labels, pos_tokens[ai])
+        seam_rows[arm] = bin_statistics(SEAM_BIN_LABELS, seam_tokens[ai])
+        pos_rows[arm] = bin_statistics(pos_labels, pos_tokens[ai])
     native_window.update({"cap": NATIVE_WINDOW, "n_tokens": native_window["same_K"]["n_tokens"],
                           "share_of_matched": native_window["same_K"]["n_tokens"] / pooled["same_K"]["n_tokens"]})
     out = {
@@ -155,11 +154,11 @@ def tail(cfg: E9Config, **summarize_kwargs) -> dict:
         "per_handoff_delta_max_same_K": summary([per_handoff[h]["same_K"]["delta_max"] for h in scored]),
     }
     (rdir / "tail.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
-    (rdir / "tail.md").write_text(_markdown(out), encoding="utf-8")
+    (rdir / "tail.md").write_text(format_tail_summary(out), encoding="utf-8")
     return out
 
 
-def _markdown(o: dict) -> str:
+def format_tail_summary(o: dict) -> str:
     k = o["pooled"]["same_K"]
     s = lambda d, nd=4: f"{d['median']:.{nd}f} (p10 {d['p10']:.{nd}f}, p90 {d['p90']:.{nd}f})"  # noqa: E731
     lines = [f"# Tail of the per-token deviation -- {o['cell']} ({o['n_scored']} scored handoffs)", "",
