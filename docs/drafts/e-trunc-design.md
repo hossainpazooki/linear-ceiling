@@ -105,6 +105,16 @@ Order by |S| descending within each level so the longest (the only ones L65 chan
 - The native cell (L32-native) changes two things at once if R is also re-prefilled natively; keep R under YaRN in
   that cell unless the ruling says otherwise, and state which.
 
+## 9b. Limitations the paper states (operator, 2026-10-04)
+
+- **The shrinkage gate is an absolute floor, not the proposed ratio.** A handoff enters the comparison only with |M_∩| ≥ 2,000
+  common matched tokens (ruling 2; the 0.80 ratio default would have voided 29 of 35). The void handoffs are named and never
+  pooled; the result speaks for the handoffs whose receiver re-renders enough late sender context to survive head truncation,
+  not for the long cohort as a whole. The pooled ratio is reported beside the gate so the reader sees the cost.
+- **No native-receiver cell.** Ruling 3 kept the L32-native cell in scope but deferred it to its own pre-prefill amendment; 0055
+  registers the four YaRN cells only. Nothing in E-TRUNC compares native with YaRN on the same tokens; the bridge control of
+  0036 (W6) remains the only such evidence.
+
 ## 10. Rulings (2026-10-04) and the CPU pre-check that informed ruling 2
 
 Taken 2026-10-04 under the operator's direction to the session ("needs your supervision"); each quotes the option

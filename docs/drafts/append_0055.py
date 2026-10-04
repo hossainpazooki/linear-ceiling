@@ -293,8 +293,11 @@ deviations.
 **Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the long half of one corpus under a scaled
 receiver (the bridge control runs at every level as {LONG_REG} registered it); "length" = causal-prefix length of the
 reused K/V on the late-S tokens the receiver re-renders, not the number of turns; the {len(above)} handoffs above
-{full.context_cap:,} and the {len(empty)} with an empty receiver prompt stay excluded; the L32-native cell is deferred, so nothing
-here compares native with YaRN on the same tokens; f* stays an oracle lower bound; generation quality after reuse not
+{full.context_cap:,} and the {len(empty)} with an empty receiver prompt stay excluded; the comparison is read on the handoffs that keep at least {T['min_common_matched']:,} common matched tokens
+({shrink['n_handoffs'] - shrink['n_void']} of {shrink['n_handoffs']} at the pre-check; the {shrink['n_void']} void handoffs are named, never pooled, and are a LIMITATION the
+paper states: the result speaks for the handoffs whose receiver re-renders enough of the late sender context to survive truncation,
+not for all 35); the L32-native cell is deferred, so nothing here compares native with YaRN on the same tokens, a second
+stated LIMITATION (W6's bridge stays the only native-vs-YaRN evidence); f* stays an oracle lower bound; generation quality after reuse not
 measured.
 
 prior-entries-sha256: PLACEHOLDER
