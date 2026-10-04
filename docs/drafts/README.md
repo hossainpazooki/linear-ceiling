@@ -53,7 +53,13 @@ Ordering guard: 0054 present, 0052 absent; then 0052 present, 0053 absent. `boot
 **Staged 2026-10-04 (evening): `append_0054.py` — Condition 1 discharged by operator ruling** (issue #7 together with PR #12's two
 review records is treated as the confirmation; descriptive, no cell moves). By operator instruction it is numbered AFTER the Llama
 drafts (0050/0051 long cell, 0052/0053 E8 amendment) and appended before them, so it precedes 0048–0053 in file order;
-`ledger_check` chains by file order. Ordering guard: 0047 present, 0054 absent. Next free number: **0055**.
+`ledger_check` chains by file order. Ordering guard: 0047 present, 0054 absent. *(0054 APPENDED 2026-10-04, `a2742b9`.)*
+
+**Staged 2026-10-04 (night): `append_0056.py` — co-author pilot figures admitted to paper text by operator ruling** (the two
+merged co-author documents `docs/2026-10-01-cache-behavior-h100.md` and `docs/2026-10-01-a100-analysis.md` may be cited under a
+provenance sentence; supersedes the "in any paper" clauses of 0046/0047; R1/R8/R12 for LEDGER figures unchanged, so 0048/0049 still
+need the operator's run or the admission procedure; types no figure). 0055 is the E-TRUNC registration on branch `e-trunc`.
+Ordering guard: 0054 present, 0056 absent. Next free number: **0057**.
 
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.

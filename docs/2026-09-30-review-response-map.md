@@ -112,3 +112,14 @@ from the public backups were dropped by ruling — the paper says the long and s
 Not changed by the ruling: the registered reading of f* as an oracle lower bound (0023:1278/1281, 0027); PR #12's README
 paragraph to the contrary is not adopted. Whether the camera-ready text printed the short-cell figures before this ruling is
 not recorded here; the deadline closed 2026-10-03 23:59 AoE.
+
+## Ruling, 2026-10-04 — co-author pilot figures citable in the paper (0056)
+
+W1 and W7 may cite the co-author's merged documents `docs/2026-10-01-cache-behavior-h100.md` (H100, execution commit `9a18ce7`,
+freeze record, torch 2.14.0 / transformers 5.17.0 / CUDA 13.0) and `docs/2026-10-01-a100-analysis.md` (A100, results commit `2fb4464`,
+`requirements-linux.lock`, input manifest) under a provenance sentence: run by a co-author on the named card at the named commit
+with the pinned environment; code, inputs manifest and environment in this repository; the raw bundle is on the co-author's machine,
+not public, and the figures have not been recomputed by anyone else. Ledger entry **0056** (staged as `docs/drafts/append_0056.py`)
+records the ruling and supersedes the "in any paper" clauses of 0046/0047; the ledger's own evidence rules (R1/R8/R12) are unchanged,
+so these figures reach the ledger only by 0048/0049 from the operator's run or by the admission procedure. The sentences are in
+the camera-ready paste list (`~/dev/briefs/2026-10-04-lcfm-camera-ready-patch.md`, W1/W7 additions of 2026-10-04 night).
