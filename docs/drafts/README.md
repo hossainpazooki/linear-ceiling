@@ -39,7 +39,7 @@ long drafts moved to **`append_0050.py` / `append_0051.py`** with `config/e9fl.t
 Next free number: **0052**. The co-authors' own runs (A100, H100; evidence private) are recorded in the registrations as
 pilots that preceded upstream registration; their figures enter only through `docs/2026-10-03-co-author-run-admission.md`.
 
-**Staged 2026-10-04 (later the same day): `append_0052.py` / `append_0053.py` — the second family's E8 amendment**, entry
+**`append_0052.py` / `append_0053.py` — the second family's E8 amendment — BOTH APPENDED 2026-10-04 (`f016bde`, `0c5ec15`; scripts retired)**, entry
 0030's protocol (arm (b) over EVERY agent sequence, per-sequence R², seeded bootstrap, change from the prior arm (b)) re-registered
 for `llama3.2-3b-to-llama3.1-8b` under `config/e8fa.toml`, on 0040's own dumps and token file by fingerprint; the rescoring entry
 0041 asked for ("whether the inversion is a property of the pair or of the draw"). Descriptive; no row, no `verdict:` line; τ_agent_K
@@ -73,7 +73,7 @@ score, control, bridge, token record or scratch under any `results/e9t*/`; the f
 IN-PROCESS over the four passes and states every count from it; reads the two reference medians from
 `results/e9s/compare.json` / `results/e9l/summary.json` by sha; locates every cited ledger line by sentence search; reads the
 E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
-config/e9t-*.toml` passes on the registrant's machine. Next free number: **0056**.
+config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053; staged 0048/0049, 0050/0051. Next free number: **0057**.)*
 
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.

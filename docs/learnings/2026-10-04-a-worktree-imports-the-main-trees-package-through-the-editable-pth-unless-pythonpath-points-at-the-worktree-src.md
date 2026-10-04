@@ -1,0 +1,9 @@
+# A worktree imports the MAIN tree's package through the editable .pth unless PYTHONPATH points at the worktree's src
+
+ts: 2026-10-04T07:58:00Z
+commit: 01b660b (basis captured at main 366a4db with e-trunc at 8d28ae4, pre-dates this entry's anchor; clock not read at capture — bounded above by the 08:05:09Z skeptic-failure notification that followed)
+session: d4f6aa2f (transcript C:\Users\hossa\.claude\projects\C--Users-hossa-dev\d4f6aa2f-529e-4861-9322-e476f4693f66.jsonl)
+status: verified
+fact: `.venv/Lib/site-packages/__editable__.linear_ceiling-0.0.1.pth` resolves `linear_ceiling` to `C:\Users\hossa\dev\linear-ceiling\src`, so `pytest` run inside a `git worktree` of another branch silently tests the MAIN tree's modules (and `linear_ceiling.REPO_ROOT` points at main's configs). With `PYTHONPATH=<worktree>/src` first on the path the worktree's package wins and `REPO_ROOT` becomes the worktree, which is how the e-trunc branch (then 8d28ae4, before PR #17) was gated at 76 passed without switching the dirty main checkout. Also: `git worktree add` under the long scratchpad path failed with "Could not reset index file to revision 'HEAD'" and succeeded at `~/dev/lc-wt-etrunc`.
+basis: `cat .venv/Lib/site-packages/__editable__.linear_ceiling-0.0.1.pth` → `C:\Users\hossa\dev\linear-ceiling\src`; in the worktree, `PYTHONPATH="$WT/src" .venv/Scripts/python.exe -c "import linear_ceiling; print(linear_ceiling.REPO_ROOT)"` → `C:\Users\hossa\dev\lc-wt-etrunc`; then `… -m pytest -q tests/test_e9_trunc.py tests/test_summarize_e9_trunc.py tests/test_append_0055.py tests/test_llama_configs.py tests/test_e9_scaled_short.py tests/test_config.py` → `76 passed in 3.57s`.
+re-verify: cat .venv/Lib/site-packages/__editable__.linear_ceiling-0.0.1.pth   # one line: the main tree's src; any worktree run needs PYTHONPATH=<worktree>/src
