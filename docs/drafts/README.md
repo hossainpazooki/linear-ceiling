@@ -51,6 +51,11 @@ behind 0048–0051 by staging order, and because the cell is ready today while 0
 down to the next number actually free at append time, in ONE commit with `config/e8fa.toml`'s `[e8.amendment] entry` and
 `bootstrap_seed` (= the entry number, as 0030 used 30). Next free number after these: **0054**.
 
+**Staged 2026-10-04 (evening): `append_0054.py` — Condition 1 discharged by operator ruling** (issue #7 together with PR #12's two
+review records is treated as the confirmation; descriptive, no cell moves). By operator instruction it is numbered AFTER the Llama
+drafts (0050/0051 long cell, 0052/0053 E8 amendment) and appended before them, so it precedes 0048–0053 in file order;
+`ledger_check` chains by file order. Ordering guard: 0047 present, 0054 absent. Next free number: **0055**.
+
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
 Reads `results/<cell>/tail.json` written by `e9_tail` (which runs `summarize_e9` first) for `e9l`, `e9`, `e9s`, `e9f`, and

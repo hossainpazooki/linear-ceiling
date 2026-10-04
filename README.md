@@ -151,6 +151,9 @@ arm in one sentence and an appendix table.
    numbers-freeze gate (EOD 2026-09-08; carried unchanged by 0035). It was not, and it is not recorded
    at the time of writing. 0032's consequence is that E9's figures are withheld; only a numbered
    entry changes that.
+   *(2026-10-04: DISCHARGED by operator ruling — issue #7 together with PR #12's two review records is treated as the
+   confirmation; the two-signature clause is discharged by ruling, not by approvals. Ledger entry 0054 records it; the
+   rows the review lists as uncovered stay open work under issue #7 and no longer gate the paper.)*
 2. E9-long enters only from a passing `summarize_e9 --config config/e9l.toml`, by its own entry,
    with "n scored of 35 registered" beside every number, never pooled with E9's 25.
 

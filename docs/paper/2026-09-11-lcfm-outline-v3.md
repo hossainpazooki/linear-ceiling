@@ -26,6 +26,9 @@ appear only in the references.
    co-author's PR (merged 2026-09-10) records a computational re-verification of two sampled handoffs; the 09-10
    brief on it states this does not by itself discharge condition 1, and whether it counts is the operator's ruling.
    Until ruled, §5.1 is written and marked cond. 1 as in v2.
+   *(2026-10-04: DISCHARGED by operator ruling — issue #7 together with PR #12's two review records is treated as the
+   confirmation; the two-signature clause is discharged by ruling, not by approvals. Ledger entry 0054 records it; the
+   rows the review lists as uncovered stay open work under issue #7 and no longer gate the paper.)*
 2. **E9-long (0036) enters only from a passing `summarize_e9 --config config/e9l.toml`.** Status: **satisfied** (v2).
 
 **Framing ruling this outline assumes (seed §7.1–7.2, operator to confirm):** the pivot, and E-RL as one

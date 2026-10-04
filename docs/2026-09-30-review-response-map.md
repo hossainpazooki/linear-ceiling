@@ -97,3 +97,14 @@ reconstructing them. What the operator can carry to wherever the tree lives:
 ## Entries, 2026-10-02
 
 W3, W4 and W5's off-ledger figures (tail counts and per-handoff maximum, |R| of the 35, native-window mean, seam and position bin MEANS) are now ON the ledger: entry **0045** (`b3bf7ec`, 2026-10-01), stated per cell from `e9_tail` (also the second family, e9f, with its per-handoff maximum 0.2860 against τ_K 0.2861). The camera-ready macros can cite 0045 for every figure the table above marked NOT ON LEDGER, except the Lean restatement (tree still absent). The short-cell paragraphs of 0045 remain Condition-1-bound: they enter no paper until the co-author review is merged (ruling 2026-10-01; the freeze clause is moot).
+
+## Ruling, 2026-10-04 — Condition 1
+
+Condition 1 (0032; restated 0045:3062–3064: the co-author refutation merged under `docs/reviews/` with two signatures) is
+**discharged by operator ruling**: issue #7 together with PR #12's two review records (`docs/reviews/2026-10-01-cache-refutation-0025-0029.md`,
+`docs/reviews/2026-10-01-feedback-and-claims.md`, PR head `8100414`) is treated as the confirmation. The review covers issue #7's
+rows R1/R3/R4 and R9/R10 and lists the rest as not covered; those stay open work and no longer gate the paper. Ledger entry
+**0054** records the ruling (staged as `docs/drafts/append_0054.py`, numbered after the Llama drafts 0050–0053 by operator instruction).
+Not changed by the ruling: the registered reading of f* as an oracle lower bound (0023:1278/1281, 0027); PR #12's README
+paragraph to the contrary is not adopted. Whether the camera-ready text printed the short-cell figures before this ruling is
+not recorded here; the deadline closed 2026-10-03 23:59 AoE.
