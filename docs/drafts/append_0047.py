@@ -27,7 +27,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 from linear_ceiling.config import load_e9_config                # noqa: E402
-from linear_ceiling.hashing import sha256_file_bytes            # noqa: E402
+from linear_ceiling.hashing import sha256_text_file             # noqa: E402  (LF-normalized: a CRLF checkout must match the box's bytes)
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash  # noqa: E402
 
 NUM, PREV = "0047", "0046"
@@ -60,8 +60,8 @@ runbook = R / "docs" / "2026-10-01-cache-behavior-runbook.md"
 tests = R / "tests" / "test_cache_behavior.py"
 for p in (cfg_path, core, run, freeze, runbook, tests):
     assert p.exists(), f"{p.relative_to(R)} missing: merge PR #14 before registering"
-assert sha256_file_bytes(cfg_path) == CONFIG_SHA, "config/cache-behavior.toml is not the frozen config"
-assert sha256_file_bytes(core) == CORE_SHA and sha256_file_bytes(run) == RUN_SHA, "the driver is not the frozen driver"
+assert sha256_text_file(cfg_path) == CONFIG_SHA, "config/cache-behavior.toml is not the frozen config"
+assert sha256_text_file(core) == CORE_SHA and sha256_text_file(run) == RUN_SHA, "the driver is not the frozen driver"
 fz = json.loads(freeze.read_text(encoding="utf-8"))
 assert fz["config_sha256"] == CONFIG_SHA and fz["input_manifest_sha256"] == INPUT_MANIFEST_SHA
 assert fz["source_sha256"]["tools/cache_behavior/core.py"] == CORE_SHA and fz["source_sha256"]["tools/cache_behavior/run.py"] == RUN_SHA

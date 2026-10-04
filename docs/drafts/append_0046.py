@@ -27,7 +27,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 from linear_ceiling.config import load_e9_config                # noqa: E402
-from linear_ceiling.hashing import sha256_file_bytes            # noqa: E402
+from linear_ceiling.hashing import sha256_text_file             # noqa: E402  (LF-normalized: a CRLF checkout must match the box's bytes)
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash  # noqa: E402
 
 NUM, PREV = "0046", "0045"
@@ -67,12 +67,12 @@ tools = {n: R / "tools" / "consolidation" / n for n in ("run.py", "capture.py", 
 runbook = R / "docs" / "2026-09-30-consolidation-runbook.md"
 for p in (cfg_path, man_path, runbook, *tools.values()):
     assert p.exists(), f"{p.relative_to(R)} missing: merge PR #8 (and #9 for summarize.py) before registering"
-assert sha256_file_bytes(cfg_path) == CONFIG_SHA, "config/consolidation.toml is not the frozen config"
-assert sha256_file_bytes(man_path) == MANIFEST_SHA, "config/consolidation-manifest.json is not the frozen manifest"
+assert sha256_text_file(cfg_path) == CONFIG_SHA, "config/consolidation.toml is not the frozen config"
+assert sha256_text_file(man_path) == MANIFEST_SHA, "config/consolidation-manifest.json is not the frozen manifest"
 cfg = tomllib.loads(cfg_path.read_text(encoding="utf-8"))
 man = json.loads(man_path.read_text(encoding="utf-8"))
 assert man["config_sha256"] == CONFIG_SHA, "the manifest does not pin this config"
-tool_sha = {n: sha256_file_bytes(p) for n, p in tools.items()}   # recorded in the entry; the pilot's differ (see PILOT)
+tool_sha = {n: sha256_text_file(p) for n, p in tools.items()}   # recorded in the entry; the pilot's differ (see PILOT)
 
 # --- the registered numerical reference is the long cell's --------------------------------------------------------
 e9l = load_e9_config(R / "config" / "e9l.toml", R)

@@ -27,7 +27,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
-from linear_ceiling.hashing import sha256_file_bytes            # noqa: E402
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file   # noqa: E402  (text = LF-normalized, for tracked files on a CRLF checkout)
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash  # noqa: E402
 
 NUM, PREV, REG = "0048", "0047", "0046"
@@ -52,9 +52,9 @@ assert f"### {PREV} " in text and f"### {NUM} " not in text, f"ordering: {PREV} 
 assert f"### {REG} " in text, "the registration entry is not on the ledger"
 
 READER = REPO_ROOT / "tools" / "consolidation" / "summarize.py"
-DRIVER = {n: sha256_file_bytes(REPO_ROOT / "tools" / "consolidation" / n) for n in ("run.py", "capture.py")}
-cfg_sha = sha256_file_bytes(REPO_ROOT / "config" / "consolidation.toml")
-man_sha = sha256_file_bytes(REPO_ROOT / "config" / "consolidation-manifest.json")
+DRIVER = {n: sha256_text_file(REPO_ROOT / "tools" / "consolidation" / n) for n in ("run.py", "capture.py")}
+cfg_sha = sha256_text_file(REPO_ROOT / "config" / "consolidation.toml")
+man_sha = sha256_text_file(REPO_ROOT / "config" / "consolidation-manifest.json")
 tau_k = tomllib.loads((REPO_ROOT / "config" / "consolidation.toml").read_text(encoding="utf-8"))["tau_K"]
 
 

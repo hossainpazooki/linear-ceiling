@@ -25,7 +25,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
-from linear_ceiling.hashing import sha256_file_bytes            # noqa: E402
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file   # noqa: E402  (text = LF-normalized, for tracked files on a CRLF checkout)
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash  # noqa: E402
 
 NUM, PREV, REG = "0049", "0048", "0047"
@@ -49,10 +49,10 @@ text = LEDGER.read_text(encoding="utf-8").replace("\r\n", "\n")
 assert f"### {PREV} " in text and f"### {NUM} " not in text, f"ordering: {PREV} present, {NUM} absent"
 assert f"### {REG} " in text, "the registration entry is not on the ledger"
 
-cfg_sha = sha256_file_bytes(REPO_ROOT / "config" / "cache-behavior.toml")
-core_sha = sha256_file_bytes(REPO_ROOT / "tools" / "cache_behavior" / "core.py")
+cfg_sha = sha256_text_file(REPO_ROOT / "config" / "cache-behavior.toml")
+core_sha = sha256_text_file(REPO_ROOT / "tools" / "cache_behavior" / "core.py")
 run_path = REPO_ROOT / "tools" / "cache_behavior" / "run.py"
-run_sha = sha256_file_bytes(run_path)
+run_sha = sha256_text_file(run_path)
 spec = importlib.util.spec_from_file_location("cache_behavior_run", run_path)
 mod = importlib.util.module_from_spec(spec)
 sys.path.insert(0, str(REPO_ROOT))                      # `from tools.cache_behavior import core` inside run.py
