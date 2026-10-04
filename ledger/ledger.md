@@ -3402,3 +3402,119 @@ text may cite, and leaves what the ledger may record untouched.
 pressing on the evidential gap is answered by the provenance sentence, not by this entry.
 
 prior-entries-sha256: 95bee8bea883a0f6bb50ec9faf9765b80a7b25134b995ee1b6ab31c7b486d803
+
+### 0055 — 2026-10-04 — E-TRUNC registered before any prefill: head truncation of the sender context on entry 0036's 35 handoffs at four levels (FULL / 65,536 / 49,152 / 32,768) under the same YaRN receiver, compared on the subset matched under every level; shrinkage stated from the alignment passes; descriptive, no cell moves
+
+**Why, and why now.** Reviewer weakness W2 (`docs/2026-09-30-review-response-map.md`): length is not isolated. The
+record agrees — entry 0037 (line 2240) says every cross-cell "what length changes" figure is length AND
+configuration, and entry 0038 (line 2361) measured the configuration's share of the short→long far-from-seam gap
+at 0.4285 on identical tokens; the residual is unattributed because the short and long cohorts are different handoffs.
+This entry registers the run that varies length WITHIN a handoff: under causal attention a matched token's reused
+K/V depend only on the sender prefix before it, so TAIL truncation of S changes nothing and the length treatment is
+HEAD truncation, S' = S[−L:], every matched token's K/V computed from a shorter causal prefix at sender position
+p_S' = p_S − (|S| − L). `results/e9t-*/` hold no report, score, control, bridge, token record or dump at append, and
+this script refuses otherwise (R1); the only things under them are the four alignment passes
+(`e9 --align-only --config config/e9t-<level>.toml`; coverage sha256 FULL `0b0419ea1d27`, L65
+`c5c3b3d55828`, L49 `1120282c65b0`, L32 `d07606d8d3e8`), from which every count below is read.
+
+**Three rulings, 2026-10-04 (design `docs/drafts/e-trunc-design.md` §10; quoted verbatim).** (1) Margin and statistic
+for the pre-registered reading: "±0.005 absolute on the far-from-seam (16+) same-K *median*, as entry 0038 reports it" (0038's levels 0.0381 scaled-short, 0.0629 long, READ from
+`results/e9s/compare.json` sha256 `a0699a826f1f` and `results/e9l/summary.json` sha256 `64e64e9318d4`);
+"unattributed" between the band and FULL's level. Why the median: 0038 reports medians and the seam-bin means run
+1.6–1.8× higher (0045). (2) Shrinkage gate: NOT the run queue's 0.80 ratio default but "an absolute floor (|M_∩| ≥ 2,000) beside the ratio", taken as the void
+gate, with "the pooled |M_∩| / |M_FULL| stated in the entry regardless of the gate" — because the pre-check below shows the ratio default would void 29 of 35
+handoffs. (3) The L32-native cell: "include it, keep R under YaRN, and state so". Scope check: entry 0025 (line 1459) and 0019 register the native cell's
+exclusion rule as over-cap handoffs EXCLUDED and counted, never truncated, so a sender truncated into the native window
+can never enter or speak to H-E9's verdict and the cell would be descriptive-only. It is **not in this entry**: the
+driver applies one RoPE schedule to every dump of a handoff and the summarizer enforces per-role spec identity, so a
+sender-native / receiver-scaled dump has no instrument yet; it enters, if at all, by its own pre-prefill amendment
+after that instrument exists and is tested (0035's precedent: the RoPE spec before the scaled receiver).
+
+**Cells.** FULL = 0035's instrument on the same 35 handoffs (|S| 34,974–80,111), re-run under this entry's gate
+so every level's per-token record comes from one box and one pin — the control arm; L65536 (L = 65,536: 4 of 35 handoffs differ from FULL) / L49152 (L = 49,152: 19 of 35 handoffs differ from FULL) / L32768 (L = 32,768: 35 of 35 handoffs differ from FULL). Receiver and source
+under 0036's static YaRN `{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}` on every dump of every level, at the upstream pin
+`063f4023fdde`; the n = 50 k = 1 mapper by sha for the cross arm. `config/e9t-{full,l65,l49,l32}.toml` are
+`config/e9l.toml` byte-for-byte on the rule, τ, ladder, controls, seam bins, block floor, bootstrap, bridge, profiles,
+keep draw, mapper and pin; they differ only in the results and scratch directories, `[e9.gate]` (ends at this entry),
+`[e9.order] by = "n_sender_desc"`, `[e9.alignment] sender_head_truncate` on the three levels, and `[e9.trunc]` on FULL
+(the levels, the floor, the margin, the two reference records, bootstrap seed 52 / 2000 reps). Registered
+hashes (LF-normalized): `e9t-full.toml` `005d8d102deb`; `e9t-l65.toml` `782f7354f422`; `e9t-l49.toml` `d4d54381e394`; `e9t-l32.toml` `3c0663fbb651`. Inclusion is decided on the FULL
+lengths before truncation, so every level keeps 0036's set: **68 observed · 35 included · 25 excluded as decided
+under the prior cap · 4 excluded above the cap · 4 excluded for an empty receiver prompt**, the same eight by name as 0035.
+A handoff with |S| ≤ L is identical at that level and at FULL and still counts.
+
+**The matched subset, and the shrinkage stated before any verdict (ruling 2).** Alignment is re-run per level because
+the aligner sees S'. Tokens matched under EVERY level form M_∩, identified in the FULL frame as (p_S, p_R) after
+undoing each level's offset |S| − L; δ is compared on M_∩ only. A handoff with **|M_∩| < 2,000** is VOID for the
+comparison and listed; |M_∩| / |M_FULL| is stated per handoff and pooled and gates nothing. **The CPU pre-check, from
+the four alignment passes alone (`summarize_e9_trunc --shrinkage`, recomputed in-process by this script):** |M_∩| / |M_FULL|
+per handoff median 0.4470 (p10 0.0000, p90 0.8270; min 0.0000, max 0.8965), pooled 0.4090
+(158,480 of 387,508 matched tokens); **14 of 35 handoffs are void under the floor** (11 with
+|M_∩| = 0), so **21 handoffs enter the comparison**; 29 sit below the 0.80 ratio the run queue proposed. The
+loss is dominated by what the truncation REMOVES: the receiver's prompt re-renders EARLY sender content, and the
+fraction of FULL pairs whose sender position survives S[−32,768:] has median 0.5027; aligner re-matching
+loses more than the removal on 10 handoffs (median loss beyond removal 0.0000, max
+0.4159 of |M_FULL|) — the design's stated weak point, measured rather than assumed. Void:
+`20241016_composio_swekit/astropy__astropy-12907_traj#97`; `20241016_composio_swekit/astropy__astropy-13398_traj#133`; `20241016_composio_swekit/astropy__astropy-13453_traj#109`; `20241016_composio_swekit/astropy__astropy-13977_traj#118`; `20241016_composio_swekit/astropy__astropy-14369_traj#108`; `20241016_composio_swekit/astropy__astropy-14539_traj#114`; `20241016_composio_swekit/django__django-10973_traj#87`; `20241025_composio_swekit/astropy__astropy-12907_traj#104`; `20241025_composio_swekit/astropy__astropy-13453_traj#102`; `20241025_composio_swekit/astropy__astropy-13977_traj#83`; `20241025_composio_swekit/astropy__astropy-14369_traj#132`; `20241025_composio_swekit/astropy__astropy-8707_traj#152`; `20241025_composio_swekit/astropy__astropy-8872_traj#74`; `20241025_composio_swekit/django__django-11087_traj#97`. Consequence stated now: "length" here means causal-prefix length on the tokens the receiver
+re-renders from the LATE part of S, and M_∩ sits at late sender positions while the two reference medians were pooled
+over full matched sets.
+
+**Statistics (per handoff on M_∩, paired across levels; descriptive).** Per level: mean δ_K; the fraction of tokens
+over τ_K = 0.3186; f*(τ_K) and f* on the ladder (0.1, 0.03) by 0023's MEAN-repair definition, oracle
+lower bounds (0027); the far-from-seam (16+) pooled median AND mean δ_K in FULL's causal seam frame b⁻(t) (0025); the
+paired (level − FULL) mean δ_K per handoff with its median over handoffs and a seeded percentile bootstrap (seed
+52, 2000 reps, `e7_stats.quantile`; reported, not read). V alongside, verdict-bearing for nothing. Each level is
+also a complete 0035 run and is read by `summarize_e9` on its own (controls, bridge, profiles, band word stated
+descriptively) before the comparison runs.
+
+**The pre-registered reading (ruling 1).** If L32's far-from-seam (16+) pooled median δ_K on M_∩ over the non-void
+handoffs lies within ±0.005 of 0.0381 (the scaled-short level, the same receiver configuration), the residual
+short↔long gap reads as **length**; within ±0.005 of 0.0629 (the long level), as **the handoffs**; between,
+**unattributed**, said so. FULL's own 16+ median on the same tokens is stated beside L32's. No hypothesis cell
+moves either way; the comparison's figures enter by their own numbered entry and the paper only from that entry.
+
+**Run order, stopping rule, resume.** Within each level the driver scores the included handoffs in the REGISTERED order
+`n_sender_desc` (full |S| descending, ties by id): `django__django-11087_traj#152` (80,111) first, `astropy__astropy-7671_traj#85` (34,974)
+last, so the longest senders — the only ones the higher levels change — are scored first and a stopped level leaves
+a named scored prefix. Controls run on the first handoff in that order at every level. `e9 --close-partial --config
+config/e9t-<level>.toml` closes an unfinished level on a PREFIX of its order; the comparison is then defined on the
+handoffs scored at EVERY level and the summarizer names the unscored per level. `--resume` after a crash keeps
+hash-matching work. Keep subset per level: n = 3, seed 9, the same draw as 0035's over the same ids
+(`20241016_composio_swekit/astropy__astropy-8872_traj#117`; `20241025_composio_swekit/django__django-10554_traj#112`; `20241025_composio_swekit/django__django-11087_traj#97`); kept dumps per level, fingerprinted, re-scored at home under 0028's tolerance.
+
+**Compute bound (R2 — a bound to be replaced by the probe on the granted card).** Prefill budget from the coverage:
+FULL 3,970,435 tokens; L65536 3,921,773 / L49152 3,596,221 / L32768 2,721,489; total 14,209,918 = 3.58× E9-long's. E9-long's
+sitting scored its 35 at 1.5–3 min per handoff (`docs/2026-09-10-e9l-gpu-runbook.md:139`) in 80 minutes (0036), with a measured peak
+of 31.56 GiB at |S| = 80,111 (`docs/2026-09-10-e9l-gpu-runbook.md:127`); memory is bounded by FULL, so an L40S 48 GB fits every level,
+and the four levels bound at 3.58× E9-long's wall time. The card is requested only after this entry is on the ledger.
+
+**Gate and enforcement.** `e9 --check --config config/e9t-<level>.toml` refuses until entries 0019/0023/0025/0027/0035/0055 are in
+the committed ledger, that config is committed unmodified, the upstream is at the pin with every invoked path clean and
+the mapper artifact is present by sha. `summarize_e9 --config config/e9t-<level>.toml` (fail-closed) reads each level
+as it read 0036's run, re-deriving every alignment from the raw traces under the truncation; `summarize_e9_trunc`
+(fail-closed, the only reader of the comparison) runs those four first, then pairs the levels on M_∩, applies the
+floor, states the shrinkage, the statistics and the reading, with every report, score, token record, coverage file
+and reference record pinned by sha, and refuses on any disagreement — including a level run under another pin,
+another config, or a different trace. Tests: `tests/test_e9_trunc.py` (the key, the exclusion decided on full lengths,
+the match set shifted by exactly |S| − L and unchanged by a tail cut, the descending order) and
+`tests/test_summarize_e9_trunc.py` (the four configs as one instrument, M_∩ in the FULL frame, the void gate, the
+three outcomes of the reading, the pins).
+
+**What this does NOT touch.** The H-E9, H-E9L and H-E9F cells; τ_K, τ_V, τ_agent_K, the rule, the band, the ladder;
+entries 0036, 0038 and 0045 and their records; `results/e9/`, `results/e9l/`, `results/e9s/`, `results/e9f*/`,
+`results/e8*/`, `results/consolidation/`, `results/cache-behavior/`; `config/e9.toml`, `config/e9l.toml`,
+`config/e9s.toml`; entries 0046–0049, the Llama long drafts (0050 / 0051), the second family's E8 amendment drafts
+(0052 / 0053) and 0054. Nothing here is a figure of the run; the pre-check figures above are alignment counts, not
+deviations.
+
+**Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the long half of one corpus under a scaled
+receiver (the bridge control runs at every level as 0035 registered it); "length" = causal-prefix length of the
+reused K/V on the late-S tokens the receiver re-renders, not the number of turns; the 4 handoffs above
+81,920 and the 4 with an empty receiver prompt stay excluded; the comparison is read on the handoffs that keep at least 2,000 common matched tokens
+(21 of 35 at the pre-check; the 14 void handoffs are named, never pooled, and are a LIMITATION the
+paper states: the result speaks for the handoffs whose receiver re-renders enough of the late sender context to survive truncation,
+not for all 35); the L32-native cell is deferred, so nothing here compares native with YaRN on the same tokens, a second
+stated LIMITATION (W6's bridge stays the only native-vs-YaRN evidence); f* stays an oracle lower bound; generation quality after reuse not
+measured.
+
+prior-entries-sha256: d1fd0344bc30f60f4ca4ae3d70ab2fc293f94189eadabb4bb38f7a481b3bc715
