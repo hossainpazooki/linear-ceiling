@@ -103,7 +103,11 @@ W3, W4 and W5's off-ledger figures (tail counts and per-handoff maximum, |R| of 
 Condition 1 (0032; restated 0045:3062–3064: the co-author refutation merged under `docs/reviews/` with two signatures) is
 **discharged by operator ruling**: issue #7 together with PR #12's two review records (`docs/reviews/2026-10-01-cache-refutation-0025-0029.md`,
 `docs/reviews/2026-10-01-feedback-and-claims.md`, PR head `8100414`) is treated as the confirmation. The review covers issue #7's
-rows R1/R3/R4 and R9/R10 and lists the rest as not covered; those stay open work and no longer gate the paper. Ledger entry
+rows R1/R3/R4 and R9/R10 and lists the rest as not covered; those no longer gate the paper. **Issue #7 was closed later the
+same day with a row-by-row disposition** (https://github.com/hossainpazooki/linear-ceiling/issues/7#issuecomment-5978012666):
+R13 (68 = 25 + 35 + 8), R14 (0.8106 vs 0.9352), the configuration share (0.4285 / 0.3916) and 0045's tail per cell were
+recomputed operator-side from the raw records and match the ledger; R2, R5/R6, R11/R12 and a second-person e9l/e9s recompute
+from the public backups were dropped by ruling — the paper says the long and scaled-short cells were recomputed by the operator only. Ledger entry
 **0054** records the ruling (staged as `docs/drafts/append_0054.py`, numbered after the Llama drafts 0050–0053 by operator instruction).
 Not changed by the ruling: the registered reading of f* as an oracle lower bound (0023:1278/1281, 0027); PR #12's README
 paragraph to the contrary is not adopted. Whether the camera-ready text printed the short-cell figures before this ruling is

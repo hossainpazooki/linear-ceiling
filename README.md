@@ -153,7 +153,9 @@ arm in one sentence and an appendix table.
    entry changes that.
    *(2026-10-04: DISCHARGED by operator ruling — issue #7 together with PR #12's two review records is treated as the
    confirmation; the two-signature clause is discharged by ruling, not by approvals. Ledger entry 0054 records it; the
-   rows the review lists as uncovered stay open work under issue #7 and no longer gate the paper.)*
+   rows the review lists as uncovered no longer gate the paper. Issue #7 CLOSED 2026-10-04 with a row-by-row disposition:
+   R13, R14, the configuration share and 0045's tail recomputed operator-side from the raw records and matching the
+   ledger; R2, R5/R6, R11/R12 and a second-person e9l/e9s recompute dropped by ruling.)*
 2. E9-long enters only from a passing `summarize_e9 --config config/e9l.toml`, by its own entry,
    with "n scored of 35 registered" beside every number, never pooled with E9's 25.
 
