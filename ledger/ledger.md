@@ -3283,3 +3283,46 @@ records; `config/e9*.toml`; the Qwen3 short cells, which stay Condition-1-bound 
 arm, so nothing here bounds practical repair cost; fresh attention at 32 query positions is an association, not a cause.
 
 prior-entries-sha256: 1d842dbf1b12d10181bd689cd4cb74371aac1300cd127d0f6a10551c4acef00a
+
+### 0054 — 2026-10-04 — Condition 1 discharged by operator ruling: issue #7 and PR #12's review records stand as the co-author confirmation; the two-signature clause of 0032 / 0045 no longer gates the paper; descriptive, no cell moves
+
+**What Condition 1 said.** Entry 0032 (lines 1948–1951) admitted E9 to the LCFM paper on a condition carried forward:
+the co-author refutation of entries 0025–0029 (two leads: τ-ladder sensitivity; the exactly-zero prefix control)
+recorded before the submission's numbers froze. Entry 0045 (lines 3062–3064) restated what remained after the
+2026-10-01 ruling that the numbers-freeze was moot for the camera-ready: "nothing enters a paper until the co-author
+refutation is merged under `docs/reviews/` with two signatures." Issue #7 (opened 2026-10-02) widened the review's
+scope to the cells the camera-ready prints (0036, 0038, 0045's tail) and named the two approvers.
+
+**The ruling (operator, 2026-10-04).** Issue #7 together with PR #12 — `docs/reviews/2026-10-01-cache-refutation-0025-0029.md`
+and `docs/reviews/2026-10-01-feedback-and-claims.md` at PR head `8100414` — is treated as the Condition 1 confirmation.
+The two-signature clause is discharged by this ruling rather than by two approvals on the review file. Recorded the same
+day on the issue (https://github.com/hossainpazooki/linear-ceiling/issues/7#issuecomment-5977785608) and on the PR (https://github.com/hossainpazooki/linear-ceiling/pull/12#issuecomment-5977785713); this entry is the ledger's record of it.
+
+**What the basis is, stated as the review states it.** The refutation record covers issue #7's rows R1, R3, R4
+(ladder sensitivity and the token claim: the three Qwen exceedance counts reproduced) and R9, R10 (prefix-control source
+inspection), against repository revision `39b13b4`, with its own status line "evidence checked; proposed co-author
+review and signatures pending" and an empty signature table. It lists as not covered: R2 (calibration refits), R5/R6
+(sample and uncertainty), R11/R12 (prefix-control checks beyond one handoff), the long and scaled-short attack pass with
+the configuration share, 0045's all-cell maxima and bin means, and R13/R14 (coverage and cross-arm). The disposition
+record maps the seven upstream changes to their evidence and claims no new result. Both were written by the co-author who
+built PRs #8–#14; neither carries a second reviewer's approval. **The ruling accepts this partial, unsigned record as
+sufficient; the entry does not claim the uncovered rows were checked.**
+
+**What changes.** The short-cell figures of 0029 and 0038 (and 0034's E9 column) may be cited in paper text as admitted,
+without the "subject to Condition 1" qualifier; 0045's "release nothing" clause for e9s is lifted to the same extent. The
+uncovered rows remain open work under issue #7 and no longer gate any paper. No deadline is implied: the LCFM
+camera-ready closed 2026-10-03 23:59 AoE; whether its text printed the short-cell figures under the old condition is a
+fact for the response map, not for this entry.
+
+**What this does NOT touch.** Every verdict and cell (H-E9 HELD on a floor, 0029; H-E9L, 0036; the scaled short cell,
+0038; 0045's tail figures); τ, the rule, the bands; the registered reading of f* as an oracle LOWER BOUND for two reasons
+(0023, lines 1278 and 1281; 0027) — PR #12's README paragraph that calls it "not a general lower bound" is not adopted by
+this ruling and needs its own corrective entry if it is ever to stand; the admission procedure for co-author-run results
+(`docs/2026-10-03-co-author-run-admission.md`) and entries 0046/0047, which are about evidence, not review.
+
+**Numbering.** 0048–0053 are allocated to staged, unrun drafts (the two registered runs' figures; the Llama long cell;
+the Llama E8 amendment). By operator instruction this entry is numbered after them and appended before them, so it
+precedes them in file order; `ledger_check` chains by file order and the drafts README is the allocator. Next free number
+after this entry: 0055.
+
+prior-entries-sha256: 5cbaec202c68a00b25c894450a20f950a8af9c703a15aae4386904d8716120d1
