@@ -1,107 +1,128 @@
-# E-BEH — behavioral check of same-model KV reuse at a handoff (design for registration; NO entry number)
+# E-BEH — next-token sensitivity to same-model KV reuse (design; NO entry number)
 
-**Date:** 2026-09-30 · **HEAD at write:** `118d08e` · **Last entry:** 0044 (next free 0047; this doc allocates
-nothing — `docs/drafts/README.md` is the only allocator) · **Status:** design, unregistered, unrun. Answers reviewer
-weakness W1 (`docs/2026-09-30-review-response-map.md`). Every threshold below is `??? (operator)`; nothing here may run
-with a placeholder. Target: MLSys 2027 (deadline Oct 30 2026 12:00 PDT).
+**Original draft:** 2026-09-30 at `118d08e`. **Update:** 2026-10-01, before a registered E-BEH run.
+**Status:** design, unregistered, unrun. This update corrects interpretation and narrows the first
+run; it does not retroactively register the cache-injection pilot. Entry numbers are allocated
+only by `docs/drafts/README.md`. Answers reviewer W1 (`docs/2026-09-30-review-response-map.md`).
+The original draft targeted MLSys 2027; the focused experiment could also inform the accepted
+LCFM paper without requiring the other experiments in the MLSys queue.
 
-**Precedent on the ledger.** 0023:1367-1370 registers a `[STRETCH]` partial-prefill experiment "own entry before
-anything runs … needs injection code upstream and a task; it is the experiment that would make f* an achieved number
-rather than an oracle floor." E-BEH is that experiment's first half (the continuation measure) with the task delta
-replaced by teacher-forced divergence, because the recorded continuation exists and a task harness does not.
+**Subsequent fork follow-up:** the separate `exp/cache-behavior` change completed a
+35-handoff H100 comparison with archived matches, fixed continuations and perturbation
+controls. Its freeze/run record states the exact scope; it is descriptive and was not
+admitted as a registered upstream E-BEH result. No repair-budget arms were run.
 
-## 1. Question
+**Precedent.** Entry 0023's `[STRETCH]` proposal called for practical cache injection with a
+separate registration. This design tests predictions from an assembled cache. It does not turn
+the representation statistic `f*` into an achieved repair cost or a task-quality measurement.
 
-Does reusing the receiver's own K/V for matched tokens (the f* = 0 reading, 0023:1275-1281) change what the receiver
-predicts on the continuation that was actually recorded, relative to a fresh prefill of R — and by how much relative
-to a size-matched random perturbation?
+## 1. Question and scope
 
-## 2. Substrate
+When the receiver actually reads the sender's same-model KV states at the archived matched
+positions, how much do its next-token distributions change relative to a fresh receiver cache?
+The first run compares **FRESH and REUSE-ALL**, with correctness controls. Repair variants and
+perturbation comparisons are optional follow-ups, not dependencies for interpreting this contrast.
 
-- **Handoffs:** the 35 long handoffs of 0035 / 0036 (`results/e9l/align/coverage.json` `run_order`), receiver
-  Qwen3-1.7B under 0036's YaRN configuration (`config/e9l.toml` `[e9.rope]`). The 25 short handoffs form a
-  **separate cell** if run at all (Condition 1, 0032, still open; short-half results stay out of registered verdicts).
-  Never pooled.
-- **Continuation C:** the receiver's recorded response text following prompt R in the trajectory. The traces carry
-  it (`e7_swe.py` reads LangChain `LLMResult.generations`; the E9 handoff record does **not** carry it — an extractor
-  is a build item). State in the entry: the recorded text was produced by a proprietary model (the handoffs are
-  Claude 3.5 Sonnet ↔ o1-mini switches, fact-check brief invariant), so this measures the representation effect on a
-  held-fixed continuation, not generation quality of the replay model. Cap C at `??? (operator)` tokens; record the
-  cap and the per-handoff |C|.
-- **Greedy-continuation arm:** secondary, only if injection lands; not verdict-bearing in the first registration.
+## 2. Fixed inputs
 
-## 3. Arms (per handoff; same R, same C, same model and dtype throughout)
+- **Handoffs:** the 35 long handoffs of 0035/0036, preserving the archived IDs and order, replayed through
+  Qwen3-1.7B with the fixed YaRN settings in `config/e9l.toml`. Use the archived alignment pairs
+  as `M`; do not introduce the pilot's 32-token minimum, question wrapper, or a new alignment.
+  The 25 short handoffs remain a separate optional cell, subject to Condition 1's admission rule.
+- **Continuation C:** the recorded receiver response following R, extracted from the pinned
+  trajectory. The original response came from a proprietary model, not the replayed Qwen model.
+  Pin the extractor, tokens, source node, maximum length, and missing/short-response rule before
+  launch. Retain the input hashes and the number of available and scored tokens per handoff.
+- **Scoring alignment:** construct the cache for **all of R**, including every token in M. Feed
+  `C[0]` as the first conditioning token, then score predictions for `C[1:]` under the same
+  teacher-forced history in each arm. `C[0]` is not scored. This avoids recomputing the final
+  receiver token merely to obtain its logits, which would silently remove it from reused M.
+  A continuation of fewer than two tokens supplies no score; report it under the fixed coverage
+  rule. The cap includes the unscored conditioning token.
 
-| arm | cache for matched tokens M | seams / unmatched | reads as |
-|---|---|---|---|
-| FRESH | receiver's own prefill of R | — | the reference |
-| REUSE-ALL | receiver's own K/V at p_S(t) (from a prefill of S), re-rotated to p_R(t); V unrotated (0023's content-space convention) | prefilled fresh, in order, attending to the reused K/V | f* = 0 taken literally |
-| REUSE-ORACLE-τ | as REUSE-ALL, then recompute the k = ⌈n·f*(τ)⌉ highest-δ_K tokens **in situ** (recompute reads reused neighbours) for τ ∈ {0.1, 0.03} | as above | the achievable version of the oracle, not the oracle — say so (0023:1278-1281 reason 2) |
-| CACHEBLEND-10 / -20 | as REUSE-ALL, then recompute the top 10 % / 20 % by δ_K in situ | as above | the CacheBlend rule in this paper's units (no numeric comparison to their figure — different units and selection rule) |
-| NULL | matched K/V replaced by the fresh K/V plus a random perturbation whose per-layer-head δ equals the matched set's measured δ (seeded via `linear_ceiling.rng.make_rng`) | as above | is the measured deviation special, or just its size? |
+## 3. Core arms and construction
 
-Own recompute (FRESH, run twice) is the control arm: its KL and top-1 disagreement must be exactly zero under the
-registered determinism settings, or the run refuses (identity control, as 0023's identity record).
+| Arm | Matched tokens M | Unmatched receiver tokens |
+|---|---|---|
+| FRESH | Receiver prefill of R | Same prefill |
+| REUSE-ALL | Copy same-model KV from S at p_S and move keys to p_R | Compute gaps in receiver order, attending to the cache assembled so far |
 
-## 4. Statistics (fixed before any data is loaded)
+This is block-wise cache construction, not replacing states in an otherwise fully fresh cache.
+Later gaps and continuation tokens can depend on earlier reused states. The sender cache is
+assumed available; record any source-cache build cost separately from reconstruction timing.
+Do not report a production speedup from diagnostic timings alone.
 
-- Per continuation token: KL(p_FRESH ‖ p_ARM) over the vocabulary at the teacher-forced position; top-1 agreement
-  (argmax equal). Per handoff: mean KL, p90 KL, top-1 agreement rate. Over handoffs: median and (p10, p90) of each;
-  paired bootstrap over handoffs, seed and reps as 0025's (seed 25, 2000 reps) unless re-registered.
-- Reported beside, never instead of: f*(τ_K), δ_K mean for the same handoff (from the E9L record), |C|.
+**Position correction.** Both S and R must use the same fixed YaRN schedule and amplitude.
+With cached key `K_S = a_S R_S(p_S) k`, relocation is
+`K_R = (a_R/a_S) R_R(p_R) R_S(p_S)^T K_S`. Only when schedules and amplitudes match does this
+reduce to rotation by `p_R - p_S` using that model's scaled `inv_freq`. Do not apply YaRN's
+amplitude a second time. Reject an unsupported schedule/configuration mismatch rather than
+silently treating a native cache as a YaRN cache. Values are copied without rotary correction.
 
-## 5. Verdict (proposal for ruling — numbers are placeholders)
+**Correctness controls before expansion:** repeat the fresh path; compare no-reuse/full-fresh
+construction with ordinary fresh prefill; check exact-prefix reuse; and check relocated keys
+against direct destination rotation under the fixed schedule. Pin dtype, backend, model revision,
+package versions, and numerical acceptance tolerances before the run. Record actual errors.
+Exact repeats may be bitwise equal; chunking, backend, and Transformers-version bridges need
+declared finite-precision tolerances, not an assumption of bitwise identity. A failed control
+stops expansion; changing its tolerance after seeing experimental results is not allowed.
 
-- HOLDS-B if median top-1 agreement (REUSE-ALL) ≥ `??? (operator; seed proposes 0.95)` **and** median mean-KL
-  (REUSE-ALL) ≤ NULL's median mean-KL minus `??? (operator)`.
-- DEGRADES-B if median top-1 agreement (REUSE-ALL) < `??? (operator; seed proposes 0.90)`.
-- UNRESOLVED-B between. The band words are new (`-B` suffix) so `ledger_check.VERDICTS` must learn them or the
-  entry must reuse an existing band with its own hypothesis row; ruling needed.
-- What it changes in the paper: the sentence "No downstream-quality number is claimed" is retired **only** by the
-  entry that reports one. Until then it stands.
+## 4. Statistics and interpretation
 
-## 6. Stopping rule and partial close
+- Per scored token: `KL(p_FRESH || p_REUSE)` over the vocabulary and top-1 agreement. Compute
+  probability reductions in a pinned numerical precision and keep the per-token results.
+- Per handoff: mean and p90 KL, top-1 agreement rate, matched-token coverage, scored |C|, and the
+  archived `delta_K` mean and `f*(tau_K)`. Use `e7_stats` for the reported quantile convention.
+- Across handoffs: median and p10/p90; retain handoff IDs and trajectory IDs. Freeze the bootstrap
+  unit, seed, and resample count in the registration; repeated handoffs from one trajectory are
+  not independent trajectories. No pooling of hardware replicas or short/long cohorts.
 
-- Order: `run_order` of 0036 (|S| ascending). Checkpoint after each handoff (atomic write, as 0043 registers for the
-  Llama driver). If stopped early, the report names the scored prefix and the unscored tail; a prefix of fewer than
-  `??? (operator)` handoffs reports no verdict. The pull/verify/delete and release rules are R5-R7 of
-  `docs/gpu-experiment-protocol.md`; R8 backup to a Hub dataset before the entry.
+These measurements test **prediction sensitivity on fixed text**. Top-1 agreement is not coding
+task success, and KL is not an answer-quality score. Even a small measured change does not
+establish unchanged greedy continuations, sampled outcomes, or agent success. The first run is
+descriptive: the earlier suggested 0.95/0.90 HOLDS-B bands have no validated quality meaning and
+are withdrawn from this proposal. No new verdict words or hypothesis row are needed.
 
-## 7. Dependencies (none exist today)
+## 5. Optional contrasts, only if separately included before launch
 
-1. **Cache injection on the receiver side.** Upstream `kvt/cache.py` already has `build_cache` and
-   `forward_with_cache` (read-only from here; pinned by ancestry in `UPSTREAM.md`). What is missing: constructing
-   the mixed cache (reused K/V at p_S re-rotated to p_R for M, fresh for the rest) for a Qwen3 GQA layout
-   `[28 layers, 8 KV heads]` under YaRN, and in-situ recompute of a chosen token subset. This is the splice the 09-21
-   brief named; it must be pinned by an entry before it runs (0023:1367).
-2. **Continuation extractor** from `traces/` (gitignored, manifest-pinned — `e7_manifest check` first) into the
-   handoff record, with its sha in the entry.
-3. **Determinism settings** registered: same attention backend as 0026's re-pin (SDPA), fp32 forward, `logits_to_keep`
-   unset for the continuation.
-4. **Card.** The S prefill of the longest included handoff (|S| = 80,111) peaked at **31.56 GiB** on an L40S under
-   this configuration (`docs/2026-09-10-e9l-gpu-runbook.md:127`); the continuation forwards add a cache of |R| + |C|
-   and are small beside it. A 20 GB slice does not fit (it fits only T ≤ 32,768 at 16.70 GiB, runbook 09-13:96); a
-   3g.40gb slice (39.5 GiB usable, 0026:1561) is marginal; an L40S 48 GB or larger fits.
+- **Oracle-ranked recomputation:** remove selected tokens from the copied blocks so they are
+  computed against the assembled cache. Choose the selection using the archived token-average
+  `delta_K`, either at the archived tau-ladder counts or a fixed 10%/20% budget. Selection still
+  uses the fresh reference, even though the recomputation itself is executable. These are not
+  CacheBlend implementations; do not label them CACHEBLEND or claim a deployable selector.
+- **Norm-matched random perturbation:** compare actual cache differences with perturbations of
+  matched magnitude. Specify K and V separately, per token/layer/KV head, the coordinate basis,
+  the perturbation location in the construction, and a seed through `make_rng`. Use pure
+  rotation when expressing K differences in content space. This can test whether direction or
+  placement matters beyond error magnitude. It is not required to interpret fresh-vs-reuse KL,
+  and doing better than a random perturbation is not an acceptable-quality threshold.
+- A position scramble is a separate disruption control. Name whether positions within blocks
+  or the blocks themselves are permuted; do not describe one as the other.
 
-## 8. Compute estimate (derived from E9L's record; verify on the box with a probe before launch, R2)
+The recorded pilot's per-example outputs were deleted. Its retained aggregates are exploratory
+background, not verified observations in this new cell; new runs preserve their own records.
 
-- The E9L sitting scored 35 handoffs at **1.5-3 min per handoff** on an L40S (`docs/2026-09-10-e9l-gpu-runbook.md:139`),
-  i.e. one S prefill + one R prefill + scoring per handoff — about 1.5 h for the cell.
-- E-BEH per handoff = the same S and R prefills (to harvest reused and fresh K/V) + 6 continuation forwards
-  (FRESH, REUSE-ALL, two ORACLE-τ, two CACHEBLEND) + 1 NULL + in-situ recompute passes of ≤ 20 % of |M| tokens. Each
-  continuation forward is a |C|-token decode-style pass over a |R|-length cache (|R| median 11,462, p90 19,853 for
-  the 35 — `results/e9l/summary.json`, not on the ledger) and costs seconds. **Upper bound: ~2× the E9L sitting,
-  ≈ 3 h L40S**, dominated by the two prefills. No dumps need to be kept beyond the per-token logits summaries
-  (KL and argmax per position, float32, ≈ |C| × 8 B per arm), so the R5/R6 pull is small.
-- If kept S dumps are wanted for re-scoring at home: 114,688 B per token per dump (0025:1535) → ≈ 9 GB per 80K
-  handoff; the keep subset of 0036 (3 handoffs) is the precedent.
+## 6. Registration, resources, and stopping
 
-## 9. What would refute the design before it runs (pre-mortem)
+The separate implementation and runbook must pass the controls before the full cell is launched.
+Before any experimental prefill, commit the fixed input manifest, continuation coverage rule,
+cap, arms, controls/tolerances, software pin, run order, checkpoint format, and partial-close
+rule. Operator approval and the numbered registration remain pending. No placeholder permits a
+run, and a preparation/probe result is not a registered E-BEH finding.
 
-- The recorded continuation is not in the trace for some of the 35 (LangChain node missing): coverage rule needed
-  (exclude and count, as 0019's cap exclusions).
-- Teacher-forced KL on a proprietary model's text measures something the replay model finds unlikely under both
-  arms; the NULL arm and the FRESH-vs-FRESH identity are what make the number interpretable — both are mandatory.
-- In-situ recompute of a subset under GQA + YaRN with a mixed cache has no existing code path; a correctness probe
-  (recompute ALL tokens in situ must reproduce FRESH bit-for-bit under the pinned backend) is the gate before any
-  arm runs.
+The old longest-S prefill (80,111 tokens) peaked at **31.56 GiB** on an L40S. That is one measured
+prefill, not a memory bound for simultaneous sender/fresh/assembled caches or retained logits.
+A **40 GB slice is marginal**. Prefer **one A100 80 GB or H100 80 GB** to reduce memory friction;
+H100 is not scientifically necessary. A 48 GB or 40 GB alternative needs a successful probe
+of the largest actual construction and scoring case with the intended cache lifetimes.
+Synchronize CUDA around measured intervals; MPS-only synchronization does not time CUDA work.
+
+Do not reserve a 24-hour experiment on the assumption that the previous approximate three-hour
+estimate is an upper bound. Probe memory and time with the actual port, then estimate the core
+two-arm run. Reuse verified work rather than repeatedly collecting the same fresh baselines.
+The proposed port scores the largest sender first as a retained memory-probe case, then the
+remaining handoffs in archive order; freeze that explicit execution order before launch.
+Checkpoint per handoff; a stopped run reports the exact scored subset and why it stopped, not
+an inferred full-cell outcome. Retain per-token scores, controls, configuration and source hashes,
+and enough selected logits/cache evidence for the registered verification. Apply R5–R8 to the
+new outputs. Passing this experiment would still leave coding-task quality unmeasured.

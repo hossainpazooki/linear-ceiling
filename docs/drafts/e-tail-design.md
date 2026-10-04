@@ -1,77 +1,102 @@
 # E-TAIL — tail and attention-weighted deviation (design; NO entry number)
 
-**Date:** 2026-09-30 · **HEAD at write:** `118d08e` · **Last entry:** 0044 (next free 0047; nothing allocated here) ·
-**Status:** design, unregistered, unrun. Answers reviewer weakness W3 and supplies the figures W4 / W5 need
-(`docs/2026-09-30-review-response-map.md`). Descriptive unless the operator registers a band (`??? (operator)`).
+**Original draft:** 2026-09-30 at `118d08e`. **Update:** 2026-10-01, after the CPU Part A analysis
+and before any registered Part B run. **Part A:** implemented at `0a51275`; its numerical
+publication/admission follows the corrective-entry process. **Part B:** design, unregistered,
+unrun, descriptive. This update allocates no entry and changes no historical result or verdict.
+It addresses W3 and supplies context for W4/W5 (`docs/2026-09-30-review-response-map.md`).
 
-**Unit discipline (0023:1253-1266).** δ(t) is the token's share of the layer-head's unexplained variance in R²'s units:
-its mean over tokens is 1 − R². A δ of 0.6 is not "60 % wrong". Every table below carries that sentence.
+**Subsequent fork follow-up:** `exp/cache-behavior` collected fresh attention at the
+last 32 receiver queries for all 35 long handoffs on an H100. This bounded descriptive
+slice is complete; an all-query or registered upstream Part B run remains unrun.
 
-## Part A — from the archived per-token records, CPU only, no GPU
+**Units.** `delta` is squared cache error divided by centered receiver variance, not a percentage
+of token error. Its token mean equals `1 - R^2` under the matching head/layer aggregation,
+subject to the archived floating-point reduction tolerance.
 
-**Inputs on this machine:** `results/e9l/tokens/*.tokens.npz` (35 files; arrays `same_K`, `same_V`, `ref_K`, `ref_V`,
-`cross_K`, `cross_V`, each `[|M|, 28 layers, 8 KV heads]` float32), `results/e9l/align/` (pairs → p_S, p_R, seam
-distance via `e9_pertoken.seam_distance_left`), `results/e9l/summary.json` and `report.json` for the hashes the
-summarizer checks. The same layout exists for `e9` and `e9s` (25 each); the short half is a **separate** table and
-enters nothing registered while Condition 1 (0032) is open.
+## Part A — archived records; already computed, do not rerun GPU baselines
 
-Per handoff and pooled, same-K (V alongside):
+Inputs are the hash-checked score/per-token/alignment files for E9, E9s, and E9l. Keep their
+25/25/35 handoff cells separate; the first two reuse the same texts under different receiver
+configurations. Short-cell admission remains subject to Condition 1.
 
-1. δ_max; p(τ) for τ ∈ {τ_K = 0.3186…, 0.1, 0.03} — the fraction of matched tokens over τ (the tail count outline v3
-   §5 carries as PENDING: 7.9 % over τ_K pooled on the long half, 5.8 % on the short — **not on the ledger**; this
-   is the figure the owed corrective entry would state).
-2. Remaining-token mean after removing the top 10 % / 20 % of tokens by δ_K (CacheBlend's selection rule in this
-   paper's units; state that CacheBlend's own number is in different units under a different rule — no numeric
-   comparison).
-3. Both Theorem 2 lower bounds per handoff — **the statement is not readable here** (the submitted tree is off this
-   machine); the summarizer code implements whatever the entry states, verbatim, once the operator supplies it.
-4. Pooled **bin means** (not only medians) by seam distance b⁻ (0025's bins) and by sender position (0036's
-   `s_pos` edges 0 / 32,768 / 49,152 / 65,536), plus the exact decomposition check µ = Σ_b (n_b / n) · mean_b δ
-   reproducing the recorded 1 − R² to float tolerance — the figures W5's Corollary 3 restatement needs.
-5. The native-window subset (p_S < 32,768): n tokens, pooled mean and median δ_K — W4's row. (The count 284,094 of
-   387,508 is already on the ledger at 0036:2206; the mean is new.)
-6. |R| for the 35: median / p10 / p90 (11,462 / 7,085 / 19,853 in `summary.json`, not on the ledger) — W4's row.
+`src/linear_ceiling/e9_tail.py` now runs the existing summary verification before reporting:
 
-**Build:** a fail-closed `summarize_e9 --tail` (or a small `e9_tail` module) that recomputes from the npz files,
-re-verifies their sha against `report.json`, and refuses on drift — the same discipline as the existing summarizer
-(0023:1360-1366). Its output is the only source for any of these numbers; the entry quotes the summarizer.
+1. Maximum token deviation and fractions above the registered reference and tighter ladder.
+2. Remaining-token mean after removing the largest 10%/20% of errors. This is **oracle-ranked
+   deletion**, not a CacheBlend implementation or an achieved recomputation cost.
+3. Pooled means and medians by causal seam distance and sender position, the native-window
+   subset, and receiver prompt lengths. Means support an error-budget decomposition; medians
+   do not supply the uniform token bounds assumed by the paper's seam corollary.
 
-**Cost:** 35 × 35 MB npz on CPU; minutes.
+The proposed lower-bound evaluation from Theorem 2 is not a completed Part A result. Any later
+extension must use the exact statement and its assumptions. Existing verified results can be
+read without repeating prefills. New descriptive arithmetic must retain its provenance and
+not be presented as a new registered verdict.
 
-## Part B — attention-weighted deviation (one GPU forward per handoff)
+## Part B — what the fresh receiver attends to
 
-**Quantity.** For each receiver query position i and layer l, head h: w_i(l,h) = Σ_{j ∈ M} a_ij(l,h) · δ_K(j,l,h), with
-a_ij the **fresh** receiver's attention weights (what the receiver actually attends to; the reused cache's own
-attention is a different, post-hoc quantity — state which is used). Report per handoff: mean and p90 of w over
-(i, l, h); the share of attention mass that lands on matched tokens with δ_K > τ_K; and, with per-head averaging as
-0023 does for δ, a per-token attention-weighted δ. **The seed attributes this to Proposition 4's diffuse / concentrated
-cases; that statement is not readable here, so the entry must quote it before the quantity is tied to it.** Report w
-next to µ and δ_max, never instead of them.
+**Question.** Are large archived representation errors concentrated on matched tokens that
+receive substantial attention? This is a descriptive mechanism check beside the unweighted
+mean, maximum, and behavioral fresh-vs-reuse comparison.
 
-**Mechanics.** One prefill of R per handoff with eager attention (`attn_implementation="eager"`,
-`output_attentions=True`) is the simple path but materializes `[heads, |R|, |R|]` fp32 per layer: at the p90 |R| of
-19,853 with 16 query heads that is 16 × 19,853² × 4 B ≈ 25 GB per layer — too much on one card. Instead hook each
-layer's attention and compute the scores in query chunks of 2,048 (≈ 2.6 GB per chunk at p90 |R|), reducing against
-δ on the fly; never store a full attention matrix. Model weights 6.41 GiB (runbook 09-13:96); the forward at
-T = 19,853 is under the 16.70 GiB measured at 32,768 — a 20 GB slice suffices for Part B.
+### Quantity, heads, and matched attention mass
 
-**Determinism and pin.** The same backend question as 0026: eager and SDPA differ in the last bits; the entry pins the
-backend and records that δ (from the SDPA dumps) and a (from eager) come from different kernels. The receiver's K/V
-under eager must match the archived dumps to a stated tolerance (identity check) or the run refuses.
+Index matched tokens by their receiver positions `j`. For selected query position `i`, layer
+`l`, and **query head** `h`, let `a_ij(l,h)` be the fresh receiver's causal attention weight.
+Map that query head to its shared KV head `g(h)` using the
+model's GQA grouping; do not treat the query-head and KV-head axes as interchangeable. Define
 
-**Cost:** one R prefill per handoff (seconds each; |R| p90 19,853 over the 35, `summary.json`) → **well under 1 h on any
-card ≥ 20 GB**;
-no dumps kept; outputs are per-handoff float summaries. R5-R8 still apply.
+`w_i(l,h) = sum_{j in M, j <= i} a_ij(l,h) * delta_K(j,l,g(h))`.
 
-## Verdict
+Report beside it:
 
-Descriptive unless registered. If the operator wants a band: a candidate is "attention-weighted mean δ_K ≤ τ_K on
-every handoff" (`??? (operator)`), read beside f*, not as a replacement; it does not move H-E9L.
+- matched attention mass `m_i(l,h) = sum_{j in M, j <= i} a_ij(l,h)`;
+- the conditional matched-token average `w_i/m_i` when `m_i > 0`, otherwise missing/undefined;
+- attention mass on tokens whose **archived token-average** `delta_K(j)` exceeds `tau_K`, so
+  this tail set matches the one reported in Part A;
+- the number and exact positions of sampled queries, layers, and heads, plus per-handoff
+  summaries before cohort aggregation.
 
-## What enters the paper, and when
+A small `w` can reflect little attention on M, not agreement of the reused states. Report both
+mass and conditional error to distinguish them. Explicitly identify whether queries are in R
+or the teacher-forced continuation. Pin query selection and aggregation before launch; sampled
+queries do not represent an exhaustive all-position evaluation.
 
-- Part A rows 1, 2, 4, 5, 6 can be computed today and could enter the **camera-ready** (T1) **only** through a
-  numbered entry — the 09-21 brief's owed corrective entry (tail counts and the per-handoff maximum) is the natural
-  carrier; whether to widen it to carry the bin means and the |R| row is ruling 4 in the response map.
-- Part B is T2 (MLSys) material.
-- Nothing here changes "f* = 0 means the matched-set mean passes τ" — Part A is what makes the tail visible beside it.
+### Interpretation and relation to Proposition 4
+
+Weights from the fresh pass are one endpoint. Proposition 4's attention-shift argument involves
+attention along the path between fresh and perturbed logits, fixed queries, and head-specific
+norm/variance factors. Fresh `w` alone checks neither those conditions nor a bound on output
+quality. A diffuse-attention guarantee requires its stated assumptions; observing small fresh
+attention-weighted error does not prove it. Reused-cache attention, if collected, is a separately
+named descriptive quantity. Do not say that this analysis validates the mapper tolerance under
+YaRN or certifies harmless reuse.
+
+### Implementation and validation
+
+Use the archived alignments and headwise error normalization. Record the same fixed YaRN
+schedule/amplitude used for the measured states; any source/destination position correction
+follows the conditions in `e-beh-design.md`. Preserve the query-to-KV-head mapping, causal mask,
+query positions, and attention temperature when reconstructing attention weights.
+
+Keep the ordinary SDPA forward where possible and reduce selected-query attention in chunks.
+Do not ask eager attention to materialize an all-layer `[heads, |R|, |R|]` tensor and then slice
+it afterward. Verify the chunked reductions and GQA mapping against a small explicit causal
+attention calculation. If an eager forward replaces SDPA, bridge its states/logits at declared
+finite-precision tolerances and report that backend difference; do not assume bitwise equality.
+
+At `|R| = 19,853`, a full 16-query-head FP32 attention matrix is about 25 GB per layer. Query
+chunking reduces that workspace but does not bound the model/cache/other-output peak. The old
+20 GB fit and sub-hour runtime were estimates, not measurements of this path. Probe the largest
+selected receiver/continuation case with the exact hook before choosing a smaller card. If
+E-BEH uses an A100/H100 80 GB, collect these summaries on that same allocated GPU when practical.
+
+### Registration and retained evidence
+
+Part B remains optional and descriptive. No quality band or new hypothesis verdict is proposed.
+Before launch, fix query selection, precision/backend, numerical checks, GQA mapping, output
+schema, and stopping rule in its own registration/runbook. Save per-query reductions and masses,
+configuration/input hashes, and controls rather than only final cohort means; no full attention
+matrices are needed. R5–R8 still apply. A future paper can report the observed association, with
+its sampling limits, without claiming that attention weighting proves unchanged behavior.
