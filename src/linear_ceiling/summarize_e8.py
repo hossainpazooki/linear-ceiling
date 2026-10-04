@@ -23,7 +23,7 @@ from linear_ceiling.e8 import (UPSTREAM_PATHS, agent_holdout_frac, archived_r2, 
                                dump_fingerprint, score)
 from linear_ceiling.rng import make_rng
 from linear_ceiling.upstream_gate import check_upstream
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 
 import numpy as np
 
@@ -51,8 +51,8 @@ def summarize(cfg: E8Config, runner=subprocess.run) -> str:
         raise ValueError(f"{rp} does not exist; E8 has not run")
     rep = json.loads(rp.read_text(encoding="utf-8"))
     _walk_nan(rep, "report")
-    if rep.get("config_sha256") != sha256_file_bytes(cfg.config_path):
-        raise ValueError("config/e8.toml changed since the run (config_sha256 mismatch)")
+    if rep.get("config_sha256") != sha256_text_file(cfg.config_path):      # newline-normalized, as the driver records it
+        raise ValueError(f"{cfg.config_path.name} changed since the run (config_sha256 mismatch)")
     if rep.get("upstream_sha") != cfg.upstream_sha:
         raise ValueError("report's upstream_sha differs from config; the pin moved")
     try:

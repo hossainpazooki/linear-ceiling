@@ -99,6 +99,18 @@ def test_refuses_config_drift(ran):
         summarize(cfg, runner=runner)
 
 
+def test_a_crlf_checkout_of_the_unchanged_config_is_not_drift(ran):
+    """The box writes the config LF and records its digest; a Windows checkout (autocrlf) hands the summarizer
+    the same text with CRLF endings. That is the same registered config, not drift: the digest is
+    newline-normalized on both sides (learnings 2026-10-02), so a byte-changed-but-text-identical file passes
+    while the edited file above still refuses."""
+    cfg, _, runner = ran
+    raw = cfg.config_path.read_bytes()
+    assert b"\r\n" not in raw
+    cfg.config_path.write_bytes(raw.replace(b"\n", b"\r\n"))
+    summarize(cfg, runner=runner)                      # no ValueError
+
+
 def test_refuses_a_broken_upstream_pin(ran, monkeypatch):
     """check_upstream's refusal (not an ancestor / changed paths / dirty) surfaces as a refusal."""
     cfg, _, runner = ran

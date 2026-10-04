@@ -22,7 +22,7 @@ from pathlib import Path
 from linear_ceiling import REPO_ROOT
 from linear_ceiling.config import E7Config, E8Config, load_e7_config, load_e8_config
 from linear_ceiling.e8_text import iter_trace_texts, qwen_encoder, sample_windows, write_tokens
-from linear_ceiling.hashing import sha256_file_bytes
+from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.upstream_gate import check_upstream
 from linear_ceiling.weights import WeightReader, assert_shared_vocab, snapshot
@@ -217,7 +217,7 @@ def assemble(cfg: E8Config, tokens_path: Path, dumps: dict, scores: dict, checks
                 "(the mapper was never fit on them); band words are read against 0009's band for orientation only; "
                 "the H-E8 cell was decided by entry 0020 under the registered 0016 protocol and does not move here")
     return {
-        "config_sha256": sha256_file_bytes(cfg.config_path),
+        "config_sha256": sha256_text_file(cfg.config_path),   # newline-normalized, as E9 records it: the box writes LF, a Windows checkout reads CRLF; equal to the raw digest for an LF file, so every recorded value stays valid
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
         "tokens": {"path": tokens_path.resolve().relative_to(Path(REPO_ROOT).resolve()).as_posix()
                    if str(tokens_path.resolve()).startswith(str(Path(REPO_ROOT).resolve())) else str(tokens_path),
