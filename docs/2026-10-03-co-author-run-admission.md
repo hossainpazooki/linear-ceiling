@@ -51,7 +51,9 @@ Everything below is checked by the operator, not read:
 3. **The run code.** If the driver in the PR differs from the code that ran (packaging edits after the run), the
    runbook states the run-time `code_sha256` values and what changed. A refutation compares the PR's files to those
    hashes; a silent divergence is a finding.
-4. **The backup push (R8)**, by the runner, from the verified home mirror, never from the box. Public. Records first,
+4. **The backup push (R8)**, by the runner, from the verified home mirror, never from the box. Public or private, as R8
+   already allows (operator ruling 2026-10-04: either); a private dataset needs a read token handed to the operator for §3.
+   Records first,
    large files by one resumable `upload-large-folder`, the `complete: true` report last. Name:
    `<account>/linear-ceiling-<exp>-<YYYY-MM-DD>`, under the runner's account if that is where the mirror is (the Llama
    precedent, ruled 2026-10-01). Dataset names stay out of double-blind material. Before the first push: sweep the
@@ -102,7 +104,7 @@ paper tables (`paper_assets.py` in PR #9) takes the entry number as a required a
 
 ## 6. What refuses the admission
 
-Any one of: no public backup; a report without `complete: true`, `code_sha256` or the runtime fields; a pin mismatch;
+Any one of: no verified Hub backup (public or private); a report without `complete: true`, `code_sha256` or the runtime fields; a pin mismatch;
 a recomputed figure that differs from the claim at printed precision; a reader that passes a planted mismatch; a
 chronology the records cannot support; a `verdict:` line on an import; a figure in a doc or PR body with no summary
 key. Refusal is a finding in the review record, not a rejection of the work: the runner can repair R8 and R3 defects
