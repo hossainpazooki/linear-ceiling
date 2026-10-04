@@ -58,10 +58,10 @@ drafts (0050/0051 long cell, 0052/0053 E8 amendment) and appended before them, s
 **Staged 2026-10-04 (night): `append_0056.py` — co-author pilot figures admitted to paper text by operator ruling** (the two
 merged co-author documents `docs/2026-10-01-cache-behavior-h100.md` and `docs/2026-10-01-a100-analysis.md` may be cited under a
 provenance sentence; supersedes the "in any paper" clauses of 0046/0047; R1/R8/R12 for LEDGER figures unchanged, so 0048/0049 still
-need the operator's run or the admission procedure; types no figure). 0055 is the E-TRUNC registration on branch `e-trunc`.
+need the operator's run or the admission procedure; types no figure). 0055 is the E-TRUNC registration (PR #17, merged `c37f626`; appended `a5c8691`). 0056 APPENDED `caccab5`.
 Ordering guard: 0054 present, 0056 absent. Next free number: **0057**.
 
-**Staged 2026-10-04 (night): `append_0055.py` — E-TRUNC registration** (design `e-trunc-design.md`; its §10 carries the three
+**`append_0055.py` — E-TRUNC registration — APPENDED 2026-10-04 (`a5c8691`; script and `tests/test_append_0055.py` retired in the append commit; staged earlier that night)** (design `e-trunc-design.md`; its §10 carries the three
 rulings taken that day under the operator's direction — running this script is the operator's ratification; the seed had
 allocated 0052, which the E8 amendment above took first). REGISTRATION, descriptive, no hypothesis row, no `verdict:` line.
 Ordering guard 0054 present / 0055 absent (0054 is the latest APPENDED entry; 0048–0053 are staged and may land before or after
