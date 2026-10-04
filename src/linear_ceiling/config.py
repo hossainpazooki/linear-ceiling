@@ -249,9 +249,21 @@ class E9Config:
     # mapper, so a second family must not recalibrate against results/e8/report.json. None = summarize_e9's
     # own default (the Qwen report), which keeps config/e9.toml, e9l.toml and e9s.toml untouched.
     e8_report: Path | None = None
+    # ---- E-TRUNC (design docs/drafts/e-trunc-design.md; registration entry number assigned at staging).
+    # Head truncation of the sender context: the aligner and the driver see S' = S[-L:] of each INCLUDED
+    # handoff (inclusion is decided on the full lengths first), so every matched token's reused K/V is
+    # computed from a shorter causal prefix at sender position p_S' = p_S - (|S| - L). None = no
+    # truncation: config/e9.toml, e9s.toml, e9l.toml and the Llama configs are untouched.
+    sender_head_truncate: int | None = None
+    # The E-TRUNC comparison's own parameters ([e9.trunc], carried by the FULL cell's config only and read by
+    # `summarize_e9_trunc`): the truncated levels' configs, the common-subset floor, the reading's margin and
+    # the two records the reading is measured against. None on every other cell.
+    trunc: dict | None = None
 
 
 _ROPE_KEYS = ("rope_type", "factor", "original_max_position_embeddings")
+_TRUNC_KEYS = ("levels", "out_dir", "margin_abs", "min_common_matched", "seam_far_bin",
+               "short_scaled_compare", "long_summary", "bootstrap_seed", "bootstrap_reps")
 
 
 def load_e9_config(path: Path, repo_root: Path) -> E9Config:
@@ -324,10 +336,47 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
     req = tuple(str(x) for x in gate.get("required_entries", ()))
     if any(not (len(x) == 4 and x.isdigit()) for x in req):
         raise ValueError(f"{path.name} [e9.gate] required_entries must be four-digit entry numbers")
+    # ---- E-TRUNC: optional head truncation of the sender context, validated only when present. It lives
+    # under [e9.alignment] because it changes what the aligner (and therefore the driver's dump) sees.
+    # A value at or above the cap truncates nothing and is refused rather than silently kept as a no-op.
+    trunc = e9["alignment"].get("sender_head_truncate")
+    if trunc is not None:
+        if isinstance(trunc, bool) or not isinstance(trunc, int) or trunc < 1 or trunc >= cap:
+            raise ValueError(f"{path.name} [e9.alignment] sender_head_truncate must be an integer in "
+                             f"[1, context_cap), got {trunc!r}: S' = S[-L:] is a head truncation of the "
+                             "sender context, and L >= cap truncates nothing (E-TRUNC design)")
+    trunc_sec = e9.get("trunc")
+    if trunc_sec is not None:
+        trunc_sec = dict(trunc_sec)
+        missing = [k for k in _TRUNC_KEYS if k not in trunc_sec]
+        extra = sorted(set(trunc_sec) - set(_TRUNC_KEYS))
+        if missing or extra:
+            raise ValueError(f"{path.name} [e9.trunc] needs exactly {list(_TRUNC_KEYS)} (missing {missing}, extra {extra})")
+        if trunc is not None:
+            raise ValueError(f"{path.name}: [e9.trunc] belongs to the FULL cell, which registers no sender_head_truncate")
+        lv = trunc_sec["levels"]
+        if not (isinstance(lv, list) and lv and all(isinstance(x, str) and x.strip() for x in lv) and len(set(lv)) == len(lv)):
+            raise ValueError(f"{path.name} [e9.trunc] levels must be a non-empty list of distinct config paths")
+        m = trunc_sec["margin_abs"]
+        if isinstance(m, bool) or not isinstance(m, (int, float)) or not (0.0 < float(m) < 1.0):
+            raise ValueError(f"{path.name} [e9.trunc] margin_abs must be a number in (0, 1): it is the absolute band, in "
+                             "delta's units, inside which the far-from-seam median reads as one of the two reference levels")
+        mc = trunc_sec["min_common_matched"]
+        if isinstance(mc, bool) or not isinstance(mc, int) or mc < 1:
+            raise ValueError(f"{path.name} [e9.trunc] min_common_matched must be an integer >= 1 (the |M_cap| floor "
+                             "below which a handoff is void for the comparison)")
+        for key in ("out_dir", "short_scaled_compare", "long_summary", "seam_far_bin"):
+            if not (isinstance(trunc_sec[key], str) and trunc_sec[key].strip()):
+                raise ValueError(f"{path.name} [e9.trunc] {key} must be a non-empty string")
+        bs, br = trunc_sec["bootstrap_seed"], trunc_sec["bootstrap_reps"]
+        if isinstance(bs, bool) or isinstance(br, bool) or not isinstance(bs, int) or not isinstance(br, int) or br < 100:
+            raise ValueError(f"{path.name} [e9.trunc] bootstrap_seed must be an int and bootstrap_reps an int >= 100")
     order = e9.get("order", {})
     order_by = str(order.get("by", "id"))
-    if order_by not in ("id", "n_sender_asc"):
-        raise ValueError(f"{path.name} [e9.order] by must be 'id' or 'n_sender_asc' (entry 0035)")
+    if order_by not in ("id", "n_sender_asc", "n_sender_desc"):
+        raise ValueError(f"{path.name} [e9.order] by must be 'id', 'n_sender_asc' or 'n_sender_desc' (entry 0035; "
+                         "descending is E-TRUNC's stopping rule: the longest senders, the only ones the higher "
+                         "truncation levels change, are scored first)")
     allow_partial = bool(order.get("allow_partial", False))
     # An ABSENT [e9.rope] is a registered state, not an omission: a receiver whose native window already covers
     # the cap is dumped unscaled, and such a cell must load cleanly (entry NNNN's long cell, provisional -- a
@@ -375,6 +424,7 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         rule=dict(e9["rule"]), controls=dict(e9["controls"]), config_path=path,
         context_floor=floor, rope=rope, required_entries=req, order_by=order_by, allow_partial=allow_partial,
         bridge=bridge, profiles=profiles, e8_report=e8_report,
+        sender_head_truncate=int(trunc) if trunc is not None else None, trunc=trunc_sec,
     )
 
 
