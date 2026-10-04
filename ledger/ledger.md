@@ -3518,3 +3518,54 @@ stated LIMITATION (W6's bridge stays the only native-vs-YaRN evidence); f* stays
 measured.
 
 prior-entries-sha256: d1fd0344bc30f60f4ca4ae3d70ab2fc293f94189eadabb4bb38f7a481b3bc715
+
+### 0053 — 2026-10-04 — E8 amendment ran on the second model family `[BASELINE, DESCRIPTIVE]`: arm (b) over every agent sequence; the inversion does not persist; no cell and no τ moves
+
+**Provenance.** Registered by 0052 before any rescoring; `config/e8fa.toml` (sha256 `80f51f0a36e9`) and this ledger committed
+unmodified; upstream at the family's pin `06f8d55`, clean for the invoked paths; 0040's agent dumps and token file
+(`agent_n50_len1024_seed8.npy`, sha256 `4e02d14af008`) reused byte for byte, fingerprints checked at run time and again by the summarizer
+against `results/e8f/report.json` (sha256 `4682508afd35`); arm (a) cross-checked against the archived `r2.json` for every k. Every
+figure below is `summarize_e8 --config config/e8fa.toml`'s: the scorer re-run on the fingerprinted dumps, per-sequence R² recomputed from
+the per-token record and checked against both the report and the re-scored json, the prior report's hash re-checked. Pinned:
+`report.json` `5521a423ae29`, `summary.json` `9ddb66cc2796`. Arm (a) keeps the mapper's own held-out fraction 0.2; arm (b)
+scores all 50 agent sequences (12,800 tokens) — 0040 had scored the last 10
+(2,560 tokens at the matched protocol).
+
+**The draw, restated beside the figures (recomputed from the token file).** 50 rows, **42 distinct windows**, the most repeated
+window 9 times; the registered hold-out was **2 distinct windows**. The bootstrap below resamples rows, so a repeated
+window carries its multiplicity; nothing here de-duplicates, because 0016's rule drew rows and this entry rescored the rows it drew.
+
+| k | agent seqs / tokens | arm (a) generic K / V | arm (b) agent, ALL K / V | 0040's arm (b) K / V | change K / V | drop K / V | drop 95% K | drop 95% V | band K / V (descriptive) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 (0040 verdict k) | 50 / 12,800 | 0.7139 / 0.4711 | **0.6979 / 0.4137** | 0.7311 / 0.4599 | -0.0332 / -0.0462 | +0.0160 / +0.0573 | [+0.0052, +0.0267] | [+0.0410, +0.0740] | HOLDS / UNRESOLVED |
+| 4 | 50 / 12,800 | 0.6183 / 0.2909 | **0.5816 / 0.1471** | 0.6219 / 0.2265 | -0.0403 / -0.0794 | +0.0367 / +0.1438 | [+0.0212, +0.0511] | [+0.1147, +0.1721] | HOLDS / UNRESOLVED |
+| 8 | 50 / 12,800 | -0.0591 / -0.9696 | **-0.2019 / -1.5591** | -0.1333 / -1.3388 | -0.0686 / -0.2203 | +0.1428 / +0.5896 | [+0.1032, +0.1826] | [+0.5003, +0.6805] | UNRESOLVED / DEGRADES |
+
+Bootstrap: seeded percentile over agent sequences (seed 52 + k, 2,000 reps), 2.5% / 97.5% of the drop; reported, read by nothing.
+Band words are 0009's band applied to the all-sequence drop for orientation only.
+
+**Per-sequence R² (a share of the pooled decomposition, SST around the global held-out mean), median (p10, p90):**
+
+| k | agent K | agent V | generic K | generic V |
+|---|---|---|---|---|
+| 1 | 0.6943 (p10 0.6522, p90 0.7619) | 0.4013 (p10 0.3437, p90 0.4961) | 0.7595 (p10 0.5911, p90 0.7895) | 0.5205 (p10 0.3336, p90 0.5764) |
+| 4 | 0.5754 (p10 0.5251, p90 0.6668) | 0.1156 (p10 0.0274, p90 0.2853) | 0.6912 (p10 0.3928, p90 0.7269) | 0.3554 (p10 0.0889, p90 0.4496) |
+| 8 | -0.2360 (p10 -0.3140, p90 0.0006) | -1.6717 (p10 -1.9578, p90 -1.1538) | 0.1084 (p10 -0.5074, p90 0.2153) | -0.7873 (p10 -1.3942, p90 -0.5658) |
+
+**What changed and what did not.** At k = 1, scoring every agent sequence instead of the last 10 moves arm (b) by
+-0.0332 (K) / -0.0462 (V); the drop is +0.0160 / +0.0573 with 95% bootstrap
+[+0.0052, +0.0267] / [+0.0410, +0.0740], read against
+0009's band as HOLDS / UNRESOLVED (0040, at the matched protocol: HOLDS / HOLDS). **The question 0041 left open:**
+the τ_agent_K < τ_K inversion does not persist: arm (b) over every sequence scores at or below arm (a) on K (all-sequence arm (b) K 0.6979 against arm (a) K 0.7139); whether that is a property of
+the pair or of a draw with 42 distinct windows is narrowed, not closed — the windows are the same 42. **τ_agent_K stays
+0040's registered value, 1 − 0.7311 = 0.2689; the all-sequence counterpart, 1 − 0.6979 = 0.3021, is
+reported here beside it and substituted for nothing** (0044 has already read τ_agent_K; τ_K = 0.2861 is untouched). **No cell moves; this
+entry carries no `verdict:` line; nothing here is pooled with a Qwen figure.**
+
+**Not established.** Anything beyond 0040's limits: off-policy text for Llama-3, one pair, one direction, one mapper, visible messages
+only (0012); the agent windows are 0016's draw under the Llama-3 BPE, not new text, and 8 of the 50 rows repeat another; arm (a)'s
+figure is on the mapper's own held-out generic sequences and its per-sequence spread is over that many. H-E8 is 0020's and is unchanged.
+
+**Scope.** All of 0009's, 0016's, 0039's, 0040's and 0052's limits. No hypothesis cell changes with this entry.
+
+prior-entries-sha256: b4ae9246fc407b36d3f24886b84330d63e9f1bce7a0a158da4e68c8eb4e8c002
