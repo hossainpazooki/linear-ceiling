@@ -73,7 +73,7 @@ score, control, bridge, token record or scratch under any `results/e9t*/`; the f
 IN-PROCESS over the four passes and states every count from it; reads the two reference medians from
 `results/e9s/compare.json` / `results/e9l/summary.json` by sha; locates every cited ledger line by sentence search; reads the
 E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
-config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053; staged 0048/0049, 0050/0051. Next free number: **0057**.)*
+config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053, 0050 (`cff787f`, script retired); staged 0048/0049 and 0051. Next free number: **0057**.)*
 
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
@@ -126,7 +126,7 @@ refuses a partial close (this config does not allow one) and a run whose dumps c
 τ_K ceiling 0039 registered is derived mechanically from the summary (`tau_K > 0.45` forces the cell to
 `unresolved` whatever the band says). Optional `--tau-ceiling-applies {yes,no}` is an assertion that must
 agree with that derivation and cannot select the verdict; required `--tau-ceiling-note` records provenance only.
-**`append_0050.py`** (E9 long half registration at a NATIVE receiver; was `append_0045.py` until 2026-10-01 and `append_0046.py` until 2026-10-04; DESCRIPTIVE, no row): declares entry
+**`append_0050.py`** (**APPENDED 2026-10-04, `cff787f`, script retired**; E9 long half registration at a NATIVE receiver; was `append_0045.py` until 2026-10-01 and `append_0046.py` until 2026-10-04; DESCRIPTIVE, no row): declares entry
 0035's D1(a), its configuration bridge and its scaled-receiver reading INAPPLICABLE, and states that the
 cell cannot move, support or refute H-E9L and is never pooled with 0036's handoffs; asserts the floor
 equals the short cell's cap AND that the ids it excludes under that floor are EXACTLY the short cell's
