@@ -61,6 +61,20 @@ provenance sentence; supersedes the "in any paper" clauses of 0046/0047; R1/R8/R
 need the operator's run or the admission procedure; types no figure). 0055 is the E-TRUNC registration on branch `e-trunc`.
 Ordering guard: 0054 present, 0056 absent. Next free number: **0057**.
 
+**Staged 2026-10-04 (night): `append_0055.py` — E-TRUNC registration** (design `e-trunc-design.md`; its §10 carries the three
+rulings taken that day under the operator's direction — running this script is the operator's ratification; the seed had
+allocated 0052, which the E8 amendment above took first). REGISTRATION, descriptive, no hypothesis row, no `verdict:` line.
+Ordering guard 0054 present / 0055 absent (0054 is the latest APPENDED entry; 0048–0053 are staged and may land before or after
+this one — if one lands first, this script's `NUM`/`PREV` and the four configs' `[e9.gate]` move together in one commit, before
+any `e9 --check`). Asserts the four configs `config/e9t-{full,l65,l49,l32}.toml` are committed and hash-equal (LF-normalized)
+to the registered values and are `config/e9l.toml`'s instrument on every field but the named lines; asserts R1 (no report,
+score, control, bridge, token record or scratch under any `results/e9t*/`; the four alignment passes and
+`results/e9t/shrinkage.*` are the only things allowed, as 0035/0037 allowed theirs); runs `summarize_e9_trunc.shrinkage`
+IN-PROCESS over the four passes and states every count from it; reads the two reference medians from
+`results/e9s/compare.json` / `results/e9l/summary.json` by sha; locates every cited ledger line by sentence search; reads the
+E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
+config/e9t-*.toml` passes on the registrant's machine. Next free number: **0056**.
+
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
 Reads `results/<cell>/tail.json` written by `e9_tail` (which runs `summarize_e9` first) for `e9l`, `e9`, `e9s`, `e9f`, and

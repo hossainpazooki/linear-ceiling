@@ -371,7 +371,8 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
     align_dir = cfg.results_dir / "align"
     records, included, blocks = [], [], {}
     for h in load_handoffs(submission_dirs(e7, cfg), counter):
-        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor)
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor,
+                                         cfg.sender_head_truncate or 0)
         write_alignment(align_dir, rec, s_ids, r_ids, pairs)
         records.append(asdict(rec))
         if not rec.excluded:
@@ -390,6 +391,8 @@ def align_only(cfg: E9Config, e7: E7Config, encoder=None) -> Path:
            "keep_subset": keep_subset(included, cfg.keep_seed, cfg.keep_n),
            "min_block_len": int(cfg.rule["min_block_len"]), "blocks_per_handoff": blocks,
            "alignments": records}
+    if cfg.sender_head_truncate:       # E-TRUNC only: existing cells' coverage.json stays byte-identical
+        out["sender_head_truncate"] = cfg.sender_head_truncate
     align_dir.mkdir(parents=True, exist_ok=True)
     p = align_dir / "coverage.json"
     p.write_text(json.dumps(out, indent=1), encoding="utf-8")
@@ -417,12 +420,16 @@ def _write_checkpoint(out: Path, report: dict) -> None:
 
 
 def run_order(records: list, included: list[str], order_by: str) -> list[str]:
-    """The registered order the driver scores in (entry 0035 stopping rule): by id (E9), or by |S|
-    ascending with the id as tie-break (E9-long), so a run stopped at the cutoff has scored a PREFIX."""
+    """The registered order the driver scores in (entry 0035 stopping rule): by id (E9), by |S|
+    ascending with the id as tie-break (E9-long), or by |S| descending (E-TRUNC: the longest senders,
+    the only ones the higher truncation levels change, first), so a run stopped at the cutoff has
+    scored a PREFIX. |S| is the FULL sender length (n_sender records it even under truncation)."""
     if order_by == "id":
         return sorted(included)
     n_s = {(r["handoff_id"] if isinstance(r, dict) else r.handoff_id): (r["n_sender"] if isinstance(r, dict) else r.n_sender)
            for r in records}
+    if order_by == "n_sender_desc":
+        return sorted(included, key=lambda h: (-n_s[h], h))
     return sorted(included, key=lambda h: (n_s[h], h))
 
 
@@ -516,7 +523,8 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
     align_dir = cfg.results_dir / "align"
     records, aligned = [], {}
     for h in handoffs:
-        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor)
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor,
+                                         cfg.sender_head_truncate or 0)
         write_alignment(align_dir, rec, s_ids, r_ids, pairs)
         records.append(rec)
         if not rec.excluded:
@@ -548,6 +556,7 @@ def run(cfg: E9Config, e7: E7Config, *, repo_root: Path, runner=subprocess.run,
         "upstream_sha": cfg.upstream_sha, "pair": cfg.pair,
         "alignment_method": cfg.alignment_method, "context_cap": cfg.context_cap,
         "context_floor": cfg.context_floor, "rope": cfg.rope,          # entry 0035 (E9: 0 and null)
+        **({"sender_head_truncate": cfg.sender_head_truncate} if cfg.sender_head_truncate else {}),
         "coverage": {"observed": len(records), "included": len(included),
                      "excluded": len(records) - len(included)},
         "alignments": [asdict(r) for r in records],

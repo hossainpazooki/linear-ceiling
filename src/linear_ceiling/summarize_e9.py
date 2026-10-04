@@ -488,7 +488,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         raise ValueError(f"handoff set differs: recomputed {len(handoffs)}, recorded {len(recorded)}")
     included, pairs_of, n_recv, ids_of = [], {}, {}, {}
     for hid, h in sorted(handoffs.items()):
-        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor)     # floor: E9-long (0035); 0 for E9
+        rec, s_ids, r_ids, pairs = align(h, enc, cfg.context_cap, cfg.context_floor,     # floor: E9-long (0035); 0 for E9
+                                         cfg.sender_head_truncate or 0)                  # truncation: E-TRUNC; None elsewhere
         if asdict(rec) != recorded[hid]:
             raise ValueError(f"{hid}: alignment record does not re-derive from the raw trace")
         if not rec.excluded:
@@ -513,6 +514,9 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         raise ValueError("keep_subset does not re-derive from the seed and the included set")
     if rep.get("context_floor", 0) != cfg.context_floor or rep.get("rope") != cfg.rope:
         raise ValueError("report's context_floor / rope differ from config (entry 0035)")
+    if (rep.get("sender_head_truncate") or None) != cfg.sender_head_truncate:
+        raise ValueError("report's sender_head_truncate differs from config (E-TRUNC); the dumps were "
+                         "made from a different S' than this config registers")
     # entry 0035: the registered run order re-derives; a partial close covers a PREFIX of it and every figure
     # below is a claim about the scored prefix, stated with "n scored of N registered" (coverage travels)
     order = run_order(list(recorded.values()), included, cfg.order_by)

@@ -88,11 +88,20 @@ class Alignment:
     text_sha256: str          # sha256 over sender_text + "\x00" + receiver_text
 
 
-def align(h: Handoff, encode, context_cap: int, context_floor: int = 0) -> tuple[Alignment, np.ndarray | None, np.ndarray | None, np.ndarray | None]:
+def align(h: Handoff, encode, context_cap: int, context_floor: int = 0,
+          sender_head_truncate: int = 0) -> tuple[Alignment, np.ndarray | None, np.ndarray | None, np.ndarray | None]:
     """(alignment record, sender ids, receiver ids, pairs) -- ids/pairs are None when excluded.
 
     `context_floor` (E9-long, entry 0035): a handoff whose |S| AND |R| are both within the floor was
-    decided under the prior cap (0029) and is EXCLUDED here, counted with its own reason, never pooled."""
+    decided under the prior cap (0029) and is EXCLUDED here, counted with its own reason, never pooled.
+
+    `sender_head_truncate` (E-TRUNC design): L >= 1 replaces the sender with S' = S[-L:] AFTER the
+    cap/floor exclusions are decided on the full lengths, so every level of the same handoff keeps the
+    same inclusion decision. Matching runs on S', so a matched pair's sender coordinate is p_S' =
+    p_S - (|S| - L) wherever the match survives; the npz `sender` array holds S' (what the driver
+    prefills) while the record's `n_sender` stays the FULL |S| (what the cap, floor, |S| bins and the
+    registered run order read). Tail truncation needs no key: under causal attention it changes no
+    matched token's K/V (design section 1)."""
     s_ids, r_ids = encode(h.sender_text), encode(h.receiver_text)
     digest = hashlib.sha256((h.sender_text + "\x00" + h.receiver_text).encode("utf-8")).hexdigest()
     if not r_ids:
@@ -109,8 +118,11 @@ def align(h: Handoff, encode, context_cap: int, context_floor: int = 0) -> tuple
         rec = Alignment(h.handoff_id, len(s_ids), len(r_ids), 0, True,
                         f"S and R within context floor {context_floor} (decided under the prior cap)", digest)
         return rec, None, None, None
+    n_sender_full = len(s_ids)
+    if sender_head_truncate and n_sender_full > sender_head_truncate:
+        s_ids = s_ids[-sender_head_truncate:]
     pairs = matching_pairs(s_ids, r_ids)
-    rec = Alignment(h.handoff_id, len(s_ids), len(r_ids), int(pairs.shape[0]), False, None, digest)
+    rec = Alignment(h.handoff_id, n_sender_full, len(r_ids), int(pairs.shape[0]), False, None, digest)
     return rec, np.asarray(s_ids, dtype=np.int64), np.asarray(r_ids, dtype=np.int64), pairs
 
 
