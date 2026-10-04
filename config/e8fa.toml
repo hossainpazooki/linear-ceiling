@@ -1,0 +1,56 @@
+# E8 amendment on the SECOND MODEL FAMILY -- arm (b) scored over EVERY agent sequence (entry 0030's protocol,
+# re-registered for llama3.2-3b-to-llama3.1-8b by the entry [e8.amendment] names). E8 itself: 0009, amended by
+# 0016; this family's registration 0039; its E8 figures 0040. DESCRIPTIVE: no hypothesis row, no `verdict:` line,
+# no cell moves, nothing pooled with a Qwen figure.
+#
+# Why this cell exists: entry 0040 disclosed that the arm (b) draw holds 42 distinct windows in 50 rows and that
+# the registered hold-out (the LAST ceil(0.2 x 50) = 10 sequences) is two distinct windows, one weighted nine
+# times; entry 0041 states that whether the pair's tau_agent_K < tau_K inversion "is a property of the pair or of
+# the draw is open, needs arm (b) rescored at agent_holdout_frac = 1.0 over every agent sequence, and enters by
+# its own numbered entry". This is that rescoring. 0040's OWN tensors are reused by fingerprint (results/e8f/kv/agent
+# and the token file data/e8f/agent_n50_len1024_seed8.npy must match results/e8f/report.json byte for byte);
+# nothing is resampled or re-dumped; the generic dumps are the archived ones.
+#
+# e8.assert_ready refuses until this file and ledger/ledger.md (with 0009, 0016, 0039 and the amendment entry)
+# are committed unmodified AND the upstream checkout is at `upstream_sha` with a clean tree for every path E8
+# invokes. The pin is the family's pin 06f8d55 (commit P on the RoPE-spec commit); it already contains the 0030
+# upstream change (`--holdout-frac 1.0`, per-sequence moments: 223f469 is its ancestor), so no re-pin is needed.
+
+[e8]
+pair = "llama3.2-3b-to-llama3.1-8b"
+results_dir = "results/e8fa"                    # separate from results/e8f: the family's E9 calibration reads results/e8f/report.json
+tokens_dir = "data/e8f"                         # 0040's token file lives here (gitignored); reused, never re-drawn
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # the family's pin (config/e8f.toml, config/e9f.toml, config/e9fl.toml): one pin per family
+scope_note = "off-policy text for Llama-3; cross-release pair (source 3.2, receiver 3.1); matched-KV (8 x 128 both sides); not a real switch point; visible messages only (0012); arm (b) over every agent sequence (0030 protocol)"
+
+[e8.gate]                                       # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016); the amendment entry is added by [e8.amendment]
+required_entries = ["0039"]
+
+[e8.mappers]
+verdict_k = 1                                   # as 0016 / 0040; band words are descriptive here (0040 is itself descriptive)
+report_k = [1, 4, 8]
+
+[e8.arms]
+generic_dumps = "data/kv/llama3.2-3b-to-llama3.1-8b"   # relative to upstream; the pair's own n = 50 calibration dumps (sitting A)
+agent_dumps = "results/e8f/kv/agent"            # 0040's agent dumps, reused; fingerprints checked against results/e8f/report.json
+reuse_agent_dumps_from = "results/e8f/report.json"
+holdout_frac = 0.2                              # arm (a): the mapper's own held-out sequences (in-sample otherwise)
+agent_holdout_frac = 1.0                        # arm (b): every agent sequence -- the mapper was never fit on them
+stride = 4
+
+[e8.text]                                       # 0016's sampling rule, recorded for the loader; NOT re-run (dumps and tokens reused)
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["tau2-bench", "swe-bench"]
+window = "first"
+
+[e8.band]                                       # 0009's band, read descriptively
+holds_max_drop = 0.05
+degrades_min_drop = 0.15
+
+[e8.amendment]
+entry = "0052"                                  # PROVISIONAL (docs/drafts/README.md allocates; moves with the draft's NUM in one commit)
+bootstrap_seed = 52                             # seeded percentile bootstrap over agent sequences (seed + k per k); = the entry number, as 0030 used 30
+bootstrap_reps = 2000

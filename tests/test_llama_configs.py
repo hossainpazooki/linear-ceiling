@@ -110,6 +110,26 @@ def test_e8f_carries_a_real_pin_and_still_refuses_one_that_does_not_hold():
         e8_driver.assert_ready(bogus, REPO_ROOT)
 
 
+def test_e8fa_re_registers_0030s_all_sequence_rescoring_on_0040s_tensors():
+    """config/e8fa.toml is entry 0030's amendment on the second family: arm (b) over EVERY agent sequence, on
+    0040's own dumps and token file by fingerprint, under the family's single pin. Pinned key by key so the
+    amendment cannot drift from the Qwen protocol or quietly re-dump."""
+    c = load_e8_config(REPO_ROOT / "config" / "e8fa.toml", REPO_ROOT)
+    f = load_e8_config(REPO_ROOT / "config" / "e8f.toml", REPO_ROOT)
+    a = load_e8_config(REPO_ROOT / "config" / "e8a.toml", REPO_ROOT)
+    assert c.pair == PAIR and c.upstream_sha == f.upstream_sha            # one pin per family
+    assert c.text == f.text and c.band == f.band and c.generic_dumps == f.generic_dumps
+    assert c.results_dir.name == "e8fa" and c.results_dir != f.results_dir  # never rewrites what E9 calibrates from
+    assert c.tokens_dir == f.tokens_dir                                   # 0040's token file, reused
+    assert c.reuse_agent_dumps_from == f.results_dir / "report.json"
+    assert c.agent_holdout_frac == 1.0 and c.holdout_frac == 0.2 == a.holdout_frac
+    assert c.amendment and set(c.amendment) == set(a.amendment) and c.amendment["bootstrap_reps"] == a.amendment["bootstrap_reps"]
+    assert c.amendment["entry"] != a.amendment["entry"]                    # its OWN registering entry, never 0030's
+    assert c.gate == ("0039",)
+    assert e8_driver.required_entries(c) == e8_driver.REQUIRED_ENTRIES + ("### 0039 ", f"### {c.amendment['entry']} ")
+    assert c.scope_note and "every agent sequence" in c.scope_note and "Llama-3" in c.scope_note
+
+
 # ---- the refusals that keep E9-Llama from running before the E8 fit -------------------------------------
 
 @pytest.mark.parametrize("name", E9_NAMES)
@@ -165,7 +185,7 @@ def test_the_absolute_keys_are_still_validated_not_merely_present(tmp_path, name
         load_e9_config(p, REPO_ROOT)
 
 
-@pytest.mark.parametrize("name", ("e8f", "e9f", "e9fl"))
+@pytest.mark.parametrize("name", ("e8f", "e8fa", "e9f", "e9fl"))
 def test_no_qwen_tau_constant_appears_in_any_llama_config(name):
     text = _text(name)
     for value in QWEN_TAU:

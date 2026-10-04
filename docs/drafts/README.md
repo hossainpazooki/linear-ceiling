@@ -39,6 +39,18 @@ long drafts moved to **`append_0050.py` / `append_0051.py`** with `config/e9fl.t
 Next free number: **0052**. The co-authors' own runs (A100, H100; evidence private) are recorded in the registrations as
 pilots that preceded upstream registration; their figures enter only through `docs/2026-10-03-co-author-run-admission.md`.
 
+**Staged 2026-10-04 (later the same day): `append_0052.py` / `append_0053.py` — the second family's E8 amendment**, entry
+0030's protocol (arm (b) over EVERY agent sequence, per-sequence R², seeded bootstrap, change from the prior arm (b)) re-registered
+for `llama3.2-3b-to-llama3.1-8b` under `config/e8fa.toml`, on 0040's own dumps and token file by fingerprint; the rescoring entry
+0041 asked for ("whether the inversion is a property of the pair or of the draw"). Descriptive; no row, no `verdict:` line; τ_agent_K
+stays 0040's. CPU only (~10 min), no box, no upstream change (the family's pin `06f8d55` already contains 0030's `223f469`). The
+registration script checks every claim against the tree (config tracked and unmodified and naming the entry, pin held and containing
+223f469, 0040's fingerprints, the 42-distinct-window count recomputed from the token file, 0041's sentence still present, R1 on
+`results/e8fa/`); the figures script runs `summarize_e8` in-process. **Numbers are provisional under this README's rule**: they sit
+behind 0048–0051 by staging order, and because the cell is ready today while 0048–0051 wait on runs, the operator may move this pair
+down to the next number actually free at append time, in ONE commit with `config/e8fa.toml`'s `[e8.amendment] entry` and
+`bootstrap_seed` (= the entry number, as 0030 used 30). Next free number after these: **0054**.
+
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
 Reads `results/<cell>/tail.json` written by `e9_tail` (which runs `summarize_e9` first) for `e9l`, `e9`, `e9s`, `e9f`, and
