@@ -2,8 +2,9 @@
 agent sequence (entry 0030's protocol) on 0040's own tensors, `config/e8fa.toml`. DESCRIPTIVE: no hypothesis row,
 no band read for a verdict, no `verdict:` line; the H-E8 cell (0020, Qwen) and this family's tau (0040) do not move.
 
-Ordering guard: 0051 on the ledger, 0052 absent (NUM is PROVISIONAL: docs/drafts/README.md allocates; if this entry is
-appended before 0048-0051 land, NUM, the config's [e8.amendment] entry and the figures draft move together in one commit).
+Ordering guard: 0054 (the file's last entry) on the ledger, 0052 absent. `ledger_check` chains by FILE order and the
+README allocates numbers, so this entry appends when its inputs are ready and precedes 0048-0051 in the file (the 0054
+precedent, recorded in that entry's Numbering paragraph).
 Nothing under this entry may exist yet: `results/e8fa/` holds no report, summary or per-token record (R1).
 Every claim below about the instrument or the record is CHECKED against the tree, never typed:
   - config/e8fa.toml is tracked and unmodified, names this entry, reuses results/e8f/report.json, scores arm (b) at 1.0;
@@ -32,7 +33,7 @@ from linear_ceiling.config import load_e8_config                 # noqa: E402
 from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file   # noqa: E402
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash  # noqa: E402
 
-NUM, PREV = "0052", "0051"
+NUM, PREV = "0052", "0054"     # ledger_check chains by FILE order (the 0054 precedent): 0054 is the last entry in the file; 0048-0051 land later
 FAMILY, E8_FIGURES, TAU_RULING, QWEN_AMEND = "0039", "0040", "0041", "0030"
 CONFIG = REPO_ROOT / "config" / "e8fa.toml"
 PRIOR_REPORT = REPO_ROOT / "results" / "e8f" / "report.json"
