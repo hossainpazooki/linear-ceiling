@@ -123,3 +123,12 @@ not public, and the figures have not been recomputed by anyone else. Ledger entr
 records the ruling and supersedes the "in any paper" clauses of 0046/0047; the ledger's own evidence rules (R1/R8/R12) are unchanged,
 so these figures reach the ledger only by 0048/0049 from the operator's run or by the admission procedure. The sentences are in
 the camera-ready paste list (`~/dev/briefs/2026-10-04-lcfm-camera-ready-patch.md`, W1/W7 additions of 2026-10-04 night).
+
+## Limitations to state with E-TRUNC (operator, 2026-10-04; PR #17, entry 0055)
+
+1. The shrinkage gate is an absolute floor (|M_∩| ≥ 2,000 common matched tokens), not the proposed 0.80 ratio, which would have
+   voided 29 of 35 handoffs; 21 of 35 enter at the pre-check. The result speaks for the handoffs whose receiver re-renders enough
+   late sender context to survive head truncation, not for the long cohort as a whole; void handoffs are named, never pooled.
+2. No native-receiver cell: the L32-native cell is deferred to its own amendment, so E-TRUNC compares nothing native-vs-YaRN on the
+   same tokens; 0036's bridge control (W6) stays the only such evidence.
+Both go in the W2 paragraph of the MLSys draft beside the E-TRUNC result, and in the limitations section.
