@@ -8,7 +8,7 @@ original path and SHA-256 to its migrated path and SHA-256, including scoped cor
 The [overview](docs/index.html), [results](docs/results.html),
 [replication steps](docs/replicate.html), [protocols](docs/protocols.html), and
 [archive review](docs/refutations.html) document the earlier exploratory work.
-`results/historical-summary.json` is preserved byte-for-byte. Its aggregates are
+`results/historical-summary.json` is preserved byte-for-byte and is NOT evidence ([label](results/README.md)). Its aggregates are
 historical reports: the original per-example outputs, prompt caches, and downloaded
 models were deleted. They cannot be independently regenerated from that summary.
 Fresh runs can use the pinned public inputs but cannot restore the deleted outputs.
