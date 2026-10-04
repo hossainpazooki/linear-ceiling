@@ -3368,3 +3368,37 @@ visible messages only (0012). No hypothesis cell changes with this entry; no `ve
 entry from a passing `summarize_e8 --config config/e8fa.toml`, run after the ordinary `e8 --config config/e8fa.toml` (CPU).
 
 prior-entries-sha256: 1f6ed2f90a114d60c95b426d9bf937b0c2a58fdb4a0f19c2201b428a4ce91d02
+
+### 0056 — 2026-10-04 — Co-author pilot figures admitted to paper text by operator ruling: the two merged co-author documents may be cited under a provenance sentence; supersedes the "in any paper" clauses of 0046 and 0047; the ledger's evidence rules unchanged; descriptive, no cell moves
+
+**What 0046 and 0047 said.** Each registered a co-author's fork run as the PILOT of the experiment it registered and
+said: no figure from the pilot is stated in the entry or in any paper until the pilot's bundle is published to the Hub
+and recomputed under `docs/2026-10-03-co-author-run-admission.md`.
+
+**The ruling (operator, 2026-10-04).** Figures the co-author has posted in the repository, with the code and the
+environment on the record, may be cited in paper text. The record is: `docs/2026-10-01-cache-behavior-h100.md`
+(`81ad2740a3457507…`, merged b26dfdb by PR #14; execution commit `9a18ce7`, freeze record
+`docs/2026-10-01-cache-behavior-freeze.json` `cff700063b6c3fd5…`, driver `tools/cache_behavior/`, environment torch 2.14.0 / transformers 5.17.0 / CUDA 13.0 on
+one H100 PCIe 80 GB; the co-author's reproduction comment https://github.com/hossainpazooki/linear-ceiling/pull/14#issuecomment-5977021295) for the W1
+figures, and `docs/2026-10-01-a100-analysis.md` (`cf27e75069f9fe04…`, merged c7911a4 by PR #9; results commit `2fb4464`,
+driver `tools/consolidation/`, `requirements-linux.lock`, input manifest `config/consolidation-manifest.json`, one
+A100-SXM4-80GB; comment https://github.com/hossainpazooki/linear-ceiling/pull/9#issuecomment-5977015570) for the W7 figures. **This entry types none of
+those figures**: the paper cites the documents, and the documents are the co-author's.
+
+**The provenance sentence the citation must carry**, in substance: run by a co-author on the named card at the named
+commit with the pinned environment; code, input manifest and environment are in this repository; the raw evidence
+bundle is on the co-author's machine, not public, and the figures have not been recomputed by anyone else. The a100
+document says so itself ("have not yet been published to a public dataset; do not claim …"); the h100 document says it
+is "not an admitted upstream E-BEH result". The paper repeats both.
+
+**What this does NOT change.** R1, R8 and R12 of `docs/gpu-experiment-protocol.md` for ledger entries: the figures of
+these two experiments enter the LEDGER only by 0048 / 0049 from the operator's registered run, or by the admission
+procedure once the bundles are public. The standing sentence "No downstream task-quality number is claimed" (0047): a
+top-1 agreement is not task accuracy. Every verdict and cell; τ, the rule, the bands; 0054's ruling on Condition 1.
+Entry 0054's precedent is extended, not widened: 0054 ruled on who approves a review; this entry rules on what paper
+text may cite, and leaves what the ledger may record untouched.
+
+**Scope.** Two documents, two experiments (W1 cache behavior; W7 same-model extension), one paper lane. A reviewer
+pressing on the evidential gap is answered by the provenance sentence, not by this entry.
+
+prior-entries-sha256: 95bee8bea883a0f6bb50ec9faf9765b80a7b25134b995ee1b6ab31c7b486d803
