@@ -75,6 +75,13 @@ IN-PROCESS over the four passes and states every count from it; reads the two re
 E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
 config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053, 0050 (`cff787f`, script retired); staged 0048/0049 and 0051. Next free number: **0057**.)*
 
+**Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
+DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
+prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
+read from `results/e9t/shrinkage.json` (review `docs/reviews/2026-10-04-0055-stated-figures-recomputed.md`). Needs `--box --launched
+--finished --dataset` and `--cutoff-reason` exactly when a level closed partial. Ordering guard 0055 present, 0057 absent.
+Refuses today (no `results/e9t-full/report.json`). Next free number: **0058**.
+
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
 Reads `results/<cell>/tail.json` written by `e9_tail` (which runs `summarize_e9` first) for `e9l`, `e9`, `e9s`, `e9f`, and
