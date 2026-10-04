@@ -46,10 +46,9 @@ for `llama3.2-3b-to-llama3.1-8b` under `config/e8fa.toml`, on 0040's own dumps a
 stays 0040's. CPU only (~10 min), no box, no upstream change (the family's pin `06f8d55` already contains 0030's `223f469`). The
 registration script checks every claim against the tree (config tracked and unmodified and naming the entry, pin held and containing
 223f469, 0040's fingerprints, the 42-distinct-window count recomputed from the token file, 0041's sentence still present, R1 on
-`results/e8fa/`); the figures script runs `summarize_e8` in-process. **Numbers are provisional under this README's rule**: they sit
-behind 0048–0051 by staging order, and because the cell is ready today while 0048–0051 wait on runs, the operator may move this pair
-down to the next number actually free at append time, in ONE commit with `config/e8fa.toml`'s `[e8.amendment] entry` and
-`bootstrap_seed` (= the entry number, as 0030 used 30). Next free number after these: **0054**.
+`results/e8fa/`); the figures script runs `summarize_e8` in-process. **Numbering:** 0052/0053 are this pair's numbers for good; `ledger_check`
+chains by FILE order (the 0054 precedent, below), so the pair appends when its inputs are ready and precedes 0048–0051 in the file.
+Ordering guard: 0054 present, 0052 absent; then 0052 present, 0053 absent. `bootstrap_seed` = 52, the entry number, as 0030 used 30.
 
 **Staged 2026-10-04 (evening): `append_0054.py` — Condition 1 discharged by operator ruling** (issue #7 together with PR #12's two
 review records is treated as the confirmation; descriptive, no cell moves). By operator instruction it is numbered AFTER the Llama

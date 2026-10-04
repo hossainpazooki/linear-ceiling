@@ -1,0 +1,9 @@
+{
+  "source_repository": "https://github.com/neuriv/linear-ceiling",
+  "source_commit": "2fb44649feb4b0d7b88d2eeca03387ac3b163c08",
+  "config_path": "tools/consolidation/proximity_config.json",
+  "config_sha256": "ecffa908ff91df9457e4a91ddbb4948f937d95b0d2cfe97ee7e67b34797573d6",
+  "original_driver_path": "tools/consolidation/replay_local_pilot.py",
+  "original_driver_sha256": "ff401657bd0b89357e8090742629f2e0428bafcbd831ebef2bd79eabaa130f01",
+  "status": "exploratory; historical MPS/CUDA replay, not registered E-BEH"
+}

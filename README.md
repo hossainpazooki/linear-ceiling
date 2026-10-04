@@ -4,8 +4,8 @@ Can one AI model reuse work another model has already done?
 
 When a language model reads a prompt, it builds a **KV cache**: an internal record that saves it
 from processing the same text again. Reusing that cache could reduce latency and cost. This
-project tests when reuse is possible in real agent conversations, both when the same model
-continues the work and when a different model takes over.
+project measures cache agreement when recorded agent handoff prompts are replayed through the
+same model or through a tested cross-model map.
 
 ```mermaid
 flowchart LR
@@ -14,7 +14,7 @@ flowchart LR
     C -->|Same model| D[Rebuild the prompt<br/>and test the old cache]
     C -->|Different model| E[Translate the cache<br/>with a linear map]
     D --> F[Close match in the<br/>tested handoffs]
-    E --> G[Most of the cache still<br/>needs recomputation]
+    E --> G[High representation error<br/>for the tested map]
 ```
 
 ## Contents
@@ -32,15 +32,15 @@ flowchart LR
 
 ## What the experiments found
 
-- **Same-model reuse survived the tested handoffs.** For the 25 shorter handoffs that fit the
+- **Same-model mean cache error passed the registered reference.** For the 25 shorter handoffs that fit the
   model's native context limit, the old and rebuilt caches were within the registered tolerance in
   the mean over each handoff's matched tokens: an oracle would have to recompute none of them to
   bring that mean inside the tolerance (entry 0029). Individual tokens do exceed it; entry 0038
-  states the fraction. The same held for the 35 longer handoffs, 35K to 80K tokens,
-  once the model's context window was extended to reach them (entry 0036), though with much less
-  room to spare: deviation grows several-fold for tokens that sat beyond the native window. This is
-  an ideal lower bound, not a working cache-reuse system.
-- **A simple cross-model translation was not useful.** A linear map trained on generic text lost
+  states the fraction. The same held for 35 handoffs with sender contexts of 35K to 80K tokens,
+  once the model's context window was extended to reach them (entry 0036). Tokens beyond the native
+  window had higher pooled median deviation, an association that does not isolate a length effect.
+  This oracle-recompute diagnostic (an oracle lower bound, 0023/0027) establishes neither practical repair cost nor generation quality.
+- **The tested cross-model map had much larger cache error.** A linear map trained on generic text lost
   accuracy on agent text. At the handoff, an ideal selector still needed to recompute a median of
   92.86% of matched tokens on the shorter handoffs and 96.40% on the longer ones. Entries 0029 and
   0036 record the results.
@@ -48,8 +48,10 @@ flowchart LR
   public trajectories studied, and the traces omit some information needed for full cache
   accounting. The reported cost figures are bounds, not production estimates.
 
-The practical result is narrow: a cache-aware router should first ask whether the same model will
-continue. These experiments do not show that a linear map makes caches portable between models.
+These measurements motivate testing practical reuse within a model. They do not validate a routing
+policy or rule out cross-model reuse with other maps or calibration data. The
+[dated evidence review](docs/reviews/2026-10-01-cache-refutation-0025-0029.md) separates the verified
+arithmetic from the interpretation; the short-cohort admission decision was taken by operator ruling (entry 0054).
 
 The current objective, every decided cell with its entry, what the positive verdict does and does
 not mean, and what comes after the paper: `ledger/ledger.md` (the hypothesis table, then the
@@ -133,8 +135,8 @@ and two structural events change one factor each.
 
 | axis | event | experiment | state |
 |---|---|---|---|
-| context | a re-rendered handoff: same tokens at new positions, new tokens at the seam | **E9** — 25 real SWE-bench handoffs up to 32K tokens | **HELD** on an oracle floor (0029); admitted to the paper (0032); freeze run passed 2026-09-09 |
-| context, long | the same event at 35K–80K tokens under a YaRN-extended receiver | **E9-long** — the 35 handoffs above the prior cap | **decided** — H-E9L `HELD` (0036, 2026-09-10): median f*(τ_K) 0.0000 on all 35, bridge CARRIED; run on a rented L40S, 80 min |
+| context | a re-rendered handoff: same tokens at new positions, new tokens at the seam | **E9** — 25 real SWE-bench handoffs up to 32K tokens | **HELD** on an oracle floor (0029) under the registered mean rule; admitted to the paper (0032; Condition 1 discharged by operator ruling, entry 0054) |
+| context, long | the same event with 35K–80K-token sender contexts under a YaRN-extended receiver | **E9-long** — the 35 handoffs above the prior cap | **decided** — H-E9L `HELD` (0036, 2026-09-10): median f*(τ_K) 0.0000 over 35 handoffs, bridge CARRIED; run on a rented L40S, 80 min |
 | context, configuration | E9's 25 handoffs again, under E9-long's YaRN receiver, so the short and long cells differ only in handoffs | **E9 scaled short cell** — registered 0037 | **measured, descriptive** (0038, 2026-09-14): no hypothesis, no verdict; the receiver configuration alone reproduces a share of 0.43 of the short-to-long far-from-seam difference and 0.39 at τ = 0.03 on identical tokens |
 | weights | a policy update under an in-flight rollout in async RL | **E-RL** | **designed, unregistered** (`docs/2026-09-02-e-rl-design.md`); the paper's contrasting direction, no figure |
 
@@ -153,7 +155,9 @@ arm in one sentence and an appendix table.
    entry changes that.
    *(2026-10-04: DISCHARGED by operator ruling — issue #7 together with PR #12's two review records is treated as the
    confirmation; the two-signature clause is discharged by ruling, not by approvals. Ledger entry 0054 records it; the
-   rows the review lists as uncovered stay open work under issue #7 and no longer gate the paper.)*
+   rows the review lists as uncovered no longer gate the paper. Issue #7 CLOSED 2026-10-04 with a row-by-row disposition:
+   R13, R14, the configuration share and 0045's tail recomputed operator-side from the raw records and matching the
+   ledger; R2, R5/R6, R11/R12 and a second-person e9l/e9s recompute dropped by ruling.)*
 2. E9-long enters only from a passing `summarize_e9 --config config/e9l.toml`, by its own entry,
    with "n scored of 35 registered" beside every number, never pooled with E9's 25.
 
@@ -183,7 +187,8 @@ It is read on a floor (0027): f* assumes an oracle that knows which tokens devia
 them in isolation, so HELD says "no more than the mapper, on a floor", not that a system achieves
 it. Scope: one pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the shorter 25 of 68
 handoffs by |S|; the long half is E9-long's question. The deviation that exists is local to the
-seam: pooled median δ_K falls from 0.236 at the seam to 0.019 sixteen or more tokens away (0029).
+seam: pooled median δ_K falls from 0.236 at the seam to 0.019 sixteen or more tokens away (0029);
+a median profile does not by itself establish that errors are confined to seams (0045 carries the means).
 
 A verdict cell is decided once, under the rule registered before its run, and only a numbered entry
 with a `verdict:` line can change it. Entries 0030–0034 re-ran the mechanism experiments under other

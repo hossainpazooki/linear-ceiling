@@ -3326,3 +3326,45 @@ precedes them in file order; `ledger_check` chains by file order and the drafts 
 after this entry: 0055.
 
 prior-entries-sha256: 5cbaec202c68a00b25c894450a20f950a8af9c703a15aae4386904d8716120d1
+
+### 0052 — 2026-10-04 — E8 amended on the second model family before any rescoring: arm (b) over every agent sequence on 0040's own tensors; descriptive; no cell and no τ moves
+
+**Why, and why now.** Entry 0040 ran 0009's instrument on `llama3.2-3b-to-llama3.1-8b` at 0016's matched protocol, so
+arm (b) was scored on the LAST ⌈0.2 × 50⌉ = 10 agent sequences; it disclosed that the draw holds **42 distinct
+windows in 50 rows** (one window 9 times) and that the registered hold-out is **2 distinct windows**. Entry
+0041 left open whether the pair's τ_agent_K < τ_K inversion (1 − 0.7311 = 0.2689 against 1 − 0.7139 = 0.2861)
+"is a property of the pair or of the draw", and said it "needs arm (b) rescored at `agent_holdout_frac = 1.0` over every agent sequence, and enters by its own numbered entry". Entry 0030 registered exactly that rescoring
+for the Qwen pair; this entry re-registers it for this family, before anything is rescored: `results/e8fa/` holds nothing at append
+and this entry's script refuses otherwise. (Recomputed here from the raw token files: the Qwen draw under the same rule also holds
+42 distinct windows in 50 rows — the repetition is a property of 0016's sampling rule on these suites, not of the Llama-3 BPE;
+stated as an observation, it changes nothing registered.)
+
+**What is registered.** A rescoring of 0040's OWN tensors — the 64 fingerprinted agent dump files (source and target, per layer) at `results/e8f/kv/agent` and the token
+file they were dumped from (`agent_n50_len1024_seed8.npy`, sha256 `4e02d14af008`), both reused and required to match the
+fingerprints in `results/e8f/report.json` (sha256 `4682508afd35`) byte for byte; nothing is resampled or re-dumped; the generic
+dumps are the archived ones. The protocol is 0030's, unchanged, under `config/e8fa.toml` (sha256 `80f51f0a36e9`): for each
+k ∈ {1, 4, 8}, arm (a) on the mapper's own held-out generic sequences (`holdout_frac` 0.2, unchanged); arm (b) at `--holdout-frac 1.0`,
+every one of the 50 agent sequences (12,800 scored tokens at stride 4); the drop (a − b) and its 0009 band word
+read descriptively; per-sequence R² for both arms from the per-token record (upstream `per_sequence_moments`, SST around the global
+held-out mean, so a sequence's R² is its share of the pooled decomposition); a seeded percentile bootstrap over agent sequences
+(seed 52 + k, 2,000 reps) of arm (b)'s pooled R² and of the drop; and the change from 0040's arm (b) at
+the same k, named as such. Because 9 rows are one window, the bootstrap resamples rows, not distinct windows, and the entry that
+states the figures must say so beside them.
+
+**What this does NOT touch.** τ_K = 0.2861, τ_V and τ_agent_K = 0.2689 stay as 0040 stated them and as `config/e9f.toml`
+and `config/e9fl.toml` carry them; the all-sequence counterpart is reported beside τ_agent_K, never substituted (0044 has already read
+it). `results/e8f/` is not rewritten — the family's E9 calibration reads it — and this amendment writes only under `results/e8fa/`.
+H-E8 is entry 0020's, on the Qwen pair, and is untouched; 0040's band reading is itself descriptive and does not move.
+
+**Instrument and enforcement.** No code change: `config/e8fa.toml` names this entry in `[e8.amendment]`, reuses 0040's report,
+and pins the family's upstream commit `06f8d55`, which already contains 0030's upstream change (`223f469` is its
+ancestor; `--holdout-frac 1.0` and the per-sequence block are in `scripts/score_mapper.py` at the pin). The driver's gate for this
+config is 0009 + 0016 + 0039 + this entry (`e8.required_entries`); `e8.reuse_agent_dumps` checks every fingerprint before scoring;
+`summarize_e8` recomputes the per-sequence figures from the record and refuses on disagreement with the report, with the re-scored
+json, or with a changed prior report. The script that appended this entry asserted every one of these against the tree.
+
+**Scope.** All of 0009's, 0016's, 0039's and 0040's limits: one pair, one direction, one mapper, off-policy text for Llama-3,
+visible messages only (0012). No hypothesis cell changes with this entry; no `verdict:` line. The figures enter by their own numbered
+entry from a passing `summarize_e8 --config config/e8fa.toml`, run after the ordinary `e8 --config config/e8fa.toml` (CPU).
+
+prior-entries-sha256: 1f6ed2f90a114d60c95b426d9bf937b0c2a58fdb4a0f19c2201b428a4ce91d02
