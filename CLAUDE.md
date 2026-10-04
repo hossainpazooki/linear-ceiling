@@ -119,6 +119,13 @@ profiles, band) · `lint_scope` · `ledger_check` (structure, entry chain, block
 through 0022 + `verdict: H-XX = <VERDICT>` lines from 0024 on — and the manifest citation).
 Tests mirror modules under `tests/`.
 `docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
+`proofs/` (PR #16, 2026-10-04) is the Lean 4 formalization of the paper's theory: 0023's statistic (`fstar` is the exact-criterion twin of
+`e9_pertoken.f_star`), Theorem 1 (μ = 1 − R̄²), Theorem 2, Corollary 3 (seams), Proposition 4 (attention under `ass:rope`) and the
+reported numbers in `Carryover/Numbers.lean`; `Audit.lean` prints the axioms of all 52 headline results (only `propext`,
+`Classical.choice`, `Quot.sound`; no `sorry`). Toolchain Lean v4.34.0-rc2 + Mathlib pinned in `lean-toolchain` / `lake-manifest.json`;
+build with `cd proofs && lake exe cache get && lake build && lake env lean Audit.lean`, or `./check.sh` where `lake` is broken (needs the
+Mathlib build in `.lake/packages`; ~21 min, mostly loading Mathlib). Not run in CI and not verified on this Windows machine. "Lean" may be
+claimed in the paper only after `lake build` has passed on the committed tree (seed §5/§8); `.lake/` is git-ignored.
 `docs/probes/` holds the scratch probes entries 0026 and 0028 cite (SDPA memory probe, the shipped
 candidate module's validation, the matching-platform re-score and its determinism test).
 
