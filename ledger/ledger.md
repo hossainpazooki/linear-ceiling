@@ -3569,3 +3569,127 @@ figure is on the mapper's own held-out generic sequences and its per-sequence sp
 **Scope.** All of 0009's, 0016's, 0039's, 0040's and 0052's limits. No hypothesis cell changes with this entry.
 
 prior-entries-sha256: b4ae9246fc407b36d3f24886b84330d63e9f1bce7a0a158da4e68c8eb4e8c002
+
+### 0050 — 2026-10-04 — E9 long half registered before any prefill on the second model family, at a NATIVE receiver: entry 0035's D1(a), its configuration bridge and its scaled-receiver reading declared INAPPLICABLE; descriptive, no cell moves
+
+**Why, and why now.** The short cell of this family (0042, decided by 0044) covers the handoffs whose
+longer side fits 32,768 tokens. The handoffs above it are the same question at greater
+length, and on this pair they can be asked WITHOUT scaling anything: the receiver meta-llama/Llama-3.1-8B ships a native
+window that already covers the cap below. This entry registers that run before any prefill —
+`results/e9fl/` holds no report and no score file at append, and the script refuses otherwise (R1) — and
+registers, equally explicitly, what it is NOT. The only things under it are the alignment pass
+(`e9 --align-only --config config/e9fl.toml`, `align/coverage.json` sha256
+`16121e677b97`) and the τ calibration (`calibration/tau.json` sha256
+`dd3fca27e82a`), both checked here against the committed config.
+
+**Descriptive, and what that forecloses.** **No hypothesis row is added and no `verdict:` line will
+follow.** In particular this cell **cannot move, support or refute H-E9L, and is never pooled with entry
+0036's handoffs.** H-E9L is a claim about a receiver pushed PAST its pretraining window by static YaRN
+(entry 0035's D1(a)): the question there was whether a SCALED receiver keeps transfer-relevant fidelity at
+those lengths. Here nothing is scaled. Two experiments sharing a length axis and nothing else; the numbers
+are stated beside each other, never added, averaged or compared as if one were a replication of the other.
+
+**Entry 0035's three scaled-receiver instruments, declared INAPPLICABLE by construction.** (i) **D1(a),
+the receiver configuration**: there is no `[e9.rope]` — the receiver's own checkpoint declares a window
+covering 81,920, so no scaling is needed and applying one would measure an artifact of our own
+construction. (Imposing YaRN here to preserve the comparison with 0036 was considered and rejected:
+upstream `scaled_config` merges the override OVER the checkpoint's own rope parameters, replacing this
+family's native `rope_type` while leaving its band factors behind — it would REMOVE the checkpoint's own
+scaling rather than compose with it.) (ii) **Control 4, the configuration bridge**: its entire content is
+scaled arm versus native arm on the same tokens, and a natively long receiver has no scaled arm;
+`config.py` refuses a `[e9.bridge]` without an `[e9.rope]`, and that refusal is correct here rather than an
+obstacle. (iii) **The scaled-receiver reading** ("if the bridge control exceeds its maximum, H-E9L is a
+claim about the scaled receiver only") has no referent and is not carried over. What replaces all three is
+stated below and costs no GPU time.
+
+**The two controls that replace the bridge.** Read off the dumps themselves: upstream `kvt/data.py` writes
+each dump's `RopeSpec` — the `inv_freq` and attention factor of the loaded model's OWN rotary embedding —
+halt-checks the reconstruction against the model at every dumped position, and
+`linear_ceiling.e9.dump_rope_meta` keeps that record beside every dump's fingerprint BEFORE the non-kept
+dumps are deleted. **(1) Native window:** `context_cap` = 81,920 must be ≤ EVERY dump's
+recorded `max_position_embeddings` — the positive statement that no extrapolation happened, which is
+exactly what the bridge used to establish by measurement. A run whose dumps carry NO RoPE block at all (a
+pin older than the RoPE-spec commit, where the strip is plain-θ and therefore silently wrong for this
+family) **FAILS** this control; it does not pass it vacuously, and the summarizer refuses such a run
+outright for this cell. **(2) Frequency identity, scoped by model ROLE:** the recorded spec must be
+identical across every dump of the receiver, and across every dump of the source, compared separately.
+Role-scoped is not a weakening: this pair's two sides carry different scaling factors and build different
+inverse-frequency vectors by construction, so an unscoped equality assert would refuse every CORRECT run.
+Both are fail-closed in `summarize_e9` and both survive the deletion of the non-kept dumps.
+
+**The verdict set is a band of token counts, and the thresholds are not hardware bounds.**
+`context_floor = 32,768`, `context_cap = 81,920`: registered LENGTH thresholds
+in this pair's own tokens. 81,920 is NOT "32,768 × 2.5" here — there is no
+scaling factor to multiply — it is the same numeric band entry 0036 reported, kept only so the two long
+cells are DEFINED over the same token counts. A handoff whose |S| and |R| both fit the floor was covered by
+the short cell and is EXCLUDED here with its own reason; this script checks that those excluded ids are
+EXACTLY the short cell's included set, so the partition is audited rather than asserted. Coverage from the
+alignment pass: **68 observed · 32 included · 28
+excluded as covered by the short cell · 4 excluded above the cap · 4 excluded for
+an empty receiver prompt**. Together the two cells cover every handoff whose longer side is within
+81,920 tokens; the **residual — 4 handoffs above 81,920 — is scored
+by NEITHER cell** and is named here so it cannot be mistaken for absence: `20241016_composio_swekit/astropy__astropy-13398_traj#290`; `20241016_composio_swekit/astropy__astropy-13398_traj#447`; `20241016_composio_swekit/astropy__astropy-14365_traj#298`; `20241025_composio_swekit/astropy__astropy-13453_traj#221`
+(|S| 175,974, 337,667, 150,160, 135,559). Included |S| runs 33,086 to 74,233; the prefill
+budget is 1,541,320 sender tokens (both models) + 370,926 receiver tokens = 3,453,566 tokens.
+
+**The instrument, unchanged.** 0023's rule verbatim, with τ this pair's own and IDENTICAL to the short
+cell's (one mapper, one calibration): τ_K = 0.2861 = 1 − 0.7139, the
+k = 1 mapper's held-out R² over 2,560 tokens; τ_V = 0.5289; τ_agent_K =
+0.2689. The HOME calibration is authoritative for K/V: this config agrees with it at 1e-9 and
+the box-written E8 report agrees within the registered 1e-6 cross-platform tolerance; agent K agrees
+across config, calibration and E8 arm (b) at 1e-9. The τ ladder (0.1, 0.03); the seam bins; the block floor
+(4); the bootstrap (seed 25,
+2000 reps). The band words
+HOLDS ≤ 0.15 / DEGRADES ≥ 0.50 are **computed and reported
+here and are verdict-bearing for nothing**: this cell has no row. f* stays an oracle LOWER BOUND read on a
+floor (0027).
+
+**Run order, stopping rule, resume.** The driver scores the included handoffs in the registered order
+`n_sender_asc` (|S| ascending, with any ties broken by id): `astropy__astropy-7336_traj#119` (33,086)
+first, `django__django-11087_traj#152` (74,233) last. Controls run on the first handoff in that order.
+**This is the campaign's cuttable stage.** If the sitting must end before all 32 are scored,
+`e9 --close-partial --config config/e9fl.toml` closes the run: allowed only by this config, refused unless
+the scored set is a PREFIX of the registered order, stamping the close time and naming every unscored
+handoff; the figures entry then states "n scored of 32 registered" beside every number. The
+cutoff is the operator's, is recorded with its reason, and may not depend on any score. A relaunch after a
+crash uses `--resume`.
+
+**Keep subset.** n = 3, seed 9, a fresh draw from THIS cell's sorted included ids
+(numpy `choice` without replacement is not nested, so this is not a subset of the short cell's):
+`20241016_composio_swekit/astropy__astropy-8872_traj#117`; `20241025_composio_swekit/django__django-10097_traj#137`; `20241025_composio_swekit/django__django-11087_traj#97`. Small on purpose — at this cap one kept handoff is tens of GB of fp16 dumps. Their
+stride-1 dumps are retained, fingerprinted, pulled home and re-scored from tensors by the summarizer under
+0028's tolerance.
+
+**Controls (1–3 as 0023/0025; 5 re-cut; 6 as 0025).** (1) Pipeline identity HALT. (2) Prefix-invariance
+HALT on the first handoff in run order, max centered δ ≤
+1e-04 — entry 0039's
+pre-registered absolute float32 kernel-noise bound, exactly `config/e9.toml`'s and never a function of
+τ_K. (3) δ_null, seeded derangement (seed
+23). **(5) Length profiles (descriptive):** f*(τ_K) and median δ_K (i) by |S| bin
+(32,768, 49,999] / [50,000, 64,999] / [65,000, 81,920], and (ii) by matched-token position in S [0, 8,191] / [8,192, 32,767] / [32,768, 65,535] / [65,536, 81,920] — (ii) is the long-context figure, and its
+edges are re-cut at this family's OWN boundary (the point where its RoPE frequency rescaling begins),
+because entry 0035's edges were the midpoint of a YaRN window that does not exist here. (6) Seam profiles
+b(t) and b⁻(t) as 0025, same bins.
+
+**Gate and enforcement.** `e9 --check --config config/e9fl.toml` refuses until entries 0019/0023/0025/0027/0050 are in the
+committed ledger, `config/e9fl.toml` is committed unmodified, the upstream is at the pin
+`06f8d5559257` with every invoked path clean, and the mapper artifact is present by sha.
+`summarize_e9 --config config/e9fl.toml` (fail-closed, the only reader) re-derives every alignment from the
+raw traces with the floor, re-derives the run order, checks a partial close is a prefix, recomputes every
+figure, re-scores the kept dumps from tensors, recomputes τ, checks the controls and the two RoPE controls
+above, and states the profiles and the band. The τ calibration is checked at THIS entry as well as by the
+summarizer, for the reason entry 0042 gives.
+
+**What this does NOT touch.** The H-E8, H-E9, H-E9L and H-E9F cells; entry 0036's figures and its 35
+handoffs; τ, the rule, the band, the ladder and the keep subsets of every other cell; `results/e9/`,
+`results/e9l/`, `results/e9s/`, `results/e9f/`, `results/e8*/`; `config/e9.toml`, `config/e9l.toml`,
+`config/e9s.toml`, `config/e9c.toml`, `config/e9f.toml`. Nothing here is a figure: this cell's figures enter by
+their own numbered entry, and the paper only from that entry.
+
+**Scope.** One pair (meta-llama/Llama-3.2-3B → meta-llama/Llama-3.1-8B), one direction, one agent family, the long band of one corpus at
+a NATIVE receiver; off-policy text for Llama-3; floor not method (0027); the 4 handoffs above
+81,920 and the 4 with an empty receiver prompt stay excluded and counted;
+generation quality after reuse not measured. `eval_hellaswag.py` and `compose_mapper.py` remain out of
+scope for this pair (entry 0039).
+
+prior-entries-sha256: 03ae7892e67a0fe37245ab17eef17a82ccb928fa4a2d5abb3cb3ff19721104d2
