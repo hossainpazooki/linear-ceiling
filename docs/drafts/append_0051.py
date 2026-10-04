@@ -1,9 +1,9 @@
-"""Append entry 0047 -- the E9 long half of the second model family RAN; figures only, written ONLY from an
+"""Append entry 0051 -- the E9 long half of the second model family RAN; figures only, written ONLY from an
 in-process `summarize_e9 --config config/e9fl.toml` run. DESCRIPTIVE: no `verdict:` line, no hypothesis row
 exists for this cell, no cell moves. Entry 0036's scaled-receiver figures are stated BESIDE these and are
 never pooled with them.
 
-Ordering guard: 0046 on the ledger, 0047 absent; the summary must PASS (it refuses on anything wrong and
+Ordering guard: 0050 on the ledger, 0051 absent; the summary must PASS (it refuses on anything wrong and
 nothing is written then). Run facts the summarizer cannot know come as arguments and are refused when
 missing:
 
@@ -12,7 +12,7 @@ missing:
   --date <YYYY-MM-DD>   (defaults to --finished's date)
   --preview             (print, do not append)
 
-Per entry 0046: coverage "n scored of N registered" travels with every number; the band word is computed
+Per entry 0050: coverage "n scored of N registered" travels with every number; the band word is computed
 and stated but is verdict-bearing for nothing; the two RoPE controls stand in for entry 0035's
 configuration bridge and are reported first, because on a natively long receiver they are the whole of the
 evidence that nothing was scaled. Runs `ledger_check` after appending. Delete once appended, chained to the
@@ -30,7 +30,7 @@ from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash
 from linear_ceiling.pairs import pair_models
 from linear_ceiling.summarize_e9 import summarize
 
-NUM, PREV = "0047", "0046"
+NUM, PREV = "0051", "0050"
 FAMILY = "0039"      # the family registration entry, APPENDED 2026-09-18 -- a fixed number now
 ap = argparse.ArgumentParser()
 ap.add_argument("--box", required=True)
@@ -59,7 +59,7 @@ assert rep["upstream_sha"] == cfg.upstream_sha
 assert f["rope"] is None and f["bridge"] is None, "this cell registers no rope and no bridge; the summary carries one"
 partial = f.get("partial")
 if partial:
-    assert a.cutoff_reason, "the report is a partial close: --cutoff-reason is required (entry 0046 stopping rule)"
+    assert a.cutoff_reason, "the report is a partial close: --cutoff-reason is required (entry 0050 stopping rule)"
 else:
     assert rep["complete"] and not a.cutoff_reason, "the run is complete: --cutoff-reason is not allowed"
 
@@ -72,7 +72,7 @@ assert prior["rope"] == e9l.rope and prior["rope"] is not None, "results/e9l/sum
 rope = f["dump_rope"]
 assert rope and rope.get("recorded"), \
     ("the run's dumps carry no RoPE spec, so neither the native-window nor the frequency-identity control ran -- "
-     "and on a natively long receiver those two ARE the control (entry 0046)")
+     "and on a natively long receiver those two ARE the control (entry 0050)")
 roles = ", ".join(f"{role} ({r['n_dumps']} dumps, max_position_embeddings {r['max_position_embeddings']:,}, "
                   f"inv_freq {str(r['inv_freq_sha256'])[:12]}, attention factor {r['attention_scaling']})"
                   for role, r in rope["by_role"].items())

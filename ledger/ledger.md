@@ -3128,3 +3128,158 @@ recomputed by this script). The box value is the outlier. The cause is still not
 asserted; the file feeds only the descriptive coverage comparison, as 0044 states.
 
 prior-entries-sha256: 4ce8765046ea6b8fdefcdd4b81e747ed774970296b729431f36db495d3535c74
+
+### 0046 — 2026-10-04 — Same-model extension registered before any operator prefill: the E9 instrument on the original 60 handoff texts replayed through Qwen3-4B and SmolLM3-3B, with a six-case Qwen3-1.7B bridge; a co-author's prior fork run recorded as the pilot; descriptive, no cell moves
+
+**Why, and why now.** Reviewer weakness W7 (`docs/2026-09-30-review-response-map.md`): one model pair. The second
+family (0039–0044) answers it at one more pair. This entry registers the cheapest further answer the instrument
+allows: the SAME 60 handoff texts that decided H-E9L and the scaled short cell (entries 0036 and 0038; 35 long,
+25 short) replayed through two more receivers on the same-model arm only, at the registered Qwen reference τ. It
+asks whether the zero floor is a property of one small Qwen pair. It does not ask about cross-model reuse, length
+(the cohorts are different handoffs), or quality. **No hypothesis row is added and no verdict is read**: a new
+model's mean deviation against another model's mapper tolerance is a descriptive comparison, stated as such.
+
+**What is registered, by hash.** `config/consolidation.toml` (`857cc92320cb…`): models and revisions
+`Qwen/Qwen3-1.7B@70d244cc86cc` (bridge, 6 handoffs: shortest, middle and
+longest sender of each cohort), `Qwen/Qwen3-4B@1cfa9a720891` (60), `HuggingFaceTB/SmolLM3-3B@a07cc9a04f16`
+(60); fp32, SDPA, 256-token chunked prefill with the full causal KV history, cap 81,920; YaRN factor
+2.5 on the Qwen models and 2.0 on SmolLM3 (its rotary-free layers unchanged); τ_K = 0.3186442653116294 and τ_V = 0.4867056499055992,
+**the 0023 Qwen3-0.6B→1.7B mapper's held-out shortfall, used as a common numerical reference and NOT a calibrated
+threshold for either new model**; ladder [0.03, 0.1]; seed 20260930. `config/consolidation-manifest.json`
+(`99185c5891fc…`) pins every input byte: the 60 texts re-tokenized per model (max sender 80,111 / 74,233 tokens, no exclusion),
+each text's sha256 equal to the archived alignment's `text_sha256` (checked here against `results/e9l/align` and
+`results/e9s/align`), and exact ordered token matching by `e9_align.matching_pairs`. Keys are captured after any key
+normalization and before rotation, values after projection; no fp16 serialization.
+
+**Controls and bridge, fixed now.** (1) Per model, before any handoff: a 1,024-token full prefill against the chunked
+prefill of the same prefix plus one later token; maximum normalized token deviation ≤ 0.0001 or the run refuses.
+(2) The bridge: the original receiver re-run on six archived handoffs; relative mean-deviation gap ≤ 0.01 and
+absolute f* gap ≤ 0.01 against the archived records at every τ, or expansion to the new models stops.
+(3) The longest sender runs first as the memory probe and is retained. (4) One raw matched-vector witness per model
+(the shortest included sender) is kept for independent re-scoring; other vectors are transient and removed only after
+their compact record and atomic checkpoint exist. (5) Resume refuses changed code, runtime, device, dtype or inputs,
+and refuses a `complete` flag with missing handoffs. Readout per handoff and arm: per-token δ (0023's unit: a token's
+share of the layer-head's unexplained variance; mean = 1 − R²), its mean, maximum, tail fraction over τ, f*(τ) at τ_K and
+the ladder, all by `e9_pertoken.centered_delta` / `token_mean` / `f_star`.
+
+**Instrument, as committed:** `tools/consolidation/run.py` `87e0efb1502c…`, `capture.py` `2cddd19b1c43…`,
+`prepare.py` `172b1ff66e37…`, `summarize.py` `d9f65ef1333c…` (the fail-closed reader: bundle hashes, report-to-config and
+report-to-manifest pins, every record and witness re-hashed, token deltas recomputed, the mean/R² identity, witnesses
+re-scored from raw tensors, a seeded trajectory-cluster bootstrap with `e7_stats` quantiles), `setup.sh`, the Linux lock,
+and the runbook `docs/2026-09-30-consolidation-runbook.md`. The committed driver differs from the pilot's by the
+resume-identity and cohort checks and comments; its arithmetic is the same functions.
+
+**The pilot, recorded and not credited with a figure.** The co-author who designed this (PRs #8, #9) ran it on a fork:
+registration commit `3cb4bb3` (2026-10-01T02:41:37Z, the fork's own ledger), results commit
+`2fb4464` (2026-10-01T05:28:11Z); the fork's entry says one A100-SXM4-80GB, FP32 prefill, all 60 texts per model scored
+without exclusion, bridge gaps within tolerance; the environment it pins is `requirements-linux.lock` (torch 2.14.0,
+transformers 5.17.0, numpy 2.5.3, CUDA runtime 13.0.96); the exact runtime, GPU name and `code_sha256` are in its
+unpublished reports; driver at the registration commit `run.py` `f544ae874085…`, `capture.py` `b713473055aa…`
+(re-hashed from the fork by the operator's session, 2026-10-04). **Upstream R1 was not met by that run**: the card was
+provisioned before the fork registration and no upstream entry existed. Its evidence (compact records, one witness
+per model, logs) is on the co-author's machine and not on the Hub (R8 not met). Therefore **no figure from the pilot is
+stated here or in any paper**; if its bundle is published and recomputed under `docs/2026-10-03-co-author-run-admission.md`,
+that is a separate, later entry, and the pilot's agreement with the run registered here becomes a cross-platform
+control in the sense of 0028.
+
+**The registered run (the operator's).** Requested only after this entry is committed. Card: an L40S 48 GB is the
+expectation (fp32 weights ≈ 16 GB for the 4B, full-cap KV < 3 GB), confirmed by the protocol's probe before any paid
+forward; a larger card if the probe says so. R2–R8 of `docs/gpu-experiment-protocol.md` apply: fresh output tree,
+detached launch, log rotation, pull → verify → delete per handoff, release checklist, mirror at `results/consolidation/` laid out as
+`summarize.py` reads it (`provenance/`, `a100/inputs/`, `a100/results/<model>/`, `archive/records/{e9s,e9l}`, `SHA256SUMS`;
+the `a100/` directory name is the reader's and does not assert the card), backup to a Hub dataset (public or private,
+operator ruling 2026-10-04) verified by `tools/hf_verify_backup.py` before the figures entry.
+
+**Gate and enforcement.** The driver asserts the config and manifest hashes at start and every input's hash; this
+script refuses if either file differs from the frozen bytes or if any report exists under `results/consolidation` (R1). The figures
+enter by `append_0048.py`, which runs `summarize.py` in-process over the verified mirror, asserts the reports' `code_sha256`
+equal the committed driver files, and refuses on any disagreement; no figure is typed.
+
+**What this does NOT touch.** H-E9, H-E9L, H-E9F and every cell; τ, the rule, the bands, the ladder; entries 0029,
+0036, 0038, 0044 and their records; `config/e9*.toml`; the Llama long drafts (now 0050 / 0051). Nothing here is pooled with
+any Qwen3-0.6B→1.7B figure: the new models are reported separately, beside the original, never in one statistic.
+
+**Scope.** Same-model arm only; one corpus; the original 60 texts, so the long/short difference is a difference of
+handoffs and configuration, not an isolated length effect (W2 is E-TRUNC's); τ is one map's shortfall; nothing about
+generation quality, serving speed, or cross-model transfer is measured. Hardware replicas are never handoffs.
+
+prior-entries-sha256: fe0aff7467ff0a1f7675f37ce047d1a5c0e6dea1320d7e2b39134b24307e8a0b
+
+### 0047 — 2026-10-04 — Cache-behavior comparison registered before any operator prefill: next-token sensitivity of the receiver to reading an assembled same-model cache on the 35 long handoffs, fresh vs reused with two perturbation controls; a co-author's prior fork run recorded as the pilot; descriptive, no band, no cell moves
+
+**Why, and why now.** Reviewer weakness W1 (`docs/2026-09-30-review-response-map.md`): the tolerance τ_K is a weak
+linear map's error and is not validated against anything the receiver does. Entry 0023's `[STRETCH]` proposal named
+the experiment that would answer it: actually read the reused cache. This entry registers its core, as revised in
+`docs/drafts/e-beh-design.md` (2026-10-01 update): FRESH against REUSE-ALL on the 35 handoffs of entry 0036, teacher-forced
+on the recorded continuation. It measures **prediction sensitivity on fixed text**, not coding-task quality, not free
+generation, not speed. The standing sentence "No downstream task-quality number is claimed" is **not** retired by this
+entry or by its figures.
+
+**What is registered, by hash.** `config/cache-behavior.toml` (`53c664556d18…`): receiver `Qwen/Qwen3-1.7B@70d244cc86cc`,
+Transformers 5.17.0, PyTorch 2.14.0, fp32, SDPA, the long cell's YaRN schedule (yarn factor 2.5, original
+32,768), cap 81,920, 256-token prefill chunks; seed 20261001; τ_K = 0.3186442653116294 used only to name the archived
+high-error tail. Driver `tools/cache_behavior/core.py` `f346b5fdf3d3…` and `run.py` `15e1ff8c1dbc…`, byte-identical to the
+pilot's execution commit; freeze record `docs/2026-10-01-cache-behavior-freeze.json`; runbook `docs/2026-10-01-cache-behavior-runbook.md`;
+tests `tests/test_cache_behavior.py`. Inputs: the 35 handoffs of 0036 in its archived order, their archived alignment
+pairs as the matched set M (one-token matches included; no new alignment), the recorded receiver response as the
+continuation C capped at 256 tokens including the unscored conditioning token C[0]; a handoff with fewer than two
+continuation tokens is excluded and counted. The prepared input manifest the pilot froze hashes `9a6f2923d3be…`;
+the operator's `--prepare` must reproduce it byte-for-byte from the verified e9l mirror and the manifest-pinned traces,
+or the run refuses.
+
+**Arms.** FRESH: the receiver's own prefill of R. REUSE-ALL: the receiver's KV from a prefill of S copied at p_S for
+every token of M, keys relocated to p_R under the same fixed schedule and amplitude (amplitude applied once; a schedule
+mismatch is refused), values unrotated; the unmatched tokens computed in receiver order against the cache assembled so
+far, so later gaps and the continuation can depend on earlier reused states. Controls: RANDOM, a perturbation of the
+fresh states with K and V norms matched to the reuse perturbation separately per token, layer and KV head (seeded via
+`make_rng`); CYCLIC, the matched source states permuted across M with keys relocated (norms not matched). No
+oracle-ranked or CacheBlend-style repair arm (`oracle_fractions = []`). All arms score the same C[1:] under the same
+teacher-forced history.
+
+**Numerical controls, fixed now; a failure stops expansion and is never relaxed after the fact.** Fresh repeat: a
+second FRESH pass must reproduce the first's logits exactly. Prefix copy over 128 tokens: maximum logit error ≤ 0.0005.
+Archive bridge: the current runtime's same-model centered K/V mean deviation per handoff within 0.001 + 0.01 × |archived|
+of the 0036 record. TF32 off, deterministic algorithms, `CUBLAS_WORKSPACE_CONFIG=:4096:8`. The largest sender is scored
+first as the retained memory probe. Stopping rule: stop on any failed control, bridge, hash or OOM; keep the completed
+prefix; resume only with unchanged code, inputs, config and runtime.
+
+**Readout, fixed now.** Per scored token: KL(p_FRESH ‖ p_ARM) over the vocabulary and top-1 agreement. Per handoff: mean
+KL, p90 KL, top-1 agreement rate, scored |C|. Over the 35: median with p10 / p90 by `e7_stats` (no interpolation),
+handoffs weighted equally; a handoff is one unit and hardware replicas are never handoffs. Beside it, descriptive and
+bounded: at the last 32 receiver query positions, the fresh pass's attention (reconstructed from the SDPA forward's
+queries and cached keys, GQA mapping kept, no full attention matrix retained) gives the attention mass on M, the mass on
+the archived tail (tokens whose token-average δ_K exceeds τ_K, the set 0045 counts), and the attention-weighted archived
+δ_K with its conditional value where mass is positive. This is a slice of E-TAIL Part B, not the all-query experiment,
+and establishes no mechanism. **No band is registered**: the first run is descriptive; a later entry may register one
+only against a quality measurement that does not exist yet.
+
+**The pilot, recorded and not credited with a figure.** The co-author who designed this (PRs #13, #14) ran it on a fork:
+execution commit `9a18ce7` (authored 2026-10-01T23:07:08Z, committed 2026-10-01T23:40:23Z; tag `archive/cache-behavior-h100-2026-10-01`), freeze
+record written 2026-10-01T23:40:22Z,
+one NVIDIA H100 PCIe 80 GB, PyTorch 2.14.0+cu130, Transformers 5.17.0, CUDA 13.0; 35 of 35 handoffs, 8,908 scored continuation tokens,
+peak allocation 24.95 GiB with allocator retries. **Upstream R1 was not met by that run**: the card preceded the freeze,
+which the freeze record says itself, and no upstream entry existed. Its evidence (report, 35 case records, summary,
+inputs, logs) is on the co-author's machine and not on the Hub. **No figure from it is stated here or in any paper**; if
+its bundle is published and recomputed under `docs/2026-10-03-co-author-run-admission.md`, that is a separate, later
+entry, and its agreement with the run registered here is a cross-platform control.
+
+**The registered run (the operator's).** Requested only after this entry is committed. Card: 80 GB preferred; the
+pilot's 24.95 GiB peak with retries does not establish a smaller fit, so a 48 GB card needs the protocol's probe of the
+largest case first. R2–R8 apply; output tree `results/cache-behavior/` (`report.json`, per-case `.npz`, `summary.json`, `inputs/`),
+mirrored home, verified, and backed up to a Hub dataset (public or private, operator ruling 2026-10-04) by
+`tools/hf_verify_backup.py` before the figures entry.
+
+**Gate and enforcement.** The driver asserts the config hash and every input's hash and records the source hashes,
+runtime and GPU in `report.json`; this script refuses if any frozen file differs or if `results/cache-behavior` holds a run (R1). The
+figures enter by `append_0049.py`, which calls `tools.cache_behavior.run.summarize` in-process over the operator's
+verified output, asserts the report's source hashes equal the committed driver, and refuses on any disagreement.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045 and their
+records; `config/e9*.toml`; the Qwen3 short cells, which stay Condition-1-bound and are not run here; the Llama drafts
+(0050 / 0051). The registered E9 drivers and `summarize_e9` are unchanged.
+
+**Scope.** One receiver, one corpus, 35 handoffs of 34,974–80,111 sender tokens read by receiver prompts of
+3,433–25,073 tokens; fixed proprietary-model text, so KL and top-1 are not task outcomes; same-model only; no repair
+arm, so nothing here bounds practical repair cost; fresh attention at 32 query positions is an association, not a cause.
+
+prior-entries-sha256: 1d842dbf1b12d10181bd689cd4cb74371aac1300cd127d0f6a10551c4acef00a

@@ -1,0 +1,28 @@
+{
+  "frozen_at_utc": "2026-10-01T23:40:22.984954+00:00",
+  "purpose": "Descriptive fixed-text sensitivity and bounded fresh-attention follow-up on the original long cohort.",
+  "upstream_status": "Fork execution record, not an upstream ledger entry or verdict. Hardware was supplied before this freeze; no long-cohort behavioral score exists.",
+  "config_sha256": "53c664556d18792401db8c1b930e487a90b88ab19c65ad94a1ab982094443a28",
+  "input_manifest_sha256": "9a6f2923d3beda90cebde009ba80a12c5363c43a440fc19a356d6b3f11d4e2dc",
+  "source_sha256": {
+    "tools/cache_behavior/core.py": "f346b5fdf3d3feff5918e3a0e95f1e084f154317213ba68ce1913ec5acdcade5",
+    "tools/cache_behavior/run.py": "15e1ff8c1dbc7925398edc11ed68d91b6cdba4f335a49adcb29baa1b10729de5"
+  },
+  "handoffs": 35,
+  "excluded_continuations": 0,
+  "order": "Largest sender first; remaining included handoffs in prepared-manifest order. The probe result is reused.",
+  "outcomes": "Per-token KL and top-1 agreement; handoff mean/p90 KL and top-1 fraction; cohort median/p10/p90. Last 32 receiver queries: weighted archived key error, tail mass, matched mass, and conditional error.",
+  "runtime": {
+    "python": "3.12",
+    "torch": "2.14.0+cu130",
+    "transformers": "5.17.0",
+    "cuda": "13.0",
+    "gpu": "NVIDIA H100 PCIe 80 GB",
+    "kernel_driver": "570.148.08",
+    "cuda_compat": "cuda-compat-13-0_580.178.04-1ubuntu1_amd64.deb",
+    "OMP_NUM_THREADS": 8,
+    "MKL_NUM_THREADS": 8
+  },
+  "stopping_rule": "Stop on a failed numerical control, archive bridge, hash check, or OOM. Keep any completed prefix. Resume only with unchanged code, inputs, configuration and runtime; do not relax thresholds from observed results.",
+  "interpretation": "Descriptive prediction sensitivity, not task success, free-generation equivalence, achievable speedup, or validation of the representation tolerance."
+}

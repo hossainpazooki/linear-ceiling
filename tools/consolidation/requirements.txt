@@ -1,0 +1,8 @@
+torch==2.14.0
+transformers==5.17.0
+numpy==2.5.3
+safetensors==0.8.0
+huggingface_hub==1.32.0
+pytest==9.1.1
+matplotlib==3.11.2
+tiktoken==0.12.0

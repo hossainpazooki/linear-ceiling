@@ -1,10 +1,10 @@
-"""Append entry 0046 -- the E9 LONG half of the second model family, registered BEFORE any prefill, at a
+"""Append entry 0050 -- the E9 LONG half of the second model family, registered BEFORE any prefill, at a
 NATIVE receiver. DESCRIPTIVE: no hypothesis row, no `verdict:` line, no cell moves. It declares entry
 0035's D1(a) receiver scaling, its configuration bridge (control 4) and its scaled-receiver reading
 INAPPLICABLE here, and states that this cell cannot move, support or refute H-E9L and is never pooled with
 entry 0036's handoffs.
 
-Ordering guard: 0045 present, 0046 absent. Nothing under this entry may exist yet: `results/e9fl/` holds no
+Ordering guard: 0049 present, 0050 absent. Nothing under this entry may exist yet: `results/e9fl/` holds no
 report and no score file (R1). What MUST exist: `config/e9fl.toml` CALIBRATED against THIS pair's own E8
 report and committed; `results/e9fl/calibration/tau.json` (checked here, at registration -- `e9 --check`
 never looks for it); `results/e9fl/align/coverage.json` from `e9 --align-only --config config/e9fl.toml`,
@@ -33,11 +33,11 @@ from linear_ceiling.hashing import sha256_file_bytes, sha256_text_file
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash
 from linear_ceiling.pairs import pair_models
 
-NUM, PREV = "0046", "0045"
+NUM, PREV = "0050", "0049"
 FAMILY = "0039"      # the family registration entry, APPENDED 2026-09-18 -- a fixed number now
 SHORT = "0042"      # the short cell's registration entry; APPENDED 2026-09-18, fixed
 VERDICT = "0044"    # the short cell's verdict entry (H-E9F HELD), APPENDED 2026-09-19, fixed; PREV is the
-                    # ordering guard only -- since the 2026-10-01 numbering ruling it is the corrective entry
+                    # ordering guard only -- since the 2026-10-04 allocation it is the cache-behavior figures entry
 CONFIG_TAU_TOL = 1e-9                # config and home calibration are the registered authority
 BOX_TAU_TOL = 1e-6                   # the E8 box report may differ by registered cross-platform arithmetic
 ap = argparse.ArgumentParser()

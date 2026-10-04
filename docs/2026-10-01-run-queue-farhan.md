@@ -40,7 +40,7 @@ in one reply.
 | **B** | Optional E-TAIL **Part B** — fresh-attention-weighted error (W3) | descriptive scope, query selection, checks + registration | chunked reductions **+ their own probe** | reuse C's **80 GB** allocation; smaller card only after probe | measure in probe | per-query w and matched mass + drafted entry |
 | **C** | E-BEH — prediction sensitivity to practical reuse (W1) | ruling 6 + registration of core arms and controls | cache injection; pinned continuation extractor | **80 GB recommended**; 40 GB marginal | measure in probe | per-token KL/top-1, controls + drafted entry |
 | **D** | *Optional:* a third pair, Llama-3.2-1B → 3B | ruling 9 (just the go/no-go) | nothing — one CPU preflight | **none** | seconds | preflight output, pass or fail |
-| **E** | Llama **LONG** cell, 0046/0047 (W7) | ruling 10 + the numbering ruling 11 | nothing; drafts are staged | **80 GB** | ≈2 h | run the staged drafts' cell |
+| **E** | Llama **LONG** cell, 0050/0051 since 2026-10-04 (W7) | ruling 10 + the numbering ruling 11 | nothing; drafts are staged | **80 GB** | ≈2 h | run the staged drafts' cell |
 
 Nothing in this document allocates a number, registers anything, or edits a design.
 
@@ -213,17 +213,17 @@ E9 cell — a new campaign, not an add-on. Worth it only if a cheap card matters
 
 ## 6. Task E — the Llama LONG cell (W7), if a 80 GB card is already in hand
 
-The drafts are **staged and unrun**: `append_0046.py` (registration) and `append_0047.py` (figures; renumbered 2026-10-01), with
+The drafts are **staged and unrun**: `append_0050.py` (registration) and `append_0051.py` (figures; renumbered 2026-10-01 and again 2026-10-04), with
 `config/e9fl.toml` committed. **Their numbers are provisional and may move — see ruling 11.**
 
 - Cap **81,920**, floor **32,768** in Llama-3 tokens. The floor equals the short cell's cap, so the two Llama cells
-  **partition** their handoffs, and 0046 asserts that the ids it excludes under the floor are *exactly* the short
+  **partition** their handoffs, and 0050 asserts that the ids it excludes under the floor are *exactly* the short
   cell's included set, with the residual above the cap named and counted. Audited, not asserted.
 - **Neither side is scaled** (both natively 131,072): no `[e9.rope]`, no `[e9.bridge]`, no `--rope-scaling`. 0035's
   configuration-bridge reading is declared **inapplicable**; two dump-derived controls replace it — a native-window
   assertion and a **role-scoped** RoPE identity (the sides carry different llama3 factors, 32.0 and 8.0, so an
   unscoped assertion would refuse every correct run).
-- It **cannot move, support or refute H-E9L** and is **never pooled** with 0036's 35. 0047 reads
+- It **cannot move, support or refute H-E9L** and is **never pooled** with 0036's 35. 0051 reads
   `results/e9l/summary.json` only to state 0036's figures *beside* these, with non-comparability spelled out.
 - **Card: 80 GB.** Not a 48 GB job, per §5.
 - **What R8 must hold before the entry:** every kept dump and record of `results/e9fl/` pushed; the push **two-way
@@ -282,7 +282,7 @@ entry script:
 | A — E-TRUNC | a **new** paired reader (intersection + paired levels), fail-closed, inputs sha-pinned | `e9 --check --config config/<level>.toml`, then the reader → exit 0 |
 | B — E-TAIL B | `e9_tail`'s surface extended, or a sibling; the eager-vs-SDPA identity check is part of it | reader exit 0 **and** identity within the entry's stated tolerance |
 | C — E-BEH | a new reader over per-position KL/argmax, input hashes, and control records | reader exit 0; declared controls within fixed tolerances; exact scored subset named |
-| E — Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0047.py` | `.venv/bin/python -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
+| E — Llama LONG | `summarize_e9 --config config/e9fl.toml`, in-process inside `append_0051.py` | `.venv/bin/python -m linear_ceiling.summarize_e9 --config config/e9fl.toml` |
 | any R8 mirror | — | `.venv/bin/python tools/hf_verify_backup.py <repo_id> <local_root>` → **exit 0 only when every file matches both directions** (`HF_TOKEN` in the env only) |
 | the repo | — | `ledger_check && lint_scope && seal verify` |
 

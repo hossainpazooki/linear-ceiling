@@ -119,6 +119,13 @@ profiles, band) · `lint_scope` · `ledger_check` (structure, entry chain, block
 through 0022 + `verdict: H-XX = <VERDICT>` lines from 0024 on — and the manifest citation).
 Tests mirror modules under `tests/`.
 `docs/drafts/` holds append scripts for entries not yet written, ordering-guarded.
+`proofs/` (PR #16, 2026-10-04) is the Lean 4 formalization of the paper's theory: 0023's statistic (`fstar` is the exact-criterion twin of
+`e9_pertoken.f_star`), Theorem 1 (μ = 1 − R̄²), Theorem 2, Corollary 3 (seams), Proposition 4 (attention under `ass:rope`) and the
+reported numbers in `Carryover/Numbers.lean`; `Audit.lean` prints the axioms of all 52 headline results (only `propext`,
+`Classical.choice`, `Quot.sound`; no `sorry`). Toolchain Lean v4.34.0-rc2 + Mathlib pinned in `lean-toolchain` / `lake-manifest.json`;
+build with `cd proofs && lake exe cache get && lake build && lake env lean Audit.lean`, or `./check.sh` where `lake` is broken (needs the
+Mathlib build in `.lake/packages`; ~21 min, mostly loading Mathlib). Not run in CI and not verified on this Windows machine. "Lean" may be
+claimed in the paper only after `lake build` has passed on the committed tree (seed §5/§8); `.lake/` is git-ignored.
 `docs/probes/` holds the scratch probes entries 0026 and 0028 cite (SDPA memory probe, the shipped
 candidate module's validation, the matching-platform re-score and its determinism test).
 
@@ -173,4 +180,4 @@ trajectories live under `traces/` (gitignored), never in history. **0045 (2026-1
 statement about the MEAN within τ_K, not "no token over τ_K" (0029/0036's sentence); the per-token tail per cell from `e9_tail`
 (e9l 7.9 %, e9 5.8 %, e9s 6.7 %, e9f 11.3 % of matched tokens over τ_K, on every handoff; per-handoff maximum mean 0.2692 / 0.2207 /
 0.2255 / 0.2860 against τ_K 0.3186 / 0.2861), the 0025/0029 R² label (0.4371 is 1 − R²; R² = 0.5629), seam-bin MEANS beside the
-medians, and 0044's E7-hash erratum. No cell moves. Next free entry: 0048 (0046/0047 are the staged Llama long drafts).
+medians, and 0044's E7-hash erratum. No cell moves. **Allocation 2026-10-04:** 0046/0047 (APPENDED 2026-10-04, `a941377` / `55a5c47`) register the two co-author-piloted runs (same-model extension, PR #8+#9; cache-behavior, PR #14) for the operator's own run under R1-R8, 0048/0049 (staged) take their figures by in-process readers, the Llama long drafts moved to 0050/0051 (gate `"0050"`); next free entry: 0052. The pilots' figures enter only via `docs/2026-10-03-co-author-run-admission.md`.

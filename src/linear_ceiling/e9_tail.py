@@ -1,7 +1,17 @@
-# Verify archived E9 records before computing tail profiles; do not change verdicts.
-# Removing the largest errors is oracle-ranked token deletion, not CacheBlend
-# or a measured recomputation cost. Delta uses centered receiver variance;
-# its token mean is exactly 1 - R², not a percent error.
+"""Tail of the per-token deviation, beside f* (reviewer weakness W3; the figures W4 and W5 need).
+
+Runs `summarize_e9.summarize` FIRST -- it verifies every record and refuses on tamper -- then re-reads the same
+sha-pinned per-token squares and alignment pairs and computes, per handoff and pooled, same-K and same-V:
+delta_max; the fraction of matched tokens over each tau (tau_K, then the registered ladder); the mean after
+removing the top 10 % / 20 % of tokens by delta (oracle-ranked token DELETION in THIS paper's units: not CacheBlend's
+selection rule, not a measured recomputation cost, no numeric comparison with their figure); pooled MEANS (not only medians) per causal seam bin b^-(t) and per sender-position
+bin; the native-window subset (sender position < 32,768); and |R| over the scored handoffs.
+
+Unit (0023): delta is a token's share of the layer-head's unexplained variance, in R^2's own units; its mean over
+tokens is exactly 1 - R^2. It is never a percent error. Nothing here moves a verdict; f* is not restated.
+
+usage: python -m linear_ceiling.e9_tail --config config/<cell>.toml
+"""
 from __future__ import annotations
 
 import argparse
