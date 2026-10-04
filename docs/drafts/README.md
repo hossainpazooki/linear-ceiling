@@ -24,6 +24,18 @@ the two Llama long drafts moved up in one commit with `config/e9fl.toml`'s `[e9.
 (registration, was 0045) and `append_0047.py` (figures, was 0046). Next free number: 0048.** The paragraph below
 is the 2026-09-19 staging record, kept as written.
 
+**Allocation 2026-10-04 (operator: "accept both and add to ledger while I run them").** Four drafts staged, in this
+staging order, for the two co-author-piloted runs the operator re-runs under registration: **`append_0046.py`** (REGISTERS
+the same-model extension to Qwen3-4B and SmolLM3-3B with the Qwen3-1.7B bridge; frozen config/manifest from PR #8),
+**`append_0047.py`** (REGISTERS the cache-behavior comparison, E-BEH's core FRESH vs REUSE-ALL with controls; frozen
+config and driver from PR #14), **`append_0048.py`** (the extension's figures, from `tools/consolidation/summarize.py`
+in-process over the operator's verified mirror), **`append_0049.py`** (the cache-behavior figures, from
+`tools.cache_behavior.run.summarize` in-process). Both registrations refuse until PRs #8 and #14 are merged (they assert
+the frozen files' hashes) and refuse if any result already exists under the registered output trees (R1). The two Llama
+long drafts moved to **`append_0050.py` / `append_0051.py`** with `config/e9fl.toml`'s gate (`"0050"`) in the same commit.
+Next free number: **0052**. The co-authors' own runs (A100, H100; evidence private) are recorded in the registrations as
+pilots that preceded upstream registration; their figures enter only through `docs/2026-10-03-co-author-run-admission.md`.
+
 **0045 APPENDED 2026-10-01 (`b3bf7ec`; staged earlier that day as `append_0045.py`, retired with `tests/test_append_0045.py`)** — the corrective entry (the per-token tail per cell with the per-handoff maximum,
 the 0025/0029 R² label, summary-file figures by key, and 0044's E7-hash erratum). Descriptive, no row, no `verdict:` line.
 Reads `results/<cell>/tail.json` written by `e9_tail` (which runs `summarize_e9` first) for `e9l`, `e9`, `e9s`, `e9f`, and
@@ -48,8 +60,8 @@ the camera-ready and the co-author refutation under `docs/reviews/` is what rema
   and then have no verdict entry to write. It now checks the *shape* — a prefix of the registered order
   with the unscored tail named — and requires `--cutoff-reason` on a partial.
 - **`append_0045.py`** — the E9-long registration (was 0044). `config/e9fl.toml`'s `[e9.gate]` moved with it.
-  *(2026-10-01: now `append_0046.py`; the gate now ends at 0046.)*
-- **`append_0046.py`** — the E9-long figures (was 0045). *(2026-10-01: now `append_0047.py`.)*
+  *(2026-10-01: now `append_0046.py`; the gate now ends at 0046. 2026-10-04: now `append_0050.py`; gate `"0050"`.)*
+- **`append_0046.py`** — the E9-long figures (was 0045). *(2026-10-01: now `append_0047.py`. 2026-10-04: now `append_0051.py`.)*
 
 **Contingency, one commit:** if another session's entry lands first, all four move up together — every
 `NUM`/`PREV` string, `[e8.gate]` in `config/e8f.toml`, and `[e9.gate]` in `config/e9f.toml` and
@@ -75,13 +87,13 @@ refuses a partial close (this config does not allow one) and a run whose dumps c
 τ_K ceiling 0039 registered is derived mechanically from the summary (`tau_K > 0.45` forces the cell to
 `unresolved` whatever the band says). Optional `--tau-ceiling-applies {yes,no}` is an assertion that must
 agree with that derivation and cannot select the verdict; required `--tau-ceiling-note` records provenance only.
-**`append_0046.py`** (E9 long half registration at a NATIVE receiver; was `append_0045.py` until 2026-10-01; DESCRIPTIVE, no row): declares entry
+**`append_0050.py`** (E9 long half registration at a NATIVE receiver; was `append_0045.py` until 2026-10-01 and `append_0046.py` until 2026-10-04; DESCRIPTIVE, no row): declares entry
 0035's D1(a), its configuration bridge and its scaled-receiver reading INAPPLICABLE, and states that the
 cell cannot move, support or refute H-E9L and is never pooled with 0036's handoffs; asserts the floor
 equals the short cell's cap AND that the ids it excludes under that floor are EXACTLY the short cell's
 included set, so the partition is audited rather than asserted, with the residual above the cap — scored by
 neither cell — named and counted; same tau and calibration checks as 0041.
-**`append_0047.py`** (long-half figures; was `append_0046.py` until 2026-10-01; DESCRIPTIVE, no `verdict:` line): `summarize_e9 --config
+**`append_0051.py`** (long-half figures; was `append_0046.py` until 2026-10-01 and `append_0047.py` until 2026-10-04; DESCRIPTIVE, no `verdict:` line): `summarize_e9 --config
 config/e9fl.toml` in-process; `--cutoff-reason` required on a partial close and forbidden otherwise; reads
 `results/e9l/summary.json` only to state 0036's scaled-receiver figures BESIDE these, with the
 non-comparability spelled out (different models, tokenizers, handoff sets, mappers and τ, and one receiver
