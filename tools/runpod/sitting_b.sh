@@ -268,7 +268,8 @@ cfg = load_e9_config(cfg_path, root)
 assert cfg.pair == pair, f"config pair {cfg.pair!r} != requested {pair!r}"
 assert cfg.upstream_sha == up_sha, f"config upstream pin {cfg.upstream_sha} != requested exact pin {up_sha}"
 assert cfg.mapper_k == 1, f"Sitting B requires its registered verdict mapper k=1, got {cfg.mapper_k}"
-assert cfg.context_floor == 0, f"short cell must have context_floor=0, got {cfg.context_floor}"
+want_floor = {"e9f": 0, "e9fl": 32768}[cfg.results_dir.name]  # 0042 short cell, 0050 long cell
+assert cfg.context_floor == want_floor, f"{cfg.results_dir.name} must have context_floor={want_floor}, got {cfg.context_floor}"
 # Entry 0042 REGISTERS the stopping rule for this cell, so the opposite is now required: without
 # it a budget kill yields no verdict at all. This assertion was written when the short cell
 # forbade a partial close and would refuse the correctly-registered config outright.
