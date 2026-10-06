@@ -9,6 +9,9 @@ box. Exits when report.complete and every kept directory is home and deleted on 
 
 usage:  pull.py [exp]                      (default exp = e9l)
 env:    BOX        ubuntu@<ip>               BOX_KEY   ssh private key (default ~/.ssh/lc-e9l-2026-09-10)
+        or JH_URL / JH_USER / JH_TOKEN (and no BOX): a JupyterHub-only box (Algoverse) through tools/jupyterhub/jh.py --
+        commands run in a kernel, files come down one by one over /files/; same mirror, verify and delete rules
+        BOX_EXTRA_FILES  more names in ~ to mirror into logs/box/ (space-separated)
         LC_RESULTS local results root (default ~/dev/linear-ceiling/results)
         BOX_REPO   the linear-ceiling checkout on the box (default linear-ceiling)
         PULL_STATE state file (default ~/.lc-<exp>-pull.json)     PULL_EVERY seconds (default 120)
@@ -26,7 +29,11 @@ import time
 from pathlib import Path
 
 EXP = sys.argv[1] if len(sys.argv) > 1 else "e9l"
-BOX = os.environ["BOX"]
+JH = not os.environ.get("BOX") and bool(os.environ.get("JH_URL"))
+if JH:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "jupyterhub"))
+    import jh  # noqa: E402
+BOX = os.environ.get("BOX", "")
 KEY = os.environ.get("BOX_KEY", str(Path.home() / ".ssh" / "lc-e9l-2026-09-10"))
 LOCAL = Path(os.environ.get("LC_RESULTS") or (Path.home() / "dev" / "linear-ceiling" / "results")) / EXP
 REPO = os.environ.get("BOX_REPO", "linear-ceiling")
@@ -35,7 +42,8 @@ STATE = Path(os.environ.get("PULL_STATE") or (Path.home() / f".lc-{EXP}-pull.jso
 EVERY = int(os.environ.get("PULL_EVERY", "120"))
 SSH = ["ssh", "-i", KEY, "-o", "StrictHostKeyChecking=accept-new", "-o", "ServerAliveInterval=30",
        "-o", "ConnectTimeout=20", "-o", "BatchMode=yes", BOX]
-BOX_FILES = f"{EXP}.log {EXP}.rc setup.log setup.rc probe.log launches.log manifest_check.out setup.sh run.sh probe_e9l.py"
+BOX_FILES = (f"{EXP}.log {EXP}.rc setup.log setup.rc probe.log launches.log manifest_check.out setup.sh run.sh probe_e9l.py "
+             + os.environ.get("BOX_EXTRA_FILES", ""))
 
 
 def sha256(p: Path) -> str:
@@ -47,6 +55,12 @@ def sha256(p: Path) -> str:
 
 
 def ssh(cmd: str, timeout: int = 120) -> str:
+    if JH:
+        # a kernel's cwd is wherever the hub started it, not necessarily ~ (ssh always lands in ~)
+        body, sep, rc = jh.exec_(f"cd ~ && {cmd}", timeout, echo=False).rpartition("\nRC= ")
+        if not sep or rc.strip() != "0":
+            raise RuntimeError(f"jh rc={rc.strip() if sep else '?'}: {(body or rc)[-500:]}")
+        return body
     r = subprocess.run(SSH + [cmd], capture_output=True, timeout=timeout)
     if r.returncode != 0:
         raise RuntimeError(f"ssh rc={r.returncode}: {r.stderr.decode('utf-8', 'replace')[-500:]}")
@@ -57,6 +71,13 @@ def stream_tar(remote_dir: str, names: list[str], local_dir: Path, timeout: int 
     """tar -C <remote_dir> <names> on the box, untar into local_dir; one ssh connection per call."""
     local_dir.mkdir(parents=True, exist_ok=True)
     quoted = " ".join(f"'{n}'" for n in names)
+    if JH:   # no tar stream over a kernel: list, then fetch each file over /files/ (paths relative to the hub's home)
+        base = remote_dir.removeprefix("~").strip("/")
+        for rel in ssh(f"cd {remote_dir} && find {quoted} -type f", 120).splitlines():
+            rel = rel.strip().removeprefix("./")
+            if rel:
+                jh.down(f"{base}/{rel}" if base else rel, str(local_dir / rel))
+        return
     remote = f"cd {remote_dir} && tar -cf - {quoted}"
     with subprocess.Popen(SSH + [remote], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as src:
         tar = subprocess.run(["tar", "-xf", "-", "-C", str(local_dir)], stdin=src.stdout, capture_output=True, timeout=timeout)

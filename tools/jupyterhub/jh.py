@@ -11,6 +11,7 @@ usage:
   jh.py up    <local> <remote>                 upload one file (base64 through /api/contents; split files > 60 MB)
   jh.py down  <remote> <local>                 stream one file down via /user/<u>/files/ (no size cap)
   jh.py ls    <remote_dir>                     list a directory via /api/contents
+  jh.py stop                                   stop this user's server (R7 step 6 on a hub) and read the state back
 
 Traps this encodes (see docs/gpu-experiment-protocol.md): keep each exec under ~40 s or the kernel
 websocket drops and the next poll reads a stale log; the Authorization header, not ?token=, is what
@@ -24,6 +25,7 @@ import tempfile
 import time
 import uuid
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 import websocket
@@ -52,7 +54,7 @@ def kernel_id() -> str:
     return k
 
 
-def exec_(cmd: str, timeout: int = 600) -> str:
+def exec_(cmd: str, timeout: int = 600, echo: bool = True) -> str:
     k = kernel_id()
     ws_url = BASE.replace("http://", "ws://").replace("https://", "wss://")
     ws = websocket.create_connection(f"{ws_url}/api/kernels/{k}/channels", timeout=30,
@@ -87,7 +89,8 @@ def exec_(cmd: str, timeout: int = 600) -> str:
             break
     ws.close()
     s = "".join(out)
-    sys.stdout.write(s)
+    if echo:
+        sys.stdout.write(s)
     return s
 
 
@@ -100,7 +103,7 @@ def up(local: str, remote: str) -> None:
 
 def down(remote: str, local: str) -> None:
     Path(local).parent.mkdir(parents=True, exist_ok=True)
-    with requests.get(f"{BASE}/files/{remote}", headers=HDR, stream=True, timeout=600) as r:
+    with requests.get(f"{BASE}/files/{quote(remote)}", headers=HDR, stream=True, timeout=600) as r:   # hids carry '#'
         r.raise_for_status()
         n = 0
         with open(local, "wb") as f:
@@ -116,6 +119,19 @@ def ls(remote: str) -> None:
         print(c["type"][:1], c.get("size"), c["name"])
 
 
+def stop() -> None:
+    r = requests.delete(f"{H}/hub/api/users/{U}/server", headers=HDR, timeout=120)
+    print("stop:", r.status_code)
+    for _ in range(30):     # the acknowledgement is not the state: read it back until no server is running
+        servers = requests.get(f"{H}/hub/api/users/{U}", headers=HDR, timeout=60).json().get("servers") or {}
+        if not servers:
+            print("server state read back: none running")
+            return
+        time.sleep(10)
+    print("server still listed after 5 min:", list(servers))
+    sys.exit(1)
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]
     if not a:
@@ -129,6 +145,8 @@ if __name__ == "__main__":
         down(a[1], a[2])
     elif a[0] == "ls":
         ls(a[1])
+    elif a[0] == "stop":
+        stop()
     else:
         print(__doc__)
         sys.exit(2)

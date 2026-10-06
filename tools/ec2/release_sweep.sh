@@ -5,6 +5,10 @@
 set -uo pipefail
 EXP=${EXP:-e9l}
 OURS_FILES="k1.json k1.safetensors traces.tar.gz setup.sh run.sh probe_e9l.py release_sweep.sh setup.log setup.rc probe.log probe.rc ${EXP}.log ${EXP}.rc launches.log manifest_check.out release.log ${EXP}.records.sha256 PYTHON_PACKAGES_LICENSES THIRD_PARTY_SOURCE_CODE_URLS"
+# A multi-level sitting (E-TRUNC on a JupyterHub box: tools/jupyterhub/go.sh) shares one home across LEVELS, so every
+# level's own files are ours on every level's sweep, plus go.sh's.
+for L in ${LEVELS:-}; do OURS_FILES="$OURS_FILES $L.log $L.rc $L.records.sha256 setup.$L.log"; done
+[ -z "${LEVELS:-}" ] || OURS_FILES="$OURS_FILES go.sh go.log go.status"
 echo "== step 0: $(date -u +%FT%TZ) who is here (single-tenant instance; anything not ours still aborts)"
 ls -la ~
 ps -u "$(whoami)" -o pid,etimes,cmd --no-headers | grep -v "sshd\|bash -c\|release_sweep\|ps -u\|grep" || true
@@ -18,7 +22,8 @@ foreign=0
 for f in $(find ~ -maxdepth 1 -mindepth 1 -newermt "$LAUNCH_UTC" -printf "%f
 "); do
   case " $OURS_FILES " in *" $f "*) ;; *)
-    case "$f" in .cache|.local|.config|.nv|.zshrc|.bash*|.profile|.ssh|.sudo_as_admin_successful|.lesshst|.python_history|.wget-hsts|kv-transfer-replication|linear-ceiling|${EXP}.*.halt.log|.venv*) ;; *) echo "  NOT OURS: $f"; foreign=1;; esac;; esac
+    # .ipython/.jupyter/.ipynb_checkpoints/.virtual_documents: created by the hub's own kernel on a JupyterHub box
+    case "$f" in .cache|.local|.config|.nv|.zshrc|.bash*|.profile|.ssh|.sudo_as_admin_successful|.lesshst|.python_history|.wget-hsts|.ipython|.jupyter|.ipynb_checkpoints|.virtual_documents|kv-transfer-replication|linear-ceiling|*.halt.log|.venv*) ;; *) echo "  NOT OURS: $f"; foreign=1;; esac;; esac
 done
 if pgrep -f "[l]inear_ceiling.e9 " > /dev/null; then echo "ABORT: the driver is still running"; exit 10; fi
 [ "$foreign" = 0 ] || { echo "ABORT: foreign presence; nothing deleted"; exit 11; }

@@ -100,6 +100,44 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
 `sha256sum`, and never compare `read_bytes()` with `git show` (the 0050 append refused on exactly that, 2026-10-04);
 (d) tau.json per level is a home-side prerequisite the gate does not check.
 
+## 5b. The alternative box: an Algoverse 40 GB slice (JupyterHub only), added 2026-10-05
+
+0055 fixes no card ("a bound to be replaced by the probe on the granted card"), so the sitting may run on the Algoverse
+H100 pool instead of an EC2 L40S: a hardware-isolated **40 GB MIG slice** (the 20 GB slices cannot hold it: Qwen3-1.7B
+OOMed at T = 40,960 on a 1g.20gb, `docs/probes/2026-09-08-e9-long-memory-ladder-1g20gb.out`), private JupyterHub login
+by email, no ssh, a fixed window after which the machine is **wiped**. Request the longest 40 GB window offered: the
+driver bound is 4.8 h on an L40S (§2) and a 3g.40gb slice has roughly a third of an H100's SMs, so budget 10–15 h plus
+setup and the last pulls. Everything else in §0–§5 holds; the differences are only the transport and the release.
+
+- **Tooling.** `tools/jupyterhub/launch.sh` (home) checks the home prerequisites, uploads `tools/ec2/{setup.sh,run.sh,
+  probe_e9l.py,release_sweep.sh}` + `tools/jupyterhub/go.sh` + the traces tarball, starts `go.sh` detached on the box,
+  and starts the per-level pullers here. `go.sh` (box) takes the mapper from the public e9 dataset (`setup.sh` checks
+  both shas, §3), runs `setup.sh` + the box's alignment for all four levels (a coverage sha unequal to home's is FATAL),
+  runs the probe at 80,111 (both models must read `ok` or nothing launches), then the four levels in order, each
+  started only when the box has `MIN_FREE_GIB` (70) free, i.e. the puller has taken the previous level's kept dumps.
+  `tools/ec2/pull.py` runs over the hub through `jh.py` when `JH_URL` is set (same verify-then-delete rule).
+- **Coverage shas are the LF bytes the box writes:** full `5d01067ab8bb`, l65 `4d9cc526b1dc`, l49 `db8c32746a33`, l32
+  `a227bea0e058` (the §3 table's values are the same files CRLF-normalized; `launch.sh` hashes the home files itself).
+- **Home disk.** The mirror holds every level's kept + bridge dumps at once (the summarizer re-scores them together):
+  ≈ 150–190 GiB. Point `results/e9t-{full,l65,l49,l32}` at a disk that has it (symlink) before launch.
+- **τ before the window closes.** `summarize_e9 --calibrate-tau --config config/e9t-<level>.toml` × 4 needs the 0029 n = 50
+  generic dumps (`../kv-transfer-replication/data/kv/qwen3-0.6b-to-1.7b/{source,target}`) and `results/e8/report.json`,
+  which are in no public dataset; on a machine without them the summarizer cannot run either. `launch.sh` warns when
+  `tau.json` is missing; it does not block the GPU run, which never reads it.
+
+```bash
+export JH_URL=https://<hub> JH_USER=<user> JH_TOKEN=<token from POST /hub/api/users/<user>/tokens>
+tools/jupyterhub/launch.sh                                                     # prints the watch commands
+.venv/bin/python tools/jupyterhub/jh.py exec 'cat ~/go.status; tail -3 ~/go.log' 30
+# release (R7), after every puller has exited and verify_mirror.py <level> passed for all four:
+L="e9t-full e9t-l65 e9t-l49 e9t-l32"; U=$(awk '{print $2}' ~/lc-sitting-launch-utc.txt)   # e.g. 20261006T013727Z
+for e in $L; do .venv/bin/python tools/jupyterhub/jh.py exec "cd ~ && EXP=$e LEVELS='$L' LAUNCH_UTC='${U:0:4}-${U:4:2}-${U:6:2} ${U:9:2}:${U:11:2}' bash ~/release_sweep.sh > ~/release.$e.log 2>&1; tail -3 ~/release.$e.log" 120; done
+.venv/bin/python tools/jupyterhub/jh.py stop                                   # R7 step 6 on a hub: stop and read back
+```
+
+Cutoff (§4.7) is unchanged: if the window ends first, `e9 --close-partial --config config/e9t-<level>.toml` at home on
+the verified mirror. `append_0057.py --box "Algoverse H100 MIG 40 GB slice (JupyterHub), <date>" …` as §4.10.
+
 ## 6. Log (UTC; filled during the sitting)
 
 - (empty until the sitting)

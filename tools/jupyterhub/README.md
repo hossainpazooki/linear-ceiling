@@ -7,8 +7,12 @@ The protocol they implement is `docs/gpu-experiment-protocol.md`; the run they s
 
 | script | what it does |
 |---|---|
-| `jh.py` | `exec` a shell command on the box through a python3 kernel; `up`/`down` single files; `ls` a dir |
+| `jh.py` | `exec` a shell command on the box through a python3 kernel; `up`/`down` single files; `ls` a dir; `stop` the server and read it back |
 | `pull.py [exp]` | the pull → verify (sha256 vs `report.json` `kept_dumps`) → delete loop, every two minutes, until `complete: true` and every kept dump is home |
+| `launch.sh` | home, one command for a multi-level sitting (E-TRUNC by default): prerequisites, upload, `go.sh` detached, then `tools/ec2/pull.py` per level over this transport (it handles bridge dumps; prefer it to `pull.py` here) |
+| `go.sh` | box: mapper from the public e9 dataset, `setup.sh` + alignment per level (sha must equal home's), the R2 probe, the levels in order with a free-disk gate; status in `~/go.status` |
+
+E-TRUNC on an Algoverse 40 GB slice: `docs/2026-10-04-e-trunc-gpu-runbook.md` §5b.
 
 Requirements on the local machine: `requests`, `websocket-client` (both in the repo `.venv`).
 
