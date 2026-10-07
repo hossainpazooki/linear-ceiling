@@ -210,8 +210,11 @@ even the LF script REFUSES to arm. The home watchdog is the only net; keep its l
   3564605773bb…`, the tarball sha). **`terminate` sent; read back PROVEN GONE** (pods 0, nothing billing).
   **Sitting $2.57** (pessimistic `max(balance delta, elapsed × rate)`; balance $10.00 → $7.51), 1.85 h wall, of which
   ≈ 86 min compute and ≈ 12 min idle after the driver exited (trap (j)). Campaign $2.57 vs cap $10.
-- R8 backup: pending the operator's token (`tools/hf_backup.sh --check hossainpazooki/linear-ceiling-cache-behavior-2026-10-07
-  <stage>`, then push, then `tools/hf_verify_backup.py`).
+- **03:47:34Z R8 BACKUP VERIFIED**: `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07` (created private by the
+  operator) matches the staging tree `~/dev/hf-staging/linear-ceiling-cache-behavior-2026-10-07` in both directions —
+  74 files: 70 compared by `lfs.sha256`, 4 downloaded and hashed, 0 problems. Staging was a COPY of the mirror (link
+  count 1, not hardlinks), `results/cache-behavior/` at the root plus the card; credential sweep before the push caught
+  exactly the planted control. Token: typed into the terminal for the push, `unset` after, revoke in the Hub UI (R9).
 
 ## 7. Open before 0049 can append
 
