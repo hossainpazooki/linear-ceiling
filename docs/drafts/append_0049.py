@@ -77,7 +77,8 @@ assert identity["manifest_sha256"] == INPUT_MANIFEST_SHA, "the run's prepared in
 assert identity["cublas_workspace_config"] == ":4096:8", "the run did not pin CUBLAS_WORKSPACE_CONFIG"
 assert len(report["run_order"]) == 35 and list(report["scores"]) == report["run_order"], "scored set is not the registered run order"
 assert sha256_file_bytes(a.output / "inputs" / "manifest.json") == INPUT_MANIFEST_SHA
-# The ruling's pinned fields: each must equal the pilot's freeze record or the repository / verified-archive bytes.
+# The ruling's pinned fields. The freeze record pins only config_sha256 and input_manifest_sha256; the config digest is
+# checked against it, the other three against the committed bytes and the verified e9l mirror.
 manifest = json.loads((a.output / "inputs" / "manifest.json").read_text(encoding="utf-8"))
 freeze = json.loads(FREEZE.read_text(encoding="utf-8"))
 assert manifest["config_sha256"] == freeze["config_sha256"] == cfg_sha, "manifest config digest differs from the pilot's freeze record"
@@ -119,13 +120,18 @@ run at commit `{commit[:7]}`.
 verified both ways before this entry). Pinned: `report.json` `{report_sha[:12]}…`, `summary.json` `{summary_sha[:12]}…`.
 
 **Inputs and the manifest clause of {REG}.** The inputs were prepared by the registered `--prepare` on Linux from the verified
-E9-long mirror and the manifest-pinned traces; their manifest is `{INPUT_MANIFEST_SHA[:12]}…`. Its pinned fields — the config
-digest, the corpus manifest digest, the archive config digest and the archive report digest — equal the pilot's freeze record
-and the committed bytes (checked by this script). It is NOT byte-identical to the pilot's frozen `{PILOT_MANIFEST_SHA[:12]}…`,
-because that manifest's `evidence_sha256_manifest` field is the sha256 of the pilot author's private evidence `SHA256SUMS` file,
-which no other machine can reproduce (192 plausible layouts tried; a Windows prepare additionally differs on every record sha by
-the zip `create_system` byte, members identical). Operator ruling, 2026-10-07, verbatim: "{RULING}" The pilot author's
-`SHA256SUMS` and `manifest.json` were requested (issue #20) for a field-level confirmation, which enters as a dated note if it arrives.
+E9-long mirror and the manifest-pinned traces; their manifest is `{INPUT_MANIFEST_SHA[:12]}…`. Its config digest equals the
+pilot's freeze record; its corpus-manifest, archive-config and archive-report digests equal the committed bytes and the verified
+e9l mirror (the freeze record pins no field beyond the config and the manifest hash itself; all checked by this script), and
+every record's trace, alignment, score and token digest matches the corpus manifest and the e9l archive. It is NOT byte-identical
+to the pilot's frozen `{PILOT_MANIFEST_SHA[:12]}…`: that manifest's `evidence_sha256_manifest` field is the sha256 of the pilot
+author's evidence `SHA256SUMS` file, which is in neither the repository nor the archive, so the frozen hash cannot be reproduced
+without that file; whether that field is the only one that differs is unknown until the pilot's manifest arrives (regenerated
+`SHA256SUMS` layouts over the same archive files were tried against the frozen hash with no hit; a Windows prepare additionally
+differs on every record sha by the zip `create_system` byte, members identical). {REG}'s clause "or the run refuses" was never
+the driver's: the frozen `run.py` compares no manifest hash, so the only refusal was this script's, and the ruling below —
+made on 2026-10-07 after the run had finished — moved it. Operator ruling, verbatim: "{RULING}" The pilot author's `SHA256SUMS`
+and `manifest.json` were requested (issue #20) for a field-level confirmation, which enters as a dated note if it arrives.
 
 **Numerical controls (registered limits in {REG}):** {ctrl_txt}. Every per-handoff archive bridge passed, or the reader would have
 refused.
