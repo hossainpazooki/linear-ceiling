@@ -136,6 +136,13 @@ diverges from the frozen manifest on all 126 record shas (same `create_system` b
 **from WSL it reproduces the frozen manifest byte-for-byte (verified 2026-10-06, clean `git status` in `~/lc-lf`)**, so
 0046's home-side inputs are the WSL ones at `~/Desktop/Carryover-evidence/a100/inputs` (WSL home), 60 texts, 126 `.npz`.
 (g) No `--run` on CPU (`device.type != "cuda"` refuses); the home side only prepares, checks and summarizes.
+(h) **Git Bash mangles leading-slash arguments**: `rp.py put … --dest /workspace/` reached `scp` as
+`C:/Program Files/Git/workspace/`, the upload failed silently (exit 0 through a `tail`), and nothing landed on the pod.
+Every `rp.py` call from Git Bash runs under `MSYS_NO_PATHCONV=1`; verify an upload by `ls -l` + `sha256sum` on the pod,
+never by the local exit code.
+(i) The dead-man has two independent failure modes here: `rp.py` writes its script with `Path.write_text` (CRLF on
+Windows → `/usr/bin/env: 'bash\r'`), and this community pod's `runpodctl` has no working pod-scoped credentials, so
+even the LF script REFUSES to arm. The home watchdog is the only net; keep its log open and the laptop awake.
 
 ## 6. Log (UTC; filled during the sitting)
 
@@ -148,9 +155,75 @@ diverges from the frozen manifest on all 126 record shas (same `create_system` b
   needs `--max-price` above 1.25, which the sitting procedure (§2 of 2026-09-19) makes an operator decision; taken back
   to the operator with the costs: A100 SXM community $1.39 × 5 h = $6.95; A100 secure $1.59 × 5 h = $7.95; cap $10,
   balance $10.00.
+- 23:42 operator: "SXM community at 1.39". 23:42:34 `up` A100-SXM4-80GB community $1.39, default filters: **REFUSED**,
+  same message. Cause per the 09-19 procedure: the create-time FILTERS, not stock — the defaults (host RAM ≥ 48 GB,
+  8 vCPU, CUDA {12.8, 12.9, 13.0}) were sized for fp32 Llama-8B host loading and exclude hosts on 13.1+ drivers.
+- **23:43:10 `up` with widened filters** (`--min-ram 24 --min-vcpu 4 --cuda 12.8 12.9 13.0 13.1 13.2 --disk 60`,
+  none a registered quantity): **pod `mvwb1quo5c2hi1` created**, `linear-ceiling-cb`, A100-SXM4-80GB community,
+  **$1.39/h**, machine `iklhq2d1mg0g`, start balance $10.00, sitting ceiling $6.95. 23:44:30 ssh up:
+  `root@216.249.100.66 -p 22426`. Card `NVIDIA A100-SXM4-80GB, 81920 MiB, driver 595.71.05`; Ubuntu 22.04.5; python3.12.13,
+  `uv`, git, `runpodctl` present; 60 GB overlay; host RAM 1,007 GB, 256 vCPU.
+- 23:44:30 `arm-deadman`: **NOT ARMED** — `/usr/bin/env: 'bash\r'`. Cause: `rp.py` writes the dead-man script with
+  `Path.write_text` (text mode → CRLF on Windows) before `scp`; same from the LF clone, since the bug is the write, not
+  the checkout. Home `watchdog --exp cb --sitting-max 6.95` started 23:45 as the only net; dead-man re-armed by
+  stripping `\r` on the pod (below).
+- 23:45–23:48 inputs tarball uploaded (`cb-inputs.tar.gz`, 317,991,348 B). Setup script `cb-setup.sh` (LF) launched
+  detached: clone at `7c9a5fd`, `uv venv` 3.12, pinned requirements, CUDA smoke test, `snapshot_download` of
+  `Qwen/Qwen3-1.7B@70d244cc` (public, no token), untar, manifest sha check, `--check`. Exit code → `/workspace/setup.rc`.
+  The first `put` of the tarball and of the script had gone nowhere (trap (h)); re-uploaded under `MSYS_NO_PATHCONV=1`,
+  verified on the pod: 317,991,348 B, sha256 `037855dde3cbc1ad…`.
+- 23:46:57–23:47:48 `cb-setup.sh`: clone at `7c9a5fd` ✓; venv `torch 2.14.0+cu130, cuda True 13.0, transformers 5.17.0,
+  numpy 2.5.3` ✓; CUDA smoke test ✓; weights at `/workspace/hf/hub/models--Qwen--Qwen3-1.7B/snapshots/70d244cc…` (3.8 GB) ✓;
+  **`tar` exit 2** — all 36 files extracted but `chown` to the Windows uid 197609 failed in the container (`--no-same-owner`
+  next time). Finished by hand: `chown -R root:root`, manifest sha `2aeee576…` ✓, `--check` → "Inputs and runtime
+  verified: 35 handoffs" ✓. Dead-man: REFUSES on this pod (trap (i)); watchdog log shows sitting kill $6.95, warn $4.17.
+- **23:50 R2 probe launched** detached (`--probe`, the largest handoff `django__django-11087_traj#152`, |S| 80,111),
+  pid 1260 → `/workspace/cb.pid`, log `/workspace/cb-probe.log`, `HF_HUB_OFFLINE=1`, `CUBLAS_WORKSPACE_CONFIG=:4096:8`.
+  23:50:34–23:51:20 three `CUDACachingAllocator` "memory allocation failed with OOM … retrying" warnings (396–633 MB
+  requests against ≤ 335 MB free of 85.09 GB) — the allocator-retry behaviour the pilot recorded; the process stayed
+  alive, 45.8 GB resident at 23:52. Spend $0.21 at 0.15 h.
+- **~23:55 probe EXIT**, 1/35 scored: `peak_allocated_GiB` **24.95** (= the pilot's figure on the H100, to the hundredth);
+  controls `fresh_repeat` mean KL 0.0 / top-1 1.0 / max logit error 0.0, `prefix_copy` mean KL 2.4e-11 / top-1 1.0 /
+  max logit error 0.00029 (limit 0.0005); 255 continuation tokens scored. ≈ 5 min wall for the largest handoff incl. load.
+- **23:56 `--run --resume` launched** over the remaining 34 (same pod, venv, inputs, config → resume identity holds),
+  log `/workspace/cb.1.log`, pid → `/workspace/cb.pid`. Home puller every 10 min (`pull --force-tar`), R5.
+- **2026-10-07 ~01:22 driver EXIT: 35/35 scored, `complete: true`**, `summary.json` written on the pod; max
+  `peak_allocated_GiB` over the 35 = **24.95** (the probe's largest case). ≈ 86 min for 35 handoffs on the A100 SXM.
+  No control, bridge, hash or OOM failure (the allocator warnings were retries, not failures).
+- 01:09–01:30 the home puller's `pull --force-tar` extracted NOTHING into `results/`: Python resolved `tar` to
+  `C:\Windows\System32\tar.exe`, which read `/c/Users/…` as `C:\c\Users\…` and left a partial stray tree there
+  (deleted). The pod kept billing idle from 01:22 until the manual pull (watchdog: $2.50 at 1.80 h). **Trap (j)**: on
+  Windows, pull by `scp` of a single on-pod tarball and extract with `/usr/bin/tar` explicitly.
+- 01:31 on-pod `tar -czf /workspace/cb-results.tar.gz --owner=0 --group=0 cache-behavior`: 332,507,779 B, 73 files
+  (35 case `.npz`, `report.json`, `summary.json`, `inputs/` 36), sha256
+  `3339e1b3a069bd1e2b8f3c55d75f669e6f60cd0ec228aacb56d0ff779094513b`; `scp` home, sha verified before extraction.
+- 01:32 home, R5/R6: 73 files extracted; **35/35 case `.npz` match `report.json` fingerprints**; `inputs/manifest.json`
+  still `2aeee576…` = `report.identity.manifest_sha256`; identity `{gpu A100-SXM4-80GB, torch 2.14.0+cu130, transformers
+  5.17.0, cuda 13.0, cublas :4096:8}`, `git_commit 7c9a5fd`, `code_sha256` = the R3 table. Pod logs pulled and hashed
+  (`cb-probe.log 9a146e1d…`, `cb.1.log 556993ee…`, `setup.log 4d5c7c06…`, `deadman.log 0decd473…`).
+- 01:34 **R11 `--summarize` from the LF clone: PASSED** (rc 0; complete, scored 35, excluded []). The reader's figures
+  are the entry's business (`append_0049.py` re-runs it in-process); recorded here only as the sitting's evidence that
+  the reader accepted the run.
+- 01:35 R7 sweep on the pod: no token file, no `HF_TOKEN`/`hf_…` in env or history; `/workspace/hf` removed; no
+  `cache_behavior` process; results dir 318 MB / 73 files still on the pod until `terminate`.
+- 01:34:11 verify receipt written (`~/.cache/linear-ceiling/cb-verified.json`: schema v1, this pod's nonce, `report_sha256
+  3564605773bb…`, the tarball sha). **`terminate` sent; read back PROVEN GONE** (pods 0, nothing billing).
+  **Sitting $2.57** (pessimistic `max(balance delta, elapsed × rate)`; balance $10.00 → $7.51), 1.85 h wall, of which
+  ≈ 86 min compute and ≈ 12 min idle after the driver exited (trap (j)). Campaign $2.57 vs cap $10.
+- R8 backup: pending the operator's token (`tools/hf_backup.sh --check hossainpazooki/linear-ceiling-cache-behavior-2026-10-07
+  <stage>`, then push, then `tools/hf_verify_backup.py`).
 
 ## 7. Open before 0049 can append
 
-- Ruling: 0047's "byte-for-byte" manifest sentence vs the unpinnable `evidence_sha256_manifest` field (§3). Either
-  obtain the pilot's `SHA256SUMS` from its author (neuriv) and re-prepare, or record a reading that compares the
-  manifest with that field masked (a draft-script change plus a sentence in 0049; 0047's text is immutable).
+- **Ordering guard first:** `append_0049.py --preview` refuses with `ordering: 0048 present, 0049 absent` — 0048 (the
+  0046 extension's figures, which needs the operator's 0046 run) is staged, not appended. 0049 is queued behind it by
+  staging order. Re-sequencing (0049 before 0048) is an allocator decision: edit `PREV` in the draft and the README,
+  nothing on the ledger moves.
+- **Then the manifest assertion:** 0047's "byte-for-byte" sentence vs the unpinnable `evidence_sha256_manifest` field
+  (§3). Either obtain the pilot's `SHA256SUMS` from its author (neuriv) and re-prepare on Linux (the 35 record shas
+  will then match, §3), or record a reading that compares the manifest with that field masked (a draft-script change
+  plus a sentence in 0049; 0047's text is immutable). Nothing else in the run is in question: every other identity
+  field equals the frozen record and the summarizer passed.
+- **R8 backup** (operator token): stage `results/cache-behavior/` and push; `--dataset` for `append_0049.py`.
+- **0046's operator run** is the next sitting: inputs prepared on WSL reproduce the frozen `consolidation-manifest.json`
+  exactly (trap (f)); card L40S/A100; the same RunPod path with traps (h)–(j) applied; ~3.5–6 h, ≈ $5–9.
