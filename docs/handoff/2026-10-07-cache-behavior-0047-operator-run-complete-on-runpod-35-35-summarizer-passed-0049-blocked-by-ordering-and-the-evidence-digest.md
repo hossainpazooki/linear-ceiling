@@ -35,8 +35,11 @@ minute-by-minute evidence is `docs/2026-10-06-cache-behavior-runpod-runbook.md` 
   contradicting 0054; two stale Condition-1 sentences); T1 closed, the rest moved to T2.
 - **built (uncommitted) — runbook §6/§7 log lines after `580f73c`**, this brief, six learnings with index rows.
 - **unknown — PR #18 / #19** (co-author, 2026-10-06) still open; #18's baseline PDF is the wrong build (`be90e0af…`).
-- **planned — R8 backup** of `results/cache-behavior/` (needs the operator's token); the 0046 sitting; E-TRUNC (AWS
-  credentials invalid; 61 GB free on C: cannot hold its mirror); the Llama long cell (93 GB mirror).
+- **built — R8 backup VERIFIED 2026-10-07 03:47Z**: `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07` (private),
+  74 files, 70 by LFS sha + 4 downloaded and hashed, 0 problems; this is `append_0049.py`'s `--dataset` value.
+  re-verify: `tools/hf_backup.sh --verify-only hossainpazooki/linear-ceiling-cache-behavior-2026-10-07 ~/dev/hf-staging/linear-ceiling-cache-behavior-2026-10-07`   # exit 0, BACKUP VERIFIED (needs a read token or a login)
+- **planned** — the 0046 sitting; E-TRUNC (AWS credentials invalid; 61 GB free on C: cannot hold its mirror); the Llama
+  long cell (93 GB mirror).
 
 ## Locked decisions
 
@@ -81,8 +84,8 @@ minute-by-minute evidence is `docs/2026-10-06-cache-behavior-runpod-runbook.md` 
    git commit -m "docs: 0047 sitting close; six learnings"
    git push origin main
    ```
-2. **R8 backup** (operator token, env-only): stage `results/cache-behavior/` → `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07`,
-   `tools/hf_backup.sh --check` then push, `tools/hf_verify_backup.py`.
+2. ~~R8 backup~~ DONE 03:47Z (above). Revoke the write token in the Hub UI if not yet done (R9); the 09-30 cached login on
+   this machine now answers "Invalid username or password", i.e. it is already dead.
 3. **Two decisions for 0049**: (a) ask neuriv for the pilot's `SHA256SUMS` (then a WSL re-prepare should hit `9a6f2923…`),
    or rule a reading that pins the manifest by its verified fields; (b) whether 0049 may precede 0048.
 4. **0046 sitting** next: inputs ready; L40S/A100 on RunPod under the same runbook shape; ≈ $5–9.
