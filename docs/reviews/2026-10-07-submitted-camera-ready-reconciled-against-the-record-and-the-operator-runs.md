@@ -68,6 +68,62 @@ hash — the only refusal was the figures script's — and the ruling (2026-10-0
 paragraph did not say so. **All four recommended wording changes were applied** to `append_0049.py` before the append, the
 0047 runbook's §3/§7 were corrected, and a correction was posted on issue #20 (which repeated the C2 overstatement).
 
+## 6. The two judgment rows (2026-10-07 ~13:20Z): the lower-bound sentence's reach and the scoping sentences
+
+Two read-only skeptic subagents, each prompted to refute; every citation below was re-checked by the operator against
+`ledger/ledger.md` (`grep -n` on the whole file), the extracted PDF text and the raw alignment records.
+
+**6.1 Reach of the contrary reading (#18 Q4).** Hypothesis "only App. A ('not a general lower bound on that cost') and
+App. D ('not an achievable recomputation or runtime cost') carry the reading 0054:3319 declined to adopt" — **REFUTED**:
+a third sentence carries it, in the Introduction: "Its removal fraction, f*, describes how much of the matched-token
+error distribution must be excluded to meet that tolerance. Actual recomputation retains the selected tokens and can
+change other states." The phrase "oracle lower bound" occurs nowhere in the submission (0 hits; 0023:1281 requires it
+beside every stated f*). Every other sentence that states f* — abstract, Fig. 1c caption, §3, §4 and the Table 1 caption,
+the Conclusion's "cohort-median oracle removal fraction is zero" — leans on neither reading; "practical savings remain
+open" (abstract, Conclusion), App. C's seam note and Prop. 4's exact-repair model change under neither ruling.
+
+*The arithmetic the skeptic added, confirmed by the operator.* 0023:1275–1281 defines f* with "removed (recomputed
+exactly)" and the MEAN **over the remaining tokens**, and calls it a lower bound for two reasons (exact restoration;
+isolated recompute, no propagation). Both reasons push real cost *up*. But under exact isolated repair judged on the mean
+over **all** tokens, the k repaired tokens contribute δ = 0, so that mean is (n−k)/n times the remaining-token mean: the
+fraction g* that criterion needs satisfies g* ≤ f*, never the reverse (δ = (0.5, 0.5, 0.5, 0), τ = 0.3: f* = 0.50,
+g* = 0.25; 0 of 5,000 random cases have g* > f*). The denominator pushes real cost *down*; the registered reasons push it
+*up*; no ordering between f* and real selective recompute is established. g* = f* whenever f* = 0, so every HELD verdict
+and every zero median is untouched; the gap opens at τ = 0.1 and 0.03. App. D's sentence is therefore **correct**;
+App. A's conclusion is correct but its reason is **backwards** — "because practical recomputation can propagate errors" is
+0023's reason 2, which argues *for* the bound; the reason that supports App. A is App. D's denominator.
+
+*What each #18 Q4 ruling requires.* (a) Restore the registered words: add "oracle lower bound" + both reasons at roughly
+nine places and delete the Intro, App. A and App. D sentences — the paper would then print a claim the arithmetic above
+refutes. (b) Corrective entry (0054's own condition): amend 0023:1278/1281 and 0027:1651's "HOLDS reads on a floor",
+giving the denominator as the reason; in the MLSys draft the Intro and App. D stand, App. A's "because" clause changes to
+cite App. D. The operator's recommendation is (b); the ruling is the operator's.
+
+**6.2 Scoping sentences (#18 Q3).** App. A: "three receiver models from two families … cross-model transfer uses a
+single model pair and a single calibration size on the long cohort." **PARTLY**: true of the PDF's own content
+(Qwen3-1.7B, Qwen3-4B, SmolLM3-3B; the only pair used is Qwen3-0.6B → 1.7B; the n = 420 map "was not run on the long
+cohort"), silent about the ledger. Llama is mentioned nowhere (0 hits), while 0039/0042/0044 register a second family
+with a verdict — H-E9F **HELD** 28/28 (0044:2864) — a fourth receiver from a third family, and 0044:2971 carries that
+pair's own cross arm (median f*(τ_K) 0.7317 on the 28). "A single model pair" is false of the record unless "on the long
+cohort" scopes the pair as well as the calibration size (the Llama long cell 0050 is registered only: `results/e9fl/`
+holds `align/` and `calibration/`). No sentence claims "the model" generally: "the tested cross-model linear mapper"
+(abstract), "across the tested models" (Conclusion), App. B disclaims a general penalty. Row for the MLSys draft: either
+report the Llama short cell or write "(a registered Llama-3.2-3B → Llama-3.1-8B short cell is not reported here)"; the
+choice is #18 Q3's.
+
+**6.3 Table 5's exclusion counts.** 25 + 35 + 4 + 4 = 68; the caption's "39 handoffs excluded for length" = 35 + 4; the
+short cell's `excluded: 43` = 39 + 4; issue #7's "68 = 25 + 35 + 8" has 8 = 4 + 4. Recomputed from the 68 per-handoff
+records in `results/e9/align/` and `results/e9l/align/` (not from entry prose): the reason counts match 0035:2091's
+by-name list exactly, and all six Table 5 figures reproduce (within the cap: |S| 25,460 (14,269, 30,106), |R| 6,551
+(4,148, 9,165); the 39: |S| 52,141 (35,692, 147,218), |R| 11,500 (7,085, 20,589); `numpy` `inverted_cdf`). **One
+imprecision**, also present in the ledger's prose (0025:1460, 0035:2091): the four empty-receiver handoffs have |S| =
+98,325 / 284,742 / 113,596 / 89,296, so **eight** handoffs exceed 81,920; "4 exceed 81,920, and 4 have empty receiver
+prompts" is a partition by exclusion precedence (empty receiver assigned first), not a count of handoffs over the cap.
+Draft wording: "4 more exceed 81,920, and 4 others — also over 81,920 — have empty receiver prompts and are excluded for
+that reason." The abstract's "35 recorded handoffs" is the long subset of §3's 68; its 35K–80K / 3.4K–25.1K ranges
+reproduce from the long cell's included records (34,974–80,111; 3,433–25,073); the 68 come from 60 trajectories, all
+composio_swekit (0013:720–730 — 60 of 2,904 measurable, 2,844 not; 0015:834).
+
 ## 4. What this record does not do
 
 It does not judge the causal/interpretive rows (#18 rows 5–7 are moot; 36–38 and Q3/Q4 remain the operator's), it does
