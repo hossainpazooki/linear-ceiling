@@ -140,3 +140,40 @@ repo root of a real clone at the pinned commit. (m) The three models must share 
   max `relative_mean_gap` **1.2e-5**, max `max_fstar_gap` **0.0** (budgets, not figures; the entry reads them from the
   summarizer). The registered pause is satisfied.
 - 04:13 **run 2 `qwen4` launched** detached (log `/workspace/cons-qwen4.log`, pid file rewritten).
+- **05:41:10 run 2 EXIT, `COMPLETE qwen4`**: 60/60 texts; max `peak_allocated_GiB` **39.72** (the 80,111-token text; the
+  §2 arithmetic said ≈ 43 — a 48 GB card would have had < 5 GiB of margin, so the 80 GB choice stands); Σ seconds 5,202
+  (≈ 87 min of scoring, 203 s / 187 s on the two longest). Pod disk 40 GB used / 81 GB free. Spend $2.42 at 1.73 h.
+- 05:42 **run 3 `smollm3` launched** detached (log `/workspace/cons-smollm3.log`, pid file rewritten).
+- **06:28:54 run 3 EXIT, `COMPLETE smollm3`**: 60/60 texts; max `peak_allocated_GiB` **22.96**; Σ seconds 2,801 (≈ 47 min);
+  `no_rope_layers` 9 of 36 recorded (the design's "layers without rotary embeddings remain unchanged"). On-pod outputs:
+  `qwen17_bridge` 3.3 GB, `qwen4` 5.2 GB, `smollm3` 2.4 GB (witnesses dominate). Spend $3.52 at 2.54 h.
+  **All three models ran on one pod, one GPU name, one runtime** (what `append_0048.py` asserts).
+- 06:29–06:40 final pull: on-pod `out-final.tar.gz` (qwen4 + smollm3) 7,500,948,731 B, sha `35f282c1c551c20a…` equal on the
+  pod and at home; 141 files under `a100/results/`; **fingerprints 6/6 + 60/60 + 60/60, witness hashes 4/4 per model**, GPU
+  `NVIDIA A100-SXM4-80GB` on all three; `SHA256SUMS` rewritten (666 files). Pod logs pulled and hashed (`cons-bridge.log
+  b69e8806…`, `cons-qwen4.log cf77d845…`, `cons-smollm3.log 15396304…`, `setup.log 41965969…`). R7 sweep: no token file,
+  no `HF_TOKEN`/`hf_…` in env or history, no driver running, `/workspace/hf` removed.
+- **06:40:08–06:40:56 R11 `summarize.py` over the whole mirror: PASSED (rc 0)** from the LF clone (Windows-native paths);
+  `a100/summary.{json,csv}` written. The figures are the entry's business (`append_0048.py` re-runs the reader in-process).
+- 06:41 `append_0048.py --preview` (box/launched/finished given, `--dataset pending`): **renders** (rc 0, no `verdict:`
+  line) — its ordering guard (`PREV` 0047) and its one-GPU / one-runtime / driver-hash assertions all pass on this mirror.
+- 06:41:30 verify receipt written; `terminate` REFUSED once because the state's `verify_file` path was `C:\c\Users\…`
+  (the `--verify-file $HOME/…` argument had been passed under `MSYS_NO_PATHCONV=1`, so the unconverted `/c/Users/…`
+  reached Python — trap (h) in reverse: pass `~/…` or a `C:/` path for arguments Python opens). Receipt copied to that
+  path; **06:43:06 `terminate` sent, read back PROVEN GONE**; stray path removed. **Sitting $3.86** (2.77 h wall, of
+  which ≈ 2.4 h scoring across the three models), campaign $6.43 of the $15 cap, balance $23.59.
+- 06:45 `SHA256SUMS` rewritten with `a100/summary.{json,csv}` included (668 files, mirror 13.18 GB); R8 staging copy at
+  `~/dev/hf-staging/linear-ceiling-consolidation-2026-10-07/` (669 files + card, link count 1).
+
+## 7. Open after the sitting
+
+- **R8 backup VERIFIED 2026-10-07 12:00:12Z**: `hossainpazooki/linear-ceiling-consolidation-2026-10-07` (private; anonymous
+  API read → 401) matches the staging copy in both directions. The first verifier pass (11:54Z) failed on Windows
+  `MAX_PATH`: `hf_hub_download` caches each small file under `~/.cache/huggingface/hub/datasets--…/snapshots/<sha>/<path>`,
+  274 characters for the longest file here; re-run with `HF_HOME=C:/hf` (246 characters) under `--verify-only`, which
+  uploads nothing. **Trap (o)**: long mirrors verify under a short `HF_HOME`.
+- **Entry 0048**: `append_0048.py` renders today; append after the backup with `--dataset` set (operator; preview first;
+  retire the script in the append commit). 0049 then follows if re-sequenced before 0048 or after it as staged.
+- The 0046 entry's "L40S 48 GB … full-cap KV < 3 GB" sentence is contradicted by the measured peaks (4B 39.72 GiB at
+  81,920 tokens); nothing to correct on the ledger (the entry allowed "a larger card if the probe says so"), but the
+  figures entry should state the card and the peak.
