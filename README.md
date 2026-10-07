@@ -103,7 +103,8 @@ no read token is needed to fetch them. Protocol R8 allows public datasets (opera
 | understand why the program asked these questions | `docs/gap-map.md` and `docs/2026-09-06-gap-map-revisited.md` |
 | read the paper being written from this record | `docs/paper/2026-09-10-lcfm-outline-v2.md` |
 | pick up the work | `docs/handoff/HANDOFF.md`, newest brief first |
-| run or re-run an experiment | `CLAUDE.md` for the commands, `docs/gpu-experiment-protocol.md` for the rules |
+| run or re-run an experiment | `docs/agent/experiment-commands.md` for the commands, `docs/gpu-experiment-protocol.md` for the rules |
+| work in the repo as an agent | `CLAUDE.md` for the standing rules, `docs/agent/repo-architecture.md` for the module map |
 | see what went wrong before and how it was caught | `docs/learnings/LEARNINGS.md` |
 | see the older, diagram-heavy README | `docs/archive/` |
 
@@ -165,7 +166,7 @@ arm in one sentence and an appendix table.
 K strips exactly (independently refuted, survives); `config/e9l.toml` with a context floor, a
 configuration-bridge control, a registered run order and a prefix-checkable stopping rule;
 `append_0035.py` registers all of it before the box is touched; `append_0036.py` writes the verdict
-from the summarizer only. Commands: `CLAUDE.md`. Runbooks and protocol R1–R12:
+from the summarizer only. Commands: `docs/agent/experiment-commands.md`. Runbooks and protocol R1–R12:
 `docs/gpu-experiment-protocol.md`. Newest brief: `docs/handoff/HANDOFF.md`.
 
 ## What the record says (decided cells)
@@ -242,3 +243,4 @@ restore the gates decide, not the download.
 | `docs/drafts/` | append scripts for entries not yet written; its README is the only number allocator |
 | `docs/archive/` | superseded READMEs, verbatim: the visual-heavy one (`7ce63cf`) and the status form (`b4b56aa`) |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
+| `CLAUDE.md` · `docs/agent/` | agent rules; the experiment command reference and the repository architecture |
