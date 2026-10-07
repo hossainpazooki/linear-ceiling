@@ -3770,3 +3770,61 @@ does not validate τ_K as a quality threshold, does not establish unchanged free
 their records; the Qwen3 short cells (Condition 1).
 
 prior-entries-sha256: f1efa70bf50f624d1d0c319bf7217ff6c3e7cf77959f9a032170529e98b7cb98
+
+### 0058 — 2026-10-07 — Corrective: f* is the oracle REMOVAL fraction, not a lower bound on real selective recompute; the 0023 / 0027 "oracle lower bound … read on a floor" reading is withdrawn and the words every output carries change; definition, verdicts, cells, τ and every figure unchanged
+
+**What 0023 and 0027 say.** 0023 (line 1275) defines f*(τ) as the smallest fraction of matched tokens that, removed
+(recomputed exactly), leaves the MEAN δ_K **over the remaining tokens** at or below τ; line 1278 calls it "an oracle
+LOWER BOUND on real selective recompute for two stated reasons" — a recomputed token is assumed restored exactly, and real
+partial prefill recomputes the selected tokens against the reused KV of the others, so errors propagate; line 1281
+requires every output stating f* to carry the words and both reasons. 0027 (line 1651) builds "HOLDS reads on a
+floor" on it and sets f* beside CacheBlend's 10–15 % "ACHIEVED figure" (line 1653). 0029, 0036, 0038, 0044 and
+others restate the floor beside their cells; 0054 (line 3320) declined to adopt the contrary reading and said it
+"needs its own corrective entry if it is ever to stand". This is that entry.
+
+**Why the bound does not hold.** The two registered reasons make a real scheme's repair fraction *higher* than an exact,
+isolated one. But the denominator pulls the other way: write g*(τ) for the fraction an exact, isolated repair needs when the
+mean is taken over **all** tokens (the k repaired tokens contributing 0). That mean is (n − k)/n times the remaining-token
+mean, so every k that satisfies f*'s criterion satisfies g*'s, and **g* ≤ f*** always. Computed here with the registered
+`f_star` (`linear_ceiling.e9_pertoken`): δ = (0.5, 0.5, 0.5, 0.0) at τ = 0.3: f* = 0.50, g* = 0.25; over
+5,000 seeded random cases (seed 58; n 2–40; τ ∈ {0.03, 0.1, 0.3186}) g* > f* in 0,
+g* < f* in 3,210, equal in 1,790, and (f* = 0) ⇔ (g* = 0) in every case. So f* bounds the exact-repair
+fraction from *above*, the registered reasons push the real fraction *up* from there, and no ordering between f* and real
+selective recompute is established in either direction. Only the reading was wrong: the definition at line 1275
+already says "over the remaining tokens", and 0045 (line 2991) already reads f* = 0 as a statement about the mean.
+
+**The ruling (operator, 2026-10-07).** (1) f* is read as the **oracle removal fraction**: the share of each handoff's
+matched tokens whose removal brings the remaining-token mean within τ — a measure of how concentrated the disagreement is,
+not a repair cost, and **not a bound on real selective recompute in either direction**. (2) Line 1281 is replaced:
+every output stating f* carries the words "oracle removal fraction" and this entry's number, and the two 0023 reasons are
+stated only where propagation is discussed, never as grounds for a bound. (3) 0027's floor sentence is withdrawn. HOLDS
+reads: on the median handoff, the mean δ_K over the matched tokens is at or under the mapper's own mean deviation τ_K, or
+gets there by removing at most the band's 15 % of them — f*(τ) = 0 ⇔ mean ≤ τ (Theorem 1 of the paper;
+`fstar_eq_zero_iff` in `proofs/Carryover/Fstar.lean`, named from the source, not built here) — "no more than the mapper"
+as a statement about disagreement, not about what any scheme pays. (4) The CacheBlend
+comparison of line 1653 is dropped: an oracle removal fraction and an achieved recompute fraction are not
+comparable in either direction. Entries that restate the floor stand as written (the chain is immutable) and are read
+under this entry from here on.
+
+**What changes in the tree, same commit.** The words `summarize_e9` prints beside the verdict-bearing f* line and the
+`f_star` docstring; `tests/test_summarize_e9.py`'s pinned phrase; README.md's verdict table and "What HELD means here";
+CLAUDE.md's H-E9 line; the staged `append_0057.py`'s scope sentence. The script that appended this entry refused until each
+carried the new words and none the old.
+
+**Occasion, for the record.** The camera-ready submitted 2026-10-04 (sha `6c706bef…`) writes App. D's "f* is not an
+achievable recomputation or runtime cost" — correct, and the denominator is its reason — and App. A's "not a general lower
+bound … because practical recomputation can propagate errors", whose conclusion is correct but whose reason is 0023's
+second, which argues *for* the bound; a third sentence in the Introduction carries the same reading. Found by the skeptic
+pass of `docs/reviews/2026-10-07-submitted-camera-ready-reconciled-against-the-record-and-the-operator-runs.md` §6.1. What the MLSys draft must change is the response map's business (#18 Q4), not this entry's.
+
+**What this does NOT touch.** The definition of f* (0023, line 1275) and its 1e-9 tolerance; every verdict and cell
+(H-E9 0029, H-E9L 0036, H-E9F 0044; the rule compares the statistic to the band, and the statistic is unchanged); τ_K, τ_V,
+τ_agent_K, the band edges, the ladder; every figure on the ledger; 0045's tail figures; Theorem 2's bounds *on* f* as a
+function of δ (`lower_bound_max`, `lower_bound_deltaMax`, `fstar_le_p` in `Fstar.lean` — bounds on the statistic, not
+readings of it); 0010 / 0012's visible-only cost figures, which are LOWER BOUNDs on spend of a different statistic and keep
+their label.
+
+**Numbering.** 0058, the next free number in the drafts README; appended after 0049 in file order while 0051 and 0057 stay
+staged (`ledger_check` chains by file order). Next free number after this entry: 0059.
+
+prior-entries-sha256: 5ba3adab23b109d2a4e37c8384a6ff544decebab2e04c8f32bd8accbd5dbfee3

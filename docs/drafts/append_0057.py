@@ -109,7 +109,7 @@ from the late part of S, not number of turns.
 
 **Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the long half of one corpus under the scaled
 receiver; YaRN receivers only — the L32-native cell is deferred (ruling 3), so nothing here compares native with YaRN on the
-same tokens and 0036's bridge control (W6) stays the only such evidence; f* stays an oracle lower bound (0023, 0027);
+same tokens and 0036's bridge control (W6) stays the only such evidence; f* is read as the oracle removal fraction (0058);
 generation quality after reuse not measured.
 
 prior-entries-sha256: PLACEHOLDER

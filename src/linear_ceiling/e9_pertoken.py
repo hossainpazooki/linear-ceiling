@@ -58,8 +58,10 @@ def f_star(delta_token: np.ndarray, tau: float) -> float:
     descending order of deviation (each assumed restored exactly), leaves the MEAN deviation of
     the rest at or below tau (to F_STAR_REL_TOL relative, so a float32 per-token record whose
     mean lands 1e-11 above tau does not cost a token). 0 when the full-set mean is already
-    <= tau; 1 when no proper subset qualifies. An oracle LOWER BOUND on real selective recompute
-    (0023: restored-exactly assumption; no error propagation through the reused KV)."""
+    <= tau; 1 when no proper subset qualifies. Read as the oracle REMOVAL fraction (0058): because the
+    mean is over the REMAINING tokens, the exact-repair fraction on the all-token mean is at most f*,
+    while real recompute propagates errors through the reused KV (0023) -- so f* bounds real selective
+    recompute in neither direction."""
     d = np.asarray(delta_token, dtype=np.float64)
     if d.ndim != 1:
         raise ValueError("f* needs a one-dimensional array of token deviations")

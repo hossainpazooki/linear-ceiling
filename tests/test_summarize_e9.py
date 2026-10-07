@@ -64,7 +64,7 @@ def test_clean_report_summarizes_with_the_0023_statistics(ran):
     cfg, e7, rp, runner = ran
     md = summarize(cfg, runner=runner, encoder=words, e7=e7)
     assert "1 included / 1 excluded" in md
-    assert "f*(tau_K = 0.2500)" in md and "oracle LOWER BOUND" in md
+    assert "f*(tau_K = 0.2500)" in md and "oracle REMOVAL fraction" in md   # the words 0058 requires beside f*
     assert "bridge R²" in md and f"{_MEAN:.4f}" in md
     assert "verdict on H-E9 is NOT stated" in md and "Units:" in md
     fig = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))

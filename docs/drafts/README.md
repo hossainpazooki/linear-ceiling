@@ -89,6 +89,19 @@ R8 `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07`), after a skeptic p
 wordings (review `docs/reviews/2026-10-07-submitted-camera-ready-…md` §5); `append_0049.py` retired in the append commit. File order
 now ends 0050, 0048, 0049. Still staged: 0051 (Llama long figures), 0057 (E-TRUNC figures). Next free: 0058.)*
 
+**Staged 2026-10-07: `append_0058.py` — CORRECTIVE, the reading of f*** (operator ruling 2026-10-07, drafted after the skeptic
+pass in `docs/reviews/2026-10-07-submitted-camera-ready-…md` §6.1): 0023's "oracle LOWER BOUND on real selective recompute" and
+0027's "HOLDS reads on a floor" are withdrawn — the mean is over the REMAINING tokens, so the exact-repair fraction on the all-token
+mean is at most f* while the two registered reasons push real recompute up; no ordering in either direction. f* is read as the
+**oracle removal fraction**; every output stating f* carries those words and the entry number. Descriptive, no row, no `verdict:`
+line; (f* = 0) ⇔ (g* = 0) so no cell can move. Fail-closed: every cited line located by sentence search inside its entry; the toy
+example and a seeded sweep (seed 58) computed in-process with the registered `f_star`; refuses until the living files that print or
+state the old words carry the new ones (`summarize_e9` output line, `f_star` docstring, `tests/test_summarize_e9.py`, README.md,
+CLAUDE.md, staged `append_0057.py`) — all edited in the staging commit. Ordering guard 0049 present / 0058 absent (0051 and 0057 may
+land before or after). Running the script is the ratification (0055 precedent). Next free number: **0059**.
+*(0058 APPENDED 2026-10-07 by the operator, chain `5ba3adab23b1`; `ledger ok`; script retired in the append commit. File order now
+ends 0048, 0049, 0058. Still staged: 0051, 0057.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
