@@ -222,7 +222,12 @@ even the LF script REFUSES to arm. The home watchdog is the only net; keep its l
   0046 extension's figures, which needs the operator's 0046 run) is staged, not appended. 0049 is queued behind it by
   staging order. Re-sequencing (0049 before 0048) is an allocator decision: edit `PREV` in the draft and the README,
   nothing on the ledger moves.
-- **Then the manifest assertion:** 0047's "byte-for-byte" sentence vs the unpinnable `evidence_sha256_manifest` field
+- **RULED 2026-10-07 (operator), verbatim:** "0047's byte-for-byte clause is read as: every field of the operator's
+  manifest that is pinned to the repository or the verified archive equals the pilot's freeze record; the evidence-file
+  digest, which pins a private file, is excluded. The operator's manifest 2aeee576… is the one 0049 asserts." Applied to
+  `docs/drafts/append_0049.py` (assertions on `2aeee576…` plus the four freeze-record fields; the reading stated in the
+  entry text). The pilot author's files were requested in parallel for a field-level confirmation (GitHub issue, same day).
+- *(superseded by the ruling above)* **Then the manifest assertion:** 0047's "byte-for-byte" sentence vs the unpinnable `evidence_sha256_manifest` field
   (§3). Either obtain the pilot's `SHA256SUMS` from its author (neuriv) and re-prepare on Linux (the 35 record shas
   will then match, §3), or record a reading that compares the manifest with that field masked (a draft-script change
   plus a sentence in 0049; 0047's text is immutable). Nothing else in the run is in question: every other identity

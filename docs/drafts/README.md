@@ -75,6 +75,11 @@ IN-PROCESS over the four passes and states every count from it; reads the two re
 E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
 config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053, 0050 (`cff787f`, script retired); staged 0048/0049 and 0051. Next free number: **0057**.)*
 
+*(2026-10-07: 0047's operator run is DONE and backed up (runbook `docs/2026-10-06-cache-behavior-runpod-runbook.md`); `append_0049.py`
+now asserts the OPERATOR's inputs manifest `2aeee576…` with its pinned fields checked against the pilot's freeze record, per the operator
+ruling of 2026-10-07 quoted in the script (the pilot's frozen `9a6f2923…` embeds the sha of a private file); its `report["identity"]`
+key bug fixed. Still queued behind 0048 (`PREV = "0048"`) unless the operator re-sequences. 0046's operator run is in progress.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
