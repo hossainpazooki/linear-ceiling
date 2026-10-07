@@ -63,8 +63,10 @@ checkout is CRLF and hashes differently — see trap (a)).
 Cohort from the prepared manifest: 35 handoffs, 0 excluded, Σ|S| 1,771,353, Σ|R| 427,729, Σ continuation 8,943 tokens
 (the scored count is one less per handoff).
 
-**The manifest is NOT byte-identical to the pilot's frozen `9a6f2923…`.** The four pinned digests match (config, corpus
-manifest, archive config, archive report). The 35 record shas hash `np.savez_compressed` output, which is
+**The manifest is NOT byte-identical to the pilot's frozen `9a6f2923…`.** The config digest equals the freeze record's;
+the corpus-manifest, archive-config and archive-report digests equal the committed bytes and the verified e9l mirror (the
+freeze record pins no field beyond the config and the manifest hash itself — corrected 2026-10-07 after a skeptic pass; an
+earlier wording here said "four freeze-record fields"). The 35 record shas hash `np.savez_compressed` output, which is
 **platform-dependent by one byte per zip entry**: Python's `zipfile` writes `create_system` 0 on Windows and 3 on Unix,
 so a Windows prepare and a Linux prepare of the same inputs agree on every `.npy` member byte (35/35 verified) and on
 none of the 35 `.npz` shas (0/35). The pilot prepared on Unix, so only a Unix-side prepare can match its record shas;
@@ -225,8 +227,13 @@ even the LF script REFUSES to arm. The home watchdog is the only net; keep its l
 - **RULED 2026-10-07 (operator), verbatim:** "0047's byte-for-byte clause is read as: every field of the operator's
   manifest that is pinned to the repository or the verified archive equals the pilot's freeze record; the evidence-file
   digest, which pins a private file, is excluded. The operator's manifest 2aeee576… is the one 0049 asserts." Applied to
-  `docs/drafts/append_0049.py` (assertions on `2aeee576…` plus the four freeze-record fields; the reading stated in the
-  entry text). The pilot author's files were requested in parallel for a field-level confirmation (GitHub issue, same day).
+  `docs/drafts/append_0049.py` (assertions on `2aeee576…`; the config digest against the freeze record, the other three
+  pinned digests against the committed bytes and the e9l mirror; the reading stated in the entry text). The pilot author's
+  files were requested in parallel for a field-level confirmation (GitHub issue #20, same day). Skeptic pass 2026-10-07
+  (`docs/reviews/2026-10-07-submitted-camera-ready-…md` §5): two wordings refuted and corrected — "four freeze-record
+  fields" (the record pins two), and "because the evidence field" (whether it is the ONLY differing field is unknown
+  until the pilot's manifest arrives); the entry also now states that the ruling postdates the run and that the frozen
+  driver never enforced 0047's "or the run refuses".
 - *(superseded by the ruling above)* **Then the manifest assertion:** 0047's "byte-for-byte" sentence vs the unpinnable `evidence_sha256_manifest` field
   (§3). Either obtain the pilot's `SHA256SUMS` from its author (neuriv) and re-prepare on Linux (the 35 record shas
   will then match, §3), or record a reading that compares the manifest with that field masked (a draft-script change

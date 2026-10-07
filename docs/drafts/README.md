@@ -84,6 +84,11 @@ key bug fixed. Still queued behind 0048 (`PREV = "0048"`) unless the operator re
 summarizer passed, R8 `hossainpazooki/linear-ceiling-consolidation-2026-10-07`); `append_0048.py` retired in the append commit. File
 order now ends 0053, 0050, 0048. 0049's ordering guard is therefore satisfied as staged; still staged: 0049, 0051, 0057. Next free: 0058.)*
 
+*(2026-10-07 12:46Z: **0049 APPENDED** (chain `f1efa70bf50f`; the operator's 0047 run on a RunPod A100 SXM, 35/35, summarizer passed,
+R8 `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07`), after a skeptic pass over its operator-written paragraph corrected two
+wordings (review `docs/reviews/2026-10-07-submitted-camera-ready-…md` §5); `append_0049.py` retired in the append commit. File order
+now ends 0050, 0048, 0049. Still staged: 0051 (Llama long figures), 0057 (E-TRUNC figures). Next free: 0058.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts

@@ -3724,3 +3724,49 @@ length effect (different handoffs), and not pooled with any 0029 / 0036 figure.
 **What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; the original pair's entries and records.
 
 prior-entries-sha256: 08b376985b5caac35d54237e9d104f8d03a87399372fe74136cff78fede72bf8
+
+### 0049 — 2026-10-07 — Cache-behavior comparison ran `[BASELINE, DESCRIPTIVE]`: next-token sensitivity of Qwen3-1.7B to reading an assembled same-model cache on the 35 long handoffs, fresh vs reused with two controls; no band, no cell moves
+
+**Setup, as registered (0047).** RunPod community NVIDIA A100-SXM4-80GB (one card), pod and machine ids in docs/2026-10-06-cache-behavior-runpod-runbook.md; launched 2026-10-06T23:50Z, finished 2026-10-07T01:22Z; GPU `NVIDIA A100-SXM4-80GB`, PyTorch 2.14.0+cu130,
+Transformers 5.17.0, CUDA 13.0; config `53c664556d18…`, driver `core.py` `f346b5fdf3d3…` / `run.py` `15e1ff8c1dbc…` as committed,
+run at commit `7c9a5fd`.
+35 of 35 handoffs scored, 8,908 continuation tokens, none excluded; peak allocation 24.95 GiB. Backup: `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07` (R8,
+verified both ways before this entry). Pinned: `report.json` `3564605773bb…`, `summary.json` `5228de0dd8c4…`.
+
+**Inputs and the manifest clause of 0047.** The inputs were prepared by the registered `--prepare` on Linux from the verified
+E9-long mirror and the manifest-pinned traces; their manifest is `2aeee5769c0a…`. Its config digest equals the
+pilot's freeze record; its corpus-manifest, archive-config and archive-report digests equal the committed bytes and the verified
+e9l mirror (the freeze record pins no field beyond the config and the manifest hash itself; all checked by this script), and
+every record's trace, alignment, score and token digest matches the corpus manifest and the e9l archive. It is NOT byte-identical
+to the pilot's frozen `9a6f2923d3be…`: that manifest's `evidence_sha256_manifest` field is the sha256 of the pilot
+author's evidence `SHA256SUMS` file, which is in neither the repository nor the archive, so the frozen hash cannot be reproduced
+without that file; whether that field is the only one that differs is unknown until the pilot's manifest arrives (regenerated
+`SHA256SUMS` layouts over the same archive files were tried against the frozen hash with no hit; a Windows prepare additionally
+differs on every record sha by the zip `create_system` byte, members identical). 0047's clause "or the run refuses" was never
+the driver's: the frozen `run.py` compares no manifest hash, so the only refusal was this script's, and the ruling below —
+made on 2026-10-07 after the run had finished — moved it. Operator ruling, verbatim: "0047's byte-for-byte clause is read as: every field of the operator's manifest that is pinned to the repository or the verified archive equals the pilot's freeze record; the evidence-file digest, which pins a private file, is excluded. The operator's manifest 2aeee576… is the one 0049 asserts." The pilot author's `SHA256SUMS`
+and `manifest.json` were requested (issue #20) for a field-level confirmation, which enters as a dated note if it arrives.
+
+**Numerical controls (registered limits in 0047):** fresh-repeat maximum logit error 0.00e+00, prefix-copy maximum logit error 2.90e-04 (limit 5e-4), over all scored handoffs. Every per-handoff archive bridge passed, or the reader would have
+refused.
+
+**Figures (`run.summarize` in-process: every case record re-hashed, the scored set checked against the registered 35,
+the logit witness re-checked; medians with p10 / p90 over handoffs, `e7_stats` convention, handoffs weighted equally).**
+KL is KL(fresh ‖ candidate) per scored token, averaged per handoff.
+
+- **REUSE-ALL (assembled same-model cache)**: mean KL per handoff 0.1424 (p10 0.0802, p90 0.1900) nats; p90 KL 0.3022 (p10 0.1768, p90 0.4713); top-1 agreement 0.9020 (p10 0.8549, p90 0.9216).
+- **RANDOM (norm-matched perturbation)**: mean KL per handoff 11.2981 (p10 9.2592, p90 13.5357) nats; p90 KL 19.5226 (p10 16.5229, p90 22.6453); top-1 agreement 0.0471 (p10 0.0196, p90 0.0980).
+- **CYCLIC (matched states permuted, keys relocated)**: mean KL per handoff 0.2826 (p10 0.1795, p90 0.3569) nats; p90 KL 0.6521 (p10 0.4347, p90 0.9791); top-1 agreement 0.8549 (p10 0.8039, p90 0.8902).
+
+Fresh attention at the last 32 receiver queries (descriptive; medians over handoffs): weighted_delta_mean 0.1041 (p10 0.0881, p90 0.1440); weighted_delta_p90 0.2479 (p10 0.2038, p90 0.3294); tail_attention_mass_mean 0.0885 (p10 0.0651, p90 0.1295); tail_attention_mass_p90 0.2469 (p10 0.1631, p90 0.2990); matched_attention_mass_mean 0.4100 (p10 0.3280, p90 0.4893); matched_attention_mass_p90 0.8928 (p10 0.7293, p90 0.9655); conditional_weighted_delta_mean 0.3012 (p10 0.2516, p90 0.4060); conditional_weighted_delta_p90 0.6880 (p10 0.5722, p90 0.9666); conditional_undefined_count 0.0000 (p10 0.0000, p90 0.0000).
+
+**Reading.** Reading the assembled same-model cache changes the receiver's predictions on the recorded continuation by
+a measurable amount, and by far less than a norm-matched random perturbation of the same states; the cyclic
+permutation sits between them. **Top-1 agreement is not task accuracy and no acceptance threshold exists**; the result
+does not validate τ_K as a quality threshold, does not establish unchanged free generation, and measures no speed.
+"No downstream task-quality number is claimed" stands.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045 and
+their records; the Qwen3 short cells (Condition 1).
+
+prior-entries-sha256: f1efa70bf50f624d1d0c319bf7217ff6c3e7cf77959f9a032170529e98b7cb98
