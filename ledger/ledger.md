@@ -3693,3 +3693,34 @@ generation quality after reuse not measured. `eval_hellaswag.py` and `compose_ma
 scope for this pair (entry 0039).
 
 prior-entries-sha256: 03ae7892e67a0fe37245ab17eef17a82ccb928fa4a2d5abb3cb3ff19721104d2
+
+### 0048 — 2026-10-07 — Same-model extension ran `[BASELINE, DESCRIPTIVE]`: Qwen3-4B and SmolLM3-3B on the original 60 handoff texts at the Qwen reference τ, bridge passed; stated beside the Qwen3-0.6B→1.7B cells and never pooled; no cell moves
+
+**Setup, as registered (0046).** RunPod community NVIDIA A100-SXM4-80GB (one card), pod and machine ids in docs/2026-10-07-consolidation-runpod-runbook.md; launched 2026-10-07T04:01Z, finished 2026-10-07T06:29Z; GPU as recorded in every report
+`NVIDIA A100-SXM4-80GB`; PyTorch 2.14.0+cu130, Transformers 5.17.0, NumPy 2.5.3, CUDA 13.0; config `857cc92320cb…`, manifest
+`99185c5891fc…`, driver `run.py` `87e0efb1502c…` / `capture.py` `2cddd19b1c43…` as committed. All 126 handoffs
+complete, none excluded. Backup: `hossainpazooki/linear-ceiling-consolidation-2026-10-07` (R8, verified both ways before this entry).
+
+**Controls.** Chunked-prefill control, maximum normalized deviation per model: Qwen3-1.7B (bridge) 4.70e-09, Qwen3-4B 1.07e-09, SmolLM3-3B 1.66e-10
+(limit 1e-4). Bridge on six archived handoffs: maximum relative mean-deviation gap 1.23e-05 (limit 0.01), maximum f* gap 0.0000
+(limit 0.01). Peak allocation per model: Qwen3-1.7B (bridge) 24.93 GiB, Qwen3-4B 39.72 GiB, SmolLM3-3B 22.96 GiB.
+
+**Figures (same-model arm; `summarize.py` recomputed every record, re-scored every witness, 2,000 trajectory-cluster
+bootstrap resamples; brackets are 95 % intervals on f*(0.03)).** τ_K = 0.3186442653116294 is the 0023 Qwen3-0.6B→1.7B mapper's
+shortfall, a common numerical reference and not a threshold calibrated for either model.
+
+- **Qwen3-4B, short (0038's 25)**, K: 25 of 25 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0007; f*(0.03) 0.2739 [0.2057, 0.4737]; mean δ 0.1011; tail over τ 0.0843. V: 25 of 25 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0342; f*(0.03) 0.3883 [0.2732, 0.5397]; mean δ 0.1269; tail over τ 0.0647.
+- **Qwen3-4B, long (0036's 35)**, K: 35 of 35 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0460; f*(0.03) 0.4979 [0.2077, 0.7239]; mean δ 0.1260; tail over τ 0.0908. V: 35 of 35 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0923; f*(0.03) 0.5394 [0.2569, 0.7326]; mean δ 0.1446; tail over τ 0.0728.
+- **SmolLM3-3B, short (0038's 25)**, K: 25 of 25 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0000; f*(0.03) 0.1527 [0.0983, 0.3896]; mean δ 0.0722; tail over τ 0.0390. V: 25 of 25 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0000; f*(0.03) 0.1353 [0.0940, 0.3491]; mean δ 0.0812; tail over τ 0.0276.
+- **SmolLM3-3B, long (0036's 35)**, K: 34 of 35 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0580; f*(0.03) 0.4529 [0.0955, 0.6761]; mean δ 0.1207; tail over τ 0.0578. V: 35 of 35 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0000; f*(0.03) 0.3630 [0.0826, 0.5620]; mean δ 0.0956; tail over τ 0.0283.
+
+Handoffs with f*(τ_K) > 0 on K among the new models: `20241025_composio_swekit/django__django-10554_traj#112` (SmolLM3-3B, e9l): mean δ_K 0.3320, f*(τ_K) 0.0228.
+
+**Reading.** On both new receivers the mean deviation of the matched tokens sits under the Qwen reference on every
+handoff but the ones named, with far less headroom at the ladder's 0.03 on the long cohort than on the short, as on the
+original pair. This is a statement about means under one map's tolerance (0045); it is not a quality result, not a
+length effect (different handoffs), and not pooled with any 0029 / 0036 figure.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; the original pair's entries and records.
+
+prior-entries-sha256: 08b376985b5caac35d54237e9d104f8d03a87399372fe74136cff78fede72bf8

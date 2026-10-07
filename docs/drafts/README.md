@@ -80,6 +80,10 @@ now asserts the OPERATOR's inputs manifest `2aeee576…` with its pinned fields 
 ruling of 2026-10-07 quoted in the script (the pilot's frozen `9a6f2923…` embeds the sha of a private file); its `report["identity"]`
 key bug fixed. Still queued behind 0048 (`PREV = "0048"`) unless the operator re-sequences. 0046's operator run is in progress.)*
 
+*(2026-10-07 12:13Z: **0048 APPENDED** (chain `08b376985b5c`; the operator's 0046 run on a RunPod A100 SXM, three models, bridge and
+summarizer passed, R8 `hossainpazooki/linear-ceiling-consolidation-2026-10-07`); `append_0048.py` retired in the append commit. File
+order now ends 0053, 0050, 0048. 0049's ordering guard is therefore satisfied as staged; still staged: 0049, 0051, 0057. Next free: 0058.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
