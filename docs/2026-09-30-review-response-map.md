@@ -151,7 +151,8 @@ extracted with pypdf, which splits some numerals; every absence below was re-che
 
 **Two facts to hold beside it.** (1) The build time is about 11 h after the 11:59Z deadline this map recorded (the operator's
 figure, never public). The operator confirms this file is the submission, so the recorded deadline, not the submission, is the
-figure in doubt. (2) PR #18's evidence map (`docs/camera-ready-evidence-map.md`, open at write) reconciled a *different* build:
+figure in doubt. *(2026-10-07, operator: the submission WAS after the deadline, and the workshop accepted it — non-archival,
+no penalty. The 11:59Z figure stands as the deadline; the lateness is a fact of the record, not a defect in the PDF.)* (2) PR #18's evidence map (`docs/camera-ready-evidence-map.md`, open at write) reconciled a *different* build:
 `be90e0af…`, pdfTeX, 06:16:43Z. Checked against the submitted text, its rows 5, 6 and 7 ("governs", "viable alternative to
 recomputation", "not an artifact of the model configuration") do not occur in the submitted PDF; its rows 1, 11, 14, 32, 34 and
 37 do.
