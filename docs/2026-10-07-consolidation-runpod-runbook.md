@@ -125,3 +125,18 @@ repo root of a real clone at the pinned commit. (m) The three models must share 
   `{torch 2.14.0+cu130, transformers 5.17.0, numpy 2.5.3, cuda 13.0, gpu A100-SXM4-80GB}`, CUDA smoke ✓; `download.py`
   CACHED all three revisions (18 GB, public, no token); inputs 126/126 match the frozen manifest; disk 28 GB used / 93 GB free.
 - 04:01 **run 1 `qwen17_bridge` launched** detached (pid → `/workspace/cons.pid`, log `/workspace/cons-bridge.log`).
+- **04:05:55 run 1 EXIT, `COMPLETE qwen17_bridge`**: control (1,024-token full vs chunked) max delta K 0.0 / V 0.0
+  (limit 1e-4); 6/6 texts; per-text peak GiB `24.93` (the longest sender, 80,111 tokens — the R2 row; arithmetic said ≈ 26),
+  8.32, 12.28, 13.81, 14.48, 18.18; seconds 126, 15, 22, 32, 33, 45. One allocator-retry warning on the last text, no failure.
+- 04:06–04:10 pull: on-pod `out-bridge.tar.gz` 3,237,592,222 B (the raw witness dominates), sha `adc09c1672285aa9…` equal on
+  the pod and at home, 11 files into `results/consolidation/a100/results/qwen17_bridge/`; `SHA256SUMS` written over the
+  whole mirror (416 files, LF, posix paths).
+- 04:10 home `summarize.py --bridge-only`: first attempt failed on a PATH (bash expanded `~` to `/c/Users/…`, which Windows
+  Python cannot open — pass `C:/…`); second attempt refused because the mirror's `archive/records/<cohort>/` lacked
+  `scores/` and `tokens/` (the bridge comparison re-derives the archived per-token deltas from them; `prepare.py` needed
+  only `report.json` + `align/`) — copied from the verified e9s/e9l mirrors, `SHA256SUMS` rewritten (536 files).
+- **04:12 home `summarize.py --bridge-only` PASSED (rc 0)** from the LF clone: every bridge row within the registered
+  tolerances (`bridge_mean_relative_tolerance` 0.01, `bridge_fstar_absolute_tolerance` 0.01): 12 rows (6 texts × K/V),
+  max `relative_mean_gap` **1.2e-5**, max `max_fstar_gap` **0.0** (budgets, not figures; the entry reads them from the
+  summarizer). The registered pause is satisfied.
+- 04:13 **run 2 `qwen4` launched** detached (log `/workspace/cons-qwen4.log`, pid file rewritten).
