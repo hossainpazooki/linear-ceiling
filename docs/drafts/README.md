@@ -102,6 +102,12 @@ land before or after). Running the script is the ratification (0055 precedent). 
 *(0058 APPENDED 2026-10-07 by the operator, chain `5ba3adab23b1`; `ledger ok`; script retired in the append commit. File order now
 ends 0048, 0049, 0058. Still staged: 0051, 0057.)*
 
+*(**0051 APPENDED 2026-10-08** by the operator on the Mac mini, chain `75a47a51de6e` (`91cea79`; script retired `62982a8`): the Llama
+long cell ran 2026-10-07 on a RunPod secure A100-SXM4-80GB, 32 of 32, complete, R8 `hossainpazooki/linear-ceiling-e9fl-2026-10-07`
+verified; runbook `docs/2026-10-07-llama-long-cell-runpod-runbook.md`. Before the append the script gained `--dataset`, the 0058
+wording, and a computed paragraph stating the coverage pin's two renderings (0050's `16121e67` is the CRLF bytes; the box's LF
+rendering is `9f10092b`). File order now ends 0049, 0058, 0051. Still staged: 0057 only. Next free number: **0059**.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
