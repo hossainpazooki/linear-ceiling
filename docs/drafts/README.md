@@ -108,6 +108,18 @@ verified; runbook `docs/2026-10-07-llama-long-cell-runpod-runbook.md`. Before th
 wording, and a computed paragraph stating the coverage pin's two renderings (0050's `16121e67` is the CRLF bytes; the box's LF
 rendering is `9f10092b`). File order now ends 0049, 0058, 0051. Still staged: 0057 only. Next free number: **0059**.)*
 
+**Staged 2026-10-08: `append_0059.py` — E9 summarizer enforcement, the τ RECOMPUTATION tolerance (0028's shape)** (operator ruling
+2026-10-08 19:5xZ, "recommendation accepted"). 0023's "refuses on disagreement (1e-9)" held on every x86 rendering of the archived
+mapper's held-out R² and fails on the arm64 home side (the Mac mini, since 0051): `summarize_e9` refused E-TRUNC's FULL level on
+τ_V alone (gap 3.7e-9 in the check's units |a−b|/max(1,|a|,|b|)). Registers 1e-7 for the recorded-vs-recomputed and
+config-vs-recomputed τ checks; the τ every reading uses stays the config's float, so nothing can move. Fail-closed: the 0023/0050
+sentences located by search; five renderings read from `results/e9t-full/calibration*/` (x86 Linux 13/1 threads from the box with
+`platform.json`, arm64 1/8 threads, the live calibration) with the assertions the sentences rest on (every x86 ≤ 1e-9, arm64 V > 1e-9,
+arm64 identical across threads, agent_K gap 0, all ≤ 1e-7); the Llama cell's gaps from `results/e9fl/calibration/tau.json`;
+`results/e9t-full/summary.json` must have been written UNDER the new check (`calibration.tau_recompute`, the 0028 move); refuses
+unless `summarize_e9.py` carries `_TAU_TOL = 1e-7` + the recorded drift, the test exists, and `append_0057.py` asserts 0059 first.
+Ordering guard 0058 + 0051 present, 0059 absent, 0057 absent. Runs on the Mac (the files live there). Next free number: **0060**.
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts

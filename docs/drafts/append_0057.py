@@ -78,6 +78,33 @@ def coverage_renderings(levels: dict, ledger_text: str) -> str:
             "the mirror carries that one. Both shas are derived from the mirror here: " + "; ".join(rows) + ".")
 
 
+def reader_corrections(levels: dict, ledger_text: str) -> str:
+    """Two reader corrections preceded these figures (2026-10-08); both are stated from the record, never hidden.
+    (1) Entry 0059: the tau RECOMPUTATION tolerance (the arm64 home side refused FULL at 3.7e-9 against 0023's 1e-9).
+    (2) `summarize_e9` compared the identity/bridge controls' coverage with the alignment record's FULL |S| -- which 0055
+    keeps so inclusion is decided on the full sender -- and so refused L65 on a correct control over the DUMPED sender
+    S' = S[-L:]; the reader now expects min(|S|, L) (`_dumped_sender_len`). Every count below is read from the reports."""
+    import json
+    assert "### 0059 " in ledger_text, "0059 must be on the ledger before 0057"
+    rows = []
+    for name, cfg in levels.items():
+        rep = json.loads((cfg.results_dir / "report.json").read_text(encoding="utf-8"))
+        c = rep["controls"]
+        rec = {a["handoff_id"]: a for a in rep["alignments"]}[c["handoff_id"]]
+        L = cfg.sender_head_truncate
+        want = int(rec["n_sender"]) if not L else min(int(rec["n_sender"]), int(L))
+        assert c["identity"]["n_pairs"] == want and c["identity"]["max_abs_square"] == 0.0, f"{name}: identity control is not the dumped sender with zero squares"
+        rows.append(f"{name} {c['identity']['n_pairs']:,} positions of |S| {int(rec['n_sender']):,}")
+    return ("**Reader corrections before any figure (2026-10-08; stated, not hidden).** (1) Entry 0059 registered the τ recomputation "
+            "tolerance (1e-7 in the check's units) after this set's FULL summary refused on the arm64 home side; each level's summary "
+            "here carries its `tau_recompute` block, and the τ every reading uses is the config's registered float. (2) `summarize_e9` "
+            "compared the identity and bridge controls' coverage with the alignment record's FULL |S|, which 0055 keeps so that "
+            "inclusion and run order are decided on the full sender; a truncated level dumps S′ = S[−L:], so the reader refused "
+            "L65 on a correct control with every square zero. The reader now expects min(|S|, L) positions (`_dumped_sender_len`); "
+            "cells without truncation are unchanged. Identity coverage on the controls handoff, per level, from the reports: "
+            + "; ".join(rows) + " — every square exactly zero. Neither correction touches a τ, a rule, a band or a cell.")
+
+
 def build_entry(out: dict, meta: dict) -> str:
     """The entry text from `compare_levels`' output and the run facts. Every number comes from `out`."""
     names = list(out["by_level"])
@@ -114,6 +141,8 @@ upstream pin `{out['upstream_sha'][:12]}…` for all four levels; {pins}. Backup
 ways before this entry).{cutoff} Runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`.
 
 {meta['coverage_txt']}
+
+{meta['reader_txt']}
 
 **Coverage and the void gate (ruling 2).** {out['n_scored_at_every_level']} handoffs scored at every level ({unscored_txt}).
 Under the registered floor |M_∩| ≥ {out['min_common_matched']:,} common matched tokens, {out['n_void']} are void and named, never
@@ -163,6 +192,7 @@ def main() -> int:
     ledger = REPO_ROOT / "ledger" / "ledger.md"
     text = ledger.read_text(encoding="utf-8").replace("\r\n", "\n")
     assert f"### {REG} " in text and f"### {NUM} " not in text, f"ordering: {REG} present, {NUM} absent"
+    assert "### 0059 " in text, "ordering: 0059 (the tau recomputation tolerance the four summaries pass under) must be on the ledger first"
 
     from linear_ceiling.config import load_e9_config
     from linear_ceiling.summarize_e9 import summarize
@@ -180,7 +210,8 @@ def main() -> int:
     entry = build_entry(out, {"date": a.date, "box": a.box, "launched": a.launched, "finished": a.finished,
                               "dataset": a.dataset, "cutoff_reason": a.cutoff_reason,
                               "erratum": erratum_0055(shrink),
-                              "coverage_txt": coverage_renderings(levels, text)})
+                              "coverage_txt": coverage_renderings(levels, text),
+                              "reader_txt": reader_corrections(levels, text)})
     if a.preview:
         sys.stdout.reconfigure(encoding="utf-8")
         print(entry)
