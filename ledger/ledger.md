@@ -3918,3 +3918,60 @@ direction, one mapper, one alignment method; generation quality after reuse.
 e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
 
 prior-entries-sha256: 75a47a51de6eb84ae4f3a91da0393bb99775868930242af35926fd31962e1399
+
+### 0059 — 2026-10-08 — E9 summarizer enforcement: the τ recomputation tolerance registered for a cross-platform recompute (1e-9 → 1e-7 in the check's units); no rule, τ, band, score, handoff or cell change
+
+**What this is, and when.** After E-TRUNC's FULL level ran (2026-10-08, registered by 0055; `results/e9t-full/report.json`
+complete, 35 of 35 scored, the home mirror fingerprint-verified) and BEFORE any figure of it is stated. 0023 registers that
+`summarize_e9` re-derives τ from the archived mapper and "recomputes it under the pin and refuses on disagreement (1e-9)" (ledger line 1308); the constant
+behind that sentence is `_TAU_TOL` in `summarize_e9.py`, applied as |a − b| ≤ tol · max(1, |a|, |b|), so for τ < 1 it is an
+absolute gap. The home side of this run is the operator's Mac mini (arm64), as it was for 0051. Under that constant the
+summarizer refused FULL on τ_V alone: `E9 SUMMARY REFUSED: config tau_V 0.4867056499055992 != recomputed 0.48670564617346357`. This entry registers the tolerance for that check as a judgment, with the
+measurement it rests on — the move 0028 made for the keep-subset re-score. It is enforcement of 0023, not a change to anything
+0023 registers about the rule, τ, the band or the cells.
+
+**Measured: five renderings of the same arithmetic.** `--calibrate-tau` under the pin `063f4023fdde…` on the same
+mapper bytes (`2fd05c333156…` / `cd6a8d939b36…`), the same E8 report
+(`5c4e70a097c2…`) and the same archived `results/mapper/qwen3-0.6b-to-1.7b/r2.json` — read on the box as the LF object committed at the pin
+(`99177e9c8950…`) and at home as its CRLF checkout rendering (`18d2276f28e9…`, the sha 0023 pins at ledger line
+1294; the LF bytes with CRLF line ends, derived here); files under `results/e9t-full/calibration*/` with their
+`platform.json`; "gap" is the check's own distance to the config float.
+
+| rendering | τ_K | gap | τ_V | gap |
+|---|---|---|---|---|
+| **config (registered; Windows x86 at 0023)** | `0.3186442653116294` | — | `0.4867056499055992` | — |
+| x86 Linux, 13 threads (the box, torch 2.11.0+cu128 CPU path) | `0.31864426521157985` | 1.0e-10 | `0.48670564997852195` | 7.3e-11 |
+| x86 Linux, 1 thread (the box) | `0.3186442652698682` | 4.2e-11 | `0.4867056503322168` | 4.3e-10 |
+| arm64 macOS, 1 thread (the Mac mini) | `0.3186442649443352` | 3.7e-10 | `0.48670564617346357` | 3.7e-09 |
+| arm64 macOS, 8 threads (the Mac mini) | `0.3186442649443352` | 3.7e-10 | `0.48670564617346357` | 3.7e-09 |
+| arm64 macOS, the live `calibration/tau.json` the summarizer checks | `0.3186442649443352` | 3.7e-10 | `0.48670564617346357` | 3.7e-09 |
+
+Every x86 rendering sits within 1e-9 (worst 4.3e-10) and the two x86 renderings differ from each other, so the registered
+floats are one x86 rendering among several, not a property of the mapper. The arm64 renderings are identical at 1 and 8 threads
+(deterministic, not thread-order jitter) and sit 3.7e-09 from the config on V. τ_agent_K is read from the E8 report with no
+arithmetic and is identical everywhere (gap 0). The second-family cell (0051, `llama3.2-3b-to-llama3.1-8b`) passed on this same machine with gaps
+K 2.6e-10 / V 1.9e-11 / agent_K 0 — under 1e-9 by magnitude, not by design.
+
+**Registered check (replaces the 1e-9 for the recomputation).** The recorded calibration's and the config's τ_K, τ_V and τ_agent_K
+must each reproduce the recomputed value within **1e-07** in `_close`'s units; a gap beyond refuses the summary, as before.
+1e-07 is three orders below the four decimals this ledger states τ to (0023: τ_K 0.3186, τ_V 0.4867) and 27× the
+worst gap measured above (3.7e-09). **The τ every reading uses remains the config's registered float**; the recomputation is a
+check that the archived mapper still yields it, and no figure, f*, cell or verdict depends on the recomputed value, so nothing can
+move by this entry. `summarize_e9` now records the gap and the platform it was measured on in `summary.json`
+(`calibration.tau_recompute`) and prints them, as 0028 made it print the re-score jitter. **Measured by `summarize_e9` on FULL
+under this check** (`results/e9t-full/summary.json` `62a6b69947b7…`, written on arm64 Darwin,
+numpy 2.5.3): gaps to the config K 3.7e-10, V 3.7e-09,
+agent_K 0; to the recorded calibration K 0,
+V 0. The summary passed; its figures enter by their own entry (0057), never by this one.
+
+**What this does NOT touch.** 0023's per-token judgment "judged to 1e-9 relative" (ledger line 1277) — a
+different check, on the f* statistic, unchanged; the 1e-6 cross-checks of the held-out R² against the archived `r2.json` and E8 arm
+(a) (`_TOL`), unchanged; τ_K, τ_V, τ_agent_K and every τ ladder; the rule section; the bands; every verdict and cell (H-E9 0029,
+H-E9L 0036, 0038, the Llama cells 0044/0053/0051); 0050's sentence that its config "this config agrees with it at 1e-9" (ledger line
+3638), which the measurement above confirms at full precision. `verdict:` lines: none.
+
+**Lesson, stated once.** A registered float check is a rendering of the platform that produced it (learnings 2026-10-08, the
+coverage-sha and `r2.json` CRLF pins are the same lesson in bytes); an enforcement constant that must hold on a second home
+platform is registered with the renderings it was measured on, as here.
+
+prior-entries-sha256: 64e1c6bad066f8a961256b227594d6b1338c922334094d6fe91b9023f41a1a5a
