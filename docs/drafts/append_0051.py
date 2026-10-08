@@ -8,6 +8,7 @@ nothing is written then). Run facts the summarizer cannot know come as arguments
 missing:
 
   --box "<instance type, GPU, region, instance id>"   --launched <UTC>   --finished <UTC>
+  --dataset <repo_id>   the R8 backup of the verified mirror, verified both ways by tools/hf_verify_backup.py first
   --cutoff-reason "<why the run was closed early>"   (REQUIRED on a partial close; forbidden otherwise)
   --date <YYYY-MM-DD>   (defaults to --finished's date)
   --preview             (print, do not append)
@@ -36,6 +37,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--box", required=True)
 ap.add_argument("--launched", required=True)
 ap.add_argument("--finished", required=True)
+ap.add_argument("--dataset", required=True)
 ap.add_argument("--cutoff-reason", default=None)
 ap.add_argument("--date", default=None)
 ap.add_argument("--preview", action="store_true")
@@ -68,6 +70,25 @@ prior_path = e9l.results_dir / "summary.json"
 assert prior_path.exists(), f"{prior_path} is missing; entry 0036's figures are stated beside these and must be readable"
 prior = json.loads(prior_path.read_text(encoding="utf-8"))
 assert prior["rope"] == e9l.rope and prior["rope"] is not None, "results/e9l/summary.json is not the scaled cell's"
+
+# The registered coverage file, in both renderings. Entry 0050 pinned the home file's sha; that file was written on
+# Windows in text mode (CRLF). The box reproduced the same lines as LF and the launcher recorded that sha in its
+# evidence. Both are DERIVED here from the bytes and checked against the ledger and the evidence, never typed.
+import hashlib
+cov_bytes = (cfg.results_dir / "align" / "coverage.json").read_bytes()
+cov_lf = cov_bytes.replace(b"\r\n", b"\n")
+cov_crlf = cov_lf.replace(b"\n", b"\r\n")
+sha_lf, sha_crlf = hashlib.sha256(cov_lf).hexdigest(), hashlib.sha256(cov_crlf).hexdigest()
+cov_lines = cov_lf.count(b"\n") + (0 if cov_lf.endswith(b"\n") else 1)
+block_0050 = text[text.index(f"### {PREV} "):]
+block_0050 = block_0050[:block_0050.index("\n### ", 1)] if "\n### " in block_0050[1:] else block_0050
+m = re.search(r"align/coverage\.json`\s+sha256\s+`([0-9a-f]{12})`", block_0050)
+assert m, f"entry {PREV} no longer states the coverage sha where expected; re-anchor"
+pin12 = m.group(1)
+assert sha_crlf.startswith(pin12), f"entry {PREV}'s coverage pin {pin12} is neither rendering of the file on disk"
+versions = (cfg.results_dir / "logs" / "box" / "sitting_b.evidence" / "versions.txt").read_text(encoding="utf-8")
+mv = re.search(r"^coverage_sha256=([0-9a-f]{64})$", versions, re.M)
+assert mv and mv.group(1) == sha_lf, "the box evidence's coverage sha is not the LF rendering of the registered file"
 
 rope = f["dump_rope"]
 assert rope and rope.get("recorded"), \
@@ -119,7 +140,12 @@ ENTRY = f"""### {NUM} — {a.date} — E9 long half ran on the second model fami
 `config/e9fl.toml` (gate: entries {'/'.join(cfg.required_entries)}), upstream pin `{cfg.upstream_sha[:7]}`.
 Pair {cfg.pair}: receiver {tgt_id}, source {src_id}, **neither scaled** — no `[e9.rope]`, no
 `[e9.bridge]`, no `--rope-scaling` on any dump; the k = {cfg.mapper_k} mapper of this family's E8 sitting
-for the cross arm, by sha. Launched {a.launched}, finished {a.finished}. {partial_txt} Of
+for the cross arm, by sha. Launched {a.launched}, finished {a.finished}. Backup: `{a.dataset}` (R8, verified
+both ways before this entry). **Coverage file, two renderings of one content:** entry {PREV} pins
+`align/coverage.json` at `{pin12}…`, the sha of the home file's CRLF rendering (written on Windows); the box's
+`--align-only` reproduced the same {cov_lines} lines as LF, sha `{sha_lf[:12]}…` (its evidence `versions.txt`),
+and the launcher's exact-match check was passed on that rendering — the parsed records are identical and
+the summarizer below re-derived them from the traces. {partial_txt} Of
 {cov['observed']} observed handoffs: {n_reg} registered (longer side above {cfg.context_floor:,} and within
 {cfg.context_cap:,} tokens under this pair's own tokenizer), {cc['n']['excluded_prior_cap']} covered by the
 short cell and excluded here, {residual} above the cap and scored by NEITHER cell,
@@ -186,11 +212,12 @@ and no figure from the two cells is averaged, pooled or differenced.
 **What this establishes, stated narrowly.** On {tgt_id} re-rendering {n_sc} real SWE-bench
 `{cfg.agent}` handoffs whose longer side runs {cfg.context_floor + 1:,}–{cfg.context_cap:,} tokens under
 this pair's own tokenizer, at a receiver inside its native window throughout, with 0019's alignment and
-0023's per-token rule at this pair's own τ, the same-model oracle recompute floor is as stated above.
+0023's per-token rule at this pair's own τ, the same-model oracle removal fraction is as stated above (read
+per entry 0058: not a bound on real selective recompute in either direction).
 **Not established:** any hypothesis cell — this entry moves none and carries no `verdict:` line; anything
 about the {residual} handoffs above {cfg.context_cap:,} or the {cc['n']['excluded_empty_r']} with an empty
 receiver prompt; anything about the {n_reg - n_sc} unscored registered handoffs{"" if partial else " (none)"}; any achievable recompute
-scheme (a floor, 0027); anything about a scaled receiver, which this cell does not contain; one pair, one
+scheme (0058); anything about a scaled receiver, which this cell does not contain; one pair, one
 direction, one mapper, one alignment method; generation quality after reuse.
 
 e7-manifest-sha256: {manifest}

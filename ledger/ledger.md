@@ -3828,3 +3828,93 @@ their label.
 staged (`ledger_check` chains by file order). Next free number after this entry: 0059.
 
 prior-entries-sha256: 5ba3adab23b109d2a4e37c8384a6ff544decebab2e04c8f32bd8accbd5dbfee3
+
+### 0051 — 2026-10-07 — E9 long half ran on the second model family `[BASELINE, DESCRIPTIVE]`: the long band at a NATIVE receiver; stated beside entry 0036's scaled-receiver figures and never pooled with them; no cell moves (32 scored of 32 registered)
+
+**Setup, as registered (0050).** RunPod SECURE pod uua1cpjql18jb6, NVIDIA A100-SXM4-80GB (81,920 MiB, driver 580.126.16), 128 vCPU / 2,003 GB host RAM, $1.59/h, created 2026-10-07T17:01:48Z; home side the operator's Mac mini; linear-ceiling at the commit carrying 0050 and
+`config/e9fl.toml` (gate: entries 0019/0023/0025/0027/0050), upstream pin `06f8d55`.
+Pair llama3.2-3b-to-llama3.1-8b: receiver meta-llama/Llama-3.1-8B, source meta-llama/Llama-3.2-3B, **neither scaled** — no `[e9.rope]`, no
+`[e9.bridge]`, no `--rope-scaling` on any dump; the k = 1 mapper of this family's E8 sitting
+for the cross arm, by sha. Launched 2026-10-07T17:35:23Z, finished 2026-10-07T19:46:17Z. Backup: `hossainpazooki/linear-ceiling-e9fl-2026-10-07` (R8, verified
+both ways before this entry). **Coverage file, two renderings of one content:** entry 0050 pins
+`align/coverage.json` at `16121e677b97…`, the sha of the home file's CRLF rendering (written on Windows); the box's
+`--align-only` reproduced the same 993 lines as LF, sha `9f10092b6238…` (its evidence `versions.txt`),
+and the launcher's exact-match check was passed on that rendering — the parsed records are identical and
+the summarizer below re-derived them from the traces. Complete: 32 scored of 32 registered. Of
+68 observed handoffs: 32 registered (longer side above 32,768 and within
+81,920 tokens under this pair's own tokenizer), 28 covered by the
+short cell and excluded here, 4 above the cap and scored by NEITHER cell,
+4 with an empty receiver prompt. Every figure below is
+`summarize_e9 --config config/e9fl.toml`'s, from a run that passed all of its checks: alignments re-derived
+from the raw traces under the cap and floor; the run order re-derived; the partial prefix checked; every R²
+recomputed from recorded moments; per-token squares summed against the moments; the 3 kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square within 6.9e-04 relative, max |f* diff| 0.0e+00); τ recomputed
+from the archived mapper; controls checked.
+
+**The two controls that replace entry 0035's configuration bridge, reported first.** On a natively long
+receiver these ARE the evidence that nothing was scaled, and `summarize_e9` refuses this cell outright if
+the dumps carry no RoPE spec. Over all 97 dumps: **native window** — the registered cap
+81,920 sat inside every dump's own recorded `max_position_embeddings`, so no dump asked either
+model for a position its configuration does not declare; **frequency identity, by model role** — source (32 dumps, max_position_embeddings 131,072, inv_freq 31576ad84e5a, attention factor 1.0), target (65 dumps, max_position_embeddings 131,072, inv_freq 8480b7658cd7, attention factor 1.0);
+the spec-vs-model halt check passed at every dumped position (worst |diff| 1.2e-07
+against atol 1e-05), and every dump recorded an attention factor of 1.0. The roles
+are compared separately because this pair's two sides build different inverse-frequency vectors by
+construction (entry 0039).
+
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run
+order: max centered per-token δ 0.000e+00 over 33,086 positions
+(tolerance 1e-04, this pair's own value). δ_null same K / V token-mean median
+2.010 / 2.023; equal-token null pairs
+0.0085. Matched fraction |M|/|R| (a floor): 0.9531 (p10 0.7762, p90 0.9868).
+
+**The statistic, computed and verdict-bearing for nothing.** Per scored handoff, E9-same, K read-out:
+f*(τ_K = 0.2861) as 0023 defines it, median over scored handoffs. τ_K is 1 − THIS pair's own
+held-out R² and is identical to the short cell's; this cell has no hypothesis row, so the band words below
+are stated descriptively and decide nothing.
+
+- **median f*(τ_K), E9-same K: 0.0000 (p10 0.0000, p90 0.0000)** over 32 handoffs (32 scored of 32 registered); seeded
+  bootstrap of the median (seed 25, 2000 reps): [0.0000,
+  0.0000]. Against 0023's edges (HOLDS ≤ 0.15, DEGRADES ≥
+  0.5) the band word would be **HOLDS**, stated descriptively.
+- f*(τ_V = 0.5289), E9-same V (alongside): 0.0000 (p10 0.0000, p90 0.0000).
+- τ ladder (descriptive): τ = 0.1: same K 0.0000 (p10 0.0000, p90 0.3014) / V 0.0088 (p10 0.0000, p90 0.3580); τ = 0.03: same K 0.2696 (p10 0.0000, p90 0.6385) / V 0.2995 (p10 0.0018, p90 0.6132).
+- f*(τ_agent_K = 0.2689): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.8355 (p10 0.6923, p90 0.9519).
+- f*(τ_K) over matched blocks of length ≥ 4: same K 0.0000 (p10 0.0000, p90 0.0000).
+- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: 0: 0.246 (n=3830) · 1: 0.128 (n=2735) · 2-3: 0.076 (n=4226) · 4-7: 0.061 (n=6598) · 8-15: 0.064 (n=8532) · 16+: 0.022 (n=308783).
+
+**Length profiles (entry 0050 control 5, descriptive).** (i) by |S| bin, median f*(τ_K) same K over
+handoffs: |S| 32769-49999: 0.0000 (p10 0.0000, p90 0.0000) (n = 21); |S| 50000-64999: 0.0000 (p10 0.0000, p90 0.0000) (n = 10); |S| 65000-81920: 0.0000 (p10 0.0000, p90 0.0000) (n = 1). (ii) by matched-token position in S, pooled f*(τ_K) same K / median δ_K: positions 0-8191: 0.0000 / 0.007 (n = 159,471); positions 8192-32767: 0.0000 / 0.042 (n = 87,894); positions 32768-65535: 0.0000 / 0.135 (n = 78,711); positions 65536-81920: 0.0000 / 0.041 (n = 8,628).
+(ii) is the long-context figure — whether agreement at a re-rendered position depends on how deep in the
+sender's context the token sat — and its bins are cut at this family's own RoPE boundary, not at entry
+0035's YaRN midpoint.
+
+**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through this pair's own
+k = 1 mapper: median f*(τ_K) = 0.7626 (p10 0.5963, p90 0.9212), f*(τ_V) = 0.8522 (p10 0.7520, p90 0.9322); against the
+same edges the transfer arm sits beyond the DEGRADES edge. Cross/same median-δ ratio K / V: 11.1 (p10 2.6, p90 81.1) /
+18.6 (p10 4.0, p90 128.6). Bridge R² (A5 across the handoff; not control 4, which does not exist here): same K
+0.9094 (p10 0.7631, p90 0.9760), same V 0.8912 (p10 0.7216, p90 0.9678), cross K 0.5798 (p10 0.4991, p90 0.6177), cross V 0.2579 (p10 0.2050, p90 0.2953).
+
+**Beside entry 0036, and NOT pooled with it.** 0036 measured
+35 handoffs of 35 registered on
+qwen3-0.6b-to-1.7b with the receiver pushed to 81,920 positions by static YaRN
+(`{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}`), at τ_K = 0.3186, and reported median f*(τ_K)
+0.0000 (p10 0.0000, p90 0.0000). This cell measured 32 handoffs on llama3.2-3b-to-llama3.1-8b with **nothing scaled**, at
+τ_K = 0.2861, and reported 0.0000 (p10 0.0000, p90 0.0000). **The two numbers are stated side by side and are not
+comparable as numbers**: different models, different tokenizers and therefore different handoff sets,
+different mappers and therefore different τ, and — the point entry 0050 registered — one receiver is
+scaled past its pretraining window and the other is not. Nothing here supports, refutes or moves H-E9L,
+and no figure from the two cells is averaged, pooled or differenced.
+
+**What this establishes, stated narrowly.** On meta-llama/Llama-3.1-8B re-rendering 32 real SWE-bench
+`composio_swekit` handoffs whose longer side runs 32,769–81,920 tokens under
+this pair's own tokenizer, at a receiver inside its native window throughout, with 0019's alignment and
+0023's per-token rule at this pair's own τ, the same-model oracle removal fraction is as stated above (read
+per entry 0058: not a bound on real selective recompute in either direction).
+**Not established:** any hypothesis cell — this entry moves none and carries no `verdict:` line; anything
+about the 4 handoffs above 81,920 or the 4 with an empty
+receiver prompt; anything about the 0 unscored registered handoffs (none); any achievable recompute
+scheme (0058); anything about a scaled receiver, which this cell does not contain; one pair, one
+direction, one mapper, one alignment method; generation quality after reuse.
+
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 75a47a51de6eb84ae4f3a91da0393bb99775868930242af35926fd31962e1399
