@@ -283,3 +283,6 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
   (21 G of gated weights) stays for future Llama sittings; it holds no token.
 - Open: the operator's HF token revoke (R9); PR #18 Q3's consequence in the MLSys draft (Llama enters as the second
   pair, now with a long cell too); the launcher's `sitting_b.*` naming is generic in function but short-cell in name.
+- Issue #21 (2026-10-08, to @emersony99, the family's author): the record above in short, plus two asks — an R12 recompute
+  of 0051 from the Hub mirror from a clean clone (as PR #6 did for 0040/0044; his read-only token for the October datasets
+  already covers the private dataset), and whether he writes the second-pair section of the MLSys draft. Supersedes #15.

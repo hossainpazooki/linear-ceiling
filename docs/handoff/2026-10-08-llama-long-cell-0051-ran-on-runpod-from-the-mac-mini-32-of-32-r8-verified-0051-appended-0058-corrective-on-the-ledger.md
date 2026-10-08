@@ -59,6 +59,8 @@ minute-by-minute evidence is `docs/2026-10-07-llama-long-cell-runpod-runbook.md`
 4. lag-ladder entry 0004 re-pin (kvt moved); `e9.py` `fsync`-on-read-handle Windows red; PR #19 ruling.
 5. Housekeeping: `pull_verify_b.py`'s defaults should follow `--exp` (learning 2026-10-08); the launcher's `sitting_b.*`
    names are short-cell in name only; the Mac staging copy (44 G) once a second local copy exists.
+6. **Issue #21** (to @emersony99): R12 recompute of 0051 from the Hub mirror (his read-only token for the October datasets
+   already covers it) and the MLSys second-pair section. Supersedes #15.
 
 ## Learnings written this session (docs/learnings, 2026-10-08)
 

@@ -49,6 +49,35 @@ def erratum_0055(shrink: dict) -> str:
             f"(1 − survivable). Its figures are unchanged.")
 
 
+def coverage_renderings(levels: dict, ledger_text: str) -> str:
+    """Entry 0055 pins each level's `align/coverage.json` sha from the home file's RAW bytes, which were CRLF (written
+    on Windows). The box reproduces the same lines as LF and the mirror carries that rendering. Both shas are DERIVED
+    from the mirror bytes here and checked against 0055's pins (sentence search; never typed) — the 0051 lesson
+    (learning 2026-10-08 `a-registered-sha-pin-is-a-rendering`)."""
+    import hashlib
+    block = ledger_text[ledger_text.index(f"### {REG} "):]
+    block = block[:block.index("\n### ", 1)] if "\n### " in block[1:] else block
+    m = re.search(r"coverage sha256 FULL `([0-9a-f]{12})`,\s*L65\s*`([0-9a-f]{12})`,\s*L49\s*`([0-9a-f]{12})`,\s*L32\s*`([0-9a-f]{12})`",
+                  block, re.S)
+    assert m, f"entry {REG} no longer states the four coverage shas where expected; re-anchor"
+    pins = dict(zip(("FULL", "L65536", "L49152", "L32768"), m.groups()))   # the reader's level names
+    rows = []
+    for name, cfg in levels.items():
+        raw = (cfg.results_dir / "align" / "coverage.json").read_bytes()
+        lf = raw.replace(b"\r\n", b"\n")
+        crlf = lf.replace(b"\n", b"\r\n")
+        sha_lf, sha_crlf = hashlib.sha256(lf).hexdigest(), hashlib.sha256(crlf).hexdigest()
+        pin = pins[name]
+        assert sha_crlf.startswith(pin) or sha_lf.startswith(pin), \
+            f"{name}: {REG}'s coverage pin {pin} is neither rendering of the mirror's coverage.json"
+        which = "CRLF" if sha_crlf.startswith(pin) else "LF"
+        other = sha_lf if which == "CRLF" else sha_crlf
+        rows.append(f"{name} pinned `{pin}…` ({which}; the other rendering `{other[:12]}…`)")
+    return ("**Coverage files, two renderings of one content.** Entry " + REG + " pins each level's `align/coverage.json` by "
+            "the sha of the home file's raw bytes; the box reproduced the same lines in the other line-ending rendering and "
+            "the mirror carries that one. Both shas are derived from the mirror here: " + "; ".join(rows) + ".")
+
+
 def build_entry(out: dict, meta: dict) -> str:
     """The entry text from `compare_levels`' output and the run facts. Every number comes from `out`."""
     names = list(out["by_level"])
@@ -83,6 +112,8 @@ def build_entry(out: dict, meta: dict) -> str:
 **Setup, as registered ({REG}).** {meta['box']}; FULL launched {meta['launched']}, last level finished {meta['finished']};
 upstream pin `{out['upstream_sha'][:12]}…` for all four levels; {pins}. Backup: `{meta['dataset']}` (R8, verified both
 ways before this entry).{cutoff} Runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`.
+
+{meta['coverage_txt']}
 
 **Coverage and the void gate (ruling 2).** {out['n_scored_at_every_level']} handoffs scored at every level ({unscored_txt}).
 Under the registered floor |M_∩| ≥ {out['min_common_matched']:,} common matched tokens, {out['n_void']} are void and named, never
@@ -148,7 +179,8 @@ def main() -> int:
         "--cutoff-reason is required exactly when a level closed partial (0035's stopping rule)"
     entry = build_entry(out, {"date": a.date, "box": a.box, "launched": a.launched, "finished": a.finished,
                               "dataset": a.dataset, "cutoff_reason": a.cutoff_reason,
-                              "erratum": erratum_0055(shrink)})
+                              "erratum": erratum_0055(shrink),
+                              "coverage_txt": coverage_renderings(levels, text)})
     if a.preview:
         sys.stdout.reconfigure(encoding="utf-8")
         print(entry)

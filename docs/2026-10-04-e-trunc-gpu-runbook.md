@@ -60,6 +60,17 @@ in |S|-descending order. Coverage each level's run must match: 68 observed · 35
 cap · 4 empty receiver (0035's eight by name), identical across the four levels — truncation is applied AFTER inclusion
 is decided on the full lengths (`e9_align.align`), so a level that excludes differently has the wrong config.
 
+**Addendum 2026-10-08 (from the 0051 sitting's lesson, learning `a-registered-sha-pin-is-a-rendering`):** the four
+`align/coverage.json` files above were written on Windows and are CRLF (1,029–1,030 CRs each); the shas in the table are
+their raw renderings. The box's `--align-only` writes LF, and `setup.sh` compares the box file's sha to `HOME_COVERAGE_SHA12`,
+so the launch must pass the **LF rendering**: full `5d01067ab8bb`, l65 `4d9cc526b1dc`, l49 `db8c32746a33`, l32
+`a227bea0e058` (computed on the Mac mini, `tr -d '\r' | shasum -a 256`, 2026-10-08). Same 1,030-odd lines, two renderings;
+**0055 pins the raw renderings at ledger lines 3417–3418**, so 0057 states both, derived from the bytes as 0051 did. Home side for this sitting = the Mac mini (`~/stage-e9t/`:
+the four box scripts LF, `traces.tar.gz`, the Qwen k1 mapper `2fd05c33…` / `cd6a8d93…`; the Qwen archived dumps and
+the four alignment passes carried from Windows and sha-verified, 615 files); the box = a RunPod 48 GB card (A40 secure
+$0.49/h or RTX 6000 Ada community $0.74/h at 10-07 prices; L40S measured peak 31.56 GiB) reached through an `~/.ssh/config`
+alias so `pull.py`'s port-less `ssh -i KEY user@host` works unchanged; AWS credentials are invalid (pickup 2026-10-07).
+
 ## 4. Steps
 
 0. **Home, before anything paid:** `summarize_e9 --calibrate-tau` for each of the four configs (table above); confirm
