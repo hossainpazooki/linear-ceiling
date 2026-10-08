@@ -113,4 +113,22 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
 
 ## 6. Log (UTC; filled during the sitting)
 
+- 2026-10-08 15:35 Qwen-pair inputs and the four alignment passes carried Windows → Mac mini (615 files, all sha-verified);
+  box scripts (LF), `traces.tar.gz`, k1 mapper staged under `~/stage-e9t/`. 15:4x operator detached the Mac's upstream
+  clone at `063f4023` (the Qwen pin).
+- 15:56–15:57 **step 0 done on the Mac**: `summarize_e9 --calibrate-tau` for all four configs → each level's
+  `calibration/tau.json` written; every level's τ equals the registered Qwen tolerances (0023/0025: τ_K 0.3186, τ_V 0.4867,
+  τ_agent_K 0.4371 — pins, not new figures); `e9 --check` → `E9 gate: ready` for all four configs. `bash -n` on the three
+  box scripts, `py_compile` on the probe: clean. (`setup.sh` itself cannot rehearse on macOS — its torch pin is Linux-only;
+  the box proves it, as the 0051 launcher did.)
+- 15:58 RunPod: no A40 / L40S / RTX 6000 Ada listed; 48 GB only as RTX PRO 5000 Blackwell community $0.82 (an
+  architecture the pinned `torch 2.11.0+cu128` has not run under in this program); A100-SXM4-80GB community back at $1.39.
+  First `--dry-run` refused on the **campaign** cap (it still counts 0051's $4.86) — the cap must cover both sittings.
+- 16:16–16:23 operator chose the community A100-SXM4-80GB at $1.39 for 7 h (`--disk 120`, then `--disk 100`; `--cap 15`;
+  projected $9.73, campaign $14.59). `rp.py up` **refused six times** over seven minutes: "There are no longer any instances
+  available with the requested specifications." By 16:23 the price list no longer carried that card at all (community A100
+  only as 40 GB at $1.00; secure A100 SXM/PCIe 80 GB at $1.79, up from $1.59 at 15:58; RTX PRO 5000 Blackwell $0.82;
+  H100 SXM secure $3.99). **No pod was created; nothing billed.** Card and price are the operator's call (R2) — the sitting
+  waits on it.
+
 - (empty until the sitting)
