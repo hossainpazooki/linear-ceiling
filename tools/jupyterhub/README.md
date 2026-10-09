@@ -12,7 +12,22 @@ The protocol they implement is `docs/gpu-experiment-protocol.md`; the run they s
 | `launch.sh` | home, one command for a multi-level sitting (E-TRUNC by default): prerequisites, upload, `go.sh` detached, then `tools/ec2/pull.py` per level over this transport (it handles bridge dumps; prefer it to `pull.py` here) |
 | `go.sh` | box: mapper from the public e9 dataset, `setup.sh` + alignment per level (sha must equal home's), the R2 probe, the levels in order with a free-disk gate; status in `~/go.status` |
 
-E-TRUNC on an Algoverse 40 GB slice: `docs/2026-10-04-e-trunc-gpu-runbook.md` §5b.
+A multi-level E9 sitting on an Algoverse slice (built 2026-10-05 for E-TRUNC, which then ran on RunPod as 0057; kept
+for the next Qwen cell that fits a slice — Qwen3-1.7B fp32 measured 16.72 GiB at 32,768 on a 1g.20gb slice and 31.56 GiB
+at 80,111 on an L40S, so a 40 GB slice should take 80K; `go.sh`'s probe decides):
+
+```bash
+export JH_URL=https://<hub> JH_USER=<user> JH_TOKEN=<token from the hub's /hub/token page>
+LEVELS="<exp> ..." tools/jupyterhub/launch.sh      # MAX_S = the run's longest prefill; MIN_FREE_GIB = box disk gate (70)
+# release (R7), after every puller exited and verify_mirror.py passed per level; LAUNCH_UTC from ~/lc-sitting-launch-utc.txt:
+for e in $LEVELS; do .venv/bin/python tools/jupyterhub/jh.py exec "cd ~ && EXP=$e LEVELS='$LEVELS' LAUNCH_UTC='<YYYY-MM-DD HH:MM>' bash ~/release_sweep.sh > ~/release.$e.log 2>&1; tail -3 ~/release.$e.log" 120; done
+.venv/bin/python tools/jupyterhub/jh.py stop        # R7 step 6 on a hub: stop the server and read it back
+```
+
+Before a window: the home mirror must hold every level's kept + bridge dumps at once (E-TRUNC was 213 GB over four
+levels); any Qwen summary needs τ, which needs the n = 50 generic dumps under `../kv-transfer-replication/data/kv/` and
+`results/e8/report.json` (in no public dataset); the box writes LF, so pass coverage shas of LF files; the machine is
+wiped at the end of the window, so the pullers must be running from launch.
 
 Requirements on the local machine: `requests`, `websocket-client` (both in the repo `.venv`).
 
