@@ -357,8 +357,29 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
 ## 7. After the sitting
 
 - **R8**: the hard-link staging `~/dev/hf-staging/linear-ceiling-e9t-2026-10-08/` (2,893 files, 217,253,073,065 B, card at the
-  root) waits on the operator's "public" ruling; push detached under `caffeinate -i` with `< /dev/null`, `ALLOW_PUBLIC=1
-  tools/hf_backup.sh …`, ends in `BACKUP VERIFIED`; revoke the token (R9).
+  root). **Operator ruling 2026-10-09 ~00:10Z: "public"** (217 G > the 100 GB private allowance; the 2026-09-11 reasoning —
+  KV of public models over public benchmark traces). Push by the operator: `read -s HF_TOKEN` alone, then `export`, `hf auth
+  whoami`, `hf repo create hossainpazooki/linear-ceiling-e9t-2026-10-08 --repo-type dataset` (public by default),
+  `ALLOW_PUBLIC=1 tools/hf_backup.sh --check …`, then the push detached under `caffeinate -i` with `< /dev/null` (log
+  `~/.cache/linear-ceiling/hf-upload-e9t.log`), ending in `BACKUP VERIFIED`; `unset` and revoke the token (R9). Home watcher
+  armed on the log from Windows. **01:10Z push started** (pid 20928; `.gitattributes` commit, then the records step).
+  **R9 slip, stated:** the push line I wrote used `nohup caffeinate -i env ALLOW_PUBLIC=1 HF_TOKEN=$HF_TOKEN bash …`, which
+  puts the token into the ARGUMENTS of `env`/`caffeinate`, readable by `ps` on the Mac for the life of the upload and captured
+  into the assistant session's transcript when the process list was read. The right form is a shell environment prefix
+  (`HF_TOKEN=$HF_TOKEN nohup caffeinate -i bash …`) or the script's own `/dev/tty` prompt, which never reach argv. The token is
+  fine-grained and scoped to this dataset; the upload is left to finish and the token is to be **revoked immediately after
+  BACKUP VERIFIED** (R9 says revoked once pasted anywhere; the process list counts). Learnings entry 2026-10-09 written;
+  operator: "local exposure is acceptable for today".
+- **01:10:46–01:40:34Z R8 push and verification** (`hf_backup.sh`, log `~/.cache/linear-ceiling/hf-upload-e9t.log`): step 1
+  the 33 small-record paths; step 2 the whole tree 01:11:59 → 01:36:55 (25 min for 217 GB — the receiver dumps are identical
+  across the four levels and the Hub stores each blob once); step 3 the card; then `hf_verify_backup.py` both directions,
+  LFS by `lfs.sha256`, the rest downloaded and hashed → **`BACKUP VERIFIED: hossainpazooki/linear-ceiling-e9t-2026-10-08`
+  (PUBLIC) at 01:40:34Z**. The push log: `2,892/2,892 files checked, 2,292/2,296 uploaded (101GB transferred), 2,509
+  committed in 8 commit(s)` then `Upload completed in 10 commits`; verifier `remote 2893 files | local 2893 files`.
+  Independent probe from Windows 01:4xZ (anonymous API, `?blobs=true`): PUBLIC, **2,894 files on the Hub** (the 2,893 plus
+  the Hub's `.gitattributes`), 2,296 LFS files; `README.md`, `SHA256SUMS`, the four `report.json`, `compare.json` present;
+  `mappers/…/k1.safetensors` LFS sha `cd6a8d939b36…` = `SHA256SUMS`. Upload processes and the caffeinate assertion gone.
+  **Token: revoke now (R9).**
 - **0057**: skeptic-passed; append on the Mac with the §6 `--launched 2026-10-08T16:35:23Z --finished 2026-10-08T23:25:49Z`,
   the box string and `--dataset hossainpazooki/linear-ceiling-e9t-2026-10-08` after BACKUP VERIFIED; retire the script;
   fetch to Windows; push; allocator lines.
