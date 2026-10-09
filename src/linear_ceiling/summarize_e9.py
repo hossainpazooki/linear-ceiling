@@ -31,6 +31,7 @@ mapper's own f* under a median tau, which is NOT zero).
 import argparse
 import json
 import math
+import platform
 import subprocess
 from dataclasses import asdict
 from pathlib import Path
@@ -63,7 +64,9 @@ _SUM_TOL = 1e-5          # float32 per-token squares vs the float64 SSE they wer
 _RESCORE_RTOL = 1e-2     # entry 0028: a kept dump re-scored on another platform (BLAS reduction order) reproduces each
                          # float32 square to this relative tolerance; per-head SUMS still to _SUM_TOL. Measured max 2.9e-3
                          # over 8 handoffs x 6 arms (Linux box vs Windows home, 2026-09-04).
-_TAU_TOL = 1e-9
+_TAU_TOL = 1e-7   # entry 0059: RELATIVE. 0023's 1e-9 held only on x86 (every x86 rendering of the archived mapper's
+                  # held-out R^2 sits within 1e-9 of the registered floats; arm64 renders tau_V 7.6e-9 away). The tau
+                  # the readings use is ALWAYS the config's registered float; this is the tolerance on re-deriving it.
 ARMS = ("same_K", "same_V", "cross_K", "cross_V")
 
 
@@ -272,6 +275,15 @@ def calibrate_tau(cfg: E9Config, runner=subprocess.run, *, allow_dirty_upstream:
     return out
 
 
+def _dumped_sender_len(cfg: E9Config, n_sender_full: int) -> int:
+    """The sender length the level actually DUMPS. The alignment record keeps the FULL |S| under E-TRUNC (0055:
+    inclusion and run order are decided on it), while a truncated level prefills S' = S[-L:], so its identity and
+    bridge controls cover min(|S|, L) positions -- every position of the sender it dumped. Found 2026-10-08 when the
+    reader refused the L65 level on a correct 65,536-pair identity control; the figures entry states the correction."""
+    L = cfg.sender_head_truncate
+    return int(n_sender_full) if not L else min(int(n_sender_full), int(L))
+
+
 def _check_calibration(cfg: E9Config, runner) -> dict:
     cal_path = cfg.results_dir / "calibration" / "tau.json"
     if not cal_path.exists():
@@ -291,6 +303,20 @@ def _check_calibration(cfg: E9Config, runner) -> dict:
         raise ValueError(f"config tau_agent_K {cfg.rule['tau_agent_K']} != 1 - E8 arm (b) K R^2 ({fresh['tau']['agent_K']})")
     if list(cfg.controls["seam_bins"]) != list(SEAM_BIN_EDGES):
         raise ValueError("config seam_bins differ from the registered edges (0023)")
+    # entry 0059: record how far the recomputation sat from the registered floats, in `_close`'s own units
+    # (|a - b| / max(1, |a|, |b|)), and on which platform -- the summary states it the way 0028 states re-score jitter.
+    def _dist(a, b):
+        return float(abs(a - b) / max(1.0, abs(a), abs(b)))
+    fresh["tau_recompute"] = {
+        "tolerance_rel": _TAU_TOL,
+        "platform": {"machine": platform.machine(), "system": platform.system(),
+                     "python": platform.python_version(), "numpy": np.__version__},
+        **{key: {"config": float(cfg.rule[f"tau_{key}"]), "recorded": float(cal["tau"][key]),
+                 "recomputed": float(fresh["tau"][key]),
+                 "rel_diff_config": _dist(float(cfg.rule[f"tau_{key}"]), fresh["tau"][key]),
+                 "rel_diff_recorded": _dist(float(cal["tau"][key]), fresh["tau"][key])}
+           for key in ("K", "V", "agent_K")},
+    }
     return fresh
 
 
@@ -616,7 +642,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
     if float(np.abs(id_tok["same_K"]).max()) != 0.0 or float(np.abs(id_tok["same_V"]).max()) != 0.0:
         raise ValueError("identity control: a per-token square is nonzero; the GPU record is not trustworthy")
     n_s = int(np.load(cdir / ctl["identity"]["pairs_file"])["pairs"].shape[0])
-    if n_s != recorded[c_hid]["n_sender"]:
+    if n_s != _dumped_sender_len(cfg, recorded[c_hid]["n_sender"]):
         raise ValueError("identity control did not cover every sender position")
     # entry 0025: prefix-invariance control -- files by hash, squares sum to moments, the max centered
     # deviation re-derived and under the registered tolerance (the driver halted on it; this refuses on it).
@@ -675,7 +701,7 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
                 if not f.exists() or sha256_file_bytes(f) != sha:
                     raise ValueError(f"bridge {hid}: {f.name} missing or off-hash")
             n_b = int(b["n_sender"])
-            if n_b != recorded[hid]["n_sender"]:
+            if n_b != _dumped_sender_len(cfg, recorded[hid]["n_sender"]):
                 raise ValueError(f"bridge {hid}: n_sender {n_b} != the alignment record's")
             bp = np.load(hdir / b["pairs_file"])["pairs"]
             if not np.array_equal(bp, np.stack([np.arange(n_b), np.arange(n_b)], 1)):
@@ -885,7 +911,8 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
         "seam_bins": list(SEAM_BIN_LABELS), "depth_profile_median_per_layer": depth,
         "bridge_r2": {"same_K": same_k, "same_V": same_v, "cross_K": cross_k, "cross_V": cross_v},
         "matched_fraction": matched, "keep_subset": rep["keep_subset"],
-        "calibration": {"tau": cal["tau"], "heldout": cal["heldout"]},
+        "calibration": {"tau": cal["tau"], "heldout": cal["heldout"],
+                        "tau_recompute": cal.get("tau_recompute")},                 # entry 0059
     }
     _walk_nan(figures, "figures")
     (cfg.results_dir / "summary.json").write_text(json.dumps(figures, indent=1), encoding="utf-8")
@@ -945,12 +972,19 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
           f"max |delta_token diff| {_fe(ra['max_abs_token_delta_diff'])}, "
           f"max |f*(tau) diff| {_fe(ra['max_fstar_abs_diff'])}"
           + (" (NO kept handoff scored: the re-score check has nothing to read; stated, never a zero)" if not rescore_agreement else "")
-          + "\n\n"
+          + "\n"
+          + (f"tau recomputation (entry 0059): config vs recomputed K {_fe(tr['K']['rel_diff_config'])}, "
+             f"V {_fe(tr['V']['rel_diff_config'])}, agent_K {_fe(tr['agent_K']['rel_diff_config'])} "
+             f"(tolerance {tr['tolerance_rel']:.0e}, |a-b|/max(1,|a|,|b|); measured on {tr['platform']['machine']} "
+             f"{tr['platform']['system']}, numpy {tr['platform']['numpy']}); the readings use the config's registered tau\n"
+             if (tr := figures["calibration"].get("tau_recompute")) else "")
+          + "\n"
           "Units: centered per-token deviation = the token's share of unexplained variance, in R²'s own "
           "units (token mean == 1 - R²); NOT a per-token percent error (0023).\n\n"
           f"- matched fraction |M|/|R| (a FLOOR; blocks method, entry 0019): {fmt(matched)}\n"
           f"- **f*(tau_K = {tau['K']:.4f}) E9-same K per handoff: {fmt(f_same_k)}**  <- verdict-bearing "
-          "(oracle LOWER BOUND: restored-exactly assumption; no error propagation through reused KV)\n"
+          "(oracle REMOVAL fraction, entry 0058: judged on the mean over the REMAINING tokens; not a bound on real "
+          "selective recompute in either direction)\n"
           f"- f*(tau_V = {tau['V']:.4f}) E9-same V per handoff: {fmt(figures['fstar']['same_V'])} (alongside)\n"
           f"- f* E9-cross K / V per handoff: {fmt(figures['fstar']['cross_K'])} / {fmt(figures['fstar']['cross_V'])} "
           "(the k=1 mapper across the handoff; never merged with same)\n"

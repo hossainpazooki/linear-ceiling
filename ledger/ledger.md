@@ -3693,3 +3693,329 @@ generation quality after reuse not measured. `eval_hellaswag.py` and `compose_ma
 scope for this pair (entry 0039).
 
 prior-entries-sha256: 03ae7892e67a0fe37245ab17eef17a82ccb928fa4a2d5abb3cb3ff19721104d2
+
+### 0048 — 2026-10-07 — Same-model extension ran `[BASELINE, DESCRIPTIVE]`: Qwen3-4B and SmolLM3-3B on the original 60 handoff texts at the Qwen reference τ, bridge passed; stated beside the Qwen3-0.6B→1.7B cells and never pooled; no cell moves
+
+**Setup, as registered (0046).** RunPod community NVIDIA A100-SXM4-80GB (one card), pod and machine ids in docs/2026-10-07-consolidation-runpod-runbook.md; launched 2026-10-07T04:01Z, finished 2026-10-07T06:29Z; GPU as recorded in every report
+`NVIDIA A100-SXM4-80GB`; PyTorch 2.14.0+cu130, Transformers 5.17.0, NumPy 2.5.3, CUDA 13.0; config `857cc92320cb…`, manifest
+`99185c5891fc…`, driver `run.py` `87e0efb1502c…` / `capture.py` `2cddd19b1c43…` as committed. All 126 handoffs
+complete, none excluded. Backup: `hossainpazooki/linear-ceiling-consolidation-2026-10-07` (R8, verified both ways before this entry).
+
+**Controls.** Chunked-prefill control, maximum normalized deviation per model: Qwen3-1.7B (bridge) 4.70e-09, Qwen3-4B 1.07e-09, SmolLM3-3B 1.66e-10
+(limit 1e-4). Bridge on six archived handoffs: maximum relative mean-deviation gap 1.23e-05 (limit 0.01), maximum f* gap 0.0000
+(limit 0.01). Peak allocation per model: Qwen3-1.7B (bridge) 24.93 GiB, Qwen3-4B 39.72 GiB, SmolLM3-3B 22.96 GiB.
+
+**Figures (same-model arm; `summarize.py` recomputed every record, re-scored every witness, 2,000 trajectory-cluster
+bootstrap resamples; brackets are 95 % intervals on f*(0.03)).** τ_K = 0.3186442653116294 is the 0023 Qwen3-0.6B→1.7B mapper's
+shortfall, a common numerical reference and not a threshold calibrated for either model.
+
+- **Qwen3-4B, short (0038's 25)**, K: 25 of 25 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0007; f*(0.03) 0.2739 [0.2057, 0.4737]; mean δ 0.1011; tail over τ 0.0843. V: 25 of 25 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0342; f*(0.03) 0.3883 [0.2732, 0.5397]; mean δ 0.1269; tail over τ 0.0647.
+- **Qwen3-4B, long (0036's 35)**, K: 35 of 35 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0460; f*(0.03) 0.4979 [0.2077, 0.7239]; mean δ 0.1260; tail over τ 0.0908. V: 35 of 35 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0923; f*(0.03) 0.5394 [0.2569, 0.7326]; mean δ 0.1446; tail over τ 0.0728.
+- **SmolLM3-3B, short (0038's 25)**, K: 25 of 25 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0000; f*(0.03) 0.1527 [0.0983, 0.3896]; mean δ 0.0722; tail over τ 0.0390. V: 25 of 25 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0000; f*(0.03) 0.1353 [0.0940, 0.3491]; mean δ 0.0812; tail over τ 0.0276.
+- **SmolLM3-3B, long (0036's 35)**, K: 34 of 35 at f*(τ) = 0; median f*(τ_K) 0.0000; f*(0.1) 0.0580; f*(0.03) 0.4529 [0.0955, 0.6761]; mean δ 0.1207; tail over τ 0.0578. V: 35 of 35 at f*(τ) = 0; median f*(τ_V) 0.0000; f*(0.1) 0.0000; f*(0.03) 0.3630 [0.0826, 0.5620]; mean δ 0.0956; tail over τ 0.0283.
+
+Handoffs with f*(τ_K) > 0 on K among the new models: `20241025_composio_swekit/django__django-10554_traj#112` (SmolLM3-3B, e9l): mean δ_K 0.3320, f*(τ_K) 0.0228.
+
+**Reading.** On both new receivers the mean deviation of the matched tokens sits under the Qwen reference on every
+handoff but the ones named, with far less headroom at the ladder's 0.03 on the long cohort than on the short, as on the
+original pair. This is a statement about means under one map's tolerance (0045); it is not a quality result, not a
+length effect (different handoffs), and not pooled with any 0029 / 0036 figure.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; the original pair's entries and records.
+
+prior-entries-sha256: 08b376985b5caac35d54237e9d104f8d03a87399372fe74136cff78fede72bf8
+
+### 0049 — 2026-10-07 — Cache-behavior comparison ran `[BASELINE, DESCRIPTIVE]`: next-token sensitivity of Qwen3-1.7B to reading an assembled same-model cache on the 35 long handoffs, fresh vs reused with two controls; no band, no cell moves
+
+**Setup, as registered (0047).** RunPod community NVIDIA A100-SXM4-80GB (one card), pod and machine ids in docs/2026-10-06-cache-behavior-runpod-runbook.md; launched 2026-10-06T23:50Z, finished 2026-10-07T01:22Z; GPU `NVIDIA A100-SXM4-80GB`, PyTorch 2.14.0+cu130,
+Transformers 5.17.0, CUDA 13.0; config `53c664556d18…`, driver `core.py` `f346b5fdf3d3…` / `run.py` `15e1ff8c1dbc…` as committed,
+run at commit `7c9a5fd`.
+35 of 35 handoffs scored, 8,908 continuation tokens, none excluded; peak allocation 24.95 GiB. Backup: `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07` (R8,
+verified both ways before this entry). Pinned: `report.json` `3564605773bb…`, `summary.json` `5228de0dd8c4…`.
+
+**Inputs and the manifest clause of 0047.** The inputs were prepared by the registered `--prepare` on Linux from the verified
+E9-long mirror and the manifest-pinned traces; their manifest is `2aeee5769c0a…`. Its config digest equals the
+pilot's freeze record; its corpus-manifest, archive-config and archive-report digests equal the committed bytes and the verified
+e9l mirror (the freeze record pins no field beyond the config and the manifest hash itself; all checked by this script), and
+every record's trace, alignment, score and token digest matches the corpus manifest and the e9l archive. It is NOT byte-identical
+to the pilot's frozen `9a6f2923d3be…`: that manifest's `evidence_sha256_manifest` field is the sha256 of the pilot
+author's evidence `SHA256SUMS` file, which is in neither the repository nor the archive, so the frozen hash cannot be reproduced
+without that file; whether that field is the only one that differs is unknown until the pilot's manifest arrives (regenerated
+`SHA256SUMS` layouts over the same archive files were tried against the frozen hash with no hit; a Windows prepare additionally
+differs on every record sha by the zip `create_system` byte, members identical). 0047's clause "or the run refuses" was never
+the driver's: the frozen `run.py` compares no manifest hash, so the only refusal was this script's, and the ruling below —
+made on 2026-10-07 after the run had finished — moved it. Operator ruling, verbatim: "0047's byte-for-byte clause is read as: every field of the operator's manifest that is pinned to the repository or the verified archive equals the pilot's freeze record; the evidence-file digest, which pins a private file, is excluded. The operator's manifest 2aeee576… is the one 0049 asserts." The pilot author's `SHA256SUMS`
+and `manifest.json` were requested (issue #20) for a field-level confirmation, which enters as a dated note if it arrives.
+
+**Numerical controls (registered limits in 0047):** fresh-repeat maximum logit error 0.00e+00, prefix-copy maximum logit error 2.90e-04 (limit 5e-4), over all scored handoffs. Every per-handoff archive bridge passed, or the reader would have
+refused.
+
+**Figures (`run.summarize` in-process: every case record re-hashed, the scored set checked against the registered 35,
+the logit witness re-checked; medians with p10 / p90 over handoffs, `e7_stats` convention, handoffs weighted equally).**
+KL is KL(fresh ‖ candidate) per scored token, averaged per handoff.
+
+- **REUSE-ALL (assembled same-model cache)**: mean KL per handoff 0.1424 (p10 0.0802, p90 0.1900) nats; p90 KL 0.3022 (p10 0.1768, p90 0.4713); top-1 agreement 0.9020 (p10 0.8549, p90 0.9216).
+- **RANDOM (norm-matched perturbation)**: mean KL per handoff 11.2981 (p10 9.2592, p90 13.5357) nats; p90 KL 19.5226 (p10 16.5229, p90 22.6453); top-1 agreement 0.0471 (p10 0.0196, p90 0.0980).
+- **CYCLIC (matched states permuted, keys relocated)**: mean KL per handoff 0.2826 (p10 0.1795, p90 0.3569) nats; p90 KL 0.6521 (p10 0.4347, p90 0.9791); top-1 agreement 0.8549 (p10 0.8039, p90 0.8902).
+
+Fresh attention at the last 32 receiver queries (descriptive; medians over handoffs): weighted_delta_mean 0.1041 (p10 0.0881, p90 0.1440); weighted_delta_p90 0.2479 (p10 0.2038, p90 0.3294); tail_attention_mass_mean 0.0885 (p10 0.0651, p90 0.1295); tail_attention_mass_p90 0.2469 (p10 0.1631, p90 0.2990); matched_attention_mass_mean 0.4100 (p10 0.3280, p90 0.4893); matched_attention_mass_p90 0.8928 (p10 0.7293, p90 0.9655); conditional_weighted_delta_mean 0.3012 (p10 0.2516, p90 0.4060); conditional_weighted_delta_p90 0.6880 (p10 0.5722, p90 0.9666); conditional_undefined_count 0.0000 (p10 0.0000, p90 0.0000).
+
+**Reading.** Reading the assembled same-model cache changes the receiver's predictions on the recorded continuation by
+a measurable amount, and by far less than a norm-matched random perturbation of the same states; the cyclic
+permutation sits between them. **Top-1 agreement is not task accuracy and no acceptance threshold exists**; the result
+does not validate τ_K as a quality threshold, does not establish unchanged free generation, and measures no speed.
+"No downstream task-quality number is claimed" stands.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045 and
+their records; the Qwen3 short cells (Condition 1).
+
+prior-entries-sha256: f1efa70bf50f624d1d0c319bf7217ff6c3e7cf77959f9a032170529e98b7cb98
+
+### 0058 — 2026-10-07 — Corrective: f* is the oracle REMOVAL fraction, not a lower bound on real selective recompute; the 0023 / 0027 "oracle lower bound … read on a floor" reading is withdrawn and the words every output carries change; definition, verdicts, cells, τ and every figure unchanged
+
+**What 0023 and 0027 say.** 0023 (line 1275) defines f*(τ) as the smallest fraction of matched tokens that, removed
+(recomputed exactly), leaves the MEAN δ_K **over the remaining tokens** at or below τ; line 1278 calls it "an oracle
+LOWER BOUND on real selective recompute for two stated reasons" — a recomputed token is assumed restored exactly, and real
+partial prefill recomputes the selected tokens against the reused KV of the others, so errors propagate; line 1281
+requires every output stating f* to carry the words and both reasons. 0027 (line 1651) builds "HOLDS reads on a
+floor" on it and sets f* beside CacheBlend's 10–15 % "ACHIEVED figure" (line 1653). 0029, 0036, 0038, 0044 and
+others restate the floor beside their cells; 0054 (line 3320) declined to adopt the contrary reading and said it
+"needs its own corrective entry if it is ever to stand". This is that entry.
+
+**Why the bound does not hold.** The two registered reasons make a real scheme's repair fraction *higher* than an exact,
+isolated one. But the denominator pulls the other way: write g*(τ) for the fraction an exact, isolated repair needs when the
+mean is taken over **all** tokens (the k repaired tokens contributing 0). That mean is (n − k)/n times the remaining-token
+mean, so every k that satisfies f*'s criterion satisfies g*'s, and **g* ≤ f*** always. Computed here with the registered
+`f_star` (`linear_ceiling.e9_pertoken`): δ = (0.5, 0.5, 0.5, 0.0) at τ = 0.3: f* = 0.50, g* = 0.25; over
+5,000 seeded random cases (seed 58; n 2–40; τ ∈ {0.03, 0.1, 0.3186}) g* > f* in 0,
+g* < f* in 3,210, equal in 1,790, and (f* = 0) ⇔ (g* = 0) in every case. So f* bounds the exact-repair
+fraction from *above*, the registered reasons push the real fraction *up* from there, and no ordering between f* and real
+selective recompute is established in either direction. Only the reading was wrong: the definition at line 1275
+already says "over the remaining tokens", and 0045 (line 2991) already reads f* = 0 as a statement about the mean.
+
+**The ruling (operator, 2026-10-07).** (1) f* is read as the **oracle removal fraction**: the share of each handoff's
+matched tokens whose removal brings the remaining-token mean within τ — a measure of how concentrated the disagreement is,
+not a repair cost, and **not a bound on real selective recompute in either direction**. (2) Line 1281 is replaced:
+every output stating f* carries the words "oracle removal fraction" and this entry's number, and the two 0023 reasons are
+stated only where propagation is discussed, never as grounds for a bound. (3) 0027's floor sentence is withdrawn. HOLDS
+reads: on the median handoff, the mean δ_K over the matched tokens is at or under the mapper's own mean deviation τ_K, or
+gets there by removing at most the band's 15 % of them — f*(τ) = 0 ⇔ mean ≤ τ (Theorem 1 of the paper;
+`fstar_eq_zero_iff` in `proofs/Carryover/Fstar.lean`, named from the source, not built here) — "no more than the mapper"
+as a statement about disagreement, not about what any scheme pays. (4) The CacheBlend
+comparison of line 1653 is dropped: an oracle removal fraction and an achieved recompute fraction are not
+comparable in either direction. Entries that restate the floor stand as written (the chain is immutable) and are read
+under this entry from here on.
+
+**What changes in the tree, same commit.** The words `summarize_e9` prints beside the verdict-bearing f* line and the
+`f_star` docstring; `tests/test_summarize_e9.py`'s pinned phrase; README.md's verdict table and "What HELD means here";
+CLAUDE.md's H-E9 line; the staged `append_0057.py`'s scope sentence. The script that appended this entry refused until each
+carried the new words and none the old.
+
+**Occasion, for the record.** The camera-ready submitted 2026-10-04 (sha `6c706bef…`) writes App. D's "f* is not an
+achievable recomputation or runtime cost" — correct, and the denominator is its reason — and App. A's "not a general lower
+bound … because practical recomputation can propagate errors", whose conclusion is correct but whose reason is 0023's
+second, which argues *for* the bound; a third sentence in the Introduction carries the same reading. Found by the skeptic
+pass of `docs/reviews/2026-10-07-submitted-camera-ready-reconciled-against-the-record-and-the-operator-runs.md` §6.1. What the MLSys draft must change is the response map's business (#18 Q4), not this entry's.
+
+**What this does NOT touch.** The definition of f* (0023, line 1275) and its 1e-9 tolerance; every verdict and cell
+(H-E9 0029, H-E9L 0036, H-E9F 0044; the rule compares the statistic to the band, and the statistic is unchanged); τ_K, τ_V,
+τ_agent_K, the band edges, the ladder; every figure on the ledger; 0045's tail figures; Theorem 2's bounds *on* f* as a
+function of δ (`lower_bound_max`, `lower_bound_deltaMax`, `fstar_le_p` in `Fstar.lean` — bounds on the statistic, not
+readings of it); 0010 / 0012's visible-only cost figures, which are LOWER BOUNDs on spend of a different statistic and keep
+their label.
+
+**Numbering.** 0058, the next free number in the drafts README; appended after 0049 in file order while 0051 and 0057 stay
+staged (`ledger_check` chains by file order). Next free number after this entry: 0059.
+
+prior-entries-sha256: 5ba3adab23b109d2a4e37c8384a6ff544decebab2e04c8f32bd8accbd5dbfee3
+
+### 0051 — 2026-10-07 — E9 long half ran on the second model family `[BASELINE, DESCRIPTIVE]`: the long band at a NATIVE receiver; stated beside entry 0036's scaled-receiver figures and never pooled with them; no cell moves (32 scored of 32 registered)
+
+**Setup, as registered (0050).** RunPod SECURE pod uua1cpjql18jb6, NVIDIA A100-SXM4-80GB (81,920 MiB, driver 580.126.16), 128 vCPU / 2,003 GB host RAM, $1.59/h, created 2026-10-07T17:01:48Z; home side the operator's Mac mini; linear-ceiling at the commit carrying 0050 and
+`config/e9fl.toml` (gate: entries 0019/0023/0025/0027/0050), upstream pin `06f8d55`.
+Pair llama3.2-3b-to-llama3.1-8b: receiver meta-llama/Llama-3.1-8B, source meta-llama/Llama-3.2-3B, **neither scaled** — no `[e9.rope]`, no
+`[e9.bridge]`, no `--rope-scaling` on any dump; the k = 1 mapper of this family's E8 sitting
+for the cross arm, by sha. Launched 2026-10-07T17:35:23Z, finished 2026-10-07T19:46:17Z. Backup: `hossainpazooki/linear-ceiling-e9fl-2026-10-07` (R8, verified
+both ways before this entry). **Coverage file, two renderings of one content:** entry 0050 pins
+`align/coverage.json` at `16121e677b97…`, the sha of the home file's CRLF rendering (written on Windows); the box's
+`--align-only` reproduced the same 993 lines as LF, sha `9f10092b6238…` (its evidence `versions.txt`),
+and the launcher's exact-match check was passed on that rendering — the parsed records are identical and
+the summarizer below re-derived them from the traces. Complete: 32 scored of 32 registered. Of
+68 observed handoffs: 32 registered (longer side above 32,768 and within
+81,920 tokens under this pair's own tokenizer), 28 covered by the
+short cell and excluded here, 4 above the cap and scored by NEITHER cell,
+4 with an empty receiver prompt. Every figure below is
+`summarize_e9 --config config/e9fl.toml`'s, from a run that passed all of its checks: alignments re-derived
+from the raw traces under the cap and floor; the run order re-derived; the partial prefix checked; every R²
+recomputed from recorded moments; per-token squares summed against the moments; the 3 kept handoffs' stride-1 dumps fingerprint-verified and re-scored at home under 0028's tolerance (every square within 6.9e-04 relative, max |f* diff| 0.0e+00); τ recomputed
+from the archived mapper; controls checked.
+
+**The two controls that replace entry 0035's configuration bridge, reported first.** On a natively long
+receiver these ARE the evidence that nothing was scaled, and `summarize_e9` refuses this cell outright if
+the dumps carry no RoPE spec. Over all 97 dumps: **native window** — the registered cap
+81,920 sat inside every dump's own recorded `max_position_embeddings`, so no dump asked either
+model for a position its configuration does not declare; **frequency identity, by model role** — source (32 dumps, max_position_embeddings 131,072, inv_freq 31576ad84e5a, attention factor 1.0), target (65 dumps, max_position_embeddings 131,072, inv_freq 8480b7658cd7, attention factor 1.0);
+the spec-vs-model halt check passed at every dumped position (worst |diff| 1.2e-07
+against atol 1e-05), and every dump recorded an attention factor of 1.0. The roles
+are compared separately because this pair's two sides build different inverse-frequency vectors by
+construction (entry 0039).
+
+**Controls (0023, 0025).** Pipeline identity: exactly zero. Prefix invariance on the first handoff in run
+order: max centered per-token δ 0.000e+00 over 33,086 positions
+(tolerance 1e-04, this pair's own value). δ_null same K / V token-mean median
+2.010 / 2.023; equal-token null pairs
+0.0085. Matched fraction |M|/|R| (a floor): 0.9531 (p10 0.7762, p90 0.9868).
+
+**The statistic, computed and verdict-bearing for nothing.** Per scored handoff, E9-same, K read-out:
+f*(τ_K = 0.2861) as 0023 defines it, median over scored handoffs. τ_K is 1 − THIS pair's own
+held-out R² and is identical to the short cell's; this cell has no hypothesis row, so the band words below
+are stated descriptively and decide nothing.
+
+- **median f*(τ_K), E9-same K: 0.0000 (p10 0.0000, p90 0.0000)** over 32 handoffs (32 scored of 32 registered); seeded
+  bootstrap of the median (seed 25, 2000 reps): [0.0000,
+  0.0000]. Against 0023's edges (HOLDS ≤ 0.15, DEGRADES ≥
+  0.5) the band word would be **HOLDS**, stated descriptively.
+- f*(τ_V = 0.5289), E9-same V (alongside): 0.0000 (p10 0.0000, p90 0.0000).
+- τ ladder (descriptive): τ = 0.1: same K 0.0000 (p10 0.0000, p90 0.3014) / V 0.0088 (p10 0.0000, p90 0.3580); τ = 0.03: same K 0.2696 (p10 0.0000, p90 0.6385) / V 0.2995 (p10 0.0018, p90 0.6132).
+- f*(τ_agent_K = 0.2689): same K 0.0000 (p10 0.0000, p90 0.0000); cross K 0.8355 (p10 0.6923, p90 0.9519).
+- f*(τ_K) over matched blocks of length ≥ 4: same K 0.0000 (p10 0.0000, p90 0.0000).
+- Seam profile under the causal distance b⁻(t), E9-same K, pooled median δ by bin: 0: 0.246 (n=3830) · 1: 0.128 (n=2735) · 2-3: 0.076 (n=4226) · 4-7: 0.061 (n=6598) · 8-15: 0.064 (n=8532) · 16+: 0.022 (n=308783).
+
+**Length profiles (entry 0050 control 5, descriptive).** (i) by |S| bin, median f*(τ_K) same K over
+handoffs: |S| 32769-49999: 0.0000 (p10 0.0000, p90 0.0000) (n = 21); |S| 50000-64999: 0.0000 (p10 0.0000, p90 0.0000) (n = 10); |S| 65000-81920: 0.0000 (p10 0.0000, p90 0.0000) (n = 1). (ii) by matched-token position in S, pooled f*(τ_K) same K / median δ_K: positions 0-8191: 0.0000 / 0.007 (n = 159,471); positions 8192-32767: 0.0000 / 0.042 (n = 87,894); positions 32768-65535: 0.0000 / 0.135 (n = 78,711); positions 65536-81920: 0.0000 / 0.041 (n = 8,628).
+(ii) is the long-context figure — whether agreement at a re-rendered position depends on how deep in the
+sender's context the token sat — and its bins are cut at this family's own RoPE boundary, not at entry
+0035's YaRN midpoint.
+
+**Cross-arm outcome, named (descriptive, decides nothing).** E9-cross through this pair's own
+k = 1 mapper: median f*(τ_K) = 0.7626 (p10 0.5963, p90 0.9212), f*(τ_V) = 0.8522 (p10 0.7520, p90 0.9322); against the
+same edges the transfer arm sits beyond the DEGRADES edge. Cross/same median-δ ratio K / V: 11.1 (p10 2.6, p90 81.1) /
+18.6 (p10 4.0, p90 128.6). Bridge R² (A5 across the handoff; not control 4, which does not exist here): same K
+0.9094 (p10 0.7631, p90 0.9760), same V 0.8912 (p10 0.7216, p90 0.9678), cross K 0.5798 (p10 0.4991, p90 0.6177), cross V 0.2579 (p10 0.2050, p90 0.2953).
+
+**Beside entry 0036, and NOT pooled with it.** 0036 measured
+35 handoffs of 35 registered on
+qwen3-0.6b-to-1.7b with the receiver pushed to 81,920 positions by static YaRN
+(`{"factor": 2.5, "original_max_position_embeddings": 32768, "rope_type": "yarn"}`), at τ_K = 0.3186, and reported median f*(τ_K)
+0.0000 (p10 0.0000, p90 0.0000). This cell measured 32 handoffs on llama3.2-3b-to-llama3.1-8b with **nothing scaled**, at
+τ_K = 0.2861, and reported 0.0000 (p10 0.0000, p90 0.0000). **The two numbers are stated side by side and are not
+comparable as numbers**: different models, different tokenizers and therefore different handoff sets,
+different mappers and therefore different τ, and — the point entry 0050 registered — one receiver is
+scaled past its pretraining window and the other is not. Nothing here supports, refutes or moves H-E9L,
+and no figure from the two cells is averaged, pooled or differenced.
+
+**What this establishes, stated narrowly.** On meta-llama/Llama-3.1-8B re-rendering 32 real SWE-bench
+`composio_swekit` handoffs whose longer side runs 32,769–81,920 tokens under
+this pair's own tokenizer, at a receiver inside its native window throughout, with 0019's alignment and
+0023's per-token rule at this pair's own τ, the same-model oracle removal fraction is as stated above (read
+per entry 0058: not a bound on real selective recompute in either direction).
+**Not established:** any hypothesis cell — this entry moves none and carries no `verdict:` line; anything
+about the 4 handoffs above 81,920 or the 4 with an empty
+receiver prompt; anything about the 0 unscored registered handoffs (none); any achievable recompute
+scheme (0058); anything about a scaled receiver, which this cell does not contain; one pair, one
+direction, one mapper, one alignment method; generation quality after reuse.
+
+e7-manifest-sha256: 371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094
+
+prior-entries-sha256: 75a47a51de6eb84ae4f3a91da0393bb99775868930242af35926fd31962e1399
+
+### 0059 — 2026-10-08 — E9 summarizer enforcement: the τ recomputation tolerance registered for a cross-platform recompute (1e-9 → 1e-7 in the check's units); no rule, τ, band, score, handoff or cell change
+
+**What this is, and when.** After E-TRUNC's FULL level ran (2026-10-08, registered by 0055; `results/e9t-full/report.json`
+complete, 35 of 35 scored, the home mirror fingerprint-verified) and BEFORE any figure of it is stated. 0023 registers that
+`summarize_e9` re-derives τ from the archived mapper and "recomputes it under the pin and refuses on disagreement (1e-9)" (ledger line 1308); the constant
+behind that sentence is `_TAU_TOL` in `summarize_e9.py`, applied as |a − b| ≤ tol · max(1, |a|, |b|), so for τ < 1 it is an
+absolute gap. The home side of this run is the operator's Mac mini (arm64), as it was for 0051. Under that constant the
+summarizer refused FULL on τ_V alone: `E9 SUMMARY REFUSED: config tau_V 0.4867056499055992 != recomputed 0.48670564617346357`. This entry registers the tolerance for that check as a judgment, with the
+measurement it rests on — the move 0028 made for the keep-subset re-score. It is enforcement of 0023, not a change to anything
+0023 registers about the rule, τ, the band or the cells.
+
+**Measured: five renderings of the same arithmetic.** `--calibrate-tau` under the pin `063f4023fdde…` on the same
+mapper bytes (`2fd05c333156…` / `cd6a8d939b36…`), the same E8 report
+(`5c4e70a097c2…`) and the same archived `results/mapper/qwen3-0.6b-to-1.7b/r2.json` — read on the box as the LF object committed at the pin
+(`99177e9c8950…`) and at home as its CRLF checkout rendering (`18d2276f28e9…`, the sha 0023 pins at ledger line
+1294; the LF bytes with CRLF line ends, derived here); files under `results/e9t-full/calibration*/` with their
+`platform.json`; "gap" is the check's own distance to the config float.
+
+| rendering | τ_K | gap | τ_V | gap |
+|---|---|---|---|---|
+| **config (registered; Windows x86 at 0023)** | `0.3186442653116294` | — | `0.4867056499055992` | — |
+| x86 Linux, 13 threads (the box, torch 2.11.0+cu128 CPU path) | `0.31864426521157985` | 1.0e-10 | `0.48670564997852195` | 7.3e-11 |
+| x86 Linux, 1 thread (the box) | `0.3186442652698682` | 4.2e-11 | `0.4867056503322168` | 4.3e-10 |
+| arm64 macOS, 1 thread (the Mac mini) | `0.3186442649443352` | 3.7e-10 | `0.48670564617346357` | 3.7e-09 |
+| arm64 macOS, 8 threads (the Mac mini) | `0.3186442649443352` | 3.7e-10 | `0.48670564617346357` | 3.7e-09 |
+| arm64 macOS, the live `calibration/tau.json` the summarizer checks | `0.3186442649443352` | 3.7e-10 | `0.48670564617346357` | 3.7e-09 |
+
+Every x86 rendering sits within 1e-9 (worst 4.3e-10) and the two x86 renderings differ from each other, so the registered
+floats are one x86 rendering among several, not a property of the mapper. The arm64 renderings are identical at 1 and 8 threads
+(deterministic, not thread-order jitter) and sit 3.7e-09 from the config on V. τ_agent_K is read from the E8 report with no
+arithmetic and is identical everywhere (gap 0). The second-family cell (0051, `llama3.2-3b-to-llama3.1-8b`) passed on this same machine with gaps
+K 2.6e-10 / V 1.9e-11 / agent_K 0 — under 1e-9 by magnitude, not by design.
+
+**Registered check (replaces the 1e-9 for the recomputation).** The recorded calibration's and the config's τ_K, τ_V and τ_agent_K
+must each reproduce the recomputed value within **1e-07** in `_close`'s units; a gap beyond refuses the summary, as before.
+1e-07 is three orders below the four decimals this ledger states τ to (0023: τ_K 0.3186, τ_V 0.4867) and 27× the
+worst gap measured above (3.7e-09). **The τ every reading uses remains the config's registered float**; the recomputation is a
+check that the archived mapper still yields it, and no figure, f*, cell or verdict depends on the recomputed value, so nothing can
+move by this entry. `summarize_e9` now records the gap and the platform it was measured on in `summary.json`
+(`calibration.tau_recompute`) and prints them, as 0028 made it print the re-score jitter. **Measured by `summarize_e9` on FULL
+under this check** (`results/e9t-full/summary.json` `62a6b69947b7…`, written on arm64 Darwin,
+numpy 2.5.3): gaps to the config K 3.7e-10, V 3.7e-09,
+agent_K 0; to the recorded calibration K 0,
+V 0. The summary passed; its figures enter by their own entry (0057), never by this one.
+
+**What this does NOT touch.** 0023's per-token judgment "judged to 1e-9 relative" (ledger line 1277) — a
+different check, on the f* statistic, unchanged; the 1e-6 cross-checks of the held-out R² against the archived `r2.json` and E8 arm
+(a) (`_TOL`), unchanged; τ_K, τ_V, τ_agent_K and every τ ladder; the rule section; the bands; every verdict and cell (H-E9 0029,
+H-E9L 0036, 0038, the Llama cells 0044/0053/0051); 0050's sentence that its config "this config agrees with it at 1e-9" (ledger line
+3638), which the measurement above confirms at full precision. `verdict:` lines: none.
+
+**Lesson, stated once.** A registered float check is a rendering of the platform that produced it (learnings 2026-10-08, the
+coverage-sha and `r2.json` CRLF pins are the same lesson in bytes); an enforcement constant that must hold on a second home
+platform is registered with the renderings it was measured on, as here.
+
+prior-entries-sha256: 64e1c6bad066f8a961256b227594d6b1338c922334094d6fe91b9023f41a1a5a
+
+### 0057 — 2026-10-08 — E-TRUNC ran `[BASELINE, DESCRIPTIVE]`: head truncation of the sender context at four levels on 0036's long handoffs; the registered reading at the native cap reads "unattributed"; descriptive, no cell moves
+
+**Setup, as registered (0055).** RunPod secure cloud, 1x NVIDIA A100-SXM4-80GB (driver 580.126.16, 128 vCPU shown / 13.6-CPU cgroup quota, 2 TB host RAM), pod w28h3vp07g8nnz; FULL launched 2026-10-08T16:35:23Z, last level finished 2026-10-08T23:25:49Z;
+upstream pin `063f4023fdde…` for all four levels; FULL config `005d8d102deb…` report `5a7ab122fcc1…`; L65536 config `782f7354f422…` report `b72a49869092…`; L49152 config `d4d54381e394…` report `c7535211d033…`; L32768 config `3c0663fbb651…` report `c166d8f11427…`. Backup: `hossainpazooki/linear-ceiling-e9t-2026-10-08` (R8, verified both
+ways before this entry). Runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`.
+
+**Coverage files, two renderings of one content.** Entry 0055 pins each level's `align/coverage.json` by the sha of the home file's raw bytes; the box reproduced the same lines in the other line-ending rendering and the mirror carries that one. Both shas are derived from the mirror here: FULL pinned `0b0419ea1d27…` (CRLF; the other rendering `5d01067ab8bb…`); L65536 pinned `c5c3b3d55828…` (CRLF; the other rendering `4d9cc526b1dc…`); L49152 pinned `1120282c65b0…` (CRLF; the other rendering `db8c32746a33…`); L32768 pinned `d07606d8d3e8…` (CRLF; the other rendering `a227bea0e058…`).
+
+**Reader corrections before any figure (2026-10-08; stated, not hidden).** (1) Entry 0059 registered the τ recomputation tolerance (1e-7 in the check's units) after this set's FULL summary refused on the arm64 home side; each level's summary here carries its `tau_recompute` block, and the τ every reading uses is the config's registered float. (2) `summarize_e9` compared the identity and bridge controls' coverage with the alignment record's FULL |S|, which 0055 keeps so that inclusion and run order are decided on the full sender; a truncated level dumps S′ = S[−L:], so the reader refused L65 on a correct control with every square zero. The reader now expects min(|S|, L) positions (`_dumped_sender_len`); cells without truncation are unchanged. Identity coverage on the controls handoff, per level, from the reports: FULL 80,111 positions of |S| 80,111; L65536 65,536 positions of |S| 80,111; L49152 49,152 positions of |S| 80,111; L32768 32,768 positions of |S| 80,111 — every square exactly zero. Neither correction touches a τ, a rule, a band or a cell.
+
+**Coverage and the void gate (ruling 2).** 35 handoffs scored at every level (every level scored every handoff any level scored).
+Under the registered floor |M_∩| ≥ 2,000 common matched tokens, 14 are void and named, never
+pooled: `20241016_composio_swekit/astropy__astropy-12907_traj#97`, `20241016_composio_swekit/astropy__astropy-13398_traj#133`, `20241016_composio_swekit/astropy__astropy-13453_traj#109`, `20241016_composio_swekit/astropy__astropy-13977_traj#118`, `20241016_composio_swekit/astropy__astropy-14369_traj#108`, `20241016_composio_swekit/astropy__astropy-14539_traj#114`, `20241016_composio_swekit/django__django-10973_traj#87`, `20241025_composio_swekit/astropy__astropy-12907_traj#104`, `20241025_composio_swekit/astropy__astropy-13453_traj#102`, `20241025_composio_swekit/astropy__astropy-13977_traj#83`, `20241025_composio_swekit/astropy__astropy-14369_traj#132`, `20241025_composio_swekit/astropy__astropy-8707_traj#152`, `20241025_composio_swekit/astropy__astropy-8872_traj#74`, `20241025_composio_swekit/django__django-11087_traj#97`. **21 handoffs enter the comparison**, carrying 154,620 common tokens (pooled
+|M_∩| / |M_FULL| over them 0.6423). Stated limitation (0055): the comparison speaks for the handoffs whose receiver re-renders enough of the late sender context to survive head truncation, not for the long cohort as a whole.
+
+**Figures on M_∩, per level (`summarize_e9_trunc` in-process: each level's `summarize_e9` passed first; medians over the
+21 entering handoffs, `e7_stats` convention; δ in R²'s units, 0023; τ_K = 0.3186442653116294).**
+
+- **FULL** (full |S|): median over handoffs of mean δ_K 0.1704, of the fraction over τ_K 0.1294; f*(0.3186) 0.0000, f*(0.1) 0.3141, f*(0.03) 0.9999; far-from-seam (16+) pooled median 0.1112, mean 0.1596 over 150,517 tokens.
+- **L65536** (S[−65,536:]): median over handoffs of mean δ_K 0.1704, of the fraction over τ_K 0.1294; f*(0.3186) 0.0000, f*(0.1) 0.3141, f*(0.03) 0.9997; far-from-seam (16+) pooled median 0.1099, mean 0.1591 over 150,517 tokens; paired mean δ_K − FULL per handoff median 0.0000 (p10 0.0000, p90 0.0000; bootstrap 95 % [0.0000, 0.0000], seed 52, 2,000 reps).
+- **L49152** (S[−49,152:]): median over handoffs of mean δ_K 0.1630, of the fraction over τ_K 0.1196; f*(0.3186) 0.0000, f*(0.1) 0.2858, f*(0.03) 0.9981; far-from-seam (16+) pooled median 0.0991, mean 0.1486 over 150,517 tokens; paired mean δ_K − FULL per handoff median 0.0000 (p10 -0.0297, p90 0.0101; bootstrap 95 % [0.0000, 0.0039], seed 52, 2,000 reps).
+- **L32768** (S[−32,768:]): median over handoffs of mean δ_K 0.1390, of the fraction over τ_K 0.0868; f*(0.3186) 0.0000, f*(0.1) 0.0971, f*(0.03) 0.9893; far-from-seam (16+) pooled median 0.0868, mean 0.1341 over 150,517 tokens; paired mean δ_K − FULL per handoff median -0.0257 (p10 -0.0733, p90 0.0641; bootstrap 95 % [-0.0434, 0.0024], seed 52, 2,000 reps).
+
+**The registered reading (ruling 1, 0055).** At the native-cap level L32768, the far-from-seam (16+) pooled
+median δ_K on M_∩ is **0.0868** (FULL on the same tokens 0.1112),
+against the scaled-short level 0.0381 (0038, read from `results/e9s/compare.json` `a0699a826f1f…`)
+and the long level 0.0629 (0036, `results/e9l/summary.json` `64e64e9318d4…`), margin ±0.005:
+**the residual short↔long far-from-seam gap reads as "unattributed"**. M_∩ sits at late sender positions while the two
+reference medians were pooled over full matched sets; the reader states this beside the reading and so does this entry.
+The reader's three outcomes are two margins and an "everything else": the value sits **ABOVE both reference levels, 0.0239 above the higher of them**, which the label alone does not say. 0055's ruling (1) covers this region in words — `"unattributed" between the band and FULL's level` (ledger line 3423): the value lies between the long band's top 0.0679 and FULL's 0.1112 on the same tokens — so the label rests on registered wording, not on the reader's note alone. On the same 154,620 common tokens, truncating the sender to S[−32,768:] lowers the pooled far-from-seam median from FULL's 0.1112 to 0.0868; the paired per-handoff interval includes zero (median -0.0257, bootstrap 95 % [-0.0434, 0.0024]), so no per-handoff direction is claimed; it does not bring the median to the scaled-short level.
+
+**Erratum to 0055.** Its sentence "aligner re-matching loses more than the removal on 10 handoffs" states the count with re-matching loss above 0.05 of |M_FULL| (`n_with_rematching_loss_over_0_05` in `results/e9t/shrinkage.json`); 14 handoffs have any re-matching loss, and 0 lose more to re-matching (survivable − ratio) than to the removal itself (1 − survivable). Its figures are unchanged.
+
+**What this does NOT touch.** Every verdict and cell (H-E9 0029, H-E9L 0036, the scaled short cell 0038, the Llama cells);
+τ, the rule, the bands; 0045's tail figures. "Length" here means causal-prefix length on the tokens the receiver re-renders
+from the late part of S, not number of turns.
+
+**Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the long half of one corpus under the scaled
+receiver; YaRN receivers only — the L32-native cell is deferred (ruling 3), so nothing here compares native with YaRN on the
+same tokens and 0036's bridge control (W6) stays the only such evidence; f* is read as the oracle removal fraction (0058);
+generation quality after reuse not measured.
+
+prior-entries-sha256: 815cdcf5524b4b5fce00de95dc441796de61630714d8800f5de23bf821bf2ef8

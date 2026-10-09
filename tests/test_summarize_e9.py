@@ -64,7 +64,7 @@ def test_clean_report_summarizes_with_the_0023_statistics(ran):
     cfg, e7, rp, runner = ran
     md = summarize(cfg, runner=runner, encoder=words, e7=e7)
     assert "1 included / 1 excluded" in md
-    assert "f*(tau_K = 0.2500)" in md and "oracle LOWER BOUND" in md
+    assert "f*(tau_K = 0.2500)" in md and "oracle REMOVAL fraction" in md   # the words 0058 requires beside f*
     assert "bridge R²" in md and f"{_MEAN:.4f}" in md
     assert "verdict on H-E9 is NOT stated" in md and "Units:" in md
     fig = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
@@ -321,6 +321,31 @@ def test_refuses_null_pairs_that_do_not_rederive(ran):
     rep["controls"]["null"]["pairs_sha256"] = sha256_file_bytes(pf)
     _write(rp, rep)
     with pytest.raises(ValueError, match="null control pairs do not re-derive"):
+        summarize(cfg, runner=runner, encoder=words, e7=e7)
+
+
+def test_0059_tau_recompute_tolerance_is_1e7_relative_and_recorded(ran, monkeypatch):
+    """Entry 0059: the recomputed tau may differ from the config's and the recorded floats by at most 1e-7 RELATIVE
+    (0023's 1e-9 was an x86 rendering property); the summary records the drift and the platform it was measured on."""
+    cfg, e7, rp, runner = ran
+    monkeypatch.setattr(s9, "_check_calibration", s9.__dict__["_check_calibration"].__wrapped__
+                        if hasattr(s9._check_calibration, "__wrapped__") else _real_check_calibration)
+    assert s9._TAU_TOL == 1e-7
+    cal_dir = cfg.results_dir / "calibration"
+    cal_dir.mkdir(parents=True)
+    exact = {"K": float(RULE["tau_K"]), "V": float(RULE["tau_V"]), "agent_K": float(RULE["tau_agent_K"])}
+    _write(cal_dir / "tau.json", {"tau": exact, "heldout": {}})
+    inside = {k: v * (1 + 5e-8) for k, v in exact.items()}            # the arm64 case: beyond 1e-9, inside 1e-7
+    monkeypatch.setattr(s9, "calibrate_tau", lambda *a, **k: {"tau": dict(inside), "heldout": {"n_tokens": 0}})
+    summarize(cfg, runner=runner, encoder=words, e7=e7)
+    rec = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))["calibration"]["tau_recompute"]
+    assert rec["tolerance_rel"] == 1e-7 and rec["platform"]["machine"]
+    for k in ("K", "V", "agent_K"):
+        assert 1e-9 < rec[k]["rel_diff_config"] < 1e-7 and 1e-9 < rec[k]["rel_diff_recorded"] < 1e-7
+        assert rec[k]["config"] == exact[k] and rec[k]["recomputed"] == inside[k]
+    outside = dict(exact, V=exact["V"] * (1 + 5e-7))
+    monkeypatch.setattr(s9, "calibrate_tau", lambda *a, **k: {"tau": outside, "heldout": {"n_tokens": 0}})
+    with pytest.raises(ValueError, match="tau_V: recorded calibration"):
         summarize(cfg, runner=runner, encoder=words, e7=e7)
 
 

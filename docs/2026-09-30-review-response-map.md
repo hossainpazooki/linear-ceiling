@@ -51,6 +51,9 @@ action · target · owner slot.
 
 ## 2. Camera-ready patch (T1) — status: NOT PREPARED, branch stopped
 
+*(2026-10-06: the camera-ready WAS submitted; the record of what landed is the last section of this file, "Camera-ready
+submitted". T1 is closed; the items that did not land move to T2.)*
+
 The seed's deliverable 3 is a diff against `neurips-farhan/main.tex` and `make_figures.py`. Neither file is on this
 machine (searched `~/dev`, `~/Downloads`, `~/Documents`, `~/Desktop`, `~/OneDrive` to depth 4), and the seed forbids
 reconstructing them. What the operator can carry to wherever the tree lives:
@@ -132,3 +135,60 @@ the camera-ready paste list (`~/dev/briefs/2026-10-04-lcfm-camera-ready-patch.md
 2. No native-receiver cell: the L32-native cell is deferred to its own amendment, so E-TRUNC compares nothing native-vs-YaRN on the
    same tokens; 0036's bridge control (W6) stays the only such evidence.
 Both go in the W2 paragraph of the MLSys draft beside the E-TRUNC result, and in the limitations section.
+
+## Camera-ready submitted — record of 2026-10-06
+
+**Who wrote it.** The camera-ready was written by the co-authors on their own tree (operator, 2026-10-06), not by the operator
+applying the paste list. The paste list below is therefore a *checklist read against their text*: "landed" means the item is
+present in what they wrote, "no" means it is absent, and neither says anything about what they were sent or chose.
+
+**The submitted PDF** (operator, 2026-10-06): `126_KV_Cache_Drift_Across_Hand.pdf`; private copy at
+`~/dev/briefs/linear-ceiling/2026-10-04-lcfm-126-camera-ready-submitted.pdf`, not tracked here. sha256
+`6c706bef9aff9cc4f77802240f7457ea08e67c170f44a49877f45b9679a2ebd6`, 139,513 bytes, 14 pages, built **2026-10-04 23:08:41Z**
+(xdvipdfmx, LaTeX with hyperref). Title *KV Cache Drift Across Handoffs in Long-Horizon Agents*, eight authors, p.1 footer
+"40th Conference on Neural Information Processing Systems (NeurIPS 2026). Workshop: Long Context Foundation Models." Text
+extracted with pypdf, which splits some numerals; every absence below was re-checked with a whitespace-tolerant pattern.
+
+**Two facts to hold beside it.** (1) The build time is about 11 h after the 11:59Z deadline this map recorded (the operator's
+figure, never public). The operator confirms this file is the submission, so the recorded deadline, not the submission, is the
+figure in doubt. *(2026-10-07, operator: the submission WAS after the deadline, and the workshop accepted it — non-archival,
+no penalty. The 11:59Z figure stands as the deadline; the lateness is a fact of the record, not a defect in the PDF.)* (2) PR #18's evidence map (`docs/camera-ready-evidence-map.md`, open at write) reconciled a *different* build:
+`be90e0af…`, pdfTeX, 06:16:43Z. Checked against the submitted text, its rows 5, 6 and 7 ("governs", "viable alternative to
+recomputation", "not an artifact of the model configuration") do not occur in the submitted PDF; its rows 1, 11, 14, 32, 34 and
+37 do.
+
+**The paste list (`~/dev/briefs/2026-10-04-lcfm-camera-ready-patch.md`) against the submitted text:**
+
+| item | landed? | evidence in the submitted PDF |
+|---|---|---|
+| W4 sender-length framing | yes, by rewrite | abstract: "35K–80K-token sender histories and 3.4K–25.1K-token receiver prompts" — not the paste list's clause; the abstract was rewritten |
+| W8 three-things sentence | no | no null-pairing median (2.015), no sentence naming null / cross arm / ladder together; cross 0.9640 and ladder 0.5255 appear only as table rows |
+| W6 Prop. 4 wording | partly | "predicts" absent near Prop. 4; the bridge is named as the carrier ("the native–YaRN comparison on 3 short controls stayed within the registered tolerance (Appendix C)"); bridge δ_K 0.071–0.089 not printed |
+| W7 reference-instrument sentence | no | 0.8106 absent; n = 420 appears only in Table 4 (E8); the Llama family is absent entirely |
+| W1 pilot paragraph (0056) | figures yes, provenance no | 0.1424 / 90.20 / 11.2982 / 0.2826, execution revision 9a18ce7, H100 PCIe 80 GB, torch 2.14.0 / transformers 5.17.0 present (§4, App. F); the 0056 provenance clause (co-author ran it; raw bundle not public; not recomputed by anyone else) absent — "co-author" occurs once, in the stale review sentence |
+| W7 additional-models sentence (0056) | figures yes, provenance no | Table 2 and the SmolLM3 0.0228 present; provenance clause absent |
+| §2 tail table (0045) | mostly no | 30,701 / 7.9 % / 0.2692 / 0.0577 / 0.0773 / 11,462 / 73.3 % absent; 284,094 present once; "even if some tokens exceed τ" stated qualitatively |
+| W5 bin MEANS / Remark 1 | no | no bin mean printed (the one "0.428" is the 0.4289 bootstrap bound in Table 6); "is consistent with" absent; Remark 1 says the pooled medians "cannot … establish the bounds on every token required by Corollary 3" |
+| N1 template | yes | LCFM workshop footer on p.1 |
+| N2 drop the E-RL appendix | yes | "E-RL" absent; Appendix E is now Proofs |
+| invariants | held | "floor" 0 hits; no Lean claim (the one "Lean" is a bibliography surname); short and long cohorts in separate rows; cross arm not headlined |
+
+**Stale against the record at submission time** (the build postdates the 0054 ruling of 07:40Z / append 08:14Z): §3 "Co-author
+review of the native-context result is still pending" and App. D "The co-author review of the short-cohort results (Section 3) is
+still open" — both contradicted by 0054. App. A says f* "is not a general lower bound on that cost because practical
+recomputation can propagate errors" — the wording 0054 explicitly did not adopt (0023:1278/1281, 0027: oracle LOWER BOUND; a
+corrective entry is the only way to change it). "removal" 19× against "recompute" 3× (#18 row 14).
+
+**What the relaxed controls produced.** Three relaxations preceded this build: 0054 (Condition 1 discharged by ruling, not
+signatures), 0056 (pilot figures citable in paper text *under a provenance sentence*), and same-day merges of the co-author PRs.
+The outcome in the text: the pilot figures are printed and the provenance sentence — the one condition attached to 0056 — is
+absent everywhere they appear; three figures with no tracked source at all are printed (Table 7's bootstrap intervals, App. F's
+0.3012, per #18 rows 31 and 35); the registered reading of f* is contradicted in App. A by the paragraph 0054 declined to adopt;
+and the two Condition-1 sentences are stale in the conservative direction. Nothing false about a ledger figure was found: every
+number that *is* on the ledger matches (#18's KEEP rows, re-checked here for Tables 1, 2, 3 and 6). The failure is of
+provenance and vocabulary, not of arithmetic.
+
+**Status.** T1 is closed: the workshop is non-archival and this PDF is what was submitted; nothing here changes it. Not landed,
+therefore T2 (the MLSys draft): W8; both W7 sentences; the 0056 provenance clauses wherever the pilot figures appear; the 0045
+tail table and bin means with the Remark 1 verb; the 0054 replacement for the two stale sentences; and the lower-bound /
+removal-vs-recompute ruling (#18 Q4, A1), which must be taken before any T2 text is cut.

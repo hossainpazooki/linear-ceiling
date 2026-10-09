@@ -39,7 +39,7 @@ flowchart LR
   states the fraction. The same held for 35 handoffs with sender contexts of 35K to 80K tokens,
   once the model's context window was extended to reach them (entry 0036). Tokens beyond the native
   window had higher pooled median deviation, an association that does not isolate a length effect.
-  This oracle-recompute diagnostic (an oracle lower bound, 0023/0027) establishes neither practical repair cost nor generation quality.
+  This oracle removal fraction (0023, read per 0058: not a bound on real recompute in either direction) establishes neither practical repair cost nor generation quality.
 - **The tested cross-model map had much larger cache error.** A linear map trained on generic text lost
   accuracy on agent text. At the handoff, an ideal selector still needed to recompute a median of
   92.86% of matched tokens on the shorter handoffs and 96.40% on the longer ones. Entries 0029 and
@@ -175,17 +175,17 @@ from the summarizer only. Commands: `CLAUDE.md`. Runbooks and protocol R1–R12:
 | H-E7a — switch-point headroom is material on public agent traces | **NOT CONFIRMED** (0.20% of spend vs a 10% cutoff, registered reading) | 0015, 0018, 0022, 0024 |
 | H-E7b — compaction break-even has substantial negative mass | **UNESTIMABLE** (no public format records it where it could occur) | 0015 |
 | H-E8 — the fitted cross-model map survives agent-text content shift | **NOT CONFIRMED** (V DEGRADES, K dead band at k = 1; V calibration-sensitive under n = 420, 0034) | 0020, 0031, 0034 |
-| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on a floor: median f*(τ_K) = 0.0000 over the 25 included handoffs (p10 and p90 0.0000) — a statement about each handoff's mean deviation, not about every token; cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027) |
-| H-E9L — the same claim on the long half under a scaled receiver | `HELD` (35 scored of 35; read on a floor; bridge CARRIED) | 0036 |
+| H-E9 — KV agreement at a real re-rendered handoff keeps its usefulness | **HELD**, read on the mean: median f*(τ_K) = 0.0000 over the 25 included handoffs (p10 and p90 0.0000) — a statement about each handoff's mean deviation, not about every token and not about repair cost (0058); cross arm beyond DEGRADES (descriptive) | 0029 (0023, 0025, 0027, 0058) |
+| H-E9L — the same claim on the long half under a scaled receiver | `HELD` (35 scored of 35; read on the mean, 0058; bridge CARRIED) | 0036 |
 | H-S1…H-S4 (pre-fit screen line) | `SHELVED` / H-S2 first clause `NOT CONFIRMED` | 0003–0006 |
 
 **What HELD means here.** The claim is same-model: the receiver's own KV at the re-rendered positions
 agrees with its KV at the original positions within the mapper's tolerance in the mean over each
 handoff's matched tokens. Individual tokens exceed it (0038 states the fraction), so this is not a
 per-token bound.
-It is read on a floor (0027): f* assumes an oracle that knows which tokens deviate and recomputes
-them in isolation, so HELD says "no more than the mapper, on a floor", not that a system achieves
-it. Scope: one pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the shorter 25 of 68
+f* is the oracle removal fraction (0058 withdrew 0027's lower-bound and floor reading: because the mean
+is over the remaining tokens, f* bounds real selective recompute in neither direction), so HELD says
+"no more than the mapper" about disagreement, not about what any system pays. Scope: one pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the shorter 25 of 68
 handoffs by |S|; the long half is E9-long's question. The deviation that exists is local to the
 seam: pooled median δ_K falls from 0.236 at the seam to 0.019 sixteen or more tokens away (0029);
 a median profile does not by itself establish that errors are confined to seams (0045 carries the means).

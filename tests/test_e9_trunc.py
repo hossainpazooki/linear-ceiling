@@ -115,6 +115,32 @@ def test_align_only_records_the_truncation_and_writes_truncated_arrays(env, tmp_
     assert "sender_head_truncate" not in cov0                             # existing cells stay byte-identical
 
 
+def test_summarizer_reads_a_truncated_level_whose_controls_cover_the_dumped_sender(env, tmp_path, monkeypatch):  # noqa: F811
+    """2026-10-08 (the E-TRUNC sitting): the L65 level's identity control covered its 65,536 dumped positions, every
+    square zero, and the reader refused it against the alignment record's FULL |S| = 80,111 -- which 0055 keeps on purpose
+    (inclusion and run order are decided on the full sender). The reader must expect min(|S|, L) positions on a truncated
+    level and |S| elsewhere; the driver was right."""
+    from linear_ceiling import summarize_e9 as s9
+    from linear_ceiling.summarize_e9 import summarize
+    from tests.test_summarize_e9 import FAKE_CAL, write_fake_e7_report
+    cfg, e7, _, runner = env
+    _write_long(tmp_path, "b", 40)
+    cfg = replace(cfg, context_cap=1000, order_by="n_sender_desc", sender_head_truncate=60)
+    rp = driver.run(cfg, e7, repo_root=tmp_path, runner=runner, encoder=words)
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    rec = {a["handoff_id"]: a for a in rep["alignments"]}
+    assert rep["controls"]["handoff_id"] == B_ID and rec[B_ID]["n_sender"] > 60    # the controls ran on a truncated sender
+    assert rep["controls"]["identity"]["n_pairs"] == 60                             # ... and covered S' = S[-60:]
+    write_fake_e7_report(e7, rp)
+    monkeypatch.setattr(s9, "check_upstream", lambda *a, **k: None)
+    monkeypatch.setattr(s9, "_check_calibration", lambda cfg, runner: FAKE_CAL)
+    summarize(cfg, runner=runner, encoder=words, e7=e7)                              # refused before the fix
+    s = json.loads((cfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    assert s["prefix_control"]["n_positions"] == 60
+    assert s9._dumped_sender_len(cfg, 80111) == 60 and s9._dumped_sender_len(replace(cfg, sender_head_truncate=None), 80111) == 80111
+    assert s9._dumped_sender_len(cfg, 40) == 40                                      # a sender shorter than L is dumped whole
+
+
 def test_e9l_config_accepts_the_key_and_existing_configs_carry_none(tmp_path):
     src = (REPO_ROOT / "config" / "e9l.toml").read_text(encoding="utf-8")
     p = tmp_path / "e9t.toml"

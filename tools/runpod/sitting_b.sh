@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# RunPod-native Sitting B orchestration: E9 short, from exact pins through a detached run.
+# RunPod-native Sitting B orchestration: E9 short, from exact pins through a detached run. The long
+# cell of the same family (EXP=e9fl, entry 0050) runs through the same launcher with CONTEXT_FLOOR and
+# DUMP_FREE_GIB set for it; the defaults below are the short cell's and change nothing for it.
 #
 # This script deliberately does NOT create, stop, or terminate a pod. RunPod container storage is
 # ephemeral, so normal completion is: this launcher writes SITTING_B_OK -> the home puller verifies
@@ -23,6 +25,8 @@
 #   MAPPER_JSON=$WORK/k1.json MAPPER_ST=$WORK/k1.safetensors
 #   TRACES_TGZ=$WORK/traces.tar.gz CALIBRATION_JSON=$WORK/tau.json CALIBRATION_SHA256=<64 hex>
 #   MIN_GPU_MARGIN_GIB=4 REMOVE_WEIGHTS_TGZ=1
+#   CONTEXT_FLOOR=0        the registered context_floor the config must carry (0 short cell; 32768 long cell)
+#   DUMP_FREE_GIB=60       box free-space floor before weights (12.4 GB/handoff short; 30.9 GB/handoff long)
 #
 # Relaunch semantics are automatic and fail closed:
 #   no report       -> plain E9 run
@@ -56,6 +60,8 @@ CALIBRATION_JSON="${CALIBRATION_JSON:-$WORK/tau.json}"
 CALIBRATION_SHA256="${CALIBRATION_SHA256:-}"
 MIN_GPU_MARGIN_GIB="${MIN_GPU_MARGIN_GIB:-4}"
 REMOVE_WEIGHTS_TGZ="${REMOVE_WEIGHTS_TGZ:-1}"
+CONTEXT_FLOOR="${CONTEXT_FLOOR:-0}"
+DUMP_FREE_GIB="${DUMP_FREE_GIB:-60}"
 
 LC_DIR="$WORK/linear-ceiling"
 UP_DIR="$WORK/kv-transfer-replication"
@@ -111,6 +117,8 @@ fi
 [[ "$EXP" =~ ^[A-Za-z0-9._-]+$ ]] || refuse "EXP contains unsafe path characters: $EXP"
 [ "$REMOVE_WEIGHTS_TGZ" = 0 ] || [ "$REMOVE_WEIGHTS_TGZ" = 1 ] \
   || refuse "REMOVE_WEIGHTS_TGZ must be 0 or 1"
+[[ "$CONTEXT_FLOOR" =~ ^[0-9]+$ ]] || refuse "CONTEXT_FLOOR must be a non-negative integer token count"
+[[ "$DUMP_FREE_GIB" =~ ^[0-9]+$ ]] || refuse "DUMP_FREE_GIB must be a non-negative integer"
 python3 - "$MIN_GPU_MARGIN_GIB" <<'PY'
 import sys
 x = float(sys.argv[1])
@@ -257,19 +265,19 @@ if [ -n "$CALIBRATION_SHA256" ]; then
   printf '%s  %s\n' "$CALIBRATION_SHA256" "$CAL_DEST" | sha256sum -c -
 fi
 "$LC_PY" - "$LC_DIR" "$CFG" "$CAL_DEST" "$PAIR" "$UP_SHA" \
-  "$MAPPER_JSON_SHA" "$MAPPER_ST_SHA" <<'PY'
+  "$MAPPER_JSON_SHA" "$MAPPER_ST_SHA" "$CONTEXT_FLOOR" <<'PY'
 import json, math, sys
 from pathlib import Path
 from linear_ceiling.config import load_e9_config
 
 root, cfg_path, cal_path = map(Path, sys.argv[1:4])
-pair, up_sha, mapper_json_sha, mapper_st_sha = sys.argv[4:]
+pair, up_sha, mapper_json_sha, mapper_st_sha, floor = sys.argv[4:]
 cfg = load_e9_config(cfg_path, root)
 assert cfg.pair == pair, f"config pair {cfg.pair!r} != requested {pair!r}"
 assert cfg.upstream_sha == up_sha, f"config upstream pin {cfg.upstream_sha} != requested exact pin {up_sha}"
 assert cfg.mapper_k == 1, f"Sitting B requires its registered verdict mapper k=1, got {cfg.mapper_k}"
-want_floor = {"e9f": 0, "e9fl": 32768}[cfg.results_dir.name]  # 0042 short cell, 0050 long cell
-assert cfg.context_floor == want_floor, f"{cfg.results_dir.name} must have context_floor={want_floor}, got {cfg.context_floor}"
+assert cfg.context_floor == int(floor), \
+    f"config context_floor {cfg.context_floor} != the registered floor requested for this cell ({floor})"
 # Entry 0042 REGISTERS the stopping rule for this cell, so the opposite is now required: without
 # it a budget kill yields no verdict at all. This assertion was written when the short cell
 # forbade a partial close and would refuse the correctly-registered config outright.
@@ -337,10 +345,10 @@ need_free_gib() {                       # need_free_gib <gib> <why>
 # clones and their venvs) and the log says plainly that the real floor went unchecked.
 if [ "$REHEARSAL" = 1 ]; then
   need_free_gib 5 "the rehearsal clones and venvs"
-  say "  REHEARSAL: the 60 GiB weights+dumps floor was NOT checked; it is a box-disk property and this"
+  say "  REHEARSAL: the ${DUMP_FREE_GIB} GiB weights+dumps floor was NOT checked; it is a box-disk property and this"
   say "             run writes neither. On the box it is checked in full."
 else
-  need_free_gib 60 "the weight cache plus several handoffs of dumps"
+  need_free_gib "$DUMP_FREE_GIB" "the weight cache plus several handoffs of dumps"
 fi
 
 step "fresh-pin E9 gate before weights"

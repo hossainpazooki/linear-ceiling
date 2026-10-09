@@ -75,6 +75,57 @@ IN-PROCESS over the four passes and states every count from it; reads the two re
 E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
 config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053, 0050 (`cff787f`, script retired); staged 0048/0049 and 0051. Next free number: **0057**.)*
 
+*(2026-10-07: 0047's operator run is DONE and backed up (runbook `docs/2026-10-06-cache-behavior-runpod-runbook.md`); `append_0049.py`
+now asserts the OPERATOR's inputs manifest `2aeee576…` with its pinned fields checked against the pilot's freeze record, per the operator
+ruling of 2026-10-07 quoted in the script (the pilot's frozen `9a6f2923…` embeds the sha of a private file); its `report["identity"]`
+key bug fixed. Still queued behind 0048 (`PREV = "0048"`) unless the operator re-sequences. 0046's operator run is in progress.)*
+
+*(2026-10-07 12:13Z: **0048 APPENDED** (chain `08b376985b5c`; the operator's 0046 run on a RunPod A100 SXM, three models, bridge and
+summarizer passed, R8 `hossainpazooki/linear-ceiling-consolidation-2026-10-07`); `append_0048.py` retired in the append commit. File
+order now ends 0053, 0050, 0048. 0049's ordering guard is therefore satisfied as staged; still staged: 0049, 0051, 0057. Next free: 0058.)*
+
+*(2026-10-07 12:46Z: **0049 APPENDED** (chain `f1efa70bf50f`; the operator's 0047 run on a RunPod A100 SXM, 35/35, summarizer passed,
+R8 `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07`), after a skeptic pass over its operator-written paragraph corrected two
+wordings (review `docs/reviews/2026-10-07-submitted-camera-ready-…md` §5); `append_0049.py` retired in the append commit. File order
+now ends 0050, 0048, 0049. Still staged: 0051 (Llama long figures), 0057 (E-TRUNC figures). Next free: 0058.)*
+
+**Staged 2026-10-07: `append_0058.py` — CORRECTIVE, the reading of f*** (operator ruling 2026-10-07, drafted after the skeptic
+pass in `docs/reviews/2026-10-07-submitted-camera-ready-…md` §6.1): 0023's "oracle LOWER BOUND on real selective recompute" and
+0027's "HOLDS reads on a floor" are withdrawn — the mean is over the REMAINING tokens, so the exact-repair fraction on the all-token
+mean is at most f* while the two registered reasons push real recompute up; no ordering in either direction. f* is read as the
+**oracle removal fraction**; every output stating f* carries those words and the entry number. Descriptive, no row, no `verdict:`
+line; (f* = 0) ⇔ (g* = 0) so no cell can move. Fail-closed: every cited line located by sentence search inside its entry; the toy
+example and a seeded sweep (seed 58) computed in-process with the registered `f_star`; refuses until the living files that print or
+state the old words carry the new ones (`summarize_e9` output line, `f_star` docstring, `tests/test_summarize_e9.py`, README.md,
+CLAUDE.md, staged `append_0057.py`) — all edited in the staging commit. Ordering guard 0049 present / 0058 absent (0051 and 0057 may
+land before or after). Running the script is the ratification (0055 precedent). Next free number: **0059**.
+*(0058 APPENDED 2026-10-07 by the operator, chain `5ba3adab23b1`; `ledger ok`; script retired in the append commit. File order now
+ends 0048, 0049, 0058. Still staged: 0051, 0057.)*
+
+*(**0051 APPENDED 2026-10-08** by the operator on the Mac mini, chain `75a47a51de6e` (`91cea79`; script retired `62982a8`): the Llama
+long cell ran 2026-10-07 on a RunPod secure A100-SXM4-80GB, 32 of 32, complete, R8 `hossainpazooki/linear-ceiling-e9fl-2026-10-07`
+verified; runbook `docs/2026-10-07-llama-long-cell-runpod-runbook.md`. Before the append the script gained `--dataset`, the 0058
+wording, and a computed paragraph stating the coverage pin's two renderings (0050's `16121e67` is the CRLF bytes; the box's LF
+rendering is `9f10092b`). File order now ends 0049, 0058, 0051. Still staged: 0057 only. Next free number: **0059**.)*
+
+**Staged 2026-10-08: `append_0059.py` — E9 summarizer enforcement, the τ RECOMPUTATION tolerance (0028's shape)** (operator ruling
+2026-10-08 19:5xZ, "recommendation accepted"). 0023's "refuses on disagreement (1e-9)" held on every x86 rendering of the archived
+mapper's held-out R² and fails on the arm64 home side (the Mac mini, since 0051): `summarize_e9` refused E-TRUNC's FULL level on
+τ_V alone (gap 3.7e-9 in the check's units |a−b|/max(1,|a|,|b|)). Registers 1e-7 for the recorded-vs-recomputed and
+config-vs-recomputed τ checks; the τ every reading uses stays the config's float, so nothing can move. Fail-closed: the 0023/0050
+sentences located by search; five renderings read from `results/e9t-full/calibration*/` (x86 Linux 13/1 threads from the box with
+`platform.json`, arm64 1/8 threads, the live calibration) with the assertions the sentences rest on (every x86 ≤ 1e-9, arm64 V > 1e-9,
+arm64 identical across threads, agent_K gap 0, all ≤ 1e-7); the Llama cell's gaps from `results/e9fl/calibration/tau.json`;
+`results/e9t-full/summary.json` must have been written UNDER the new check (`calibration.tau_recompute`, the 0028 move); refuses
+unless `summarize_e9.py` carries `_TAU_TOL = 1e-7` + the recorded drift, the test exists, and `append_0057.py` asserts 0059 first.
+Ordering guard 0058 + 0051 present, 0059 absent, 0057 absent. Runs on the Mac (the files live there). Next free number: **0060**.
+*(**0059 APPENDED 2026-10-08** by the operator on the Mac mini, chain `64e1c6ba…` (`0aec95a`; script retired `b33c6ce`); `ledger ok`.
+**0057 APPENDED 2026-10-09** by the operator on the Mac mini, chain `815cdcf5…` (`fd76600`; script retired `ce89ef2`), after a
+skeptic pass on the rendered text (two wording corrections: 0055's ruling (1) sentence cited by search for a value above both
+references; the per-handoff causal clause replaced by the pooled-median move with its zero-spanning interval) and R8
+`hossainpazooki/linear-ceiling-e9t-2026-10-08` BACKUP VERIFIED (public). File order now ends 0058, 0051, 0059, 0057.
+Nothing staged. Next free number: **0060**.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
