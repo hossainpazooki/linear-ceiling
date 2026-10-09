@@ -3975,3 +3975,47 @@ coverage-sha and `r2.json` CRLF pins are the same lesson in bytes); an enforceme
 platform is registered with the renderings it was measured on, as here.
 
 prior-entries-sha256: 64e1c6bad066f8a961256b227594d6b1338c922334094d6fe91b9023f41a1a5a
+
+### 0057 — 2026-10-08 — E-TRUNC ran `[BASELINE, DESCRIPTIVE]`: head truncation of the sender context at four levels on 0036's long handoffs; the registered reading at the native cap reads "unattributed"; descriptive, no cell moves
+
+**Setup, as registered (0055).** RunPod secure cloud, 1x NVIDIA A100-SXM4-80GB (driver 580.126.16, 128 vCPU shown / 13.6-CPU cgroup quota, 2 TB host RAM), pod w28h3vp07g8nnz; FULL launched 2026-10-08T16:35:23Z, last level finished 2026-10-08T23:25:49Z;
+upstream pin `063f4023fdde…` for all four levels; FULL config `005d8d102deb…` report `5a7ab122fcc1…`; L65536 config `782f7354f422…` report `b72a49869092…`; L49152 config `d4d54381e394…` report `c7535211d033…`; L32768 config `3c0663fbb651…` report `c166d8f11427…`. Backup: `hossainpazooki/linear-ceiling-e9t-2026-10-08` (R8, verified both
+ways before this entry). Runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`.
+
+**Coverage files, two renderings of one content.** Entry 0055 pins each level's `align/coverage.json` by the sha of the home file's raw bytes; the box reproduced the same lines in the other line-ending rendering and the mirror carries that one. Both shas are derived from the mirror here: FULL pinned `0b0419ea1d27…` (CRLF; the other rendering `5d01067ab8bb…`); L65536 pinned `c5c3b3d55828…` (CRLF; the other rendering `4d9cc526b1dc…`); L49152 pinned `1120282c65b0…` (CRLF; the other rendering `db8c32746a33…`); L32768 pinned `d07606d8d3e8…` (CRLF; the other rendering `a227bea0e058…`).
+
+**Reader corrections before any figure (2026-10-08; stated, not hidden).** (1) Entry 0059 registered the τ recomputation tolerance (1e-7 in the check's units) after this set's FULL summary refused on the arm64 home side; each level's summary here carries its `tau_recompute` block, and the τ every reading uses is the config's registered float. (2) `summarize_e9` compared the identity and bridge controls' coverage with the alignment record's FULL |S|, which 0055 keeps so that inclusion and run order are decided on the full sender; a truncated level dumps S′ = S[−L:], so the reader refused L65 on a correct control with every square zero. The reader now expects min(|S|, L) positions (`_dumped_sender_len`); cells without truncation are unchanged. Identity coverage on the controls handoff, per level, from the reports: FULL 80,111 positions of |S| 80,111; L65536 65,536 positions of |S| 80,111; L49152 49,152 positions of |S| 80,111; L32768 32,768 positions of |S| 80,111 — every square exactly zero. Neither correction touches a τ, a rule, a band or a cell.
+
+**Coverage and the void gate (ruling 2).** 35 handoffs scored at every level (every level scored every handoff any level scored).
+Under the registered floor |M_∩| ≥ 2,000 common matched tokens, 14 are void and named, never
+pooled: `20241016_composio_swekit/astropy__astropy-12907_traj#97`, `20241016_composio_swekit/astropy__astropy-13398_traj#133`, `20241016_composio_swekit/astropy__astropy-13453_traj#109`, `20241016_composio_swekit/astropy__astropy-13977_traj#118`, `20241016_composio_swekit/astropy__astropy-14369_traj#108`, `20241016_composio_swekit/astropy__astropy-14539_traj#114`, `20241016_composio_swekit/django__django-10973_traj#87`, `20241025_composio_swekit/astropy__astropy-12907_traj#104`, `20241025_composio_swekit/astropy__astropy-13453_traj#102`, `20241025_composio_swekit/astropy__astropy-13977_traj#83`, `20241025_composio_swekit/astropy__astropy-14369_traj#132`, `20241025_composio_swekit/astropy__astropy-8707_traj#152`, `20241025_composio_swekit/astropy__astropy-8872_traj#74`, `20241025_composio_swekit/django__django-11087_traj#97`. **21 handoffs enter the comparison**, carrying 154,620 common tokens (pooled
+|M_∩| / |M_FULL| over them 0.6423). Stated limitation (0055): the comparison speaks for the handoffs whose receiver re-renders enough of the late sender context to survive head truncation, not for the long cohort as a whole.
+
+**Figures on M_∩, per level (`summarize_e9_trunc` in-process: each level's `summarize_e9` passed first; medians over the
+21 entering handoffs, `e7_stats` convention; δ in R²'s units, 0023; τ_K = 0.3186442653116294).**
+
+- **FULL** (full |S|): median over handoffs of mean δ_K 0.1704, of the fraction over τ_K 0.1294; f*(0.3186) 0.0000, f*(0.1) 0.3141, f*(0.03) 0.9999; far-from-seam (16+) pooled median 0.1112, mean 0.1596 over 150,517 tokens.
+- **L65536** (S[−65,536:]): median over handoffs of mean δ_K 0.1704, of the fraction over τ_K 0.1294; f*(0.3186) 0.0000, f*(0.1) 0.3141, f*(0.03) 0.9997; far-from-seam (16+) pooled median 0.1099, mean 0.1591 over 150,517 tokens; paired mean δ_K − FULL per handoff median 0.0000 (p10 0.0000, p90 0.0000; bootstrap 95 % [0.0000, 0.0000], seed 52, 2,000 reps).
+- **L49152** (S[−49,152:]): median over handoffs of mean δ_K 0.1630, of the fraction over τ_K 0.1196; f*(0.3186) 0.0000, f*(0.1) 0.2858, f*(0.03) 0.9981; far-from-seam (16+) pooled median 0.0991, mean 0.1486 over 150,517 tokens; paired mean δ_K − FULL per handoff median 0.0000 (p10 -0.0297, p90 0.0101; bootstrap 95 % [0.0000, 0.0039], seed 52, 2,000 reps).
+- **L32768** (S[−32,768:]): median over handoffs of mean δ_K 0.1390, of the fraction over τ_K 0.0868; f*(0.3186) 0.0000, f*(0.1) 0.0971, f*(0.03) 0.9893; far-from-seam (16+) pooled median 0.0868, mean 0.1341 over 150,517 tokens; paired mean δ_K − FULL per handoff median -0.0257 (p10 -0.0733, p90 0.0641; bootstrap 95 % [-0.0434, 0.0024], seed 52, 2,000 reps).
+
+**The registered reading (ruling 1, 0055).** At the native-cap level L32768, the far-from-seam (16+) pooled
+median δ_K on M_∩ is **0.0868** (FULL on the same tokens 0.1112),
+against the scaled-short level 0.0381 (0038, read from `results/e9s/compare.json` `a0699a826f1f…`)
+and the long level 0.0629 (0036, `results/e9l/summary.json` `64e64e9318d4…`), margin ±0.005:
+**the residual short↔long far-from-seam gap reads as "unattributed"**. M_∩ sits at late sender positions while the two
+reference medians were pooled over full matched sets; the reader states this beside the reading and so does this entry.
+The reader's three outcomes are two margins and an "everything else": the value sits **ABOVE both reference levels, 0.0239 above the higher of them**, which the label alone does not say. 0055's ruling (1) covers this region in words — `"unattributed" between the band and FULL's level` (ledger line 3423): the value lies between the long band's top 0.0679 and FULL's 0.1112 on the same tokens — so the label rests on registered wording, not on the reader's note alone. On the same 154,620 common tokens, truncating the sender to S[−32,768:] lowers the pooled far-from-seam median from FULL's 0.1112 to 0.0868; the paired per-handoff interval includes zero (median -0.0257, bootstrap 95 % [-0.0434, 0.0024]), so no per-handoff direction is claimed; it does not bring the median to the scaled-short level.
+
+**Erratum to 0055.** Its sentence "aligner re-matching loses more than the removal on 10 handoffs" states the count with re-matching loss above 0.05 of |M_FULL| (`n_with_rematching_loss_over_0_05` in `results/e9t/shrinkage.json`); 14 handoffs have any re-matching loss, and 0 lose more to re-matching (survivable − ratio) than to the removal itself (1 − survivable). Its figures are unchanged.
+
+**What this does NOT touch.** Every verdict and cell (H-E9 0029, H-E9L 0036, the scaled short cell 0038, the Llama cells);
+τ, the rule, the bands; 0045's tail figures. "Length" here means causal-prefix length on the tokens the receiver re-renders
+from the late part of S, not number of turns.
+
+**Scope.** One pair (Qwen3-0.6B → 1.7B), one direction, one agent family, the long half of one corpus under the scaled
+receiver; YaRN receivers only — the L32-native cell is deferred (ruling 3), so nothing here compares native with YaRN on the
+same tokens and 0036's bridge control (W6) stays the only such evidence; f* is read as the oracle removal fraction (0058);
+generation quality after reuse not measured.
+
+prior-entries-sha256: 815cdcf5524b4b5fce00de95dc441796de61630714d8800f5de23bf821bf2ef8
