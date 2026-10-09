@@ -119,6 +119,12 @@ arm64 identical across threads, agent_K gap 0, all ≤ 1e-7); the Llama cell's g
 `results/e9t-full/summary.json` must have been written UNDER the new check (`calibration.tau_recompute`, the 0028 move); refuses
 unless `summarize_e9.py` carries `_TAU_TOL = 1e-7` + the recorded drift, the test exists, and `append_0057.py` asserts 0059 first.
 Ordering guard 0058 + 0051 present, 0059 absent, 0057 absent. Runs on the Mac (the files live there). Next free number: **0060**.
+*(**0059 APPENDED 2026-10-08** by the operator on the Mac mini, chain `64e1c6ba…` (`0aec95a`; script retired `b33c6ce`); `ledger ok`.
+**0057 APPENDED 2026-10-09** by the operator on the Mac mini, chain `815cdcf5…` (`fd76600`; script retired `ce89ef2`), after a
+skeptic pass on the rendered text (two wording corrections: 0055's ruling (1) sentence cited by search for a value above both
+references; the per-handoff causal clause replaced by the pooled-median move with its zero-spanning interval) and R8
+`hossainpazooki/linear-ceiling-e9t-2026-10-08` BACKUP VERIFIED (public). File order now ends 0058, 0051, 0059, 0057.
+Nothing staged. Next free number: **0060**.)*
 
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;

@@ -380,7 +380,8 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
   the Hub's `.gitattributes`), 2,296 LFS files; `README.md`, `SHA256SUMS`, the four `report.json`, `compare.json` present;
   `mappers/…/k1.safetensors` LFS sha `cd6a8d939b36…` = `SHA256SUMS`. Upload processes and the caffeinate assertion gone.
   **Token: revoke now (R9).**
-- **0057**: skeptic-passed; append on the Mac with the §6 `--launched 2026-10-08T16:35:23Z --finished 2026-10-08T23:25:49Z`,
-  the box string and `--dataset hossainpazooki/linear-ceiling-e9t-2026-10-08` after BACKUP VERIFIED; retire the script;
-  fetch to Windows; push; allocator lines.
+- **0057 APPENDED 2026-10-09 ~02:5xZ** by the operator on the Mac (token revoked first; Mac pulled `da5f07a`): the gate re-ran
+  the four summaries and the comparison, `appended 0057; chain 815cdcf5…`, `ledger ok (blocks unchanged vs HEAD)`; script
+  retired; commits `fd76600` (append) and `ce89ef2` (retire) on the Mac, to be fetched into Windows over the LAN and pushed.
+  Allocator lines (drafts README, CLAUDE.md) updated in the same close: nothing staged, next free 0060.
 - Close brief: `docs/handoff/2026-10-08-e-trunc-0057-ran-on-runpod-from-the-mac-mini-four-levels-35-of-35-reads-unattributed-0059-appended-r8-pending.md`.
