@@ -28,6 +28,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from linear_ceiling.ledger_check import _ENTRIES_HEAD, chain_hash  # noqa: E402
 
 NUM, REG = "0057", "0055"
+UNATTR_SENTENCE = '"unattributed" between the band and FULL\'s level'   # 0055 ruling (1); located by search, never by line
 SPEAK_FOR = ("the comparison speaks for the handoffs whose receiver re-renders enough of the late sender context to survive "
              "head truncation, not for the long cohort as a whole")
 
@@ -76,6 +77,15 @@ def coverage_renderings(levels: dict, ledger_text: str) -> str:
     return ("**Coverage files, two renderings of one content.** Entry " + REG + " pins each level's `align/coverage.json` by "
             "the sha of the home file's raw bytes; the box reproduced the same lines in the other line-ending rendering and "
             "the mirror carries that one. Both shas are derived from the mirror here: " + "; ".join(rows) + ".")
+
+
+def locate(text: str, entry: str, sentence: str) -> int:
+    """1-based ledger line of `sentence` inside `entry`'s block; refuses if absent or repeated there (the 0045/0058 pattern)."""
+    start = text.index(f"### {entry} ")
+    nxt = text.find("\n### ", start + 1)
+    blk = text[start:(nxt if nxt > 0 else len(text))]
+    assert blk.count(sentence) == 1, f"{entry}: expected exactly one occurrence of {sentence!r}, found {blk.count(sentence)}"
+    return text.count("\n", 0, start + blk.index(sentence)) + 1
 
 
 def reader_corrections(levels: dict, ledger_text: str) -> str:
@@ -134,6 +144,34 @@ def build_entry(out: dict, meta: dict) -> str:
     pins = "; ".join(f"{n} config `{p['config_sha256'][:12]}…` report `{p['report_sha256'][:12]}…`" for n, p in out["levels"].items())
     cutoff = (f" Levels closed partial under 0035's stopping rule: {', '.join(partial)}; cutoff reason: {meta['cutoff_reason']}."
               if partial else "")
+    # Where the read value sits relative to the two reference levels. The reader's "unattributed" is everything outside
+    # both margins, which includes a value ABOVE or BELOW both; the entry says which, from the numbers, so the label is
+    # never read as "between" by default.
+    v, s_lvl, l_lvl = rd["far_from_seam_median_on_M_cap"], rd["short_scaled_level"], rd["long_level"]
+    lo, hi = min(s_lvl, l_lvl), max(s_lvl, l_lvl)
+    where = ("between the two reference levels" if lo < v < hi else
+             f"ABOVE both reference levels, {f4(v - hi)} above the higher of them" if v >= hi else
+             f"BELOW both reference levels, {f4(lo - v)} below the lower of them")
+    l32 = out["by_level"][rd["level"]]
+    pd32 = l32["paired_mean_delta_K_minus_full"]
+    full_same = rd["full_far_from_seam_median_on_M_cap"]
+    band_top = hi + rd["margin_abs"]
+    # Skeptic pass 2026-10-08: 0055's reading paragraph says "between, unattributed" (the two references), but its ruling (1)
+    # sentence covers the region this value sits in — between the long band's top and FULL's level. Cite that sentence
+    # (located by search in main(), never typed) only when the value really lies there; otherwise say so plainly.
+    if band_top < v < full_same:
+        covered = (f" 0055's ruling (1) covers this region in words — `{meta['unattr_sentence']}` (ledger line "
+                   f"{meta['unattr_line']}): the value lies between the long band's top {f4(band_top)} and FULL's {f4(full_same)} "
+                   f"on the same tokens — so the label rests on registered wording, not on the reader's note alone.")
+    else:
+        covered = (f" 0055's wording for \"unattributed\" names the region between the references and the region between the "
+                   f"long band and FULL's level; this value ({f4(v)}) sits in neither, which is stated here as a gap in the registration.")
+    position_txt = (f"The reader's three outcomes are two margins and an \"everything else\": the value sits **{where}**, which the "
+                    f"label alone does not say.{covered} On the same {out['n_common_total']:,} common tokens, truncating the sender to "
+                    f"S[−{l32['sender_head_truncate']:,}:] lowers the pooled far-from-seam median from FULL's {f4(full_same)} to {f4(v)}; "
+                    f"the paired per-handoff interval includes zero (median {f4(pd32['median'])}, bootstrap 95 % "
+                    f"[{f4(pd32['bootstrap']['lower_2.5'])}, {f4(pd32['bootstrap']['upper_97.5'])}]), so no per-handoff direction is "
+                    f"claimed; it does not bring the median to the scaled-short level.")
     return f"""### {NUM} — {meta['date']} — E-TRUNC ran `[BASELINE, DESCRIPTIVE]`: head truncation of the sender context at four levels on 0036's long handoffs; the registered reading at the native cap reads "{rd['reads_as']}"; descriptive, no cell moves
 
 **Setup, as registered ({REG}).** {meta['box']}; FULL launched {meta['launched']}, last level finished {meta['finished']};
@@ -160,6 +198,7 @@ against the scaled-short level {f4(rd['short_scaled_level'])} (0038, read from `
 and the long level {f4(rd['long_level'])} (0036, `{refs['long']['path']}` `{refs['long']['sha256'][:12]}…`), margin ±{rd['margin_abs']}:
 **the residual short↔long far-from-seam gap reads as "{rd['reads_as']}"**. M_∩ sits at late sender positions while the two
 reference medians were pooled over full matched sets; the reader states this beside the reading and so does this entry.
+{position_txt}
 
 {meta['erratum']}
 
@@ -211,7 +250,9 @@ def main() -> int:
                               "dataset": a.dataset, "cutoff_reason": a.cutoff_reason,
                               "erratum": erratum_0055(shrink),
                               "coverage_txt": coverage_renderings(levels, text),
-                              "reader_txt": reader_corrections(levels, text)})
+                              "reader_txt": reader_corrections(levels, text),
+                              "unattr_sentence": UNATTR_SENTENCE,
+                              "unattr_line": locate(text, REG, UNATTR_SENTENCE)})
     if a.preview:
         sys.stdout.reconfigure(encoding="utf-8")
         print(entry)
