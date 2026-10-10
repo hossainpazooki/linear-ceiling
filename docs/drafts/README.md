@@ -126,6 +126,18 @@ references; the per-handoff causal clause replaced by the pooled-median move wit
 `hossainpazooki/linear-ceiling-e9t-2026-10-08` BACKUP VERIFIED (public). File order now ends 0058, 0051, 0059, 0057.
 Nothing staged. Next free number: **0060**.)*
 
+**Staged 2026-10-09: `append_0060.py` — the MLSys 2027 cut, the FIGURE SET frozen** (operator: "write entry 0060 summarizing
+experiments addressing review"). Maps the LCFM reviewers' points (`docs/2026-09-30-review-response-map.md` rows W1–W8) to the
+experiments run since — the second pair (0044 / 0053 / 0051), the same-model extension (0048), E-TRUNC (0055 / 0057), the tails
+and native-window subset (0045), cache behaviour (0049), the two correctives (0058 / 0059) — with every figure READ from its
+summary file in-process (`results/{e9,e9l,e9f,e9fl}/summary.json`, `e9s/compare.json`, `e8fa` and `e9c` summaries,
+`consolidation/a100/summary.json`, `cache-behavior/summary.json`, `e9t/compare.json`, the four `tail.json`) and the file's
+sha stated; entries located by their header lines (search, never typed). Freezes the set: nothing registered after 0060 enters
+the submission; the manuscript tree is pinned at submission by the reconciliation record, not here. Conditions discharged
+(0054, 0045) and carried (L32-native cell, long-cohort calibration size, E-BEH, issue #21) named. Descriptive, no `verdict:`
+line, nothing runs. Ordering guard: 0057 and 0059 present (file order ends 0059, 0057), 0060 absent. Runs on Windows (the two
+Mac-only summary files were copied over on 2026-10-09). Next free number: **0061**.
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
