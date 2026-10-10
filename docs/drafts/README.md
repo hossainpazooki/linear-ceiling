@@ -138,6 +138,11 @@ the submission; the manuscript tree is pinned at submission by the reconciliatio
 line, nothing runs. Ordering guard: 0057 and 0059 present (file order ends 0059, 0057), 0060 absent. Runs on Windows (the two
 Mac-only summary files were copied over on 2026-10-09). Next free number: **0061**.
 
+*(2026-10-10: **0060 APPENDED** (`e0be46d`, chain `84e86162…`; script retired in the retire commit; ran on Windows with
+`--date 2026-10-10` after the 0060 preview passed the same day). File order now ends 0059, 0057, 0060. Nothing staged.
+Next free number: **0061**. From this append on, allocator state is recorded here only; `CLAUDE.md` carries no entry
+lines (PR #19's layout).)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
