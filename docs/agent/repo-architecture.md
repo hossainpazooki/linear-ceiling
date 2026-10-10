@@ -2,7 +2,7 @@
 
 A reference map of where things live and which module owns which rule. It is not a status log: verdicts are in
 the ledger's hypothesis table, current work in the newest brief of `docs/handoff/HANDOFF.md`, staged entries in
-`docs/drafts/README.md`. Commands: `docs/agent/experiment-commands.md`. Rules: the root `CLAUDE.md`.
+`docs/drafts/README.md`. Commands: `docs/agent/experiment-commands.md`. Rules: the root `AGENTS.md`.
 
 ## Single owners (one module, one rule)
 
@@ -120,7 +120,7 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 | path | role |
 |---|---|
 | `tools/hf_backup.sh` · `tools/hf_verify_backup.py` · `tools/hf_prune_backup.py` | protocol R8: push the verified mirror, verify both directions, repair a mis-push |
-| `tools/jupyterhub/` · `tools/ec2/` · `tools/runpod/` | GPU box drivers: JupyterHub-only box from home; rented EC2 over ssh; the second family's RunPod sittings |
+| `tools/jupyterhub/` · `tools/ec2/` · `tools/runpod/` | GPU box drivers: JupyterHub-only box from home; any box over ssh (EC2, or a RunPod pod once up); RunPod pod lifecycle, every sitting since 2026-10-06 |
 | `tools/preflight_pair.py` · `tools/emit_tau.py` | pre-rental checks for a new pair; a family's τ lines from its own E8 report |
 | `tools/consolidation/` · `tools/cache_behavior/` | drivers and fail-closed readers for the registered runs of entries 0046 and 0047 |
 | `tools/seam_pilot/` · `tools/cache_injection_pilots/` | preserved exploratory pilots; not registered results (see each README) |

@@ -1,7 +1,7 @@
 # Experiment command reference
 
 The command catalog that used to live in the root `CLAUDE.md`. The rules that govern these commands are in
-`CLAUDE.md`, `docs/gpu-experiment-protocol.md` (R1–R12) and each experiment's registering ledger entry; where
+`AGENTS.md`, `docs/gpu-experiment-protocol.md` (R1–R12) and each experiment's registering ledger entry; where
 a comment below and an entry disagree, the entry wins.
 
 **Interpreter.** `$PY` below means the repository's own virtual environment:
@@ -18,7 +18,7 @@ and `docs/drafts/README.md` (the only allocator), not here.
 
 ## Common checks
 
-Run after any change; the definition of done in `CLAUDE.md`.
+Run after any change; the definition of done in `AGENTS.md`.
 
 ```
 $PY -m pytest -q                 # suite (synthetic, offline)
@@ -137,10 +137,10 @@ $PY -m linear_ceiling.e9_rescore summarize                        # fail-closed:
 $PY -m linear_ceiling.e9_tail --config config/<cell>.toml       # runs summarize_e9 first (the gate), then the per-token TAIL from the same pinned records: tokens over each tau, means after removing the top 10/20 %, seam and position bin MEANS beside medians, native-window subset, |R| -> results/<cell>/tail.{json,md}, pinned to summary.json + report.json (W3/W4/W5; the corrective entry reads it)
 ```
 
-## E-TRUNC — sender head truncation (registered 0055)
+## E-TRUNC — sender head truncation (registered 0055, ran 0057; descriptive)
 
-Runbook: `docs/2026-10-04-e-trunc-gpu-runbook.md`. Check the ledger tail and `docs/drafts/README.md` for whether
-the figures entry has landed; claim no E-TRUNC result until it has.
+Runbook: `docs/2026-10-04-e-trunc-gpu-runbook.md`. The figures are entry 0057; the τ recomputation tolerance the
+reader enforces is entry 0059.
 
 ```
 $PY -m linear_ceiling.e9 --align-only --config config/e9t-<level>.toml   # the alignment pass per level (full / l65 / l49 / l32); the truncated levels see S' = S[-L:] via [e9.alignment] sender_head_truncate; inclusion is decided on the full |S| so every level keeps 0036's 35
@@ -149,11 +149,10 @@ $PY -m linear_ceiling.e9 --check --config config/e9t-<level>.toml        # gate 
 $PY -m linear_ceiling.summarize_e9_trunc                        # after the four runs: summarize_e9 per level (fail-closed, the gate), then the paired comparison on M_cap, the |M_cap| >= 2000 void gate, and the registered +/-0.005 reading of L32's far-from-seam median against 0038 / 0036 (READ from results/e9s/compare.json and results/e9l/summary.json) -> results/e9t/compare.{json,md}
 ```
 
-## Second model family — Llama long cell (registered 0050)
+## Second model family — Llama long cell (registered 0050, ran 0051; descriptive)
 
 As written in entry 0050 (gate and reader for `config/e9fl.toml`); the short cell is entries 0042–0044 with
-`config/e9f.toml`. Upstream pin `06f8d55`, one clone detached per cell (`UPSTREAM.md`). Whether the figures entry
-has landed: the ledger tail and `docs/drafts/README.md`.
+`config/e9f.toml`. Upstream pin `06f8d55`, one clone detached per cell (`UPSTREAM.md`). The figures are entry 0051.
 
 ```
 $PY -m linear_ceiling.e9 --align-only --config config/e9fl.toml   # the alignment pass 0050 cites (align/coverage.json)
@@ -183,8 +182,9 @@ $PY tools/hf_prune_backup.py <repo_id> <staging_dir>       # R8 repair: dry run;
 `ALLOW_PUBLIC=1`, a concurrent upload or summarizer, and a token without the `hf_` prefix; it ends in
 `tools/hf_verify_backup.py`, whose exit is the script's. Tokens come from the environment only (R9).
 
-Box drivers: `tools/jupyterhub/` (a JupyterHub-only box, e.g. Algoverse, driven from home), `tools/ec2/` (a
-rented EC2 GPU instance over ssh), `tools/runpod/` (the second family's RunPod sittings). Pre-rental checks:
+Box drivers: `tools/jupyterhub/` (a JupyterHub-only box, e.g. Algoverse, driven from home), `tools/ec2/` (any
+GPU box over ssh: a rented EC2 instance, or a RunPod pod once it is up), `tools/runpod/` (RunPod pod lifecycle: up,
+watchdog, spend, terminate; every sitting since 2026-10-06). Pre-rental checks:
 `tools/preflight_pair.py` (a pair against its models' own config and tokenizer files, CPU-only) and
 `tools/emit_tau.py` (a second family's τ lines from its own E8 report, before its config can load). The
 consolidation (`tools/consolidation/`) and cache-behavior (`tools/cache_behavior/`) drivers are run as their

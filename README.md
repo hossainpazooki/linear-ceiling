@@ -104,7 +104,7 @@ no read token is needed to fetch them. Protocol R8 allows public datasets (opera
 | read the paper being written from this record | `docs/paper/2026-09-10-lcfm-outline-v2.md` |
 | pick up the work | `docs/handoff/HANDOFF.md`, newest brief first |
 | run or re-run an experiment | `docs/agent/experiment-commands.md` for the commands, `docs/gpu-experiment-protocol.md` for the rules |
-| work in the repo as an agent | `CLAUDE.md` for the standing rules, `docs/agent/repo-architecture.md` for the module map |
+| work in the repo as an agent | `AGENTS.md` for the standing rules (`CLAUDE.md` adds the operator's Claude Code notes), `docs/agent/repo-architecture.md` for the module map |
 | see what went wrong before and how it was caught | `docs/learnings/LEARNINGS.md` |
 | see the older, diagram-heavy README | `docs/archive/` |
 
@@ -243,4 +243,4 @@ restore the gates decide, not the download.
 | `docs/drafts/` | append scripts for entries not yet written; its README is the only number allocator |
 | `docs/archive/` | superseded READMEs, verbatim: the visual-heavy one (`7ce63cf`) and the status form (`b4b56aa`) |
 | `UPSTREAM.md` | the pinned upstream and the provenance ledger for everything borrowed |
-| `CLAUDE.md` · `docs/agent/` | agent rules; the experiment command reference and the repository architecture |
+| `AGENTS.md` · `CLAUDE.md` · `docs/agent/` | the agent contract; the operator's Claude Code notes; the command reference and the repository architecture |
