@@ -24,7 +24,7 @@ columns, **up to 10 pages not including references**, the MLSys 2025 style files
 | §3 "still pending" sentences (two) | Condition 1 "still open" | delete; 0054 discharged it | 0054 |
 | App. B, Table 4 | Qwen E8 blocks only | add the second pair's k = 1 block (registered 10-sequence arm (b) and the all-sequence amendment) | 0040:2539, 0053:3540, 3559 |
 | **new §4.x "A second source→receiver pair"** | absent | the section drafted in §2 below; one table | 0039, 0042, 0044, 0050, 0051, 0053 |
-| Related work / E-TRUNC | — | if 0057 lands before the deadline, one paragraph in §4 (length vs. handoff identity); otherwise one future-work sentence with 0055's two limitations | 0055, 0057 (staged) |
+| §4, E-TRUNC | — | 0057 landed 2026-10-09: one paragraph in §4 (length vs. handoff identity), drafted and approved in §2c below, carrying 0055's two limitations | 0055, 0057 |
 | Lean | no claim | no claim (`lake build` has not run on an operator machine) | CLAUDE.md rule |
 
 Page budget: the camera-ready's main text is ~4 pages in the NeurIPS one-column style; the MLSys two-column 10-page
@@ -132,9 +132,65 @@ unscoped inversion (K only), "short cohort" for the n = 420 map (8 handoffs), fi
 2942/2950, edges 2942–2943, verdict 2986; 0051 τ_V 3878), the shared Qwen/Llama table (dropped), and P3's closing
 equivalence (replaced by 0051's own wording).
 
+## 2c. The E-TRUNC paragraph (§4), approved 2026-10-10
+
+Placement: §4, after the second-pair section; one paragraph, no table, descriptive, no cell moves. Four decimals, as the
+ledger prints them (operator ruling 2026-10-10). Line numbers in this section are those of `ledger/ledger.md` at
+`71c4cef` (0057 appended). Every figure was read from `results/e9t/compare.json` (sha256 `0572662307f3…`) and
+`results/e9s/compare.json` (`a0699a826f1f…`) at drafting, not from entry prose.
+
+> **Does length alone move the far-from-seam deviation?** The short and long cohorts are different handoffs, so their
+> far-from-seam same-K medians (native short 0.0195, scaled short 0.0381, long 0.0629) confound context length with
+> handoff identity. The move from the native to the scaled receiver, measured on identical tokens, accounts for 0.4285
+> of the native-short to long gap; the remainder, from 0.0381 to 0.0629, was unattributed. E-TRUNC varies length within
+> a handoff. Under causal attention a matched token's reused K/V depend only on the sender prefix before it, so we
+> truncate the sender's head, S′ = S[−L:], at L = 65,536, 49,152 and 32,768 beside the full sender, on the 35 long
+> handoffs under the same YaRN receiver, and compare on the tokens matched under every level. Fourteen handoffs fall
+> below the pre-registered floor of 2,000 common tokens and are void; 21 enter, with 154,620 common tokens. Median
+> f*(τ_K) is 0 at every level. At the native-window level L = 32,768 the far-from-seam pooled median on the common
+> tokens is 0.0868, against 0.1112 for the full sender on the same tokens; the paired per-handoff difference has median
+> −0.0257 with a bootstrap 95 % interval [−0.0434, 0.0024] that includes zero, so no per-handoff direction is claimed.
+> Under the pre-registered ±0.005 margin against the two cohort levels the result reads as unattributed: shortening the
+> causal prefix to the native window lowers the pooled median but does not bring it to the short cohort's level, and
+> the value sits above both references. The common subset lies at late sender positions, whereas the two cohort medians
+> pool their full matched sets. Two limitations are registered. The comparison speaks for the handoffs whose receiver
+> re-renders enough late sender context to survive head truncation, not for the long cohort as a whole; and every level
+> runs under the YaRN receiver, so nothing here compares a native with a scaled receiver on the same tokens, where the
+> bridge control (§X) remains the only evidence.
+
+Sources, and why each sentence is there:
+
+- Cohort medians and the confound — 0055:3410–3411 ("the residual is unattributed because the short and long cohorts
+  are different handoffs"). 0.0195 / 0.0381 / 0.0629 and the share's definition (scaled − native) / (long − native) —
+  0038:2360–2361; recomputed from `results/e9s/compare.json` (16+ bin `median_native`, `median_scaled`,
+  `long_cell.seam_far_median`, `configuration_share.seam_far`). Motivates the run: says what "unattributed" is the
+  residual of.
+- Causal-prefix argument and head truncation — 0055:3412–3414.
+- Levels, 35 handoffs, same YaRN receiver, the common subset — 0055:3406.
+- Floor 2,000, 14 void, 21 enter, 154,620 common tokens — 0057:3990–3992; `n_void`, `n_used`, `n_common_total`,
+  `min_common_matched`; the void set recomputed from the per-handoff block.
+- Median f*(τ_K) 0 at every level — 0057:3997–4000; `by_level.*.fstar_median_over_handoffs["0.3186"]`. "Median"
+  because the file holds the median over handoffs; the per-level summaries are not on the drafting machine.
+- 0.0868 vs 0.1112, paired median and bootstrap interval — 0057:4000, 4008; `reading`,
+  `by_level.L32768.paired_mean_delta_K_minus_full`.
+- Reading word, above both references, not to the short level — 0057:4004–4008, resting on 0055's ruling (1) wording
+  at 3423.
+- Late-positions caveat — 0057:4006–4007; the entry states it beside the reading, so the paper does too.
+- Limitation 1 — 0057:3992 (0055:3515). Limitation 2 and the bridge control as the only native-vs-scaled evidence on
+  the same tokens — 0057:4017–4018 (0055:3516).
+
+Skeptic pass (2026-10-10, read-only `skeptic-verifier`): every number recomputed from the two JSON files at four
+decimals, CONFIRMED; claims checked line by line against 0055/0057, CONFIRMED; the paraphrase scorer reports no scope
+overlap (max 0.08 against 0.45). REFUTED and corrected: the first draft paired the 0.4285 share with the scaled-short
+to long gap; the share is the native-to-scaled move's part of the native-short to long gap, and the scaled-to-long gap
+is the residual. Also corrected: "f*" to "median f*".
+
+Open at approval: the section number for the bridge-control cross-reference (§X), set once the App. C controls have
+their place in the main text.
+
 ## 3. What is NOT in this plan
 
-No Lean claim; no E-TRUNC figure until 0057 is on the ledger; no cache-behaviour or extension figure beyond what 0048
+No Lean claim; no E-TRUNC figure beyond the ones §2c reads from 0057; no cache-behaviour or extension figure beyond what 0048
 and 0049 state; no sentence about "practical savings" beyond the camera-ready's; no pooled Qwen/Llama number anywhere.
 The LaTeX source of the camera-ready is not in this repository (co-authors' Overleaf), so this document is the paste
 source and the ledger lines are its provenance; whoever holds the source applies the delta table.
