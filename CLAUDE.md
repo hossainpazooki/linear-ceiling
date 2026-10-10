@@ -1,93 +1,88 @@
-# linear-ceiling — agent contract
+@AGENTS.md
 
-A pre-registered experiment record on KV-cache reuse at agent handoffs. `README.md` explains the science;
-`docs/2026-08-26-kv-handoff-screen-design.md` is the authority on scope; `ledger/ledger.md` is the source of truth
-for hypotheses, rules, results and verdicts. This file holds only the stable rules. Commands:
-`docs/agent/experiment-commands.md`. Modules and layout: `docs/agent/repo-architecture.md`.
+# CLAUDE.md — how the operator drives Claude Code in this repository
 
-## Invariants — never break these
-- `../kv-transfer-replication` is **read-only** and pinned (`UPSTREAM.md`). Never write there, never `import kvt`,
-  never copy its code; it is invoked only by subprocess. Borrowed facts carry `{sourceRepo, filePath, commitSha}`.
-- `ledger/ledger.md` is append-only by numbered entry and hash-chained in file order; `ledger_check --against <rev>`
-  makes the trailing entry immutable too. A verdict cell changes only through an entry with a `verdict:` line.
-- Never write a number into the ledger that was not recomputed from `results/` by a summarizer. Summarizers are
-  fail-closed; a refusal is a finding, not an obstacle to route around.
-- Never edit a hypothesis after its experiment starts; never edit a sealed prediction.
-- Seeds and thresholds live in `config/*.toml`; a registered config is committed unmodified before its run and
-  its gate checks that. Randomness only via `linear_ceiling.rng.make_rng`.
-- One owner per rule: upstream pins only via `upstream_gate`, quantiles only via `e7_stats`, entry numbers only
-  via `docs/drafts/README.md`.
-- `traces/`, `results/` and `data/` never enter git history.
+`AGENTS.md` is the contract for any agent; this file restates nothing from it. It holds only what a Claude Code
+session on the operator's machines needs on top of that contract. Program state (what is staged, what ran last,
+what a statistic currently reads) is never written here; `AGENTS.md` says where it lives.
 
-## Domain traps — the rules newcomers break first
-- Lane A ALONE decides H-E7a; Lane B never resolves anything (0007/0010).
-- Unmeasurable is never a zero: every taxonomy class carries its own NOT MEASURABLE state (0006).
-- A narrow detector is a defect, not a null: search `model|model_id|model_name` at minimum (0010).
-- A trajectory is one agent run on one task instance, not one file (0011).
-- Every trace-only cost figure is a LOWER BOUND and headroom an UPPER BOUND, both labelled (0010/0012).
-- Per-token deviation is in R²'s own units (a token's share of unexplained variance), never a per-token percent
-  error (0023).
-- f*(τ) = 0 is a statement about each handoff's MEAN deviation, not a guarantee that no token exceeds τ (0045).
-- Quantiles come only from `e7_stats` (lower nearest-rank, no interpolation); a second convention silently moves
-  a p90.
-- Entries 0006–0023 are the authority: read them whole before touching E7/E8/E9 code.
+## Repo override of the global working agreement
+This is a paper, not a software project. Work lands on `main` by explicit-path commits; a branch exists only to
+put a change in front of a reviewer. Ad-hoc coordination, and no process beyond what the next step calls for.
+This applies the global rule that a repo file may override the global one; say so when you apply it.
 
-## Paper-facing claims
-- A scientific figure or claim enters paper text only through the admitted evidence path: a ledger entry that
-  states it, or a document a ledger entry explicitly admits for citation.
-- Co-author pilot figures admitted for paper citation by entry 0056 carry the provenance language that entry
-  specifies. Paper-citation admission does not by itself make them ledger figures; ledger admission still follows
-  the registered entry / draft path.
-- The registered reading of f* is in entries 0023 and 0027, and 0054 records how a contrary reading would have to
-  enter. When a review record, draft or manuscript disagrees with a registered reading or an operator ruling,
-  report the conflict and leave it to the operator. Do not resolve it in text.
-- "Lean" may be claimed in the paper only after `lake build` has passed on the committed tree (`proofs/`).
+## The operator's machines
+- **Windows** is the primary tree and the paper's editing side. Its disk cannot hold a results mirror, so an append
+  script previews here only after the summary files it reads are copied over (see *Previews on Windows*).
+- **The Mac mini** on the home LAN is the home side for GPU sittings since entry 0051: every results mirror, the
+  upstream clone detached at each cell's pin, and the Hub staging copies live there. It is reached over ssh only.
+  It is arm64, so a reader that passes on every x86 rendering can refuse there; entry 0059 records one such refusal.
+- Both trees are clones of `origin`. Commits move between them through `origin`, or by a LAN fetch when the
+  operator says so. Never assume the two trees match: `git status` and `git log -1` on each before a block.
 
-## GPU runs
-`docs/gpu-experiment-protocol.md` (R1–R12) governs every GPU experiment, and each run has a dated runbook. Never skip:
-- Registered before requested: no rule, τ, band or cap change once a score file exists (R1).
-- Budget the attention backend, not the parameters: f32 + GQA takes the math kernel (R2).
-- Every input the driver reads is in git, the manifest, or listed by sha in the runbook, gitignored mappers too (R3).
-- Launch detached, rotate the log before any relaunch, never `pkill -f` a self-matching pattern (R4).
-- Pull → verify against `report.json` `kept_dumps` → delete, per handoff; nothing exists only on the box (R5/R6).
-- Release by the R7 checklist in order, starting with step 0 (the account is shared until proven otherwise):
-  mirror re-verified, box swept, HF cache removed, server stopped and the effect probed.
-- Back the verified home mirror up to an HF dataset, every file checked by `lfs.sha256` (R8). The backup is
-  transport only: summarizers read the local mirror.
-- Hub tokens: scoped, expiring, environment-only, revoked once pasted anywhere (R9).
+## Git mechanics for Claude
+- Claude writes no git history here, on either machine, including over ssh: no checkout, pull, commit, push, rm,
+  branch or rebase. `git fetch` and `git show HEAD:<path> > <path>` (restoring a tracked file to its committed
+  bytes) are allowed.
+- Commit blocks go to the operator in Git Bash form, one commit per concern, conventional subjects, no
+  attribution trailers. A block for the Mac is zsh over ssh: no `#` comments and no apostrophes anywhere in it,
+  because bracketed paste makes the whole block one command and a stray quote leaves the shell at `quote>`. Put a
+  check that the change took effect before and after the commit instead of a comment.
+- The Mac has no git identity configured; a commit block for it starts with `git config --global user.name` and
+  `user.email` unless the operator has set them.
+- An append script is ratified by the operator running it, never by Claude: the staging commit (the script and
+  `docs/drafts/README.md`), then `$PY docs/drafts/append_00NN.py --date YYYY-MM-DD && rm docs/drafts/append_00NN.py`,
+  then two commits (the ledger alone first, then the retired script and the README's allocator line), then push.
+  Claude runs the script only with `--preview`.
 
-## Where to read current state
-Not restated here; it changes too fast. Read, in order:
-1. `ledger/ledger.md`: the hypothesis table, then the entries its cells cite.
-2. `docs/handoff/HANDOFF.md`: the newest brief is the pick-up target, but re-verify it against the repo rather
-   than treating it as evidence.
-3. `docs/drafts/README.md`: staged entries, file order, the next free number (the only allocator).
-4. The experiment's runbook (`docs/*-runbook.md`) and `docs/gpu-experiment-protocol.md`.
+## GPU sittings from the Mac
+The operator sits a RunPod pod from the Mac: `tools/runpod/rp.py up`, the watchdog, then the `tools/ec2/` flow over
+the ssh alias the runbook names. On every sitting after a campaign's first, pass the watchdog `--kill <cap>` and
+`--ttl <hours>` explicitly; its defaults are a campaign-wide spend cap and `up --hours`, which has killed a run early
+once (learning `docs/learnings/2026-10-08-the-watchdogs-kill-default-is-9-dollars-of-campaign-spend-and-up-hours-is-its-ttl-set-both-explicitly-on-every-sitting-after-a-campaigns-first.md`).
+The minute-by-minute log goes into the dated runbook as it happens, never reconstructed afterwards.
 
-## Before changing anything
-- Run `git status`: parallel sessions leave uncommitted work in this tree. Commit by explicit paths.
-- Re-read `docs/drafts/README.md` before staging an entry; parallel sessions have collided on numbers.
-- Ledger entries, handoff briefs and learnings entries are immutable; a correction is a new one.
-- Leave to the operator, or do only on the operator's explicit instruction: appending an entry or running an
-  `append_00NN.py` script, taking or reinterpreting a ruling, requesting or releasing a GPU box, pushing to or
-  changing the visibility of a Hub dataset, re-pinning the upstream, editing a registered config.
+## Shell traps that have bitten here
+- Git Bash rewrites a leading-slash argument into a Windows path, even for `python.exe`: an upload to `/workspace`
+  went to a Windows path and reported success. Prefix `MSYS_NO_PATHCONV=1`, or pass bytes through Python
+  (learning `docs/learnings/2026-10-07-git-bash-rewrites-a-leading-slash-argument-so-rp-py-put-dest-workspace-uploaded-to-a-windows-path-and-reported-success.md`).
+- zsh over ssh does not word-split an unquoted variable: a command held in a variable becomes one missing path and
+  a release chain silently skips. Spell the arguments out
+  (learning `docs/learnings/2026-10-08-zsh-over-ssh-does-not-word-split-an-unquoted-variable-a-command-held-in-a-variable-becomes-one-missing-path-and-the-whole-release-chain-silently-skips.md`).
+- The Bash tool's heredocs die past a few KB: write the script into the session scratchpad and run it from there.
+- A loop whose body runs `ssh` has its stdin eaten by `ssh`; run each body with `< /dev/null`.
+- The Windows console is cp1252: ASCII in `print()`; UTF-8 only into files opened as UTF-8.
 
-## Common checks — the definition of done
-`$PY` is the repo venv: `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (Linux/macOS). If it is missing,
-say so; never substitute another environment for a scientific run.
-```
-$PY -m pytest -q                       # synthetic, offline
-$PY -m linear_ceiling.seal verify
-$PY -m linear_ceiling.lint_scope
-$PY -m linear_ceiling.ledger_check
-```
-A green suite proves the tools work, not a scientific claim.
+## Secrets mechanics (the Claude side of R9)
+- The `read -s HF_TOKEN` line is pasted by the operator ALONE, never inside a block Claude wrote, and the token is
+  never pasted into the chat.
+- A detached push is written in the shell-prefix form, `HF_TOKEN=$HF_TOKEN nohup caffeinate -i bash tools/hf_backup.sh …`.
+  The `env HF_TOKEN=$HF_TOKEN …` form puts the token into argv, `ps` and the transcript
+  (learning `docs/learnings/2026-10-09-env-var-equals-in-a-detached-command-line-puts-the-secret-into-argv-use-a-shell-environment-prefix-or-the-scripts-tty-prompt.md`).
+  The token is revoked once the verifier prints BACKUP VERIFIED.
+- The RunPod API key lives at `~/.config/linear-ceiling/runpod_api_key` and is never printed, echoed or read into
+  the conversation.
+- This is a public repository: no balances, tokens, hostnames or addresses in issues, pull requests, commits or docs.
 
-## Repo map
-- `src/linear_ceiling/`: instruments, gates and fail-closed summarizers. `tests/` mirrors it (synthetic, offline).
-- `config/`: registered experiment configs and manifests. `ledger/ledger.md`: the record.
-- `docs/handoff/` briefs · `docs/drafts/` append scripts + allocator · `docs/reviews/` review records ·
-  `docs/learnings/` re-verifiable learnings · `docs/paper/` outlines (the manuscript is not in this repo).
-- `docs/gpu-experiment-protocol.md` + dated runbooks · `docs/agent/` commands and architecture.
-- `tools/`: GPU box drivers, HF backup push/verify, pilot code. `proofs/`: the Lean 4 formalization.
-- `UPSTREAM.md`: the pin chain and the provenance table for everything borrowed.
+## Verification choreography
+- A skeptic pass (the `skeptic-verifier` agent) runs on every append-script preview before it is offered for
+  ratification, and on any paper paragraph before it is offered for approval.
+- Every figure in a reply is read from the result file at the point of claiming it, with the file's sha; nothing is
+  restated from an earlier message, a brief or memory.
+- A reader defect found on a sitting is fixed in the summarizer with a synthetic test in the same change; a
+  registered tolerance or control moves only through an entry, in 0028's shape.
+- A learning goes to `docs/learnings/` with a `re-verify:` line that Claude runs from the written file before
+  handing the block over. A brief goes to `docs/handoff/`. Both are immutable once committed; a brief edited after
+  its commit is restored to the committed bytes. Anything private (a consultation draft, reviewer correspondence)
+  goes to `~/dev/briefs`, never into this tree.
+
+## Paper text
+The manuscript is not in this repository. A rewrite is delivered as the paragraph, then a "Changes, and why" list
+citing entry and line for every change; approval is per paragraph, and paragraphs are not batched. A figure or
+reading enters a paragraph only by the admitted evidence path in `AGENTS.md`.
+
+## Previews on Windows
+An append script reads the summary files of every experiment it cites, by sha, from `results/`. Those files live on
+the Mac. Before a preview here, copy the files the script's `FILES` dict names under the same `results/<cell>/`
+paths on Windows, then run `$PY docs/drafts/append_00NN.py --date YYYY-MM-DD --preview`. `results/` is gitignored
+on both machines, so nothing copied can reach a commit.
