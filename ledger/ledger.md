@@ -4019,3 +4019,51 @@ same tokens and 0036's bridge control (W6) stays the only such evidence; f* is r
 generation quality after reuse not measured.
 
 prior-entries-sha256: 815cdcf5524b4b5fce00de95dc441796de61630714d8800f5de23bf821bf2ef8
+
+### 0060 — 2026-10-10 — MLSys 2027 cut: the figure set frozen — the experiments run since the LCFM reviews, mapped to the reviewers' points, every figure read from its summary file; conditions discharged or carried; descriptive, no cell moves
+
+**What this entry is.** The LCFM reviews (TE3a and teFN, 2026-09-25/28; decision Accept) are mapped in `docs/2026-09-30-review-response-map.md`
+(`6cb0e06ab3c0…`) to what the record stated then and what it lacked. Between 2026-10-01 and 2026-10-09 the lacking figures
+were produced under this ledger's rules — registered before run, read only by fail-closed summarizers, backed up and
+verified — and entered by their own entries. This entry **freezes the figure set the MLSys 2027 submission may draw from**:
+the entries named below, each figure as its summary file states it today, with that file's sha. Nothing registered after
+this entry enters the submission; a figure that changes re-enters only through a later entry. 0006's gate restated: only
+numbers that recompute clean from `results/` via a fail-closed summarizer enter. The manuscript tree and its commit are
+pinned at submission by the reconciliation record (the camera-ready precedent, `docs/reviews/2026-10-07-…reconciled.md`),
+not by this entry. Nothing is measured here; the draft plan is `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md` (`1fda36fc2653…`).
+
+**Experiments addressing the reviews, by point.** Lines are the entries' header lines, located by search at append time.
+
+| reviewer point (map row) | experiment, entry (ledger line) | figure read from the record (file sha12) |
+|---|---|---|
+| **W7 narrow**: one pair, one agent family, a 50-sequence mapper | second source→receiver pair, Llama-3.2-3B → 3.1-8B at its own τ: short cell 0044 (line 2864), E8 amendment 0053 (line 3522), long cell at a NATIVE receiver 0051 (line 3832); same-model extension 0048 (line 3697): Qwen3-4B and SmolLM3-3B on the 60 texts — four receivers, three families; calibration size 0034 (line 2020) | 0044: same-model f*(τ_K) median 0.0000 over 28 handoffs, cross 0.7317 (`e1e5feb8aadd`); 0051: 0.0000 over 32, cross 0.7626 (`1ac712b3897e`); 0053 (k = 1, 50 agent sequences): generic K/V R² 0.7139/0.4711, agent 0.6979/0.4137, bands HOLDS/UNRESOLVED (`9ddb66cc2796`); 0048: same-model f*(τ_K) median 0.0000 on every cohort — Qwen3-4B short / long (n 25 / 35, zero on 25 / 35; median mean δ_K 0.1011 / 0.1260), SmolLM3-3B (zero on 25 / 34; 0.0722 / 0.1207) (`f7248239ce89`); 0034: kept-subset cross arm at the n = 420 refit 0.8106 vs 0.9352 at n = 50, 8 handoffs (`3d09197cbc49`) |
+| **W2 length not isolated**: "truncating the sender context of the same handoffs would isolate it" | E-TRUNC 0055 (line 3406) ran as 0057 (line 3979): head truncation at 4 levels on the 35 long handoffs | 35 scored at every level, 14 void under the registered floor, 21 enter on 154,620 common tokens; at the native cap the far-from-seam median on M_∩ is 0.0868 (FULL on the same tokens 0.1112) against scaled-short 0.0381 and long 0.0629, margin ±0.005 → **"unattributed"**, the value above both references; paired per-handoff median -0.0257, bootstrap [-0.0434, 0.0024] (`0572662307f3`) |
+| **W3 mean vs tail**: "a mean criterion can pass while the tail still matters" | corrective 0045 (line 2991): the per-token tail per cell from `e9_tail`; corrective 0058 (line 3774): f* read as the oracle REMOVAL fraction, not a lower bound on recompute | tokens over τ_K on the same-model K arm: long 7.9 %, short 5.8 %, scaled-short 6.7 %, Llama short 11.3 %; per-handoff maximum mean 0.2692 / 0.2207 / 0.2255 / 0.2860; long-cell pooled mean after removing the top 10 % / 20 % of tokens 0.0773 / 0.0586 (`7683696cd02a`, `3210fd21e24a`, `f42763865fde`, `c35c48b9dbbe`) |
+| **W4 framing**: most matched tokens inside the native window, receivers short | 0045 (line 2991): the native-window subset and |R| per cell | long cell: 73.3 % of matched tokens at sender positions ≤ 32,768 (284,094 tokens), their median / mean δ_K 0.0381 / 0.0926; receiver length median 11,462 tokens over 35 handoffs (`7683696cd02a`) |
+| **W5 Corollary 3 with medians** | 0045 (line 2991): seam-bin MEANS beside the medians, per cell | 6 seam bins with mean and median in each cell's `tail.json` (`7683696cd02a`); the submitted LCFM text printed no bin mean (map row W5) |
+| **W6 Prop. 4 under YaRN** | bridge control 0036 (line 2174) and at every E-TRUNC level (0057); the second pair's long cell at a NATIVE receiver, 0051 | 0036 bridge: scaled vs native receiver f*(τ_K) K 0.0000 / V 0.0000 → CARRIED: the scaled receiver stays within the mapper's tolerance of the native one; tau_K carries (`64e64e9318d4`); 0051 carries no `[e9.rope]` block — no registered RoPE override; the Llama models' built-in `llama3` scaling is the native receiver (`1ac712b3897e`) |
+| **W1 behavioural validation**: "next-token KL or top-1 agreement" | cache behaviour 0049 (line 3728): next-token sensitivity of the receiver to reading an assembled same-model cache, three arms, descriptive | over 35 long handoffs: reuse median KL 0.1424 nats / top-1 90.2 %; random 11.2981 / 4.7 %; cyclic (0049's name; the file's `scrambled` arm) 0.2826 / 85.5 % (`5228de0dd8c4`); the reader's own words: "Prediction sensitivity on a fixed continuation; no task-quality verdict." — no task-quality band exists; E-BEH's HOLDS / DEGRADES bands stay unregistered and unrun |
+| **W8 what HOLDS could have failed against** | null pairing on every same-model cell: 0029 (line 1756), 0036, and now 0051 | null-pairing median token mean on K: short 2.0090, long 2.0147, Llama short 2.0036, Llama long 2.0103 — against same-model medians of 0.0000, 0.0000, 0.0000, 0.0000 f*(τ_K) (`ae461db872f2`, `64e64e9318d4`, `e1e5feb8aadd`, `1ac712b3897e`) |
+
+**Wording invariants the submission carries** (each registered by the entry named): f* is the oracle REMOVAL fraction, not a
+lower bound on recompute (0058); the τ every reading uses is the config's registered float, the recomputation check at
+1e-7 (0059); short and long cells never pooled, the second pair's cells stated beside the first pair's and never pooled
+(0044, 0051); the cross arm never headlined; E-TRUNC's reading stated with its position above both references (0057); no
+downstream task-quality claim (0049's reader states none); co-author pilot figures replaced by the operator's registered
+runs 0048 and 0049, so 0056's provenance clause is not needed; **where a bound is invoked, the submission states the seam-bin
+MEANS** (0045; the LCFM text printed medians only) — an obligation on the text, not a fact about one.
+
+**Conditions.** Discharged: Condition 1 by ruling 0054 (line 3287); the 0029 description defect by 0045. Carried as
+stated limitations, not resolved: the L32-native E-TRUNC cell (ruled in by 0055 ruling 3, deferred by 0055 itself for lack
+of an instrument); a second calibration size on the
+long cohort (unrun; 0034 covers the short cohort's kept subset); E-BEH bands (unregistered, unrun); issue #21, the R12
+recompute of 0051 by a second person (open). Carried as reviewer nits outside this ledger: N1 (template) and N2 (the
+unrun appendix) are manuscript matters.
+
+**What this does NOT touch.** No `verdict:` line; every cell as decided (H-E9 0029, H-E9L 0036, 0038, the Llama cells
+0044/0053/0051); τ_K, τ_V, τ_agent_K, the band, the ladder, the kept dumps; nothing runs under this entry.
+
+**Numbering.** 0060 is the next free number in the drafts README; appended after 0057 in file order; ordering guard 0059 and
+0057 present, 0060 absent. Next free number after this entry: 0061.
+
+prior-entries-sha256: 84e861624edec6bd66434931317c89208b758347cd83e7a6b18ac7750e37e357
