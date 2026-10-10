@@ -1,5 +1,8 @@
 # Entry drafts (delete each script once its entry is appended)
 
+**Live allocator (moves with every staging and append; the dated notes below record their moment): 2026-10-10 —
+appended through **0060** (`e0be46d`); file order ends 0059, 0057, 0060; staged: `append_0061.py`; next free number **0062**.**
+
 Convention: an entry that carries numbers is appended by an ordering-guarded script that runs
 the relevant fail-closed summarizer IN-PROCESS first and pulls every figure from its verified
 output — the script refuses to run out of order and runs `ledger_check` after appending. Run
@@ -142,6 +145,16 @@ Mac-only summary files were copied over on 2026-10-09). Next free number: **0061
 `--date 2026-10-10` after the 0060 preview passed the same day). File order now ends 0059, 0057, 0060. Nothing staged.
 Next free number: **0061**. From this append on, allocator state is recorded here only; `CLAUDE.md` carries no entry
 lines (PR #19's layout).)*
+
+**Staged 2026-10-10: `append_0061.py` — CORRECTIVE, the quantile convention behind the pooled PER-TOKEN p10/p90/p99** (operator
+ruling 2026-10-10 after the PR #19 audit; learning 2026-10-01). 0038 (its pooled scaled − native p10/p90/p99) and 0045 (each
+cell's pooled per-token p90/p99) print fields that `e9_compare` / `e9_tail` computed with `np.quantile` (linear interpolation),
+while every quantile over handoffs is `e7_stats` nearest-rank (0013). The script reads each recorded value from its file with
+the sha, rebuilds the pooled array from the same pinned `scores/` + `tokens/` records through `e9_compare._delta_K`, REFUSES
+unless `np.quantile` reproduces the recorded value to 1e-12, then states `e7_stats.quantile` of the same array beside it and
+the largest gap (read); entries located by header line and by sentence search (0038: one hit; 0045: four, in cell order).
+DESCRIPTIVE, no `verdict:` line, nothing moves, reader code unchanged. Ordering guard: 0013, 0038, 0045, 0060 present, 0061
+absent. Runs on Windows (all four cells' records are native here). Next free number: **0062**.
 
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;

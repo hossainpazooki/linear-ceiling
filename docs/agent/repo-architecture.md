@@ -115,7 +115,6 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 | `docs/*-runbook.md` | one dated runbook per GPU sitting |
 | `docs/agent/` | this file and the command reference |
 | dated `docs/*.md` | design, recon and status documents: the scope authority `2026-08-26-kv-handoff-screen-design.md`, `gap-map.md`, `background.md`, the review-response map; experiment designs (`e-trunc-design.md`, `e-beh-design.md`, `e-tail-design.md`) sit under `docs/drafts/` |
-| `docs/superpowers/` | one committed planning document from 2026-08-26; not a record |
 
 ## `tools/`
 
