@@ -1,0 +1,674 @@
+{
+  "config_sha256": "53c664556d18792401db8c1b930e487a90b88ab19c65ad94a1ab982094443a28",
+  "archive_report_sha256": "084d9480af74de2b038ce82f22bef3d2e5d477dc7243addf0c357d64b13aa9c8",
+  "archive_config_sha256": "bab1afca494c19131ef12ab1333aa771bb12aaebf5197e8f2765968986b577b7",
+  "corpus_manifest_sha256": "371fb4bf3cb089bdbca1588330f997199045426e84983e6ee6691b43fbc6a094",
+  "evidence_sha256_manifest": "eb3500f1224d48c82103b73abf452eff00201b8b69778d37f7e6b1b1a5629129",
+  "records": [
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-7671_traj#85",
+      "file": "20241016_composio_swekit__astropy__astropy-7671_traj_sw85.npz",
+      "sha256": "099c02d2c4f67d0a76e020d8951b2a64c93a99945bd50590cc572f658703af5b",
+      "sender_tokens": 34974,
+      "receiver_tokens": 8449,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "3a4816ca777c3303cf54f9b8ea8cffd025020c68135c33634879f4daedd4f49c",
+      "archive_score_sha256": "1f58dd40dc3fd54101734af51ad8512c15435ff9adf229a1a68dbb06e1b5bcd7",
+      "archive_tokens_sha256": "79b63cc724b1a383e61b0c64d3e0282190bc239b6b0daaa19f8b7dd43ee1410e",
+      "trace_sha256": "f7d27f86f5e8cb12eda7436f7ff517d5527daf340abc97237ed4be2fc2abe8dd",
+      "continuation_text_sha256": "895da138fdc1e451610875335c11b8a22dfec19d210e20e7d317cda8ff1cecb8",
+      "archived_mean": {
+        "K": 0.08624098751199527,
+        "V": 0.1124763081710124
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-14598_traj#94",
+      "file": "20241025_composio_swekit__astropy__astropy-14598_traj_sw94.npz",
+      "sha256": "f2b107257d4ef0b5845e04addb08152f5e34805a73d6a4bbdb85f1b14dd03156",
+      "sender_tokens": 35193,
+      "receiver_tokens": 10238,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "49f43711a970c3f5087aeca437b54c09fbcbf5afb1565ab2f9d95ea41f4b3678",
+      "archive_score_sha256": "074646fe3e920d60c2d2211c16bd321ca56ff3dc3f59d421fae5026b4579408c",
+      "archive_tokens_sha256": "409bb516cc95b6b4a7346ed0286489111adc73480c2ee7789402a1721ace2972",
+      "trace_sha256": "6d889de9d7a2666f7249be2ab4f1ca60be44c5136c231e3b048e454ff4949e79",
+      "continuation_text_sha256": "8675f777e1798331568eda6cc60347f7e35a5dfde7fa65c4c065ba253823490e",
+      "archived_mean": {
+        "K": 0.05087920832023052,
+        "V": 0.07171867144566912
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-7336_traj#119",
+      "file": "20241016_composio_swekit__astropy__astropy-7336_traj_sw119.npz",
+      "sha256": "bd1ce5d9ec63134dae5c94440559d518b9c1286a0eb448e8107e8b82ac9b96e3",
+      "sender_tokens": 35355,
+      "receiver_tokens": 7085,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "07b6aaeb39f82d8542ff822eb72a5f96f01770941d7aab54b3c8f2f425d3ef17",
+      "archive_score_sha256": "63422685b46f45cec7122d20614e4b61acf588e201c733c80f530f1d67a32acc",
+      "archive_tokens_sha256": "0d27e3770a7d255749e9fc8fe266fc474455cdf850d71a02349ab4a2abea32c5",
+      "trace_sha256": "87d7bf19d46ea27e0f2c92044d667670db6b3a660f8966f0a7582b9265a6cde9",
+      "continuation_text_sha256": "dbd4591a58aa1940cdb1b3b7e3816fb79b8decdcee168ec541df8e2b497d4f17",
+      "archived_mean": {
+        "K": 0.05039703301720144,
+        "V": 0.07075286930269298
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-10914_traj#104",
+      "file": "20241025_composio_swekit__django__django-10914_traj_sw104.npz",
+      "sha256": "393e4edebf345f084d0a48aac599f428c34d10587f26895d9030e9231d5ea982",
+      "sender_tokens": 35692,
+      "receiver_tokens": 9710,
+      "continuation_tokens": 239,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "b13b539efd0dbaf98de711c05c2999f52b889ef8050e1ffbb6f121c7a4c97b16",
+      "archive_score_sha256": "03a9a91c278f5f9e7a7f19e0a895f4dcf890db5c43c0ce8a9e50e67d9c65bac5",
+      "archive_tokens_sha256": "94128ccb005b2ce9717017c592368bc8d0b90593a7c69a9a1fa05aec21a5c84d",
+      "trace_sha256": "1eac89d172ca89d747e2a4f664a60772dc9badc57b9e5976ab10310b708cb129",
+      "continuation_text_sha256": "cf19ecd0b7a929c48df6602f67b37f13597d694d9598fb5c7553c8e27c3e0592",
+      "archived_mean": {
+        "K": 0.17171882562296414,
+        "V": 0.20324491215387863
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-10973_traj#78",
+      "file": "20241025_composio_swekit__django__django-10973_traj_sw78.npz",
+      "sha256": "ab63f3e54a083bfc04948daf5c22ce384126e0cc6077159d82747a8a56d03759",
+      "sender_tokens": 37939,
+      "receiver_tokens": 13201,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "8dc2d6848a48dbbf284f44246514a14596265d643f60a9d85e3bdc98ef413139",
+      "archive_score_sha256": "6fccc47bab0f7b04abf0a3c97af5430e814084836673117f01cdbacf551c1c1e",
+      "archive_tokens_sha256": "bd0968d09d23bfbcd2406a8bb6e43fb38ea8e86ff20ae268714722a9e819c6e4",
+      "trace_sha256": "318a3e91848723ac60f049d98f8d7921af522fd534b5773a625fb6d3ca59afb8",
+      "continuation_text_sha256": "a804ead814d32db9dee3693b69e63675518d7471470e6e46374db67825efc4a2",
+      "archived_mean": {
+        "K": 0.20233844573904636,
+        "V": 0.20510595779767082
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-12907_traj#97",
+      "file": "20241016_composio_swekit__astropy__astropy-12907_traj_sw97.npz",
+      "sha256": "5a7f1178b499b95037380fe05f9c501a20e8982f506965e2a7091a096f75ec6f",
+      "sender_tokens": 38238,
+      "receiver_tokens": 7758,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "28a73224ad6fa3475b5c5b4af041cd4c4a93c26225b99be1586a3402024423fb",
+      "archive_score_sha256": "ad0f209ac22344a4f264c23163dfa6e3fd99408866555904ef8b9baf478eab4d",
+      "archive_tokens_sha256": "a0208f6da1324ef080e818108fa69cec9ef0a6da634e8a3dc35813d5999376d4",
+      "trace_sha256": "d9ddb8aef6ca175265edb75c38442d0964a62558dd838c5cfd217d41a352e94f",
+      "continuation_text_sha256": "b5d853773a791165d67088e51a8cf2fc8b7119311ff18d5a0d27d322af0a5430",
+      "archived_mean": {
+        "K": 0.08808405281329212,
+        "V": 0.11069255748316109
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/django__django-10097_traj#111",
+      "file": "20241016_composio_swekit__django__django-10097_traj_sw111.npz",
+      "sha256": "ed75f702660755b4f0b9ba53028c2bddd1a7fded224437230f891e970f228270",
+      "sender_tokens": 38474,
+      "receiver_tokens": 13163,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "ac3b031d8098d7c65e50a1a9077eb1b9a0577b44f6b4f425f3c60998f0f8bf6c",
+      "archive_score_sha256": "50300aa969adc25400089033922207482a1c430d5ccd4547367f3acb2ee14da4",
+      "archive_tokens_sha256": "8e16708720fbf80ad2bb1782fffbfe6316363e385a54403a32762241b958d04a",
+      "trace_sha256": "51fa9f20a9f03ff6cac79e058e651382febc6ccc47f9876aedf2c9bf8162e87a",
+      "continuation_text_sha256": "b05426794ee664ccc16f6d8f0a1e045db60ac01da40208ce942e138415768cb4",
+      "archived_mean": {
+        "K": 0.17440892306172806,
+        "V": 0.21565972459310156
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-14598_traj#103",
+      "file": "20241016_composio_swekit__astropy__astropy-14598_traj_sw103.npz",
+      "sha256": "47f7bb09ef56c71ac0d4cce6c2b63e372064331fea141f65d12c8b1c2046fff0",
+      "sender_tokens": 40088,
+      "receiver_tokens": 10908,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "71db7391fc0d379bd532982ba6082b2e5d30562314bb913cf6919e2f3de4b278",
+      "archive_score_sha256": "4300c956dedb19c2756610e8dd276294935eeee32a261684eb88a02bbeffc185",
+      "archive_tokens_sha256": "d0e233dc473c104e38d4818874f755ea765373218c2b3ad38db1804f8b1c51af",
+      "trace_sha256": "6973d0370422fbf1991f8d18b6cd2015bff8406c40aa7ba42782bc118ee0f056",
+      "continuation_text_sha256": "3a1a636a2109273292924dffe96c24784c107fa897eb99dedfcf5c22e06abc34",
+      "archived_mean": {
+        "K": 0.11057232231859937,
+        "V": 0.14068754624963165
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-8872_traj#74",
+      "file": "20241025_composio_swekit__astropy__astropy-8872_traj_sw74.npz",
+      "sha256": "93d2261993ce221a3b4a81e5b5e1cb3fbd62eabfd03181ad79f983cf136fffe9",
+      "sender_tokens": 41001,
+      "receiver_tokens": 11420,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "427eced5a8226787da3bc3e59ebc5c82260c33b91e36d3965a42be1e285a523c",
+      "archive_score_sha256": "e13b96d6f9adb3fda0246bfd3756bceddec6fe22508afc86ed97be6464fdc644",
+      "archive_tokens_sha256": "cd06b00667545c5f9e1cb92e61a539023eb9c3d52a1e995552225500583cbcb1",
+      "trace_sha256": "6ad1dcf7a9358f9482cb032848b5dc47902b0d960d82356afcb69576d5bf6f42",
+      "continuation_text_sha256": "dc3cf69a6a4228d14ed2d73d3f89e6fb213ccc7d6bc743403e8496468448f334",
+      "archived_mean": {
+        "K": 0.07303875278365879,
+        "V": 0.09617023641295419
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-12907_traj#104",
+      "file": "20241025_composio_swekit__astropy__astropy-12907_traj_sw104.npz",
+      "sha256": "317db5fee896231694e3cbe7d7a2ca178fa593ef2206d70ef87c305ef7abfed1",
+      "sender_tokens": 41566,
+      "receiver_tokens": 11476,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "45608449280ed754f452640e828a8c46931863188f40cbece9024ef45211fada",
+      "archive_score_sha256": "92288049ab1f7180ce56fa0ae11b08ed778fee0bc5ebaca165839a6b52c91ece",
+      "archive_tokens_sha256": "54e5088f387743a44cb71ca15870608698c21cd48cbc645e43379765b8937cd4",
+      "trace_sha256": "e4ea2618ff245d5ab159c086a72d3ef7d2dc095064e74d86b196711af20ccb36",
+      "continuation_text_sha256": "8ad8ed40ae1529beff6d8bfc65cc6cfe9df78a1725c753c8515e9abb4ce1f527",
+      "archived_mean": {
+        "K": 0.04787521846189158,
+        "V": 0.06847972985083406
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-13453_traj#102",
+      "file": "20241025_composio_swekit__astropy__astropy-13453_traj_sw102.npz",
+      "sha256": "1739580aaf1b10f155c12516d0048300698928c2ba775e00792e1b3ce6617a45",
+      "sender_tokens": 42151,
+      "receiver_tokens": 11592,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "31be2e7d96e9f861ae672b94aa84e2dbc76b2d9a5b9aa1078f910f3a4d3be3e6",
+      "archive_score_sha256": "ce93d7788eecb359cde1ecf9b1213aa66769185f0f5cbc4e273f318d485b5998",
+      "archive_tokens_sha256": "b3c2762944e4aeb6f062dba26269c01416057742749b5d9194f20bd0e59d190c",
+      "trace_sha256": "e9490edfae9a347224471709ffa521c03c301a63b540274efdc399973cba15dc",
+      "continuation_text_sha256": "047363f8b2e275337b8cb9d0dfaac4d0e950f758a6fa911e57260337a5a577cd",
+      "archived_mean": {
+        "K": 0.05165326830923689,
+        "V": 0.07341722165341424
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-13579_traj#98",
+      "file": "20241025_composio_swekit__astropy__astropy-13579_traj_sw98.npz",
+      "sha256": "70e8b4411287bba6b8aefdea63d5889871814ed6a09f87a3ae562e92c1923297",
+      "sender_tokens": 43134,
+      "receiver_tokens": 11462,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "b5a1c861d832d5e09f083399cd47d60a0190e829bf434f789e07a2eeddb44191",
+      "archive_score_sha256": "9e0b34d14784e696f35e18c961530fd418218d25ebcbdbdf0d90f4a7cf39699d",
+      "archive_tokens_sha256": "66136979e7ce2170cb5a4a060e1839f45e30083a74f35c8fd5a13c933a83608a",
+      "trace_sha256": "f5412b64b825934522773bef02ad478d9b9621fc646ba6ce70a3e14a9d2f7ae5",
+      "continuation_text_sha256": "829a80d6df2d4d472303f303ae3b8ec064e92c7d43074751cbb7da5c23caebeb",
+      "archived_mean": {
+        "K": 0.1273239993662404,
+        "V": 0.16166190476423714
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-11095_traj#81",
+      "file": "20241025_composio_swekit__django__django-11095_traj_sw81.npz",
+      "sha256": "27653aac35556fd3c64f78ad9ad1d22d2b556eb04e21903da56c2c2b3ab20c41",
+      "sender_tokens": 44481,
+      "receiver_tokens": 10316,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "8abd81c4b55b3460512c77c628c30877b8eac99087a13b4e71db3a06ea1b3b1c",
+      "archive_score_sha256": "fcee3f098926b42e16404bf7361b629be4d24769ab7008b0b5454fc609a4ce97",
+      "archive_tokens_sha256": "9502cee4e7b3d0aa32c2f6eb34feb02890b478a87cc959ff9a0ec82e79527f49",
+      "trace_sha256": "6ff27540e6bcd6ea797ec69b881c6adf896337c706603e3521cc069e46bbf5f2",
+      "continuation_text_sha256": "2ca1c0745a2b5b26ed4d0907f46defe007c274e9de061f9f09f691aa8d5f5242",
+      "archived_mean": {
+        "K": 0.20018587055345105,
+        "V": 0.23300546260729027
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-13398_traj#133",
+      "file": "20241016_composio_swekit__astropy__astropy-13398_traj_sw133.npz",
+      "sha256": "f025c21531e6e21d5bf49f281d6896f989673d03d493f46d1fecda4e7c226d1b",
+      "sender_tokens": 46599,
+      "receiver_tokens": 10434,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "e783778eb5f0cc6110367393998ead2b32121a19d7652aa8e40f95de0c1a3888",
+      "archive_score_sha256": "60263d5a184baeb3dbd1165f8d981353b53c79478aecf41534cf5045756e9100",
+      "archive_tokens_sha256": "88741359806379ccbc5ae61d42289db6633cc5ae2ed1e924cb02b8a66736575c",
+      "trace_sha256": "c77fdf08418d454fe886e3c4b3b026ab31b1bebbc6e1bd88113d2bcd124925ed",
+      "continuation_text_sha256": "0b4b6d10f96456e83497217152ef21741d6710f273acba9523553fe8087294f4",
+      "archived_mean": {
+        "K": 0.050170551144935516,
+        "V": 0.07153040002041944
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/django__django-10914_traj#128",
+      "file": "20241016_composio_swekit__django__django-10914_traj_sw128.npz",
+      "sha256": "c5270a579cd35017fb8c525ed2ce2b5f0dcd887c062c1dcefe36c708e01bbb29",
+      "sender_tokens": 46868,
+      "receiver_tokens": 12240,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "d4a09ae31a36932caa1ddabd7f296b4e2c9fe6a5440b65c325b99362b52b77cb",
+      "archive_score_sha256": "93e2c14e75ab6e8f61a91df9a22064a3452821ce2f18934bc4b407441e2f7f13",
+      "archive_tokens_sha256": "1153d3c404a486a3ac24fb488d53d8a800326af094666c344b42837cfc9b9b12",
+      "trace_sha256": "a7079f20aa4bc84f1b92ce858f6d908d7c7af17243c88dfe2137e312bf02cbac",
+      "continuation_text_sha256": "dfbf43dac2f90e196843df501771c4c29211d120f917e8ee83e95035b972a58e",
+      "archived_mean": {
+        "K": 0.15056191310952027,
+        "V": 0.18384173119426606
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-14539_traj#114",
+      "file": "20241016_composio_swekit__astropy__astropy-14539_traj_sw114.npz",
+      "sha256": "e0d551f4bbec30b6aeb7fca0d7d7140a943db56972196facc28b82efee162914",
+      "sender_tokens": 48605,
+      "receiver_tokens": 12289,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "3ad93c3b626a2214c4055867d49b0b3da3f9ec8c9d65be3b55f3799bc0177936",
+      "archive_score_sha256": "274647cfb190706bd1a6bd1e47b3b3e0e3dc18f88a303e51f4145dd6fd3b4fb0",
+      "archive_tokens_sha256": "d3965bdc284727a2cedbe93bada480b3f12915b771402730cd0792108200b61b",
+      "trace_sha256": "daf021878e90087e1270451f841cd33e2ede7c189ddb5f47f9404a12a00e59fb",
+      "continuation_text_sha256": "ef94838427c6543236a15bd04d0088c97d061130309feafd80c46d7e1e758abd",
+      "archived_mean": {
+        "K": 0.04886213430948383,
+        "V": 0.06900812259860711
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-14369_traj#108",
+      "file": "20241016_composio_swekit__astropy__astropy-14369_traj_sw108.npz",
+      "sha256": "2dc1c41184d6b8d2680b468264b26c1a517b7ba3d300d90238e02225dd274dbf",
+      "sender_tokens": 49196,
+      "receiver_tokens": 11500,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "4e0a40fb7b4612bae27cd55592427c3946e4471800f1f5a54ff83d71773ba361",
+      "archive_score_sha256": "2ef8c1e16b63d4ebe163401063cd825e17fe3c8cbffbec29891787df640bd3ba",
+      "archive_tokens_sha256": "1d81937df543126fedd9c1ef09db02ca2b71594709361abd59c01cc73252e31d",
+      "trace_sha256": "9a5e7d3e0bbd30f6f560e3c6a649c626fe4fa69c29e3814a57c2e2965d2b0c89",
+      "continuation_text_sha256": "3a229ed144103bc309fb9dbcfe3e31f8819d730d97ab6b33486e4715dd279536",
+      "archived_mean": {
+        "K": 0.18409503454271336,
+        "V": 0.22725331217894984
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-10880_traj#103",
+      "file": "20241025_composio_swekit__django__django-10880_traj_sw103.npz",
+      "sha256": "a64a5f814585dc59dee85728df19960e7cbf95622ffdc15c211afa54c94d7f30",
+      "sender_tokens": 50916,
+      "receiver_tokens": 7004,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "663f85444ae06be98d542cedec3f9810411c2f6aea7784890fae5da3a905a34b",
+      "archive_score_sha256": "4883d7fe6016b9ce7412428098b873c2d2a8bb87f7fc557595d05207c74228b3",
+      "archive_tokens_sha256": "c3777e851fd07cf95d41adb27f0011c2a4d334c0b6e7d572d79d0be75b3f7668",
+      "trace_sha256": "5c894627c40f300211bfee18e0e9e92d1512b22fdffb74965c9bd6c7b1a77315",
+      "continuation_text_sha256": "9b97c983a1d47989f312e5694339634707937231dfe7e1fb74a8bdc47b4b6d95",
+      "archived_mean": {
+        "K": 0.2691764117084897,
+        "V": 0.29692468702871744
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-10097_traj#137",
+      "file": "20241025_composio_swekit__django__django-10097_traj_sw137.npz",
+      "sha256": "dac3fe1929807eb935853e7bf12919b05dc8bb8d6b1eeca8e0a4c7fb9ea956a4",
+      "sender_tokens": 51789,
+      "receiver_tokens": 20589,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "0d1237c23c095d0c52e0501b0434ba2502f214a618202a524897d4dd0bf537f6",
+      "archive_score_sha256": "d4e6cd9b1128ae8b85a474615ef3c75467129f68921cb88102d7a6663c7bd64a",
+      "archive_tokens_sha256": "30f0c21fd3045de43e36e1560899df357b9d3fd53d17b6f9789a187b91ea98b7",
+      "trace_sha256": "b62d8aa1a14dfd3e3c3acd50119f227235b56b3f9b4103ca0e2d54812c743561",
+      "continuation_text_sha256": "eff9f07e7145b2bb78f1fc4838e8076370850e083b1939cb814eee165797ee2a",
+      "archived_mean": {
+        "K": 0.14636512644932043,
+        "V": 0.1694795749473773
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/django__django-10973_traj#87",
+      "file": "20241016_composio_swekit__django__django-10973_traj_sw87.npz",
+      "sha256": "6b40326a284ccbe3947522f5fe447de3567e47a94c3750ae2f32f1036f2c63be",
+      "sender_tokens": 52141,
+      "receiver_tokens": 5246,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "62762e4aab64b25fd9d168e41befad5039e2f498b8cb000ede6d238c8b049af8",
+      "archive_score_sha256": "61b2135edba361153d0d52ef74e67c4d97ad6d34f5a3760428d34846eb278808",
+      "archive_tokens_sha256": "43b3575a117b7c4cf62ad966b6575c3c0fc156efe863f2ee3c15fa5936778cea",
+      "trace_sha256": "b52483ff04e2b5d5a5c5572c3dd059e0b40052643446967b3a987e72061acff4",
+      "continuation_text_sha256": "c3f45c6b967717270f27c013311a7fbabaff5803c513a8f0bd18a3ebbdd9d15b",
+      "archived_mean": {
+        "K": 0.061912304833594445,
+        "V": 0.07769318740252928
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-8707_traj#108",
+      "file": "20241016_composio_swekit__astropy__astropy-8707_traj_sw108.npz",
+      "sha256": "41cd03fba13ce09102e83d9bb4e97e7d3c75bc74b3e6e2a209173f0b1816a099",
+      "sender_tokens": 52692,
+      "receiver_tokens": 10889,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "e8845c541de7b9714bd84f72c1bfaded13ae6aeecfc3f0b2b8d7ee460ea93990",
+      "archive_score_sha256": "626fad483947ea3f6f44e0a15db9de45d107c5aa52fb092dc272ada8d3fb4458",
+      "archive_tokens_sha256": "b2f58fecceb192c594cfeee7a1b13832ce3b0c71866521f07e0315d59d1dcf8e",
+      "trace_sha256": "b7c574da7ffe0dd1c7517a41293141fef6eb71185f977cd6909b18e6c5385f6f",
+      "continuation_text_sha256": "c571952bda9100a8ed2a8edeecdc92f20ce9793158432319104d063086d17255",
+      "archived_mean": {
+        "K": 0.1602429078222508,
+        "V": 0.19688255767137086
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-11087_traj#97",
+      "file": "20241025_composio_swekit__django__django-11087_traj_sw97.npz",
+      "sha256": "82d9e12ef8dc36eef467864cb60ad7e03d6d497aed4de98dc96419881ed1bbd4",
+      "sender_tokens": 53401,
+      "receiver_tokens": 9425,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "2ac518f6805ec9f2540f3973afb5df17969281235e537f59c0da535ec8bbe841",
+      "archive_score_sha256": "240be655bc5190ca7e9fb1336e6818b658969db90caad01b5f04137e71ef6970",
+      "archive_tokens_sha256": "df66157e1fbe4e016f7f4718590ef24f94938d0d83ab197930fe219359806ee7",
+      "trace_sha256": "2ff23065e72a5180c7731e23aa050c359362e89467cfebeac4da63ec28d2a09f",
+      "continuation_text_sha256": "8e6c4622d3bd846640ce554eb205a82c03e3352907cbce7442f8ddd3b8766bc6",
+      "archived_mean": {
+        "K": 0.042899764566613485,
+        "V": 0.0594280731346738
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-13579_traj#123",
+      "file": "20241016_composio_swekit__astropy__astropy-13579_traj_sw123.npz",
+      "sha256": "319d368b6a8e75d9b287e914ca12992a1c06040118094c8911c5a5883c9a32f4",
+      "sender_tokens": 54188,
+      "receiver_tokens": 8922,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "003b43bcf2d96b60f0f213ae6a4665d5b59134eec945b9c7f7541966f356ebe8",
+      "archive_score_sha256": "f83e877cbff5940f5496ce82ae7073cafc90c15abd7b5cdd3ce1a5cda4faebcf",
+      "archive_tokens_sha256": "2a3d857d186e2c9143c7ece4a5e3edc314f5a7e9441d4f2992afa6ebf374610b",
+      "trace_sha256": "4295a363d91803fbf31ad8727c2502aba00dfd147d3ea5d1941c7228f0741dee",
+      "continuation_text_sha256": "aadfa71c6ae571b440bf7fe4447d157e8143ce05d5bba9c652641f5e9e549ed1",
+      "archived_mean": {
+        "K": 0.08565072655350803,
+        "V": 0.10677619103504876
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-13977_traj#83",
+      "file": "20241025_composio_swekit__astropy__astropy-13977_traj_sw83.npz",
+      "sha256": "a9a8457f2ff0e6aa6f6c4ecf7e275f717d3b2e998195f4c540cb3e96b00eaf86",
+      "sender_tokens": 54278,
+      "receiver_tokens": 15822,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "f5438871851016203a2df19f7bc5c91233457f6bf8172a214d57124a65cdc63f",
+      "archive_score_sha256": "4d2cc3c94ac19c826854d3abdceaf66b21cc60e3e2c29ef8dce8ba9003c2a439",
+      "archive_tokens_sha256": "b1f32ae01057206c75e776321aedf777f61e95d52f0f0dabf3c56b40c99b6fed",
+      "trace_sha256": "4409ef334c52f1c2a606a1e63a350e9989e49b6100d1ff5cfdd92fc8aa97485b",
+      "continuation_text_sha256": "14d075cfb466171cf5e9cc33b179c8d605939d5b39c1548f8cac05bce75b5ad1",
+      "archived_mean": {
+        "K": 0.07273903660928216,
+        "V": 0.09899124478771049
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-14365_traj#153",
+      "file": "20241016_composio_swekit__astropy__astropy-14365_traj_sw153.npz",
+      "sha256": "913e4bb796b953e8929c13d4dffe902d9e4258c4db421b21f37bb06699735dbd",
+      "sender_tokens": 54583,
+      "receiver_tokens": 3433,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "b2663a38fdd5edac8e99b4079ebdfef30fa8b898f1155882f191ff93dba7726d",
+      "archive_score_sha256": "563d5eaa58f994dd909616474008201dbcc37512ca827c233f54b74e8b6f5d4f",
+      "archive_tokens_sha256": "acbfa8472eb4967d93af61ca31ce5c75cef9a111ee5bfdaf66ec50c2a4b78c38",
+      "trace_sha256": "db90b1e5d7a3c433c7b0e3fe0b7663984a26eb0ab24b777c52ccc0d85f010b68",
+      "continuation_text_sha256": "962a46ac696278aa888506379f700b1f958b10c0638e734c111df1756fe90b29",
+      "archived_mean": {
+        "K": 0.18386987271087452,
+        "V": 0.17540964495420996
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-14369_traj#132",
+      "file": "20241025_composio_swekit__astropy__astropy-14369_traj_sw132.npz",
+      "sha256": "7bed9363e871175e3bce820e56f0229267cc752abf60845e3efea6c6d9e1772f",
+      "sender_tokens": 55805,
+      "receiver_tokens": 10795,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "d22e8878e2ecbd496253d34859ae17ecaee3c8bc202dea8a31525d201b0be74a",
+      "archive_score_sha256": "b709d1a2aa7714f7cb8a50081977ffac8af7c1e7e56aa75b1190586da9735dd5",
+      "archive_tokens_sha256": "4f2dd314d6a2c4fadde4023270214ce0dcf0b8ce9981cd236442922286354a25",
+      "trace_sha256": "830e99698cedd06d682f864ccdd6b0f86f541502a4742b20b181df8eaa0246ab",
+      "continuation_text_sha256": "5dbca8f52c33b16846cdf3950f6d703bc34230935d29367cdfbb43c34c029d3f",
+      "archived_mean": {
+        "K": 0.1844058308234685,
+        "V": 0.22121030089466098
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-13453_traj#109",
+      "file": "20241016_composio_swekit__astropy__astropy-13453_traj_sw109.npz",
+      "sha256": "5ce8feb1a32100cd48e1934ed435c08521bfae182e72252862be42b09b844f2e",
+      "sender_tokens": 56298,
+      "receiver_tokens": 9529,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "70694f6d493ea58a76ba83826017f6f6fb1798924262632871683186628efdc2",
+      "archive_score_sha256": "e4f7370d7b130e936fefe8a1e4f27966293981789d693ae463062ecbb61d452f",
+      "archive_tokens_sha256": "0d5d4bef4f48a795eb2aed48299c8959b690f5943e0cd7fba125b570e0447d18",
+      "trace_sha256": "7fffd069235593f8380bef631b2e16aba440bc6baf1fa909afb3f51ebb3ff33c",
+      "continuation_text_sha256": "632d8d0274989feae06d9b0628a33e7fd01ffca749a551dfe95e5c44654b4f9e",
+      "archived_mean": {
+        "K": 0.05576675737206538,
+        "V": 0.07604920886277233
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-13236_traj#126",
+      "file": "20241016_composio_swekit__astropy__astropy-13236_traj_sw126.npz",
+      "sha256": "c8bb58cea30f876dd33f2f896014ebb4fe4c2624f021e7adaf66c35a6f2173f0",
+      "sender_tokens": 60921,
+      "receiver_tokens": 20121,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "857cf82452073dc2475a5e7eac0d83cd9ca304624d8ea5662d02ae9ec445e359",
+      "archive_score_sha256": "8b818478ccd0244971864634aa59cf8ee0b198d929d14c9c8205a6b3e867f59d",
+      "archive_tokens_sha256": "f472c24fdabb3fdcb0f5e098079771c4fc055386850cc377dbda54acbbd54094",
+      "trace_sha256": "894d71358b803ba3d168a07eca6955e4c180ea6d3d518b61dee0e8c330a824e9",
+      "continuation_text_sha256": "9cd675d25d15b8d16e7331bccc085b8e920b12b3c1043307cf7806bcd1b2d95c",
+      "archived_mean": {
+        "K": 0.15887748132483404,
+        "V": 0.18469178040098178
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-13236_traj#106",
+      "file": "20241025_composio_swekit__astropy__astropy-13236_traj_sw106.npz",
+      "sha256": "bcc525b32b625f5f2481ad7c68e45bd97c5985290b99ca656547516def6ac132",
+      "sender_tokens": 61268,
+      "receiver_tokens": 17065,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "fef9b35cc0e78cc5cf818c9164ed342c5788ea08b9254c9583aa9b237d9ec5c8",
+      "archive_score_sha256": "9c1219fe730a21e6f46cbbcd8ab9189c7ec17bbc1610370f434388fc83ab448d",
+      "archive_tokens_sha256": "191f36cb1a5cd38ca379f512d5a6e66fa1cb3d5535ae8f7fb24d53dbc984861f",
+      "trace_sha256": "2acf9ed54b99a7b486b7fcb898371bee58b3fc5b46c49ddb099cce4891526e9f",
+      "continuation_text_sha256": "1bef76d02b4c479ad16f53001237de1c32858f0489394edccb0a12db62aa6dec",
+      "archived_mean": {
+        "K": 0.21830136156325308,
+        "V": 0.2548589465285739
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-13398_traj#116",
+      "file": "20241025_composio_swekit__astropy__astropy-13398_traj_sw116.npz",
+      "sha256": "327b4f008dcc08062c7e58f96b635b89c54757a64d6bc224915a08044b1f2357",
+      "sender_tokens": 63016,
+      "receiver_tokens": 17715,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "f39c80bf4d80d536a230854d8aee8fab75d9f239964a3aa28f2641c8a189e48a",
+      "archive_score_sha256": "159c93ac009847812a38bfa568d966fac1aee9a87d2773d08a5d423e7dddc144",
+      "archive_tokens_sha256": "590e91647e8fd9d8aceb1b942e9490286582b5a210917d5d3152e9180ffa03e1",
+      "trace_sha256": "82bd12d973779630d879aa87e4aed8c42e50f1c8c471806cabe96a1e9f772d49",
+      "continuation_text_sha256": "94bfc5ba4a7d39a21e0fc4229eb7b3321e17f9f2f1678e0c6d9a23a543ddbe50",
+      "archived_mean": {
+        "K": 0.12341631088934524,
+        "V": 0.1573806092901867
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/astropy__astropy-8707_traj#152",
+      "file": "20241025_composio_swekit__astropy__astropy-8707_traj_sw152.npz",
+      "sha256": "2258ff4de100db2bb32b21cfc72d5c6db63b500c9751859ee58138c8c438df1e",
+      "sender_tokens": 64028,
+      "receiver_tokens": 16196,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "8cbcf5a3eb2ef88492bffea406c6c741229fbd30938ca763dd26450529b3f93d",
+      "archive_score_sha256": "254562aff17130d694772e53c8ef89ae3a35c1178e2dc7e882b0c150d4a83ad0",
+      "archive_tokens_sha256": "b396379be9a85db4e729c2a237c576f729105426ef37cc3b4fbfcb96f00ab44a",
+      "trace_sha256": "c81ae680dec008dac809e1299bd467fbc6f0f796f517ff11f0be79e3d0087b4f",
+      "continuation_text_sha256": "9eab3f031bd8a335143b90ea87f26aad4c958ec89d30ecd883d19bdfca4e7930",
+      "archived_mean": {
+        "K": 0.0496149402582553,
+        "V": 0.06869005308032716
+      }
+    },
+    {
+      "handoff": "20241025_composio_swekit/django__django-10554_traj#112",
+      "file": "20241025_composio_swekit__django__django-10554_traj_sw112.npz",
+      "sha256": "665be43ba3044fe2debea8ae18b5a717b342764695a867a9af5fec4dc6a3b34b",
+      "sender_tokens": 66991,
+      "receiver_tokens": 14986,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "a6d936c443cd05d189ce9c1853b8c30b96c47e105edbcd40f804834d620691f7",
+      "archive_score_sha256": "eee14c06b3657f0fa3a12763d241a9a95fc7eab7e21278057e9420a4395d0d7c",
+      "archive_tokens_sha256": "c1c353c8dc7641b6561733d4481291f8bc08264567d7c9614ff1caccb37b1d21",
+      "trace_sha256": "e0f4347359b518967cc904a2bc63babd531bed77a72dfa7bf1307e0e1983b2c5",
+      "continuation_text_sha256": "c953629e508cffa0a6fd38f8959ab865c79a89d7a526e4814c133cd393b6fcf0",
+      "archived_mean": {
+        "K": 0.2114080075311474,
+        "V": 0.22369559122486182
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-8872_traj#117",
+      "file": "20241016_composio_swekit__astropy__astropy-8872_traj_sw117.npz",
+      "sha256": "b69ff2ad5209b58d710caefdc9a56e0c037b09f7626b843092b5c703da3dd8a2",
+      "sender_tokens": 68897,
+      "receiver_tokens": 19853,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "a55f34a2133e250adb88714669cb1344c587b5cded1c2fc71e948c41087f546d",
+      "archive_score_sha256": "9994d6112ec936880fc2f12b81c7c75cc667bf9569ff440c84c8257654d1fd69",
+      "archive_tokens_sha256": "b7273e5650efd653a69fcc59e41e9e4d7e96a72c7bc722b4150bc3b7600e6325",
+      "trace_sha256": "2948e47e325c63d6267374fbf05c1e61faa55ffa03d00452aa704773b637f976",
+      "continuation_text_sha256": "2b67a54b6b7ab34ec709dde105a964d44ba7d9261f4cd52ace274b5d606dc94a",
+      "archived_mean": {
+        "K": 0.07774106248754797,
+        "V": 0.09566246506901765
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/astropy__astropy-13977_traj#118",
+      "file": "20241016_composio_swekit__astropy__astropy-13977_traj_sw118.npz",
+      "sha256": "24e8504283742163555a44708a05ba0a380358e254a2db5d6e937ee00dd4c7da",
+      "sender_tokens": 70476,
+      "receiver_tokens": 11825,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "87d5c5100fae0ec20fb12cbd41c6c0f634b7b1020aa1c4dc19ee0201ce7bf1cf",
+      "archive_score_sha256": "8d85305519d108495dce1b5b9af86c3e3894d3cbf0350c03f18397e5ead18183",
+      "archive_tokens_sha256": "87d16b4f5618774cc25c3072b1554b807859a9839503851d837826498dfe97e4",
+      "trace_sha256": "800519a3239f6e6fff1b8ef53e0cade9efce60bb6c4756ca40a358fdadf6e543",
+      "continuation_text_sha256": "27e7d5034e07a554b8e3836861c914f264381b12a36dccf9351cf3a46eef3508",
+      "archived_mean": {
+        "K": 0.043436243125393736,
+        "V": 0.06152804512047538
+      }
+    },
+    {
+      "handoff": "20241016_composio_swekit/django__django-11087_traj#152",
+      "file": "20241016_composio_swekit__django__django-11087_traj_sw152.npz",
+      "sha256": "3f79826e8a0168d79d8e37072472e3d8022d4dc0b9db010c1511b5ff3fbab6bd",
+      "sender_tokens": 80111,
+      "receiver_tokens": 25073,
+      "continuation_tokens": 256,
+      "excluded": false,
+      "reason": null,
+      "archive_alignment_sha256": "49447fcd3a610fa7da4eee64b76ca0b0c49e59046a3637fc8191f7aa31110917",
+      "archive_score_sha256": "306d85f838643e9e8051d5e0f44278b820ee0d37aa4369b4363ce8bb1f9fb7c2",
+      "archive_tokens_sha256": "6faddc18154c3c7c0c86f0f9b6358fd40c43c0ad0e6086790ac87aa618e89c84",
+      "trace_sha256": "315a60c1de09ada610eeeecb5c08f096ef544ca3457419636c7f2e24a1edae23",
+      "continuation_text_sha256": "f425c179e2ced8653897163925fe8519b9b352c937fe495e25f0045aad859c66",
+      "archived_mean": {
+        "K": 0.1120316551138405,
+        "V": 0.1220813629208114
+      }
+    }
+  ]
+}
