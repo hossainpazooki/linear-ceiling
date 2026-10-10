@@ -7,8 +7,8 @@ session on the operator's machines needs on top of that contract. Program state 
 what a statistic currently reads) is never written here; `AGENTS.md` says where it lives.
 
 ## Repo override of the global working agreement
-This is a paper, not a software project. Work lands on `main` by explicit-path commits; a branch exists only to
-put a change in front of a reviewer. Ad-hoc coordination, and no process beyond what the next step calls for.
+This is a paper, not a software project. Work lands on `main`; a branch exists only to put a change in front of a
+reviewer. Ad-hoc coordination, and no process beyond what the next step calls for.
 This applies the global rule that a repo file may override the global one; say so when you apply it.
 
 ## The operator's machines
@@ -72,8 +72,8 @@ The minute-by-minute log goes into the dated runbook as it happens, never recons
 - A reader defect found on a sitting is fixed in the summarizer with a synthetic test in the same change; a
   registered tolerance or control moves only through an entry, in 0028's shape.
 - A learning goes to `docs/learnings/` with a `re-verify:` line that Claude runs from the written file before
-  handing the block over. A brief goes to `docs/handoff/`. Both are immutable once committed; a brief edited after
-  its commit is restored to the committed bytes. Anything private (a consultation draft, reviewer correspondence)
+  handing the block over. A brief goes to `docs/handoff/`. A brief edited after its commit is restored to the
+  committed bytes. Anything private (a consultation draft, reviewer correspondence)
   goes to `~/dev/briefs`, never into this tree.
 
 ## Paper text
@@ -84,5 +84,5 @@ reading enters a paragraph only by the admitted evidence path in `AGENTS.md`.
 ## Previews on Windows
 An append script reads the summary files of every experiment it cites, by sha, from `results/`. Those files live on
 the Mac. Before a preview here, copy the files the script's `FILES` dict names under the same `results/<cell>/`
-paths on Windows, then run `$PY docs/drafts/append_00NN.py --date YYYY-MM-DD --preview`. `results/` is gitignored
-on both machines, so nothing copied can reach a commit.
+paths on Windows, then run `$PY docs/drafts/append_00NN.py --date YYYY-MM-DD --preview`. Nothing copied under
+`results/` can reach a commit.

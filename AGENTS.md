@@ -7,8 +7,10 @@ for hypotheses, rules, results and verdicts. This file holds only the stable rul
 operator's Claude Code notes on top of this file and restates nothing from it.
 
 ## Invariants — never break these
-- `../kv-transfer-replication` is **read-only** and pinned (`UPSTREAM.md`). Never write there, never `import kvt`,
-  never copy its code; it is invoked only by subprocess. Borrowed facts carry `{sourceRepo, filePath, commitSha}`.
+- `../kv-transfer-replication` is **read-only** and pinned (`UPSTREAM.md`). Never write there; the instruments under
+  `src/` never `import kvt` or copy its code, and every experiment invokes it by subprocess. The one importer is the
+  box-side memory probe `tools/ec2/probe_e9l.py`, which imports the pinned `kvt` to measure the pinned forward and
+  writes no result. Borrowed facts carry `{sourceRepo, filePath, commitSha}`.
 - `ledger/ledger.md` is append-only by numbered entry and hash-chained in file order; `ledger_check --against <rev>`
   makes the trailing entry immutable too. A verdict cell changes only through an entry with a `verdict:` line.
 - Never write a number into the ledger that was not recomputed from `results/` by a summarizer. Summarizers are
@@ -16,21 +18,26 @@ operator's Claude Code notes on top of this file and restates nothing from it.
 - Never edit a hypothesis after its experiment starts; never edit a sealed prediction.
 - Seeds and thresholds live in `config/*.toml`; a registered config is committed unmodified before its run and
   its gate checks that. Randomness only via `linear_ceiling.rng.make_rng`.
-- One owner per rule: upstream pins only via `upstream_gate`, quantiles only via `e7_stats`, entry numbers only
-  via `docs/drafts/README.md`.
-- `traces/`, `results/` and `data/` never enter git history.
+- One owner per rule in `src/`: upstream pins via `upstream_gate`, handoff-level quantiles via `e7_stats`, entry
+  numbers via `docs/drafts/README.md`. Two exceptions are stated, not hidden: the pooled per-token p90/p99 fields in
+  the E9 family's summary files are `np.quantile` (linear interpolation), and the RunPod sitting scripts run their own
+  `merge-base --is-ancestor` before launch.
+- Top-level `traces/`, `results/` and `data/` never enter git history (`.gitignore`). The one tracked `results/`
+  path is a pilot's aggregate under `tools/cache_injection_pilots/results/`, kept by ruling under a not-evidence header.
 
 ## Domain traps — the rules newcomers break first
-- Lane A ALONE decides H-E7a; Lane B never resolves anything (0007/0010).
-- Unmeasurable is never a zero: every taxonomy class carries its own NOT MEASURABLE state (0006).
+- Lane A ALONE decides H-E7a; Lane B never resolves anything (0007).
+- Unmeasurable is never a zero: every taxonomy class carries its own NOT MEASURABLE state (0007; the per-class rule
+  is 0012).
 - A narrow detector is a defect, not a null: search `model|model_id|model_name` at minimum (0010).
 - A trajectory is one agent run on one task instance, not one file (0011).
 - Every trace-only cost figure is a LOWER BOUND and headroom an UPPER BOUND, both labelled (0010/0012).
 - Per-token deviation is in R²'s own units (a token's share of unexplained variance), never a per-token percent
   error (0023).
 - f*(τ) = 0 is a statement about each handoff's MEAN deviation, not a guarantee that no token exceeds τ (0045).
-- Quantiles come only from `e7_stats` (lower nearest-rank, no interpolation); a second convention silently moves
-  a p90.
+- Handoff-level quantiles come only from `e7_stats` (lower nearest-rank, no interpolation). Recompute a summarizer
+  p10/p90 with it, never with `np.quantile`, which moves a p90 by about 4 % and looks like drift (learning
+  2026-10-01). The per-token p90/p99 fields in the same files ARE `np.quantile`; cite the field, never a rederived value.
 - Entries 0006–0023 are the authority: read them whole before touching E7/E8/E9 code.
 
 ## Paper-facing claims
@@ -48,8 +55,8 @@ operator's Claude Code notes on top of this file and restates nothing from it.
 
 ## GPU runs
 `docs/gpu-experiment-protocol.md` (R1–R12) governs every GPU experiment, and each run has a dated runbook. Never skip:
-- Registered before requested: no rule, τ, band or cap change once a score file exists (R1).
-- Budget the attention backend, not the parameters: f32 + GQA takes the math kernel (R2).
+- Registered before requested: no rule, τ, band, cap, dtype or handoff-set change once a score file exists (R1).
+- Budget the forward, not the parameters: f32 + GQA takes the math kernel (R2).
 - Every input the driver reads is in git, the manifest, or listed by sha in the runbook, gitignored mappers too (R3).
 - Launch detached, rotate the log before any relaunch, never `pkill -f` a self-matching pattern (R4).
 - Pull → verify against `report.json` `kept_dumps` → delete, per handoff; nothing exists only on the box (R5/R6).
@@ -84,13 +91,28 @@ $PY -m linear_ceiling.seal verify
 $PY -m linear_ceiling.lint_scope
 $PY -m linear_ceiling.ledger_check
 ```
-A green suite proves the tools work, not a scientific claim.
+A green suite proves the tools work, not a scientific claim. Green means the CI run (`.github/workflows/ci.yml`,
+Linux). A Windows checkout carries known reds (the `os.fsync` call in `e9.py`, CRLF asserts, the bash-exec tests;
+learnings 2026-10-01 and 2026-10-02), so a red Windows suite is read against those before anything else.
+
+## Contributing by pull request
+- CI runs the four checks above and then `ledger_check --against <PR base>`: every entry block committed at the base
+  must be byte-identical in the PR. A PR never edits an existing entry, brief or learning; a correction is a new one.
+- A PR never carries `results/`, `traces/`, `data/`, private evidence, a token, a balance or a hostname. A pilot's
+  aggregate enters only under a not-evidence header (`tools/cache_injection_pilots/results/README.md` is the form).
+- A co-author's run enters the record by `docs/2026-10-03-co-author-run-admission.md` (PROPOSED; R13 once ruled): the
+  runner does not append, number or write a figure into a doc; the operator recomputes on a clean clone and the
+  admission refutation goes to `docs/reviews/`. Entry 0056 governs paper citation of pilot documents separately.
+- An entry is appended by the operator, or by a co-author on the operator's explicit instruction, by running the staged
+  `append_00NN.py`; the number comes from `docs/drafts/README.md` at staging.
 
 ## Repo map
 - `src/linear_ceiling/`: instruments, gates and fail-closed summarizers. `tests/` mirrors it (synthetic, offline).
 - `config/`: registered experiment configs and manifests. `ledger/ledger.md`: the record.
 - `docs/handoff/` briefs · `docs/drafts/` append scripts + allocator · `docs/reviews/` review records ·
-  `docs/learnings/` re-verifiable learnings · `docs/paper/` outlines (the manuscript is not in this repo).
+  `docs/learnings/` re-verifiable learnings · `docs/paper/` outlines (the manuscript is not in this repo) ·
+  `docs/probes/` scratch probes entries cite · `docs/provenance/` verbatim outside records with hashes ·
+  `docs/archive/` superseded READMEs · dated `docs/*.md` design, recon and status documents (the scope authority among them).
 - `docs/gpu-experiment-protocol.md` + dated runbooks · `docs/agent/` commands and architecture.
 - `tools/`: GPU box drivers, HF backup push/verify, pilot code. `proofs/`: the Lean 4 formalization.
 - `UPSTREAM.md`: the pin chain and the provenance table for everything borrowed.

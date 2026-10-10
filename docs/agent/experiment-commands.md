@@ -168,7 +168,9 @@ Rules: `docs/gpu-experiment-protocol.md` R1–R12 and the run's own dated runboo
 `docs/2026-09-10-e9l-gpu-runbook.md` (E9-long), `docs/2026-09-13-e9s-gpu-runbook.md` (scaled short),
 `docs/2026-09-18-llama-gpu-runbook.md` (second family), `docs/2026-09-30-consolidation-runbook.md` (same-model
 extension, 0046), `docs/2026-10-01-cache-behavior-runbook.md` (cache behavior, 0047),
-`docs/2026-10-04-e-trunc-gpu-runbook.md` (E-TRUNC).
+`docs/2026-10-04-e-trunc-gpu-runbook.md` (E-TRUNC, 0055/0057), and the operator's RunPod sittings
+`docs/2026-10-06-cache-behavior-runpod-runbook.md` (0049), `docs/2026-10-07-consolidation-runpod-runbook.md` (0048),
+`docs/2026-10-07-llama-long-cell-runpod-runbook.md` (0051).
 
 ```
 tools/hf_backup.sh --check <repo_id> <staging_dir>        # run first: preflight only, uploads nothing

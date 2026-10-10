@@ -11,11 +11,11 @@ refuse, so extend the owner rather than adding a sibling.
 
 | rule | owner |
 |---|---|
-| quantiles (lower nearest-rank, no interpolation) | `e7_stats` — the ONE pinned quantile convention |
-| upstream pin check (ancestor + invoked paths unchanged + clean) | `upstream_gate` — the ONE pin check; a later experiment's re-pin is not an older experiment's drift |
+| handoff-level quantiles (lower nearest-rank, no interpolation) | `e7_stats` — the pinned convention for every p10/p90 over handoffs; the per-token p90/p99 fields in `summary.json`, `compare.json` and `tail.json` are `np.quantile` (linear interpolation), stated so in the 2026-10-01 learning |
+| upstream pin check (ancestor + invoked paths unchanged + clean) | `upstream_gate` — the one pin check in `src/`; a later experiment's re-pin is not an older experiment's drift. The RunPod sitting scripts (`tools/runpod/sitting_a.sh`, `sitting_b.sh`) run their own `merge-base --is-ancestor` before launch |
 | ledger structure, entry chain (by file order), block diff `--against <rev>` (so the TRAILING entry is immutable too), verdict-cell provenance (frozen map through 0022 + `verdict: H-XX = <VERDICT>` lines from 0024 on), the E7 manifest citation | `ledger_check` |
 | the scope sentence: exactly once, verbatim, in README; no paraphrase in README / ledger / `docs/**/*.md` | `lint_scope` |
-| canonical sha256 | `hashing` |
+| canonical-JSON sha256 for seals and manifests (parsed, sorted, LF) | `hashing` — raw file bytes are hashed with `hashlib.sha256` at their call sites |
 | randomness | `rng.make_rng` |
 | sealed predictions | `seal` |
 | entry-number allocation | `docs/drafts/README.md` (not a module; the only allocator) |
@@ -52,7 +52,7 @@ E7 (public traces):
 - `e7_usage` — reported-vs-estimated, per role.
 - `e7_taxonomy` — entry 0014's six event classes, each with a measurability rule; H-E7a ratio over the Lane A
   measurable subset.
-- `e7_stats` — the ONE pinned quantile convention.
+- `e7_stats` — the pinned handoff-level quantile convention.
 
 E8 (mapper content shift): `e8_text` (0016 §4 sampling + Qwen tokenizer from the snapshot) · `e8` (gate + driver
 by subprocess; never imports kvt) · `summarize_e8`. `config.E8Config.mapper_tag` is the E8 half of entry 0033.
@@ -80,7 +80,7 @@ Every experiment invokes the upstream by subprocess in the upstream's own enviro
 
 ## `tests/`
 
-Mirror the modules under `src/` (`tests/test_<module>.py`) and cover the tool drivers (`test_runpod_*`,
+Most modules have a `tests/test_<module>.py`; a few are covered by a neighbour (`test_e0_cli.py` for `e0`). They also cover the tool drivers (`test_runpod_*`,
 `test_consolidation_*`, `test_cache_behavior.py`); synthetic and offline. A few pins need local data and
 skip without it (e.g. `LC_REAL_TRACES=1` for `tests/test_e7_sensitivity.py`). `tests/test_imports.py` reserves the
 one full upstream sha in `UPSTREAM.md` for `linear_ceiling.UPSTREAM_SHA`.
@@ -114,6 +114,8 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 | `docs/gpu-experiment-protocol.md` | standing GPU rules R1–R12 |
 | `docs/*-runbook.md` | one dated runbook per GPU sitting |
 | `docs/agent/` | this file and the command reference |
+| dated `docs/*.md` | design, recon and status documents: the scope authority `2026-08-26-kv-handoff-screen-design.md`, `gap-map.md`, `background.md`, the review-response map; experiment designs (`e-trunc-design.md`, `e-beh-design.md`, `e-tail-design.md`) sit under `docs/drafts/` |
+| `docs/superpowers/` | one committed planning document from 2026-08-26; not a record |
 
 ## `tools/`
 
