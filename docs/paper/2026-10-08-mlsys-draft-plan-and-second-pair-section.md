@@ -194,3 +194,18 @@ No Lean claim; no E-TRUNC figure beyond the ones §2c reads from 0057; no cache-
 and 0049 state; no sentence about "practical savings" beyond the camera-ready's; no pooled Qwen/Llama number anywhere.
 The LaTeX source of the camera-ready is not in this repository (co-authors' Overleaf), so this document is the paste
 source and the ledger lines are its provenance; whoever holds the source applies the delta table.
+
+**Pooled per-token quantiles (rule, 2026-10-10).** This plan prints none. If a table or sentence ever prints a pooled
+per-token p10/p90/p99 from an E9 cell (0038:2357, the scaled − native p10/p90/p99 from `results/e9s/compare.json`
+`pooled_token_diff`; 0045:3011–3090, each cell's pooled p90/p99 from `results/<cell>/tail.json` `pooled.<arm>`; the
+September outlines' "pooled token p90 0.2305, p99 0.6736" and "p90 0.2856, p99 0.7600" are these), it is required that:
+1. the figure is read from its summary file at the printed precision, not retyped from the entry;
+2. the caption or the quantile sentence states both conventions, in words: quantiles over handoffs are lower
+   nearest-rank (`e7_stats`, 0013), pooled per-token quantiles are linearly interpolated (numpy default). A single
+   "quantiles are nearest-rank" sentence over a table that holds one of these is false by up to one unit in the fourth
+   decimal (largest gap over the 11 such figures 0.0001001, computed 2026-10-10 by the withdrawn 0061 preview from the
+   pinned `scores/` + `tokens/` records);
+3. if the convention sentence is cited to the ledger, cite 0006:267 (an interpolated p90 already on the record) and
+   0013:740 (the over-handoff convention), not a claim of one convention; no entry exists or is needed for this;
+4. the skeptic pass recomputes the printed value with `np.quantile` from the records and the nearest-rank value beside
+   it, and the approval note records both.
