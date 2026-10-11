@@ -18,7 +18,9 @@ Format (approved by the operator 2026-10-10):
   "Changes, and why" (or "Sources, and why each sentence is there") with entry:line per figure, then the skeptic record,
   then the approval record. A table sits in the same body at the paper's precision (four decimals), every cell with
   its source. Approval is per paragraph.
-- Immutability: a file edits freely while `DRAFT`. Once `APPROVED` it never changes; a correction, a filled
+- Immutability: a file edits freely while `DRAFT`. Only the operator's approval commit, the one that rewrites the
+  `status:` line to `APPROVED <date>`, ends that; a co-author's review or sign-off is recorded in the approval record
+  and changes nothing on its own, so the file stays `DRAFT` and editable after it. Once `APPROVED` it never changes; a correction, a filled
   cross-reference or a reviewer-forced rewrite is a NEW file that names the one it supersedes in its header, and the
   index below marks the old one superseded. `PRINTED` is a superseding file too, pinning the manuscript tree.
 - No figure here is typed from memory: the skeptic pass reads each cell from its summary file at claim time and the

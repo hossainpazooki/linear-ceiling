@@ -119,5 +119,6 @@ unscoped inversion (K only), "short cohort" for the n = 420 map (8 handoffs), fi
 2942/2950, edges 2942–2943, verdict 2986; 0051 τ_V 3878), the shared Qwen/Llama table (dropped), and P3's closing
 equivalence (replaced by 0051's own wording).
 
-Approval record: (none yet; reply with the paragraph letters approved, or the change wanted; once every paragraph is
-approved the status line becomes `APPROVED <date>` in the approving commit and the file is immutable from then on).
+Approval record: (none yet). Co-author review requested from the second family's author on issue #21 (2026-10-11),
+per paragraph; his sign-off is recorded here when it arrives and leaves the file `DRAFT`. The status line becomes
+`APPROVED <date>` only in the operator's approving commit, which cites that record; the file is immutable from then on.
