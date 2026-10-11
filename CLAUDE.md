@@ -9,6 +9,8 @@ authority on scope. `ledger/ledger.md` is append-only by numbered entry.
 - Never write a number into the ledger that was not recomputed from `results/` by a summarizer.
 - Never edit a hypothesis after its experiment starts; never edit a sealed prediction.
 - Seeds and thresholds live in `config/*.toml`. Randomness only via `linear_ceiling.rng.make_rng`.
+- `main` is protected (ruleset 24886867, 2026-10-11): a PR with the CI `test` check, merged as a MERGE COMMIT only; no
+  force-push, no deletion; the operator alone bypasses for direct pushes. Never squash or rebase a PR here.
 
 ## GPU runs
 `docs/gpu-experiment-protocol.md` (rules R1–R12) governs every GPU experiment; each run also gets a
