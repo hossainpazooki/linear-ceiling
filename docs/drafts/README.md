@@ -149,8 +149,8 @@ previewed as a corrective stating that the pooled PER-TOKEN p10/p90/p99 in 0038 
 11 recorded values and found the largest nearest-rank gap 0.0001001. Dropped because nothing on the record moves: the
 summarizers' printed values are the readings, the ledger already carries an interpolated p90 at 0006 line 267, and 0013's
 "one convention" sentence describes its own table. The fact lives in `AGENTS.md` (PR #19) and the learnings of 2026-10-01
-and 2026-10-10; the rule for printing one of these quantiles in the paper is in
-`docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md` §3. The number 0061 was never used. Nothing staged.
+and 2026-10-10; the rule for printing one of these quantiles in the paper is `tables/T01-pooled-per-token-quantiles.md`
+(the first file of `docs/drafts/tables/`, paper-table drafts with their sources). The number 0061 was never used. Nothing staged.
 Next free number: **0061**.)*
 
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
