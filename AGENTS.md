@@ -98,6 +98,8 @@ learnings 2026-10-01 and 2026-10-02), so a red Windows suite is read against tho
 ## Contributing by pull request
 - CI runs the four checks above and then `ledger_check --against <PR base>`: every entry block committed at the base
   must be byte-identical in the PR. A PR never edits an existing entry, brief or learning; a correction is a new one.
+- `main` is protected (ruleset 24886867): a PR with the CI `test` check, merged as a merge commit only; no force-push or
+  deletion; the operator alone bypasses for direct pushes. Never squash or rebase a PR.
 - A PR never carries `results/`, `traces/`, `data/`, private evidence, a token, a balance or a hostname. A pilot's
   aggregate enters only under a not-evidence header (`tools/cache_injection_pilots/results/README.md` is the form).
 - A co-author's run enters the record by `docs/2026-10-03-co-author-run-admission.md` (PROPOSED; R13 once ruled): the
