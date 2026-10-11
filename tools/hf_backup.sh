@@ -108,7 +108,7 @@ export HF_TOKEN
 trap 'unset HF_TOKEN' EXIT
 
 who=$("$HF" auth whoami 2>&1) || true
-user=$(printf '%s\n' "$who" | tr -d '\r' | sed -n 's/^[[:space:]]*user:[[:space:]]*//p' | head -1)
+user=$(printf '%s\n' "$who" | tr -d '\r' | sed -En 's/^[[:space:]]*user[:=][[:space:]]*//p' | head -1)
 [ -n "$user" ] || die 4 "hf auth whoami did not confirm a login: $(printf '%s\n' "$who" | tr -d '\r' | head -1). Check the token and its expiry."
 say "logged in as $user"
 
