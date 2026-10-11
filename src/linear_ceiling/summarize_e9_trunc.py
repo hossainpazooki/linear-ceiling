@@ -20,7 +20,7 @@ entry 0038's scaled-short far-from-seam median (results/e9s/compare.json) and en
 LENGTH; within the margin of the long level: THE HANDOFFS; between: UNATTRIBUTED, said so. Descriptive; no
 hypothesis cell moves.
 
-`--shrinkage` runs BEFORE any prefill (CPU): from the four alignment passes alone (`e9 --align-only` per
+`--shrinkage` runs BEFORE any prefill (CPU): from the five alignment passes alone (`e9 --align-only` per
 config) it states M_cap and the ratio distribution the registration entry carries.
 
 Fail-closed, as `summarize_e9` and `e9_compare`: every level's report must be complete under its committed
