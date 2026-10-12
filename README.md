@@ -1,95 +1,161 @@
-# linear-ceiling
+<h1 align="center">linear-ceiling: KV cache reuse at agent handoffs, on the record</h1>
 
-[![paper](https://img.shields.io/badge/OpenReview-kEGVswNFaq-8c1b13.svg)](https://openreview.net/forum?id=kEGVswNFaq)
-[![ci](https://github.com/hossainpazooki/linear-ceiling/actions/workflows/ci.yml/badge.svg)](https://github.com/hossainpazooki/linear-ceiling/actions/workflows/ci.yml)
-[![license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![proofs](https://img.shields.io/badge/Lean_4-proofs%2F-informational.svg)](proofs/README.md)
+<p align="center">
+  <a href="https://openreview.net/forum?id=kEGVswNFaq"><img src="https://img.shields.io/badge/OpenReview-kEGVswNFaq-8c1b13.svg" alt="paper"></a>
+  <a href="https://github.com/hossainpazooki/linear-ceiling/actions/workflows/ci.yml"><img src="https://github.com/hossainpazooki/linear-ceiling/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="license"></a>
+  <a href="proofs/README.md"><img src="https://img.shields.io/badge/Lean_4-proofs%2F-informational.svg" alt="proofs"></a>
+</p>
 
-The pre-registered experiment record behind *KV Cache Drift Across Handoffs in Long-Horizon Agents*
-(NeurIPS 2026 Workshop on Long Context Foundation Models) and its MLSys 2027 extension.
+The pre-registered experiment record behind *KV Cache Drift Across Handoffs in Long-Horizon Agents* (NeurIPS 2026
+Workshop on Long Context Foundation Models) and its MLSys 2027 extension. When a language model reads a prompt it
+builds a **KV cache**, an internal record that saves it from processing the same text again. An agent handoff
+re-renders that prompt: same content at new positions, new tokens at the seam, sometimes a different model. This
+repository measures how far the cache drifts at real handoffs, with every number recomputed from raw output and every
+rule committed before its run.
 
-Can one AI model reuse work another model has already done? When a language model reads a prompt it builds a
-**KV cache**, an internal record that saves it from processing the same text again. Reusing that cache could reduce
-latency and cost. This project measures cache agreement when recorded agent handoff prompts are replayed through
-the same model, or through a tested cross-model map.
+<p align="center">
+  <img src="docs/assets/seam-profile-same-model.png" alt="per-token K deviation by causal distance to the nearest seam, four same-model cells" width="720">
+</p>
 
-```mermaid
-flowchart LR
-    A[Agent conversation] --> B[Model builds a KV cache]
-    B --> C{Who continues?}
-    C -->|Same model| D[Rebuild the prompt<br/>and test the old cache]
-    C -->|Different model| E[Translate the cache<br/>with a linear map]
-    D --> F[Close match in the<br/>tested handoffs]
-    E --> G[High representation error<br/>for the tested map]
-```
+<p align="center"><sub>Drawn by <code>tools/readme_figure.py</code> from each cell's summary file, which it refuses to read unless the file's sha256 is the one the ledger pins.</sub></p>
 
-## Contents
+## Table of contents
 
-- [What the experiments found](#what-the-experiments-found)
-- [How the record stays auditable](#how-the-record-stays-auditable)
-- [From a printed figure to its bytes](#from-a-printed-figure-to-its-bytes)
-- [Where the data lives](#where-the-data-lives)
-- [Setup and the gates](#setup-and-the-gates)
+- [Overview](#overview)
+- [Get started](#get-started)
+- [Reproduce a cell](#reproduce-a-cell)
+- [How the record is built](#how-the-record-is-built)
+- [Data](#data)
 - [Formal proofs](#formal-proofs)
-- [Where to go next](#where-to-go-next)
+- [Contributing](#contributing)
+- [Documentation](#documentation)
 - [Citation](#citation)
 
-## What the experiments found
+## Overview
 
-- **Same-model cache error passed the registered reference, read on the mean.** For the 25 shorter handoffs that
-  fit the model's native context, the oracle removal fraction f*(τ_K) was 0.0000 on every handoff (median, p10 and
-  p90; entry 0029): the mean deviation over each handoff's matched tokens already sat inside the mapper's tolerance.
-  Individual tokens do exceed it, and entry 0045 states the fraction per cell. The same held for the 35 handoffs
-  with sender contexts of 35K to 80K tokens once the receiver's context window was extended to reach them (entry
-  0036), and for a second model family's short cell (entry 0044); its long cell at a native receiver reads the same way,
-  descriptively (entry 0051). f* is a statement about the mean, not
-  about every token, and entry 0058 withdrew the earlier reading of it as a bound on recompute cost in either
-  direction.
-- **The tested cross-model map had much larger cache error.** A linear map trained on generic text lost accuracy on
-  agent text. At the handoff, an ideal selector would still have had to remove a median of 92.86% of matched tokens
-  on the shorter handoffs and 96.40% on the longer ones (entries 0029, 0036).
-- **Length alone does not explain the long cohort's higher deviation.** Truncating the sender context of the same 35
-  handoffs to four lengths under the same receiver left the far-from-seam deviation above both references; the
-  registered reading is "unattributed" (entry 0057).
-- **Public traces cannot answer the whole cost question.** Model switches were rare in the 2,904 public trajectories
-  studied, and the traces omit information needed for full cache accounting. The cost figures are bounds, not
-  production estimates (entries 0015, 0018, 0022, 0024).
+**The instrument.** For each handoff, the sender's prompt and the receiver's prompt are aligned token by token; on
+the matched tokens, the receiver's own KV at the new positions is compared with its KV at the original positions.
+The per-token deviation is centred and expressed in the units of a cross-model linear mapper's R², so the same
+yardstick covers both arms. The statistic is f*(τ): the smallest fraction of matched tokens an oracle must remove
+before the **mean** deviation of the rest is at or below τ, where τ_K is the pair's own k = 1 mapper's held-out
+shortfall. A cell HOLDS at f* ≤ 0.15 and DEGRADES at f* ≥ 0.50, rules registered before any run (entry 0023).
+f* is a statement about the mean, not a per-token bound and not a recompute cost in either direction (entry 0058).
 
-These measurements motivate testing practical reuse within a model. They do not validate a routing policy and do
-not rule out cross-model reuse with other maps or calibration data. The hypothesis table at the top of
-`ledger/ledger.md` carries every decided cell with its verdict and the entries that decided it; the
-[dated evidence review](docs/reviews/2026-10-01-cache-refutation-0025-0029.md) separates the verified arithmetic from
-the interpretation.
+**What the record says.** Medians over handoffs, four decimals, read from each cell's summary file; the entry decides
+the cell and nothing else does.
 
-## How the record stays auditable
+| cell | pair, receiver | n | same-model f*(τ_K) | cross-model f*(τ_K) | verdict | entry |
+|---|---|---|---|---|---|---|
+| E9, short handoffs | Qwen3-0.6B → 1.7B, native | 25 | 0.0000 | 0.9286 | H-E9 HELD | 0029 |
+| E9-long, 35K–80K-token senders | same pair, receiver under YaRN | 35 | 0.0000 | 0.9640 | H-E9L HELD | 0036 |
+| second family, short | Llama-3.2-3B → 3.1-8B, native | 28 | 0.0000 | 0.7317 | H-E9F HELD | 0044 |
+| second family, long | same pair, native (no scaling) | 32 | 0.0000 | 0.7626 | descriptive | 0051 |
 
-The repository treats each result like a registered experiment, not an editable report.
+Three descriptive findings sit beside the decided cells. The receiver configuration alone reproduces a share of
+0.4285 of the short-to-long far-from-seam difference on identical tokens (entry 0038). Truncating the long senders to
+four lengths under the same receiver leaves the far-from-seam median at 0.0868, above both the scaled-short reference
+0.0381 and the long reference 0.0629, so length is not attributed as the cause (entry 0057, "unattributed"). On
+public agent traces, model switches are too rare for cross-model headroom to be material, and the traces omit what
+full cache accounting needs, so the cost figures are bounds (entries 0015, 0018, 0022, 0024). The hypothesis table at
+the top of `ledger/ledger.md` carries every verdict with its rule.
 
-1. The research rule and thresholds are committed before a run starts.
-2. A summarizer recalculates each reported number from the raw output and stops on a mismatch.
-3. The numbered ledger entries are hash-chained and checked in CI, so later edits fail the build.
-
-`ledger/ledger.md` is the source of truth for hypotheses, rules, results and verdicts. A green test suite proves that
-the tools work. It does not prove a scientific claim.
-
-The original scope boundary remains fixed:
+**What it does not say.** The results motivate testing practical reuse within a model. They do not validate a routing
+policy, do not price a recompute, and do not rule out cross-model reuse with other maps or calibration data. The scope
+boundary registered at the start still holds:
 
 > The screen predicts what a linear mapper can achieve; retention asymmetry beyond that
 > prediction is measured and attributed receiver-side, not explained.
 
-## From a printed figure to its bytes
+## Get started
 
-Every number in either paper follows one chain: paper cell → paste source (`docs/drafts/tables/T<nn>`) → ledger
-entry and line → summary file with its sha256 → Hugging Face dataset holding the raw tensors. `docs/paper-to-record.md`
-walks it for every figure set and ends in a re-verify line; the submitted camera-ready is reconciled row by row in
-`docs/reviews/2026-10-07-submitted-camera-ready-reconciled-against-the-record-and-the-operator-runs.md`.
+Five minutes, no GPU, no token. Install, run the three gates, then check one published run record against the ledger.
 
-## Where the data lives
+```bash
+git clone https://github.com/hossainpazooki/linear-ceiling.git && cd linear-ceiling
+uv venv --python 3.12 .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+uv pip install -e ".[dev]"
+python -m linear_ceiling.seal verify && python -m linear_ceiling.lint_scope && python -m linear_ceiling.ledger_check
+```
+
+```
+OK (no sealed predictions yet)
+scope ok
+ledger ok (blocks unchanged vs HEAD)
+```
+
+`pytest` runs 598 offline tests on synthetic fixtures. On a Windows checkout the tests that execute the repository's
+shell scripts fail on CRLF line endings; the Linux CI run is the gate. Now fetch the E9-long run record from its
+public dataset and compare its hash with the line the ledger pinned before the figures were written:
+
+```bash
+python - <<'EOF'
+from huggingface_hub import hf_hub_download
+import hashlib
+p = hf_hub_download("hossainpazooki/linear-ceiling-e9l-2026-09-10", "results/e9l/report.json", repo_type="dataset")
+print(hashlib.sha256(open(p, "rb").read()).hexdigest()[:12])
+EOF
+grep -n "084d9480af74" ledger/ledger.md | cut -c1-60
+```
+
+```
+084d9480af74
+3034:084d9480af74, `summary.json` 64e64e9318d4.
+```
+
+The bytes on the Hub are the bytes entry 0045 read. Every figure in the table above is recomputed from a record like
+this one by a summarizer that refuses on any mismatch; the full chain from a printed figure to its bytes, for every
+cell, is `docs/paper-to-record.md`.
+
+## Reproduce a cell
+
+Every experiment runs through the same moves, and each refuses until the one before it is on the record:
+
+```bash
+python -m linear_ceiling.e9 --check --config config/e9l.toml            # gate: registering entries committed, upstream at its pin, mapper by sha
+python -m linear_ceiling.e9 --align-only --config config/e9l.toml       # CPU: alignments, coverage, run order, keep draw (what the entry cites)
+python -m linear_ceiling.summarize_e9 --calibrate-tau --config config/e9l.toml   # CPU: tau from the archived mapper, before any prefill
+python -m linear_ceiling.e9 --config config/e9l.toml                    # GPU: dump, score, delete per handoff; checkpointed
+python -m linear_ceiling.summarize_e9 --config config/e9l.toml          # fail-closed: every figure from the raw record, or a refusal
+python -m linear_ceiling.e9_tail --config config/e9l.toml               # the per-token tail beside the mean (entry 0045)
+```
+
+What the GPU step needs and does not ship: the public agent trajectories under `traces/` (rebuilt from
+`config/e7-manifest.json` by `e7_manifest fetch`), the pinned upstream instrument named in `UPSTREAM.md` (invoked
+by subprocess; the gate refuses if its pin does not hold), the pair's mapper, and one 40–80 GB card for one sitting.
+Each sitting has a dated runbook listed in `docs/README.md`, and the standing rules R1–R12 are in
+`docs/gpu-experiment-protocol.md`. The complete command reference, with what each gate refuses until, is
+`docs/agent/experiment-commands.md` (on `main` after PR #19; `CLAUDE.md` until then).
+
+## How the record is built
+
+The repository treats each result like a registered experiment, not an editable report: the rule and thresholds are
+committed before a run, a summarizer recalculates each reported number from the raw output and stops on a mismatch,
+and the numbered entries are hash-chained and checked in CI so a later edit fails the build. A green suite proves the
+tools work; it does not prove a scientific claim. Mapped to files:
+
+| stage | where | what it enforces |
+|---|---|---|
+| hypotheses, rules, verdicts | `ledger/ledger.md` | numbered immutable entries; the table at the top is decided only by an entry with a `verdict:` line |
+| chain and provenance check | `src/linear_ceiling/ledger_check.py`, CI | sha chain over entries, block diff against the base revision, verdict-cell provenance, manifest citation |
+| registration | `config/*.toml`, `docs/drafts/append_00NN.py` | a config is committed unmodified before its run; an append script reads every figure in-process and refuses a stale file; `docs/drafts/README.md` is the only number allocator |
+| gates | `e7.assert_ready`, `e8`, `e9 --check`, `upstream_gate.py` | refuse until the registering entries are committed and the upstream instrument sits at its pinned commit, clean |
+| corpus | `e7_manifest.py`, `e7_traces.py`, `e7_corpus.py` | the committed manifest hashes every trace file; the driver refuses if disk and manifest disagree |
+| alignment and statistic | `e9_align.py`, `e9_pertoken.py` | the registered handoff slices and matched blocks; entry 0023's deviation, f*(τ), seam distance, null pairing, band |
+| drivers | `e7.py`, `e8.py`, `e9.py`, `e9_rescore.py` | checkpointed per handoff; dump, score, delete; never import the upstream |
+| summarizers | `summarize_e7.py`, `summarize_e8.py`, `summarize_e9.py`, `e9_tail.py`, `e9_compare.py`, `summarize_e9_trunc.py` | fail-closed: alignments re-derived from raw traces, moments re-summed, keep subsets re-scored from fingerprinted tensors, τ recomputed |
+| quantiles | `e7_stats.py` | the one pinned over-handoff convention (lower nearest-rank); pooled per-token p90/p99 fields are `np.quantile` and the record says so |
+| scope and seal | `lint_scope.py`, `seal.py` | the scope sentence appears once, verbatim, and is never paraphrased; sealed predictions are hash-verified |
+| paper paste source | `docs/drafts/tables/T<nn>-*.md` | each printed table or paragraph with both source forms (entry:line and summary-file sha), its conventions and an executable re-verify line; immutable once approved |
+| GPU box drivers | `tools/runpod/`, `tools/ec2/`, `tools/jupyterhub/`, `tools/hf_backup.sh`, `tools/hf_verify_backup.py` | launch, pull, release and back up under protocol R1–R12; every backup file verified in both directions |
+
+## Data
 
 Raw model outputs never enter git history. Each GPU run's tensors are backed up to a Hugging Face dataset after the
-run is verified at home; the backup is transport, not evidence, and every file is checked in both directions
-(`tools/hf_verify_backup.py <repo_id> <local_root>`) before it counts. Seven of the eight are public and need no token;
-the second family's long cell (`e9fl`) is still private as of 2026-10-11 (the Hub API answers 401 anonymously).
+run is verified at home; the backup is transport, not evidence, and `tools/hf_verify_backup.py <repo_id> <local_root>`
+checks every file in both directions before it counts. Seven of the eight datasets are public and need no token; the
+second family's long cell (`e9fl`) is still private as of 2026-10-11.
 
 | dataset | what it holds | entries |
 |---|---|---|
@@ -99,49 +165,41 @@ the second family's long cell (`e9fl`) is still private as of 2026-10-11 (the Hu
 | [`hossainpazooki/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9s-2026-09-13) | the 25 shorter handoffs re-run under the long run's scaled receiver | 0037–0038 |
 | [`emmmy/linear-ceiling-e8f-2026-09-18`](https://huggingface.co/datasets/emmmy/linear-ceiling-e8f-2026-09-18) | the second model family's calibration (Llama-3.2-3B → Llama-3.1-8B): dumps, the k = 1/4/8 mappers | 0040 |
 | [`emmmy/linear-ceiling-e9f-2026-09-19`](https://huggingface.co/datasets/emmmy/linear-ceiling-e9f-2026-09-19) | the second model family's short cell | 0042–0044 |
-| [`hossainpazooki/linear-ceiling-e9fl-2026-10-07`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9fl-2026-10-07) | the second model family's long cell at a native receiver | 0050–0051 |
+| [`hossainpazooki/linear-ceiling-e9fl-2026-10-07`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9fl-2026-10-07) | the second model family's long cell at a native receiver (private) | 0050–0051 |
 | [`hossainpazooki/linear-ceiling-e9t-2026-10-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9t-2026-10-08) | E-TRUNC: the 35 long handoffs at four sender-truncation levels | 0055, 0057 |
 
 Protocol R8 in `docs/gpu-experiment-protocol.md` governs the push and the restore; after a restore the gates decide,
 not the download.
 
-## Setup and the gates
-
-```bash
-uv venv --python 3.12 .venv
-uv pip install torch --index-url https://download.pytorch.org/whl/cpu
-uv pip install -e ".[dev]"
-pytest
-python -m linear_ceiling.seal verify && python -m linear_ceiling.lint_scope && python -m linear_ceiling.ledger_check
-```
-
-The suite runs offline on synthetic fixtures. The Linux CI run is the gate; on a Windows checkout the tests that
-execute the repository's shell scripts fail (CRLF line endings and no `bash` on the path), which CI does not share. The experiments need local data that is not in the
-repository: public agent trajectories under `traces/` (rebuilt from `config/e7-manifest.json`) and the pinned
-upstream repository named in `UPSTREAM.md`, which every experiment invokes by subprocess and refuses to run against
-if its pin does not hold. Every experiment command, with what each gate refuses until: `docs/agent/experiment-commands.md`
-(on `main` after PR #19; `CLAUDE.md` until then).
-
 ## Formal proofs
 
-`proofs/` holds a Lean 4 formalization of the paper's theory: the registered statistic, Theorems 1 and 2, Corollary 3
-and Proposition 4, with the reported numbers the theorems explain. `proofs/README.md` maps each paper statement to its
-theorem and states the build's status plainly: the build has not run in CI, and the paper makes no claim that rests
-on it.
+`proofs/` is a Lean 4 formalization of the paper's theory: the registered statistic (`fstar` is the exact-criterion
+twin of `e9_pertoken.f_star`), Theorem 1 (μ = 1 − R̄²), Theorem 2, Corollary 3 on seams and Proposition 4 on attention
+under the RoPE assumption, with the reported numbers the theorems explain. `proofs/README.md` maps each paper statement
+to its theorem, pins the toolchain, and states the build's status plainly: it has not run in CI, and the paper makes no
+claim that rests on it.
 
-## Where to go next
+## Contributing
+
+- `main` is protected: every change arrives by pull request with the CI `test` check, merged as a merge commit, never
+  squashed or rebased.
+- `results/`, `data/` and `traces/` never enter a pull request. A co-author's GPU run enters the ledger by the
+  admission procedure in `docs/2026-10-03-co-author-run-admission.md`: upload by the runner, refutation by the operator.
+- A ledger entry is appended only by its append script under `docs/drafts/`, which reads every figure from the
+  summary file in-process; the entry number comes from `docs/drafts/README.md` at staging time.
+- A paper figure is printed only from a `docs/drafts/tables/T<nn>` file whose re-verify line has been run.
+
+## Documentation
 
 | if you want to | read |
 |---|---|
-| see every hypothesis, rule, result and verdict | `ledger/ledger.md`: the table, then the entries its cells cite |
 | trace a paper figure to its bytes | `docs/paper-to-record.md` |
-| understand why the program asked these questions | `docs/background.md`, `docs/gap-map.md`, `docs/2026-09-06-gap-map-revisited.md` |
 | read what the MLSys draft changes from the camera-ready | `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md`, then `docs/drafts/tables/` |
-| run or re-run an experiment | `docs/gpu-experiment-protocol.md` for the rules, the dated runbooks listed in `docs/README.md` |
-| work in the repo as an agent or contributor | `AGENTS.md` (after PR #19; `CLAUDE.md` until then), `docs/drafts/README.md` for the next entry number |
+| understand why the program asked these questions | `docs/background.md`, `docs/gap-map.md`, `docs/2026-09-06-gap-map-revisited.md` |
+| find a runbook, seed, design or status note | `docs/README.md` |
+| work in the repo as an agent | `AGENTS.md` (after PR #19; `CLAUDE.md` until then) |
 | pick up the work where the last session left it | `docs/handoff/HANDOFF.md`, newest brief first |
 | see what went wrong before and how it was caught | `docs/learnings/LEARNINGS.md` |
-| find any other document | `docs/README.md` |
 
 ## Citation
 
