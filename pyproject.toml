@@ -28,6 +28,7 @@ Paper = "https://openreview.net/forum?id=kEGVswNFaq"
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+figures = ["matplotlib>=3.9"]   # tools/readme_figure.py only
 
 [build-system]
 requires = ["setuptools>=77"]
