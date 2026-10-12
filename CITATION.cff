@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this record or its tools, cite the paper below. The repository is the registered record the paper is written from."
+title: "linear-ceiling: a pre-registered experiment record on KV-cache reuse at agent handoffs"
+type: software
+license: Apache-2.0
+repository-code: "https://github.com/hossainpazooki/linear-ceiling"
+authors:
+  - family-names: Pazooki
+    given-names: Hossain
+    email: hossain@pazooki.com
+preferred-citation:
+  type: conference-paper
+  title: "KV Cache Drift Across Handoffs in Long-Horizon Agents"
+  # Eight authors on the submitted camera-ready (sha256 6c706bef...); the operator fills the
+  # other seven from the PDF's first page before the first release tag.
+  authors:
+    - family-names: Pazooki
+      given-names: Hossain
+  collection-title: "NeurIPS 2026 Workshop on Long Context Foundation Models (non-archival)"
+  year: 2026
+  url: "https://openreview.net/forum?id=kEGVswNFaq"

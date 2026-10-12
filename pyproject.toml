@@ -1,8 +1,18 @@
 [project]
 name = "linear-ceiling"
 version = "0.0.1"
-description = "The Linear Ceiling: pre-fit screen, seal protocol, and ledger for cross-model KV cache transfer"
+description = "Pre-registered experiment record on KV-cache reuse at agent handoffs: seal protocol, summarizers, hash-chained ledger"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{name = "Hossain Pazooki", email = "hossain@pazooki.com"}]
 requires-python = ">=3.12,<3.13"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "numpy>=1.26",
     "torch>=2.4",
@@ -12,11 +22,15 @@ dependencies = [
     "tokenizers>=0.19",       # E8 arm (b): Qwen3 tokenizer from the snapshot's tokenizer.json (ledger 0016)
 ]
 
+[project.urls]
+Repository = "https://github.com/hossainpazooki/linear-ceiling"
+Paper = "https://openreview.net/forum?id=kEGVswNFaq"
+
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
