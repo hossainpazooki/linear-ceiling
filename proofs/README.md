@@ -16,6 +16,11 @@ Every file compiles against Mathlib with no `sorry`, no `admit` and no new axiom
 axioms used are Lean's three standard ones: `propext`, `Classical.choice` and `Quot.sound`
 (`Audit.lean` prints them for all 52 headline results).
 
+**Status, honestly stated.** The build has not been run in CI and has not been reproduced on an operator
+machine; the only full run on record is the macOS one described under `check.sh` below (2026-10-03). The
+repository therefore claims that these files exist and are pinned, not that a reader's `lake build` has been
+seen to pass here. The paper makes no claim that rests on this build.
+
 ## Building
 
 Toolchain: Lean `v4.34.0-rc2`, Mathlib `v4.34.0-rc2` (pinned in `lean-toolchain`,
