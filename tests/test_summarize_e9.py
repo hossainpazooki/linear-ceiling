@@ -671,3 +671,61 @@ def test_refuses_an_absent_prefix_control_even_on_a_rope_recording_run(ran):
     _write(report, rep)
     with pytest.raises(ValueError, match="prefix-invariance control missing|prefix control is missing"):
         summarize(cfg, runner=runner, encoder=words, e7=e7)
+
+
+# ------------------------- the native-window control on a TRUNCATED NATIVE cell (entry 0062, the L32-native cell)
+# A truncated level with no [e9.rope] keeps the long cap for inclusion (decided on the FULL |S|, 0055) while every
+# dump it writes is S' = S[-L:], S' + 1 (the prefix control) or R. Its demand on a dump's window is the longest of
+# those, read from the alignment records; every other config keeps the cap as the demand.
+
+def _trunc_native_cfg(cap=81920, floor=32768, L=32768):
+    return types.SimpleNamespace(context_cap=cap, context_floor=floor, rope=None, sender_head_truncate=L)
+
+
+def _rep_with_alignments(rec, *, n_sender, n_receiver, hid="h#0"):
+    rep = _rep_with(rec)
+    rep["alignments"] = [{"handoff_id": hid, "n_sender": n_sender, "n_receiver": n_receiver, "n_matched": 1, "excluded": False}]
+    return rep
+
+
+def test_a_truncated_native_cell_reads_the_dumped_length_against_the_window_not_the_cap():
+    native = _rope_rec("target", mpe=40960)                      # the receiver's own window, below the 81,920 cap
+    rep = _rep_with_alignments(native, n_sender=80111, n_receiver=25073)
+    out = s9._check_rope_meta(_trunc_native_cfg(), rep, ["h#0"])
+    assert out["window"] == {"basis": "dumped_length", "demand": 32769, "context_cap": 81920, "sender_head_truncate": 32768,
+                             "longest": "h#0", "note": out["window"]["note"]}
+    assert out["context_cap"] == 81920                           # the cap is still stated: it is what inclusion used
+    # the same records under the cap basis (no truncation) refuse, as 0035 registered
+    with pytest.raises(ValueError, match="context cap 81920 is outside the window"):
+        s9._check_rope_meta(_fake_cfg(cap=81920, floor=32768), rep, ["h#0"])
+    # a receiver prompt longer than the window is the demand, and refuses
+    long_r = _rep_with_alignments(native, n_sender=80111, n_receiver=40961)
+    with pytest.raises(ValueError, match="dumped length 40961 .* is outside the window"):
+        s9._check_rope_meta(_trunc_native_cfg(), long_r, ["h#0"])
+    # a sender shorter than L is dumped whole, plus one for the prefix control: at L = |S| = 40960 that is one past the window
+    short_s = _rep_with_alignments(native, n_sender=40960, n_receiver=10)
+    with pytest.raises(ValueError, match="dumped length 40961"):
+        s9._check_rope_meta(_trunc_native_cfg(L=40960), short_s, ["h#0"])
+    assert s9._check_rope_meta(_trunc_native_cfg(L=40960), _rep_with_alignments(native, n_sender=40959, n_receiver=10), ["h#0"])["window"]["demand"] == 40960
+    assert s9._check_rope_meta(_trunc_native_cfg(), short_s, ["h#0"])["window"]["demand"] == 32769          # L = 32768 truncates it
+
+
+def test_a_truncated_native_cell_refuses_without_the_alignment_record_it_reads_lengths_from():
+    rep = _rep_with(_rope_rec("target", mpe=40960))              # no alignments at all
+    with pytest.raises(ValueError, match="no alignment record"):
+        s9._check_rope_meta(_trunc_native_cfg(), rep, ["h#0"])
+
+
+def test_the_cap_basis_is_unchanged_for_every_config_without_a_truncation_or_with_a_rope():
+    """The cap stays the demand everywhere else, and the block carries no `window` key there, so every existing cell's
+    summary.json is byte-identical to what it was."""
+    rec = _rope_rec("target", mpe=131072)
+    for cfg in (_fake_cfg(), _fake_cfg(cap=81920, floor=32768)):
+        out = s9._check_rope_meta(cfg, _rep_with(rec), ["h#0"])
+        assert "window" not in out and out["context_cap"] == cfg.context_cap
+    # a truncated level UNDER a rope (E-TRUNC's own levels) keeps the cap basis too
+    yarn = {"rope_type": "yarn", "factor": 2.5, "original_max_position_embeddings": 32768}
+    scaled = _rope_rec("target", mpe=81920, att=1.0916, params={**yarn, "rope_theta": 1e6})
+    cfg = types.SimpleNamespace(context_cap=81920, context_floor=32768, rope=dict(yarn), sender_head_truncate=32768)
+    assert "window" not in s9._check_rope_meta(cfg, _rep_with(scaled, dict(scaled)), ["h#0"])
+
