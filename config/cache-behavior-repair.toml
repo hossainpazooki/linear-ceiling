@@ -1,0 +1,38 @@
+# Cache-behavior REPAIR amendment (registration entry number assigned at staging; design
+# ~/dev/briefs/2026-10-13-linear-ceiling-experimental-gaps-plan.md, ruling B, 2026-10-13).
+# Entry 0047's instrument on the same 35 long handoffs, same inputs manifest, same FRESH / REUSE-ALL /
+# RANDOM / CYCLIC arms and numerical controls, PLUS the repair arms 0047 switched off: at each budget
+# f, the top-f matched tokens by archived token-mean delta_K are recomputed in place against the
+# reused predecessors (`oracle_ranked_<f>pct`), and, as the selection control, a seeded uniformly
+# random subset of the same size (`random_ranked_<f>pct`). Descriptive; no band; no cell moves.
+# Every key other than the two fraction lists is byte-equal in value to config/cache-behavior.toml.
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+transformers = "5.17.0"
+torch = "2.14.0"
+seed = 20261001
+expected_handoffs = 35
+context_cap = 81920
+chunk_tokens = 256
+continuation_tokens = 256
+continuation_chunk = 16
+prefix_control_tokens = 128
+control_max_logit_error = 0.0005
+bridge_absolute_tolerance = 0.001
+bridge_relative_tolerance = 0.01
+tau_K = 0.3186442653116294
+# Fresh attention at the final 32 receiver queries, not every prompt query.
+attention_queries = 32
+attention_query_chunk = 16
+# Repair budgets as a fraction of each handoff's matched set M, ceil(|M| x f) tokens; 0.10 and 0.20
+# are the budgets whose removal means entry 0045 already states, so achieved and removal figures
+# sit at the same budgets.
+oracle_fractions = [0.05, 0.10, 0.20]
+# The selection control: the same budgets, tokens drawn uniformly at random without replacement by
+# make_rng(seed + handoff index + 1000003) -- a stream distinct from the RANDOM arm's noise stream.
+random_control_fractions = [0.05, 0.10, 0.20]
+
+[rope]
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768

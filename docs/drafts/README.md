@@ -155,6 +155,37 @@ and 2026-10-10; the rule for printing one of these quantiles in the paper is `ta
 (the first file of `docs/drafts/tables/`, paper-table drafts with their sources). The number 0061 was never used. Nothing staged.
 Next free number: **0061**.)*
 
+**Staged 2026-10-13: `append_0061.py` — the cache-behavior REPAIR amendment** (operator rulings B and F, 2026-10-13; private design
+`~/dev/briefs/2026-10-13-linear-ceiling-experimental-gaps-plan.md` §9). Registers, before any operator prefill, entry 0047's
+instrument on the same 35 long handoffs and the same prepared inputs as 0049 (manifest `2aeee5769c0a…`, reused byte for byte), with
+the repair arms 0047 switched off: `oracle_ranked_{5,10,20}pct` (top-f matched tokens by archived δ_K recomputed in place against the
+reused predecessors) and the selection control `random_ranked_{5,10,20}pct` (the same budget, drawn by `make_rng(seed + index +
+1000003)`). Pins `config/cache-behavior-repair.toml` (`97aa99b1958e…`, every value equal to 0047's config but the two fraction lists),
+`tools/cache_behavior/core.py` unchanged (`f346b5fdf3d3…`) and the amended `run.py` (`e137f1d8b8c5…`; two additive changes, the
+optional `random_control_fractions` key and one selection branch; 0047's config carries no such key, so its registration reads
+unchanged); text files hashed newline-normalized (`sha256_text_file`). Restates 0049's REUSE / RANDOM / CYCLIC figures by READING
+`results/cache-behavior/summary.json` (`5228de0dd8c4…`). Output tree `results/cache-behavior-repair/` (R1: refuses if it holds a
+run). DESCRIPTIVE, no band, no `verdict:` line. The figures entry is unwritten (0062 or later, by in-process `run.summarize` over the
+verified mirror, checking the restated arms against 0049). Ordering guard: 0060 present, 0061 absent. `--preview` RAN 2026-10-13 on
+Windows (exit 0, 69 lines). Next free number: **0062**.
+
+**Staged 2026-10-13, after `append_0061.py`: `append_0062.py` — the L32-NATIVE cell** (operator ruling A, 2026-10-13, same private
+design §9; supersedes the wording of 0055's ruling 3, "keep R under YaRN", because every dump of the cell — S' = S[−32768:], S' + 1 for
+the prefix control, R at most 25,073 — sits inside the receiver's declared native window, so both models run native and no per-dump
+RoPE switch is needed). Registers, before any operator prefill, `config/e9t-l32n.toml` (`5e01f133c3c0…`: `config/e9t-l32.toml`
+`3c0663fbb651…` minus `[e9.rope]` and `[e9.bridge]`, results dirs, `[e9.gate]` ending at 0062, plus `[e9.native]`), and the
+instrument it needs: `summarize_e9`'s native-window control reads the longest DUMPED length against each dump's recorded window on a
+truncated native cell only (every other config keeps the cap as the demand; summaries unchanged), `[e9.native]` in `config.py`, and
+`summarize_e9_native` (the paired reader: refuses unless the native matched sets equal the YaRN level's, re-derives M_cap from the four
+E-TRUNC passes, recomputes the YaRN-L32 far-from-seam median on the same tokens and refuses if it is not 0057's record). Runs
+`summarize_e9_native.alignment_check` in-process over the five alignment passes (native coverage `be3e02040766…`): 35 of 35
+identical to L32's, 21 enter / 14 void under the 0055 floor on the same M_cap as 0057. Reads the two reference levels from
+`results/e9s/compare.json` (`a0699a826f1f…`) and `results/e9t/compare.json` (`0572662307f3…`), and the declared window from the
+receiver's pinned `config.json` (revision `70d244cc86cc…`, the one 0047 pins). The reading, fixed now: native far-from-seam median on
+M_cap within ±0.005 of native-short → THE SCALING; within ±0.005 of YaRN-L32 → NOT THE SCALING; between → UNATTRIBUTED. DESCRIPTIVE,
+no band, no `verdict:` line. Pins the three source files by LF-normalized sha, so any edit to them before the append re-stages the
+script. Ordering guard: 0061 present, 0062 absent. Next free number: **0063**.
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
