@@ -30,7 +30,7 @@ workshop paper).
 - **The repository name** `linear-ceiling` is not identifying on its own and stays.
 - **`LICENSE`** is the canonical Apache-2.0 text with no copyright line and stays. `pyproject.toml` drops its `authors`
   and `[project.urls]` tables on the mirror.
-- **`docs/2026-09-20-astra_review.md`** names a reviewer tool and the branch; censor by pattern like any other file.
+- **`docs/reviews/2026-09-20-astra_review.md`** names a reviewer tool and the branch; censor by pattern like any other file.
 - **`tools/cache_injection_pilots/docs/refutations.html`** is a co-author's review record; censor by pattern, never edit otherwise.
 - **The ledger** carries 11 pattern hits (dataset ids, PR links, one surname at 0005's design citation). The mirror re-derives
   the chain after censoring, as before; a censored ledger proves internal consistency only and is never a source for a figure.
@@ -48,21 +48,21 @@ workshop paper).
 | `tools/cache_injection_pilots/docs/refutations.html` | 11 | censor |
 | `docs/paper-to-record.md` | 8 | censor |
 | `docs/reviews/2026-10-01-cache-refutation-0025-0029.md` | 8 | censor |
-| `docs/2026-10-07-llama-long-cell-runpod-runbook.md` | 7 | censor |
+| `docs/runbooks/2026-10-07-llama-long-cell-runpod-runbook.md` | 7 | censor |
 | `pyproject.toml` | 6 | censor |
-| `docs/2026-09-02-e9-gpu-runbook.md` | 5 | censor |
+| `docs/runbooks/2026-09-02-e9-gpu-runbook.md` | 5 | censor |
 | `docs/gpu-experiment-protocol.md` | 5 | censor |
 | `docs/reviews/2026-09-14-e9-cold-rescore-second-machine.md` | 5 | censor |
 | `UPSTREAM.md` | 4 | censor |
-| `docs/2026-09-08-n420-target-dump-runbook.md` | 4 | censor |
-| `docs/2026-09-10-e9l-gpu-runbook.md` | 4 | censor |
-| `docs/2026-10-04-e-trunc-gpu-runbook.md` | 4 | censor |
-| `docs/2026-10-06-cache-behavior-runpod-runbook.md` | 4 | censor |
+| `docs/runbooks/2026-09-08-n420-target-dump-runbook.md` | 4 | censor |
+| `docs/runbooks/2026-09-10-e9l-gpu-runbook.md` | 4 | censor |
+| `docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md` | 4 | censor |
+| `docs/runbooks/2026-10-06-cache-behavior-runpod-runbook.md` | 4 | censor |
 | `docs/drafts/README.md` | 4 | censor |
-| `docs/2026-09-02-e-rl-design.md` | 3 | censor |
-| `docs/2026-09-13-seed-e9-scaled-short-cell.md` | 3 | censor |
-| `docs/2026-09-30-consolidation-runbook.md` | 3 | censor |
-| `docs/2026-09-30-review-response-map.md` | 3 | censor |
+| `docs/design/2026-09-02-e-rl-design.md` | 3 | censor |
+| `docs/design/2026-09-13-seed-e9-scaled-short-cell.md` | 3 | censor |
+| `docs/runbooks/2026-09-30-consolidation-runbook.md` | 3 | censor |
+| `docs/reviews/2026-09-30-review-response-map.md` | 3 | censor |
 | `docs/reviews/2026-09-11-clean-clone-reproduction.md` | 3 | censor |
 | `tools/cache_injection_pilots/docs/replicate.html` | 3 | censor |
 | `tools/cache_injection_pilots/experiment-manifest.json` | 3 | censor |
@@ -71,18 +71,18 @@ workshop paper).
 | `config/e8f.toml` | 2 | censor |
 | `config/e9f.toml` | 2 | censor |
 | `config/e9fl.toml` | 2 | censor |
-| `docs/2026-09-08-seed-e9-long-half.md` | 2 | censor |
-| `docs/2026-09-13-e9s-gpu-runbook.md` | 2 | censor |
-| `docs/2026-09-18-llama-upstream-patch-spec.md` | 2 | censor |
-| `docs/2026-09-19-sitting-b-procedure.md` | 2 | censor |
-| `docs/2026-10-07-consolidation-runpod-runbook.md` | 2 | censor |
+| `docs/design/2026-09-08-seed-e9-long-half.md` | 2 | censor |
+| `docs/runbooks/2026-09-13-e9s-gpu-runbook.md` | 2 | censor |
+| `docs/design/2026-09-18-llama-upstream-patch-spec.md` | 2 | censor |
+| `docs/runbooks/2026-09-19-sitting-b-procedure.md` | 2 | censor |
+| `docs/runbooks/2026-10-07-consolidation-runpod-runbook.md` | 2 | censor |
 | `docs/reviews/2026-10-01-feedback-and-claims.md` | 2 | censor |
 | `tools/cache_injection_pilots/README.md` | 2 | censor |
 | `tools/cache_injection_pilots/results/README.md` | 2 | censor |
-| `docs/2026-09-01-lcfm-gpu-plan.md` | 1 | censor |
-| `docs/2026-09-18-llama-gpu-runbook.md` | 1 | censor |
-| `docs/2026-09-20-astra_review.md` | 1 | censor |
-| `docs/2026-10-01-cache-behavior-runbook.md` | 1 | censor |
+| `docs/design/2026-09-01-lcfm-gpu-plan.md` | 1 | censor |
+| `docs/runbooks/2026-09-18-llama-gpu-runbook.md` | 1 | censor |
+| `docs/reviews/2026-09-20-astra_review.md` | 1 | censor |
+| `docs/runbooks/2026-10-01-cache-behavior-runbook.md` | 1 | censor |
 | `docs/README.md` | 1 | censor |
 | `docs/agent/experiment-commands.md` | 1 | censor |
 | `docs/drafts/e-trunc-design.md` | 1 | censor |

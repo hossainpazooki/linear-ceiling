@@ -1,7 +1,7 @@
 """SWE-bench trajectory adapters, and the per-step serving-model detector.
 
 Trajectories are not in the `SWE-bench/experiments` repo; they live in a public S3 bucket at
-`verified/<submission>/trajs/<instance>.<ext>` (see docs/2026-09-01-swe-bench-trace-recon.md).
+`verified/<submission>/trajs/<instance>.<ext>` (see docs/design/2026-09-01-swe-bench-trace-recon.md).
 Formats differ per submitter, so an adapter states which shape it handles and refuses anything
 else rather than guessing.
 

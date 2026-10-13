@@ -120,7 +120,7 @@ and resubmit; R1 cannot be repaired and is recorded instead.
 | §2.3 run code | PR driver differs from the pre-run commit; run-time hashes not stated | runbook note with `code_sha256` (runner) |
 | §2.4 R8 push | **not done** | runner |
 | §2.5 verify line | — | runner, after the push |
-| §2.6 claimed figures with keys | tables in `docs/2026-10-01-a100-analysis.md` and the fork entry; keys in `summary.json` | — |
+| §2.6 claimed figures with keys | tables in `docs/pilots/2026-10-01-a100-analysis.md` and the fork entry; keys in `summary.json` | — |
 | §3 recompute + record | not started; blocked on §2.4 | operator |
 | §4 entry | number 0048 unallocated; config currently proposed under `config/` in PR #8 | operator, after §3 |
 | §5 paper | `paper_assets.py` ungated | runner |

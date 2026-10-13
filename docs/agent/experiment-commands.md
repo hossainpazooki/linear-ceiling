@@ -38,7 +38,7 @@ $PY -m linear_ceiling.summarize_e0_depth   # per-layer depth structure (entry 00
 ## E7 — replay over public traces (completed: H-E7a NOT CONFIRMED, H-E7b UNESTIMABLE; entries 0013–0018, 0022, 0024)
 
 The corpus manifest is `config/e7-manifest.json`; real trajectories live under `traces/` (gitignored) and never
-enter history. Corpus formats and what they omit: `docs/2026-09-01-swe-bench-trace-recon.md`.
+enter history. Corpus formats and what they omit: `docs/design/2026-09-01-swe-bench-trace-recon.md`.
 
 ```
 $PY -m linear_ceiling.e7_manifest write     # NETWORK, once: hash traces/ + S3 keys/ETags + selection rule -> config/e7-manifest.json (commit it)
@@ -110,7 +110,7 @@ $PY -m linear_ceiling.e9_compare --native config/e9.toml --scaled config/e9s.tom
 
 ## E9 long — H-E9L (registered 0035; decided HELD, entry 0036)
 
-Runbook: `docs/2026-09-10-e9l-gpu-runbook.md`.
+Runbook: `docs/runbooks/2026-09-10-e9l-gpu-runbook.md`.
 
 ```
 $PY -m linear_ceiling.e9 --check --config config/e9l.toml        # E9-long gate (entry 0035): 0019/0023/0025/0027/0035 committed, config/e9l.toml committed, the RoPE-spec upstream pin, mapper by sha
@@ -139,7 +139,7 @@ $PY -m linear_ceiling.e9_tail --config config/<cell>.toml       # runs summarize
 
 ## E-TRUNC — sender head truncation (registered 0055, ran 0057; descriptive)
 
-Runbook: `docs/2026-10-04-e-trunc-gpu-runbook.md`. The figures are entry 0057; the τ recomputation tolerance the
+Runbook: `docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md`. The figures are entry 0057; the τ recomputation tolerance the
 reader enforces is entry 0059.
 
 ```
@@ -164,13 +164,13 @@ $PY -m linear_ceiling.summarize_e9 --config config/e9fl.toml      # fail-closed,
 ## GPU and backup tooling
 
 Rules: `docs/gpu-experiment-protocol.md` R1–R12 and the run's own dated runbook. Runbooks:
-`docs/2026-09-02-e9-gpu-runbook.md` (E9), `docs/2026-09-08-n420-target-dump-runbook.md` (n = 420 target dump),
-`docs/2026-09-10-e9l-gpu-runbook.md` (E9-long), `docs/2026-09-13-e9s-gpu-runbook.md` (scaled short),
-`docs/2026-09-18-llama-gpu-runbook.md` (second family), `docs/2026-09-30-consolidation-runbook.md` (same-model
-extension, 0046), `docs/2026-10-01-cache-behavior-runbook.md` (cache behavior, 0047),
-`docs/2026-10-04-e-trunc-gpu-runbook.md` (E-TRUNC, 0055/0057), and the operator's RunPod sittings
-`docs/2026-10-06-cache-behavior-runpod-runbook.md` (0049), `docs/2026-10-07-consolidation-runpod-runbook.md` (0048),
-`docs/2026-10-07-llama-long-cell-runpod-runbook.md` (0051).
+`docs/runbooks/2026-09-02-e9-gpu-runbook.md` (E9), `docs/runbooks/2026-09-08-n420-target-dump-runbook.md` (n = 420 target dump),
+`docs/runbooks/2026-09-10-e9l-gpu-runbook.md` (E9-long), `docs/runbooks/2026-09-13-e9s-gpu-runbook.md` (scaled short),
+`docs/runbooks/2026-09-18-llama-gpu-runbook.md` (second family), `docs/runbooks/2026-09-30-consolidation-runbook.md` (same-model
+extension, 0046), `docs/runbooks/2026-10-01-cache-behavior-runbook.md` (cache behavior, 0047),
+`docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md` (E-TRUNC, 0055/0057), and the operator's RunPod sittings
+`docs/runbooks/2026-10-06-cache-behavior-runpod-runbook.md` (0049), `docs/runbooks/2026-10-07-consolidation-runpod-runbook.md` (0048),
+`docs/runbooks/2026-10-07-llama-long-cell-runpod-runbook.md` (0051).
 
 ```
 tools/hf_backup.sh --check <repo_id> <staging_dir>        # run first: preflight only, uploads nothing

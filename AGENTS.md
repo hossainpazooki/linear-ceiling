@@ -1,7 +1,7 @@
 # linear-ceiling — agent contract
 
 A pre-registered experiment record on KV-cache reuse at agent handoffs. `README.md` explains the science;
-`docs/2026-08-26-kv-handoff-screen-design.md` is the authority on scope; `ledger/ledger.md` is the source of truth
+`docs/design/2026-08-26-kv-handoff-screen-design.md` is the authority on scope; `ledger/ledger.md` is the source of truth
 for hypotheses, rules, results and verdicts. This file holds only the stable rules, for any agent. Commands:
 `docs/agent/experiment-commands.md`. Modules and layout: `docs/agent/repo-architecture.md`. `CLAUDE.md` adds the
 operator's Claude Code notes on top of this file and restates nothing from it.
