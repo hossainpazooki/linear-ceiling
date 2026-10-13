@@ -131,8 +131,8 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
   H100 SXM secure $3.99). **No pod was created; nothing billed.** Card and price are the operator's call (R2) — the sitting
   waits on it.
 - **16:26:57 operator: "go, secure A100 at 1.79, 7 hours" → `up` SECURE A100-SXM4-80GB $1.79/h, 7.0 h, disk 100, `--cap 18`:
-  pod `w28h3vp07g8nnz` created**, `linear-ceiling-e9t`, start balance $18.65, sitting ceiling $12.53, campaign $17.39 vs
-  cap $18. 16:27:54 `wait-ssh` OK → `root@154.54.102.27 -p 15131`; `arm-deadman` **NOT ARMED** (no pod-scoped
+  pod `w28h3vp07g8nnz` created**, `linear-ceiling-e9t`, start balance <redacted>, sitting ceiling $12.53, campaign $17.39 vs
+  cap $18. 16:27:54 `wait-ssh` OK → `root@<pod-ip> -p <port>`; `arm-deadman` **NOT ARMED** (no pod-scoped
   credentials, as on every RunPod sitting so far) — the home watchdog is the only net. 16:28:53 watchdog supervisor up on
   the Mac under `caffeinate -i` (pid 7916, `--exp e9t-full --sitting-max 12.53 --every 60`; `pmset` shows sleep
   prevented). `~/.ssh/config` alias `e9tbox` (port 15131, `~/.ssh/id_rsa`) so `pull.py`'s port-less ssh works unchanged.
@@ -179,7 +179,7 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
 - 18:42 projection at the new rate: FULL ≈ 19:10Z, L65 ≈ 20:30Z, L49 ≈ 21:45Z, L32 ≈ 22:45Z, release ≈ 23:00Z at ≈ $11.7 —
   inside the $12.53 ceiling (kill 23:27Z) but across the watchdog's graceful drain at 70 % = $8.77 (≈ 21:21Z), which would
   SIGTERM the L49 driver into a partial. **Operator ruling 18:43Z: option 1 — `--no-drain --sitting-max 14.5 --kill 18`**
-  (ceiling as a backstop, expected spend unchanged); no credit reload needed (balance $14.66 against ≈ $7.7 remaining).
+  (ceiling as a backstop, expected spend unchanged); no credit reload needed (balance <redacted>).
 - 18:43–18:45 three supervisor restarts to land it: (i) the kill loop over `$S`/`$W` did nothing — zsh does not word-split
   an unquoted variable (learnings 2026-10-08), the 18:40 watchdog stayed the net throughout; (ii) 18:44:11 supervisor 10111
   up with the new flags but printing **`TTL 7.0h`** — `up --hours` is also the watchdog's default TTL, so the pod would
@@ -272,7 +272,7 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
 - **22:12:53 L49 driver EXIT=0** (`~/e9t-l49.rc` mtime): 35/35 in the registered order (`[1/35] … 452s` with the controls,
   then 106–131 s per handoff), 0 Tracebacks, `complete: true`; wall 1 h 27 min from the 20:45:28 launch. 22:13:24 home
   puller: `run complete and every kept directory is home; final mirror done; report.json sha256
-  c7535211d033265efa2ff349611c57444cab0646d9898f418b5879949ec27530`. Spend $10.34, campaign $15.17, balance $8.35 at 22:13Z;
+  c7535211d033265efa2ff349611c57444cab0646d9898f418b5879949ec27530`. Spend $10.34, campaign $15.17, balance <redacted> at 22:13Z;
   **Mac disk 59 Gi free** (L49's mirror ≈ 50 G; L32's is expected smaller, its sender being 32,768 tokens) — the
   staging-copy ruling still unanswered.
 - **22:14:08 L32 launched** (`EXP=e9t-l32 bash ~/run.sh` under the 13-thread cap, pid 91117, scorer child 14 threads;
@@ -288,7 +288,7 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
   then 102–108 s per handoff), 0 Tracebacks, `complete: true`; wall 1 h 12 min from the 22:14:08 launch. **`--finished
   2026-10-08T23:25:49Z` for 0057.** 23:26:29 home puller: `run complete and every kept directory is home; final mirror done;
   report.json sha256 c166d8f114271a936d1f3ce3409cff767e219528a246456f7b69f4493a35737d`. Spend $12.56, campaign $17.42,
-  balance $6.09 at 23:26:48Z — ≈ 19 min to the $18 campaign kill (no ruling on raising it arrived); R7 release begins at once.
+  balance <redacted> at 23:26:48Z — ≈ 19 min to the $18 campaign kill (no ruling on raising it arrived); R7 release begins at once.
   Mac disk 21 Gi free after the four mirrors.
 - 23:27:12 **L32 mirror verified on the Mac**: `report.json sha256 c166d8f1…  complete=True  scored=35/35`; **529/529
   fingerprinted files verified from raw bytes, 40,051,410,891 B; ALL VERIFIED**; 38 G under `results/e9t-l32/`. Mirrors:
@@ -303,7 +303,7 @@ configs are CRLF on a Windows clone while every pin above is LF-normalized — h
 - **23:29:10 `rp.py terminate` → `terminate sent: w28h3vp07g8nnz` … `PROVEN GONE`**, after the home receipt
   `~/.cache/linear-ceiling/e9t-verified.json` (nonce- and pod-bound, the four verified `report.json` shas and the
   verification time) satisfied the interlock; `rp.py status`: `pods 0 (none — nothing is billing)`. **Final: sitting
-  $12.60, campaign $17.42, balance $6.09** (≈ 17 min before the $18 campaign kill). Pod life 16:26:57–23:29:10 = 7 h 02 min.
+  $12.60, campaign $17.42, balance <redacted>** (≈ 17 min before the $18 campaign kill). Pod life 16:26:57–23:29:10 = 7 h 02 min.
 - 23:30:24 watchdog **exited 0 (two consecutive polls saw nothing billing)**, supervisor stopped; no puller, no caffeinate
   assertion left on the Mac. Log check against the box's final hashes: every pulled log hash-identical except
   `launches.log` under FULL/L65/L49, which the box appended at each later launch (3/3/4 lines vs the final 5); L32's copy

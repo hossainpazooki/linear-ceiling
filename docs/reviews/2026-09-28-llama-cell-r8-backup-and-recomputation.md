@@ -118,7 +118,7 @@ it as unchecked.
 ## Finding 3 — the mirrors are held on one machine and are not retrievable
 
 The verified home mirrors of `results/e8f/` and `results/e9f/` exist only on the machine that ran the
-sittings — `/Users/emersonyu/e9-repro/linear-ceiling` per the Llama runbook, with the Sitting A pull
+sittings — `~/e9-repro/linear-ceiling` per the Llama runbook, with the Sitting A pull
 under `~/.cache/linear-ceiling/sitting-a-pull/pull/`. As of this date the reviewer reports them
 unrecoverable (2026-09-28, reported by the reviewer; not independently verified from this checkout). This
 note treats the mirrors as lost.

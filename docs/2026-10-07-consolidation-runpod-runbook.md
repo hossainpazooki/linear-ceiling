@@ -114,8 +114,8 @@ repo root of a real clone at the pinned commit. (m) The three models must share 
 
 - 03:56:36 `up` A100 80GB PCIe community $1.19 (widened filters, `--disk 120`, `--cap 15`): **REFUSED** ("no longer any
   instances"), as in the 0047 sitting. 03:56:37 `up` A100-SXM4-80GB community **$1.39/h**: **pod `9rlzui4nli6uup`
-  created**, `linear-ceiling-cons`, machine `zwtqdin590js`, start balance $27.41, sitting ceiling 1.39 × 6 = $8.34.
-  03:56:39 ssh up `root@216.249.100.66 -p 22279`. Note: `rp.py` prints `campaign total $-10.27` because the operator's
+  created**, `linear-ceiling-cons`, machine `zwtqdin590js`, start balance <redacted>, sitting ceiling 1.39 × 6 = $8.34.
+  03:56:39 ssh up `root@<pod-ip> -p <port>`. Note: `rp.py` prints `campaign total $-10.27` because the operator's
   recharge moved the balance above the campaign's start balance; the guardrail uses `max(balance delta, elapsed × rate)`,
   so the elapsed-time figure governs — the cap still binds.
 - 03:57 home `watchdog --exp cons --sitting-max 8.34` started (the dead-man does not arm on community pods, trap (i));
@@ -161,7 +161,7 @@ repo root of a real clone at the pinned commit. (m) The three models must share 
   (the `--verify-file $HOME/…` argument had been passed under `MSYS_NO_PATHCONV=1`, so the unconverted `/c/Users/…`
   reached Python — trap (h) in reverse: pass `~/…` or a `C:/` path for arguments Python opens). Receipt copied to that
   path; **06:43:06 `terminate` sent, read back PROVEN GONE**; stray path removed. **Sitting $3.86** (2.77 h wall, of
-  which ≈ 2.4 h scoring across the three models), campaign $6.43 of the $15 cap, balance $23.59.
+  which ≈ 2.4 h scoring across the three models), campaign $6.43 of the $15 cap, balance <redacted>
 - 06:45 `SHA256SUMS` rewritten with `a100/summary.{json,csv}` included (668 files, mirror 13.18 GB); R8 staging copy at
   `~/dev/hf-staging/linear-ceiling-consolidation-2026-10-07/` (669 files + card, link count 1).
 

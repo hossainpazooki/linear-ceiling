@@ -11,7 +11,7 @@ the upstream change it needs is specified in `docs/2026-09-18-llama-upstream-pat
 
 Stated plainly at the top because the sizing below makes it a correctness rule, not a preference. The home box has
 **no GPU, 18 GiB of RAM (`hw.memsize` = 19,327,352,832) and 82 GiB free on `/Users`** with ~32 GB already held by
-`/Users/emersonyu/e9-repro/linear-ceiling`. The receiver's fp32 weights alone are **29.9 GiB**, so no home-side step
+`~/e9-repro/linear-ceiling`. The receiver's fp32 weights alone are **29.9 GiB**, so no home-side step
 may load `meta-llama/Llama-3.1-8B` at all — not "should not": it cannot. The operator has also ruled that nothing is
 run locally for this campaign.
 

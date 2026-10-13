@@ -117,7 +117,7 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
 - 15:17 Mac ssh opened from the Windows session (operator added the key); upstream clone confirmed at `06f8d55`; carry
   bundle `796088b2…` copied, 331/331 sha OK; **τ rehearsal PASS** (K pinned 0.2861326431727862 / mac 0.28613264297901364;
   V 0.5289405769050128 / 0.5289405769525087; agent_K equal).
-- 15:30 RunPod key file on the Mac (0600); `balance $23.5124` from the Mac. Pod keypair generated 15:32.
+- 15:30 RunPod key file on the Mac (0600); `balance <redacted> from the Mac. Pod keypair generated 15:32.
 - 15:35 Llama-3.2-3B staged (6.0 GiB); **Llama-3.1-8B refused: account not in the authorized list** — the 3.1 licence is a
   separate Meta gate from 3.2 (the 10-01 work needed only the shared tokenizer). Request submitted; awaiting review.
 - 15:39 staged `traces.tar.gz` (`21fe358eae8b`), `k1.*`, `tau.json`, launcher under `~/stage-0051/`.
@@ -140,10 +140,10 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
 - 17:00:58 REFUSED again (widened filters, disk 160); 17:01:25 REFUSED (disk 120). `rp.py price` now lists **no community
   A100-SXM4-80GB at all** (it showed $1.39 Low at 16:3xZ) — stock, not filters, this time.
 - **17:01:48 `up` SECURE A100-SXM4-80GB $1.59/h (0044's own card), 6.0 h, disk 160, widened filters: pod `uua1cpjql18jb6`
-  created**, `linear-ceiling-sitting-c`, start balance $23.5124, sitting ceiling $9.54, campaign cap $12. Home watchdog
+  created**, `linear-ceiling-sitting-c`, start balance <redacted>, sitting ceiling $9.54, campaign cap $12. Home watchdog
   supervisor started on the Mac under `caffeinate -i` (`--exp e9fl --sitting-max 9.54 --every 60`); 17:02:13 watchdog
   up (`rp.py` wraps it in `caffeinate -dimsu` itself; `pmset` shows sleep prevented).
-- 17:02:22 `wait-ssh` OK → `root@154.54.102.29 -p 16988`. `arm-deadman`: **NOT ARMED** (no pod-scoped credentials on
+- 17:02:22 `wait-ssh` OK → `root@<pod-ip> -p <port>`. `arm-deadman`: **NOT ARMED** (no pod-scoped credentials on
   this pod either; the home watchdog is the only net — as on 10-06/10-07). Card `NVIDIA A100-SXM4-80GB, 81920 MiB,
   driver 580.126.16` (0044's driver), overlay 160 GB, 128 vCPU, host RAM 2,003 GB.
 - 17:02–17:03 `put` sitting_b.sh, k1.json, k1.safetensors, tau.json, traces.tar.gz; all five sha-verified on the pod
@@ -236,7 +236,7 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
   planted control, uv's package cache excluded: **1 match = the planted file**; `rm -rf /workspace/hf` confirmed gone;
   no `~/.cache/huggingface`; step 5 — the 19:55 listing stands (system processes only; the 20:02 count line was malformed
   by quoting and is not relied on); box `report.json` sha = mirror `b046bb9dd70d56d2…`; step 6 — `terminate` on the puller's
-  receipt → **PROVEN GONE** 20:03:45Z, `pods 0 (nothing is billing)`. **Sitting total $4.8014**; balance $18.7339. GPU
+  receipt → **PROVEN GONE** 20:03:45Z, `pods 0 (nothing is billing)`. **Sitting total $4.8014**; balance <redacted> GPU
   2 h 11 min of 3 h 02 min billed (two refused launches, the deliberate hold for the home summary, release).
 - 20:0x `append_0051.py --preview` renders from the Mac mirror (needed `results/e9l/summary.json`, carried from Windows,
   sha `64e64e9318d442ec…`). Two "floor" phrases in the staged script predate 0058 and are corrected before the append;
@@ -252,7 +252,7 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
   intact (1,073 metadata files under `.cache/huggingface/`), 50 files already committed on the Hub. **Rule from it: run a
   multi-GB push detached (`nohup … caffeinate -i`), never as a child of an interactive session.** Restart = the same
   `upload-large-folder` line, detached, chained to the verifier.
-- 23:55Z (Mac moved to Wi‑Fi; mDNS name now `Hossains-Mac-Mini.local`) the operator restarted the push detached, chained to
+- 23:55Z (Mac moved to Wi‑Fi; mDNS name now `<mac-mini mDNS name>`) the operator restarted the push detached, chained to
   `hf_verify_backup.py`, log `~/.cache/linear-ceiling/hf-upload.log`. The pasted block ran **twice** (a `read -s` prompt in a
   pasted block consumes the following pasted line), so two chains ran on one folder; the younger (pids 6283/6286) was
   stopped at 23:5x, the older kept its per-file resume state: 177 / 256 files, 11.6 GB of the first 24.5 GB batch, 69 MB/s.
@@ -263,7 +263,7 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
   `hf_verify_backup.py` then died at interpreter start (`init_sys_streams … Bad file descriptor`): the `nohup bash -c` chain
   had no `< /dev/null`, so when the operator's session closed, Python had no stdin to initialise. Not a verification
   result — the verifier never ran. Re-run detached with stdin from `/dev/null`.
-- 00:5x the Mac moved to Wi‑Fi at 192.168.1.26 (`Hossains-Mac-Mini.local` does not resolve from Windows; the old
+- 00:5x the Mac moved to Wi‑Fi at <home LAN IP> (`<mac-mini mDNS name>` does not resolve from Windows; the old
   Ethernet address is gone from the neighbour table — address the Mac by IP). Operator ran the verifier detached
   (`< /dev/null`), token in the child's environment only, two separate pastes.
 - **2026-10-08 01:31Z R8 BACKUP VERIFIED**: `hossainpazooki/linear-ceiling-e9fl-2026-10-07` (private) against the staging
@@ -272,7 +272,7 @@ on the pod**; R7 step 4 asserts "never existed", not "removed".
   closes the docs.
 - **~02:0xZ 0051 APPENDED on the Mac** (`appended 0051; chain 75a47a51de6e`, `ledger ok`), commits `91cea79` (ledger + the
   script version that rendered it) and `62982a8` (script retired). The Mac has no GitHub credential; rather than mint one,
-  the Windows clone fetched the two commits over the LAN (`git fetch ssh://hossa@192.168.1.26/Users/hossa/dev/linear-ceiling
+  the Windows clone fetched the two commits over the LAN (`git fetch ssh://<home-lan>/~/dev/linear-ceiling
   main`), `ledger_check` passed on the fetched file, and the operator pushes from Windows. The Mac fast-forwards afterwards.
 
 ## 7. After the sitting

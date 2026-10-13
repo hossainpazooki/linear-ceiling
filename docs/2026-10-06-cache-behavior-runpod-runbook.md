@@ -150,20 +150,20 @@ even the LF script REFUSES to arm. The home watchdog is the only net; keep its l
 
 - 23:39:49 `rp.py up` (A100 80GB PCIe, community, $1.19/h, 5.0 h, cap $10): **REFUSED by RunPod — "no longer any
   instances available with the requested specifications"** (the listing had shown stock Low). `status`: pods 0, nothing
-  billing, balance $10.00. Inputs tarball `cb-inputs.tar.gz` 317,991,348 B sha256 `037855dde3cbc1ad…` ready in the
+  billing, balance <redacted> Inputs tarball `cb-inputs.tar.gz` 317,991,348 B sha256 `037855dde3cbc1ad…` ready in the
   scratchpad. Retry and fallback decision recorded below.
 - 23:40:32 retry, same flags, after a fresh `price` listing (community: A100 PCIe $1.19 Low, A100 SXM $1.39 Low, H100 NVL
   $2.59 Low; secure: A100 PCIe/SXM $1.59 Low/Medium): **REFUSED again, same message**. Pods 0, $0.00. Every fallback row
   needs `--max-price` above 1.25, which the sitting procedure (§2 of 2026-09-19) makes an operator decision; taken back
   to the operator with the costs: A100 SXM community $1.39 × 5 h = $6.95; A100 secure $1.59 × 5 h = $7.95; cap $10,
-  balance $10.00.
+  balance <redacted>
 - 23:42 operator: "SXM community at 1.39". 23:42:34 `up` A100-SXM4-80GB community $1.39, default filters: **REFUSED**,
   same message. Cause per the 09-19 procedure: the create-time FILTERS, not stock — the defaults (host RAM ≥ 48 GB,
   8 vCPU, CUDA {12.8, 12.9, 13.0}) were sized for fp32 Llama-8B host loading and exclude hosts on 13.1+ drivers.
 - **23:43:10 `up` with widened filters** (`--min-ram 24 --min-vcpu 4 --cuda 12.8 12.9 13.0 13.1 13.2 --disk 60`,
   none a registered quantity): **pod `mvwb1quo5c2hi1` created**, `linear-ceiling-cb`, A100-SXM4-80GB community,
-  **$1.39/h**, machine `iklhq2d1mg0g`, start balance $10.00, sitting ceiling $6.95. 23:44:30 ssh up:
-  `root@216.249.100.66 -p 22426`. Card `NVIDIA A100-SXM4-80GB, 81920 MiB, driver 595.71.05`; Ubuntu 22.04.5; python3.12.13,
+  **$1.39/h**, machine `iklhq2d1mg0g`, start balance <redacted>, sitting ceiling $6.95. 23:44:30 ssh up:
+  `root@<pod-ip> -p <port>`. Card `NVIDIA A100-SXM4-80GB, 81920 MiB, driver 595.71.05`; Ubuntu 22.04.5; python3.12.13,
   `uv`, git, `runpodctl` present; 60 GB overlay; host RAM 1,007 GB, 256 vCPU.
 - 23:44:30 `arm-deadman`: **NOT ARMED** — `/usr/bin/env: 'bash\r'`. Cause: `rp.py` writes the dead-man script with
   `Path.write_text` (text mode → CRLF on Windows) before `scp`; same from the LF clone, since the bug is the write, not
@@ -210,7 +210,7 @@ even the LF script REFUSES to arm. The home watchdog is the only net; keep its l
   `cache_behavior` process; results dir 318 MB / 73 files still on the pod until `terminate`.
 - 01:34:11 verify receipt written (`~/.cache/linear-ceiling/cb-verified.json`: schema v1, this pod's nonce, `report_sha256
   3564605773bb…`, the tarball sha). **`terminate` sent; read back PROVEN GONE** (pods 0, nothing billing).
-  **Sitting $2.57** (pessimistic `max(balance delta, elapsed × rate)`; balance $10.00 → $7.51), 1.85 h wall, of which
+  **Sitting $2.57** (pessimistic `max(balance delta, elapsed × rate)`; balance <redacted>), 1.85 h wall, of which
   ≈ 86 min compute and ≈ 12 min idle after the driver exited (trap (j)). Campaign $2.57 vs cap $10.
 - **03:47:34Z R8 BACKUP VERIFIED**: `hossainpazooki/linear-ceiling-cache-behavior-2026-10-07` (created private by the
   operator) matches the staging tree `~/dev/hf-staging/linear-ceiling-cache-behavior-2026-10-07` in both directions —
