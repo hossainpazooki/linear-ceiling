@@ -19,7 +19,7 @@ def test_upstream_pin_matches_upstream_md():
 
 def test_verbatim_docs_present():
     docs = linear_ceiling.REPO_ROOT / "docs"
-    for name in ("2026-08-26-kv-handoff-screen-design.md", "2026-08-26-seed-w1.md", "gap-map.md"):
+    for name in ("design/2026-08-26-kv-handoff-screen-design.md", "design/2026-08-26-seed-w1.md", "design/gap-map.md"):
         assert (docs / name).exists(), name
 
 
