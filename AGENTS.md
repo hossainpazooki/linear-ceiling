@@ -69,10 +69,8 @@ operator's Claude Code notes on top of this file and restates nothing from it.
 ## Where to read current state
 Not restated here; it changes too fast. Read, in order:
 1. `ledger/ledger.md`: the hypothesis table, then the entries its cells cite.
-2. `docs/handoff/HANDOFF.md`: the newest brief is the pick-up target, but re-verify it against the repo rather
-   than treating it as evidence.
-3. `docs/drafts/README.md`: staged entries, file order, the next free number (the only allocator).
-4. The experiment's runbook (`docs/*-runbook.md`) and `docs/gpu-experiment-protocol.md`.
+2. `docs/drafts/README.md`: staged entries, file order, the next free number (the only allocator).
+3. The experiment's runbook (`docs/*-runbook.md`) and `docs/gpu-experiment-protocol.md`.
 
 ## Before changing anything
 - Run `git status`: parallel sessions leave uncommitted work in this tree. Commit by explicit paths.
@@ -111,8 +109,7 @@ learnings 2026-10-01 and 2026-10-02), so a red Windows suite is read against tho
 ## Repo map
 - `src/linear_ceiling/`: instruments, gates and fail-closed summarizers. `tests/` mirrors it (synthetic, offline).
 - `config/`: registered experiment configs and manifests. `ledger/ledger.md`: the record.
-- `docs/handoff/` briefs · `docs/drafts/` append scripts + allocator · `docs/reviews/` review records ·
-  `docs/learnings/` re-verifiable learnings · `docs/paper/` outlines (the manuscript is not in this repo) ·
+- `docs/drafts/` append scripts + allocator · `docs/reviews/` review records · `docs/paper/` outlines (the manuscript is not in this repo) ·
   `docs/probes/` scratch probes entries cite · `docs/provenance/` verbatim outside records with hashes ·
   `docs/archive/` superseded READMEs · dated `docs/*.md` design, recon and status documents (the scope authority among them).
 - `docs/gpu-experiment-protocol.md` + dated runbooks · `docs/agent/` commands and architecture.

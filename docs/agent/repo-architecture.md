@@ -1,8 +1,7 @@
 # Repository architecture
 
 A reference map of where things live and which module owns which rule. It is not a status log: verdicts are in
-the ledger's hypothesis table, current work in the newest brief of `docs/handoff/HANDOFF.md`, staged entries in
-`docs/drafts/README.md`. Commands: `docs/agent/experiment-commands.md`. Rules: the root `AGENTS.md`.
+the ledger's hypothesis table, staged entries and current work in `docs/drafts/README.md`. Commands: `docs/agent/experiment-commands.md`. Rules: the root `AGENTS.md`.
 
 ## Single owners (one module, one rule)
 
@@ -103,10 +102,9 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 
 | path | role |
 |---|---|
-| `docs/handoff/` | dated session briefs, immutable; `HANDOFF.md` is the index and its newest brief is the pick-up target |
+| `docs/handoff/` | a stub `HANDOFF.md` only: session briefs are private records since 2026-10-13 (earlier ones remain in git history) |
 | `docs/drafts/` | ordering-guarded `append_00NN.py` scripts for entries not yet written, each running its fail-closed summarizer in-process; `README.md` is the only number allocator and records staged vs appended |
 | `docs/reviews/` | dated review and refutation records (claim / attack / evidence / finding / limits) |
-| `docs/learnings/` | `LEARNINGS.md`: one non-obvious, re-verifiable fact per dated entry, each with a `re-verify:` line; immutable, superseded by `kills:` |
 | `docs/paper/` | paper outlines and seeds; the manuscript source is not in this repository |
 | `docs/probes/` | scratch probes entries 0026 and 0028 cite (SDPA memory probe, the shipped candidate module's validation, the matching-platform re-score and its determinism test) |
 | `docs/provenance/` | verbatim copies of outside records, with hashes (e.g. the A100 fork's ledger excerpt) |

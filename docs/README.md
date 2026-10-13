@@ -55,8 +55,8 @@ figures.
 
 ## Process records
 
-- `handoff/` — session briefs, newest first in `handoff/HANDOFF.md`; the pick-up target.
-- `learnings/` — what went wrong and how it was caught, each with a `re-verify:` line; index `learnings/LEARNINGS.md`.
+- `handoff/HANDOFF.md` — a stub: session briefs and learnings became private records on 2026-10-13 (the files before
+  that date remain in git history; the ledger cites this path once, at entry 0007).
 - `probes/` — scratch probes that entries 0026 and 0028 cite.
 - `provenance/` — borrowed-fact provenance.
 - `archive/` — superseded READMEs, verbatim.

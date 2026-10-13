@@ -39,16 +39,16 @@ This applies the global rule that a repo file may override the global one; say s
 The operator sits a RunPod pod from the Mac: `tools/runpod/rp.py up`, the watchdog, then the `tools/ec2/` flow over
 the ssh alias the runbook names. On every sitting after a campaign's first, pass the watchdog `--kill <cap>` and
 `--ttl <hours>` explicitly; its defaults are a campaign-wide spend cap and `up --hours`, which has killed a run early
-once (learning `docs/learnings/2026-10-08-the-watchdogs-kill-default-is-9-dollars-of-campaign-spend-and-up-hours-is-its-ttl-set-both-explicitly-on-every-sitting-after-a-campaigns-first.md`).
+once (learning `2026-10-08-the-watchdogs-kill-default-is-9-dollars-of-campaign-spend-and-up-hours-is-its-ttl-set-both-explicitly-on-every-sitting-after-a-campaigns-first.md`, in the operator's private briefs).
 The minute-by-minute log goes into the dated runbook as it happens, never reconstructed afterwards.
 
 ## Shell traps that have bitten here
 - Git Bash rewrites a leading-slash argument into a Windows path, even for `python.exe`: an upload to `/workspace`
   went to a Windows path and reported success. Prefix `MSYS_NO_PATHCONV=1`, or pass bytes through Python
-  (learning `docs/learnings/2026-10-07-git-bash-rewrites-a-leading-slash-argument-so-rp-py-put-dest-workspace-uploaded-to-a-windows-path-and-reported-success.md`).
+  (learning `2026-10-07-git-bash-rewrites-a-leading-slash-argument-so-rp-py-put-dest-workspace-uploaded-to-a-windows-path-and-reported-success.md`, in the operator's private briefs).
 - zsh over ssh does not word-split an unquoted variable: a command held in a variable becomes one missing path and
   a release chain silently skips. Spell the arguments out
-  (learning `docs/learnings/2026-10-08-zsh-over-ssh-does-not-word-split-an-unquoted-variable-a-command-held-in-a-variable-becomes-one-missing-path-and-the-whole-release-chain-silently-skips.md`).
+  (learning `2026-10-08-zsh-over-ssh-does-not-word-split-an-unquoted-variable-a-command-held-in-a-variable-becomes-one-missing-path-and-the-whole-release-chain-silently-skips.md`, in the operator's private briefs).
 - The Bash tool's heredocs die past a few KB: write the script into the session scratchpad and run it from there.
 - A loop whose body runs `ssh` has its stdin eaten by `ssh`; run each body with `< /dev/null`.
 - The Windows console is cp1252: ASCII in `print()`; UTF-8 only into files opened as UTF-8.
@@ -58,7 +58,7 @@ The minute-by-minute log goes into the dated runbook as it happens, never recons
   never pasted into the chat.
 - A detached push is written in the shell-prefix form, `HF_TOKEN=$HF_TOKEN nohup caffeinate -i bash tools/hf_backup.sh …`.
   The `env HF_TOKEN=$HF_TOKEN …` form puts the token into argv, `ps` and the transcript
-  (learning `docs/learnings/2026-10-09-env-var-equals-in-a-detached-command-line-puts-the-secret-into-argv-use-a-shell-environment-prefix-or-the-scripts-tty-prompt.md`).
+  (learning `2026-10-09-env-var-equals-in-a-detached-command-line-puts-the-secret-into-argv-use-a-shell-environment-prefix-or-the-scripts-tty-prompt.md`, in the operator's private briefs).
   The token is revoked once the verifier prints BACKUP VERIFIED.
 - The RunPod API key lives at `~/.config/linear-ceiling/runpod_api_key` and is never printed, echoed or read into
   the conversation.
@@ -71,10 +71,15 @@ The minute-by-minute log goes into the dated runbook as it happens, never recons
   restated from an earlier message, a brief or memory.
 - A reader defect found on a sitting is fixed in the summarizer with a synthetic test in the same change; a
   registered tolerance or control moves only through an entry, in 0028's shape.
-- A learning goes to `docs/learnings/` with a `re-verify:` line that Claude runs from the written file before
-  handing the block over. A brief goes to `docs/handoff/`. A brief edited after its commit is restored to the
-  committed bytes. Anything private (a consultation draft, reviewer correspondence)
-  goes to `~/dev/briefs`, never into this tree.
+- If a file named `LEARNINGS.md` exists at the repository root, read it before any paper work. It is untracked
+  (gitignored) and arrives out of band: the co-authors' digest of the private learnings and handoff records, for
+  writing the MLSys draft. Its figures are pointers into the ledger, not evidence; every number still comes from
+  the entry or summary file it names. A clone without the file loses nothing that is on the record.
+- Learnings and session briefs are private since 2026-10-13: a learning (with its `re-verify:` line, run from the
+  written file before the block is handed over) goes to `~/dev/briefs/linear-ceiling/learnings/`, a brief to
+  `~/dev/briefs/linear-ceiling/handoff/`, both with their index files; the pre-2026-10-13 files were moved there
+  from `docs/` and remain in this repository's history. Anything else private (a consultation draft, reviewer
+  correspondence) goes to `~/dev/briefs` as well, never into this tree.
 
 ## Paper text
 The manuscript is not in this repository. A rewrite is delivered as the paragraph, then a "Changes, and why" list

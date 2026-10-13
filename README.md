@@ -198,8 +198,7 @@ claim that rests on it.
 | understand why the program asked these questions | `docs/background.md`, `docs/gap-map.md`, `docs/2026-09-06-gap-map-revisited.md` |
 | find a runbook, seed, design or status note | `docs/README.md` |
 | work in the repo as an agent | `AGENTS.md`; `docs/agent/repo-architecture.md` for the module map |
-| pick up the work where the last session left it | `docs/handoff/HANDOFF.md`, newest brief first |
-| see what went wrong before and how it was caught | `docs/learnings/LEARNINGS.md` |
+| see what went wrong before and how it was caught | the ledger's corrective entries (0021, 0045, 0058, 0059) and `docs/reviews/` |
 
 ## Citation
 

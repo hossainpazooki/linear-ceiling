@@ -1,7 +1,7 @@
 # GPU experiments — how we run them and the rules that bind them
 
 Standing protocol, written 2026-09-05 from the E9 GPU day (2026-09-04; entries 0026–0029; runbook
-`docs/2026-09-02-e9-gpu-runbook.md`; closing brief `docs/handoff/2026-09-04-e9-gpu-day-and-verdict.md`).
+`docs/2026-09-02-e9-gpu-runbook.md`; closing brief `2026-09-04-e9-gpu-day-and-verdict.md`, a private record since 2026-10-13).
 Each experiment still gets its own dated runbook; this page is what every runbook inherits. The ledger
 entries cited here are the authority where they overlap; this page adds the box, transport and backup
 discipline the ledger does not carry.
