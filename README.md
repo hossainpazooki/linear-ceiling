@@ -126,7 +126,7 @@ What the GPU step needs and does not ship: the public agent trajectories under `
 by subprocess; the gate refuses if its pin does not hold), the pair's mapper, and one 40–80 GB card for one sitting.
 Each sitting has a dated runbook listed in `docs/README.md`, and the standing rules R1–R12 are in
 `docs/gpu-experiment-protocol.md`. The complete command reference, with what each gate refuses until, is
-`docs/agent/experiment-commands.md` (on `main` after PR #19; `CLAUDE.md` until then).
+`docs/agent/experiment-commands.md`.
 
 ## How the record is built
 
@@ -197,7 +197,7 @@ claim that rests on it.
 | read what the MLSys draft changes from the camera-ready | `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md`, then `docs/drafts/tables/` |
 | understand why the program asked these questions | `docs/background.md`, `docs/gap-map.md`, `docs/2026-09-06-gap-map-revisited.md` |
 | find a runbook, seed, design or status note | `docs/README.md` |
-| work in the repo as an agent | `AGENTS.md` (after PR #19; `CLAUDE.md` until then) |
+| work in the repo as an agent | `AGENTS.md`; `docs/agent/repo-architecture.md` for the module map |
 | pick up the work where the last session left it | `docs/handoff/HANDOFF.md`, newest brief first |
 | see what went wrong before and how it was caught | `docs/learnings/LEARNINGS.md` |
 
