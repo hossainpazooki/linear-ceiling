@@ -149,6 +149,20 @@ $PY -m linear_ceiling.e9 --check --config config/e9t-<level>.toml        # gate 
 $PY -m linear_ceiling.summarize_e9_trunc                        # after the four runs: summarize_e9 per level (fail-closed, the gate), then the paired comparison on M_cap, the |M_cap| >= 2000 void gate, and the registered +/-0.005 reading of L32's far-from-seam median against 0038 / 0036 (READ from results/e9s/compare.json and results/e9l/summary.json) -> results/e9t/compare.{json,md}
 ```
 
+## E-TRUNC, the L32-native cell (staged 0062; descriptive)
+
+Operator ruling A (2026-10-13): the L32 level with BOTH models under their native RoPE, `config/e9t-l32n.toml`
+(`config/e9t-l32.toml` minus `[e9.rope]` and `[e9.bridge]`, plus `[e9.native]`), paired token by token with the L32
+YaRN level on M_cap. The summarizer's native-window control reads the longest DUMPED length (S' + 1, or R) against
+each dump's recorded window on this cell, since the 81,920 cap is for inclusion only.
+
+```
+$PY -m linear_ceiling.e9 --align-only --config config/e9t-l32n.toml      # the alignment pass: identical to e9t-l32's by construction (same S', same R, same aligner)
+$PY -m linear_ceiling.summarize_e9_native --alignment-check             # BEFORE any prefill, CPU: native matched sets == the YaRN level's, M_cap and the void set from the four E-TRUNC passes, the longest dumped length -> results/e9tn/alignment.{json,md}; append_0062.py runs it in-process
+$PY -m linear_ceiling.e9 --check --config config/e9t-l32n.toml           # gate: 0019/0023/0025/0027/0035/0055/0062 committed, config committed unmodified, upstream at 063f402, mapper by sha
+$PY -m linear_ceiling.summarize_e9_native                               # after the run: summarize_e9 on the native cell and on e9t-l32 (fail-closed, the gate), then the paired comparison on M_cap and the registered +/-0.005 reading of the native far-from-seam median against 0038's native-short (READ from results/e9s/compare.json) and 0057's YaRN-L32 on the same tokens (READ from results/e9t/compare.json, recomputed, refused on disagreement) -> results/e9tn/compare.{json,md}
+```
+
 ## Second model family — Llama long cell (registered 0050, ran 0051; descriptive)
 
 As written in entry 0050 (gate and reader for `config/e9fl.toml`); the short cell is entries 0042–0044 with
