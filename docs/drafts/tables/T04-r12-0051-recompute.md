@@ -1,7 +1,7 @@
 # T04 — R12 recompute of 0051 (the Llama long cell) from the Hub mirror
 
-status: DRAFT (recomputed 2026-10-11 by the second family's author on issue #21, ask 1; awaiting the operator's
-  re-verify run)
+status: APPROVED 2026-10-13 (recomputed 2026-10-11 by the second family's author on issue #21, ask 1; both re-verify
+  lines run on the operator's verified Windows mirror 2026-10-13 with exactly the expected output)
 sources: ledger lines at `e0be46d` (the ledger is unchanged from there to main `5c4e645`) — 0051:3870, 3874, 3878,
   3885, 3891. Files — `results/e9fl/summary.json`: the operator's mirror and the Hub backup carry sha256
   `1ac712b3897e…`; the recompute below wrote `b67ebd977cee…` (the difference is confined to the 19 leaves named under
