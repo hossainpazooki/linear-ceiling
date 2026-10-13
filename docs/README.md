@@ -13,7 +13,7 @@ here, and a reader needs only the first two.
 | `2026-08-26-kv-handoff-screen-design.md` | the design spec; the scope authority |
 | `background.md` · `gap-map.md` · `2026-09-06-gap-map-revisited.md` | how the program got its shape, and the motivating claims read against the record |
 | `2026-10-03-co-author-run-admission.md` | how a co-author's GPU run enters the ledger |
-| `2026-10-01-anonymity-denylist.md` | the terms the double-blind mirror censors |
+| `2026-10-13-anonymity-denylist.md` | the terms the double-blind mirror censors, refreshed for the MLSys re-cut (supersedes the 2026-10-01 list) |
 | `reviews/` | dated adversarial reads of the record, the camera-ready and the co-author runs; each a finished document |
 | `drafts/` | staged append scripts and `drafts/tables/` (the paper's paste-source tables); its README is the only entry-number allocator |
 | `paper/` | the outlines the LCFM paper was written from and the MLSys delta index |
