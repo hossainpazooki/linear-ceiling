@@ -32,7 +32,7 @@ authority; this page only names the files beside it.
 | second family E9 short cell | 0044, 0045 | `results/e9f/summary.json` `e1e5feb8aadd`; tail `results/e9f/tail.json` `c35c48b9dbbe` | `emmmy/linear-ceiling-e9f-2026-09-19` |
 | second family long cell at a native receiver | 0051 | `results/e9fl/summary.json` `1ac712b3897e` | `hossainpazooki/linear-ceiling-e9fl-2026-10-07` (private as of 2026-10-11) |
 | same-model extension to two more models | 0048 | `results/consolidation/` | see entry 0048 |
-| cache behaviour, next-token sensitivity | 0049 | `results/cache-behavior/` | see entry 0049 |
+| cache behaviour, next-token sensitivity | 0049 | `results/cache-behavior/summary.json`; the entry's CYCLIC arm is the file's `arms.scrambled` key (reuse and random keep their names) | see entry 0049 |
 | corpus and headroom, E7 | 0015, 0018, 0022, 0024 | `results/e7/` (recomputed from raw traces by `summarize_e7`) | traces rebuilt from `config/e7-manifest.json` |
 
 The paste sources, each with both source forms (entry:line at a named ledger revision, and summary-file key with sha12),
