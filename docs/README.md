@@ -17,7 +17,7 @@ here, and a reader needs only the first two.
 | `reviews/` | dated adversarial reads of the record, the camera-ready and the co-author runs; each a finished document |
 | `drafts/` | staged append scripts and `drafts/tables/` (the paper's paste-source tables); its README is the only entry-number allocator |
 | `paper/` | the outlines the LCFM paper was written from and the MLSys delta index |
-| `agent/` (after PR #19) | command reference and module map for agents working in the repo |
+| `agent/` | command reference and module map for agents working in the repo |
 
 ## Runbooks, one per GPU sitting
 
