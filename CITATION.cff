@@ -11,11 +11,32 @@ authors:
 preferred-citation:
   type: conference-paper
   title: "KV Cache Drift Across Handoffs in Long-Horizon Agents"
-  # Eight authors on the submitted camera-ready (sha256 6c706bef...); the operator fills the
-  # other seven from the PDF's first page before the first release tag.
+  # Author order and affiliations as printed on page 1 of the submitted camera-ready (sha256 6c706bef...).
   authors:
     - family-names: Pazooki
       given-names: Hossain
+      affiliation: Independent Researcher
+    - family-names: Nadathur
+      given-names: Vikram
+      affiliation: De Anza College
+    - family-names: Yan
+      given-names: Lingyuan
+      affiliation: Independent Researcher
+    - family-names: Alake
+      given-names: Samuel
+      affiliation: Independent Researcher
+    - family-names: Asad
+      given-names: Muhammad Zain
+      affiliation: University of Alberta
+    - family-names: Yu
+      given-names: Emerson
+      affiliation: University of Toronto
+    - family-names: Aggarwal
+      given-names: Ritvik
+      affiliation: University of Toronto
+    - family-names: Ishmam
+      given-names: Md Farhan
+      affiliation: University of Utah
   collection-title: "NeurIPS 2026 Workshop on Long Context Foundation Models (non-archival)"
   year: 2026
   url: "https://openreview.net/forum?id=kEGVswNFaq"

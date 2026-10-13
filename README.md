@@ -206,7 +206,7 @@ claim that rests on it.
 ```bibtex
 @inproceedings{pazooki2026kvdrift,
   title     = {{KV} Cache Drift Across Handoffs in Long-Horizon Agents},
-  author    = {Pazooki, Hossain and others},
+  author    = {Pazooki, Hossain and Nadathur, Vikram and Yan, Lingyuan and Alake, Samuel and Asad, Muhammad Zain and Yu, Emerson and Aggarwal, Ritvik and Ishmam, Md Farhan},
   booktitle = {NeurIPS 2026 Workshop on Long Context Foundation Models},
   year      = {2026},
   note      = {Non-archival},
