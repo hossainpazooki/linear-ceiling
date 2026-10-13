@@ -138,10 +138,22 @@ the submission; the manuscript tree is pinned at submission by the reconciliatio
 line, nothing runs. Ordering guard: 0057 and 0059 present (file order ends 0059, 0057), 0060 absent. Runs on Windows (the two
 Mac-only summary files were copied over on 2026-10-09). Next free number: **0061**.
 
+*(Carried 2026-10-13, no number: the next entry that touches 0045 carries one sentence correcting 0045:3126/3131 — the E7 report hash 27dc922e was regenerated on the second family's summarizing machine at home (0044:2920, 2924), not the GPU box, and T04 reproduces it there; learning 2026-10-13. Next free number unchanged: **0061**.)*
+
 *(2026-10-10: **0060 APPENDED** (`e0be46d`, chain `84e86162…`; script retired in the retire commit; ran on Windows with
 `--date 2026-10-10` after the 0060 preview passed the same day). File order now ends 0059, 0057, 0060. Nothing staged.
 Next free number: **0061**. From this append on, allocator state is recorded here only; `CLAUDE.md` carries no entry
 lines (PR #19's layout).)*
+
+*(2026-10-10, late: **0061 WITHDRAWN before its staging commit** (operator ruling). A draft `append_0061.py` was written and
+previewed as a corrective stating that the pooled PER-TOKEN p10/p90/p99 in 0038 (scaled − native) and 0045 (per cell) are
+`np.quantile` linear interpolation while every quantile over handoffs is `e7_stats` nearest-rank; the preview reproduced all
+11 recorded values and found the largest nearest-rank gap 0.0001001. Dropped because nothing on the record moves: the
+summarizers' printed values are the readings, the ledger already carries an interpolated p90 at 0006 line 267, and 0013's
+"one convention" sentence describes its own table. The fact lives in `AGENTS.md` (PR #19) and the learnings of 2026-10-01
+and 2026-10-10; the rule for printing one of these quantiles in the paper is `tables/T01-pooled-per-token-quantiles.md`
+(the first file of `docs/drafts/tables/`, paper-table drafts with their sources). The number 0061 was never used. Nothing staged.
+Next free number: **0061**.)*
 
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;

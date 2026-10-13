@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this record or its tools, cite the paper below. The repository is the registered record the paper is written from."
+title: "linear-ceiling: a pre-registered experiment record on KV-cache reuse at agent handoffs"
+type: software
+license: Apache-2.0
+repository-code: "https://github.com/hossainpazooki/linear-ceiling"
+authors:
+  - family-names: Pazooki
+    given-names: Hossain
+    email: hossain@pazooki.com
+preferred-citation:
+  type: conference-paper
+  title: "KV Cache Drift Across Handoffs in Long-Horizon Agents"
+  # Author order and affiliations as printed on page 1 of the submitted camera-ready (sha256 6c706bef...).
+  authors:
+    - family-names: Pazooki
+      given-names: Hossain
+      affiliation: Independent Researcher
+    - family-names: Nadathur
+      given-names: Vikram
+      affiliation: De Anza College
+    - family-names: Yan
+      given-names: Lingyuan
+      affiliation: Independent Researcher
+    - family-names: Alake
+      given-names: Samuel
+      affiliation: Independent Researcher
+    - family-names: Asad
+      given-names: Muhammad Zain
+      affiliation: University of Alberta
+    - family-names: Yu
+      given-names: Emerson
+      affiliation: University of Toronto
+    - family-names: Aggarwal
+      given-names: Ritvik
+      affiliation: University of Toronto
+    - family-names: Ishmam
+      given-names: Md Farhan
+      affiliation: University of Utah
+  collection-title: "NeurIPS 2026 Workshop on Long Context Foundation Models (non-archival)"
+  year: 2026
+  url: "https://openreview.net/forum?id=kEGVswNFaq"

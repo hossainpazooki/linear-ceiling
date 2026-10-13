@@ -13,7 +13,8 @@ first clause is `NOT CONFIRMED` (entry 0004, E0); H-S1/H-S3/H-S4 carry `SHELVED`
 no experiment decided them; none is scheduled; the screen-validation line is CLOSED, entry
 0006); H-E7a is `NOT CONFIRMED` (entry 0015; corrected figures 0018; tokenizer sensitivity
 0022) and H-E7b `UNESTIMABLE` (entry 0015); H-E8 is `NOT CONFIRMED` (entry 0020); H-E9 is
-`unresolved` (registered 0019, rule amended 0023 — gated, awaiting its run). From entry 0007 on, each entry
+`HELD` (entry 0029; registered 0019, rule amended 0023); H-E9L is `HELD` (entry 0036) and H-E9F is
+`HELD` (entry 0044), each on its own cohort, never pooled. From entry 0007 on, each entry
 records a `prior-entries-sha256:` over the entries section above it; from entry 0024 on, an
 entry that changes a verdict cell carries a machine-readable line `verdict: H-XX = <VERDICT>`
 (the cells above are otherwise frozen in `ledger_check.VERDICT_PROVENANCE`), and an entry that
@@ -25,6 +26,9 @@ Rule amendment: the H-E9 row below embeds entry 0019's rule clause (pooled K R²
 statement cell; that clause is superseded by entry 0023 (median oracle selective-recompute fraction
 f*(τ_K), 0.15/0.50) and the cell text is left as registered under the house rule that only the verdict
 cell changes.
+Rule amendment (2026-10-13): the H-E9, H-E9L and H-E9F statement cells say "read on a floor (0027)"; entry 0058
+withdrew that reading — f*(τ) is the oracle removal fraction, read on the mean within τ, not a lower bound on recompute
+cost — and the cell text is left as registered under the same house rule.
 
 ## Hypotheses (pre-registered; verdict column is the only cell that ever changes, and only via a numbered entry)
 
