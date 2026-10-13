@@ -138,6 +138,8 @@ the submission; the manuscript tree is pinned at submission by the reconciliatio
 line, nothing runs. Ordering guard: 0057 and 0059 present (file order ends 0059, 0057), 0060 absent. Runs on Windows (the two
 Mac-only summary files were copied over on 2026-10-09). Next free number: **0061**.
 
+*(Carried 2026-10-13, no number: the next entry that touches 0045 carries one sentence correcting 0045:3126/3131 — the E7 report hash 27dc922e was regenerated on the second family's summarizing machine at home (0044:2920, 2924), not the GPU box, and T04 reproduces it there; learning 2026-10-13. Next free number unchanged: **0061**.)*
+
 *(2026-10-10: **0060 APPENDED** (`e0be46d`, chain `84e86162…`; script retired in the retire commit; ran on Windows with
 `--date 2026-10-10` after the 0060 preview passed the same day). File order now ends 0059, 0057, 0060. Nothing staged.
 Next free number: **0061**. From this append on, allocator state is recorded here only; `CLAUDE.md` carries no entry
