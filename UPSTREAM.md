@@ -43,7 +43,7 @@
   (8 KV heads x 128 head dim on both sides; the receiver declares no `head_dim` and `kv_shape` reaches 128 by
   `hidden_size // num_attention_heads`), so `check_matched_kv` passes unrelaxed and no estimator, scorer or dump
   format changes: the diff is one entry and no behaviour. The specification the operator lands is
-  `docs/2026-09-18-llama-upstream-patch-spec.md`; it is written against this repo's read-only rule and nothing
+  `docs/design/2026-09-18-llama-upstream-patch-spec.md`; it is written against this repo's read-only rule and nothing
   here writes to the upstream tree. **P must be based on `063f4023`** ("RoPE spec from the model's rotary
   embedding"; the tip of `origin/main`, a descendant of the pin above and of `d5786df9`), not on the checkout's
   current `d5786df9`: both models declare `rope_scaling.rope_type = "llama3"`, whose low-frequency rescaling a
