@@ -31,3 +31,4 @@ Format (approved by the operator 2026-10-10):
 | [T01](T01-pooled-per-token-quantiles.md) | RULE | printing a pooled per-token p10/p90/p99 under the nearest-rank sentence |
 | [T02](T02-e-trunc-paragraph.md) | APPROVED 2026-10-10 | the E-TRUNC paragraph (§4); §X cross-reference open, filled by a superseding file |
 | [T03](T03-second-pair-section.md) | DRAFT | §4.x second pair Llama-3.2-3B → Llama-3.1-8B: table, P1–P4, App. A scoping sentences; P2 tail-sentence placement open |
+| [T04](T04-r12-0051-recompute.md) | DRAFT | R12 recompute of 0051 (Llama long cell) from the Hub mirror: 18 figures, entry vs recomputed, all equal |
