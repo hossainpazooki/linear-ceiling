@@ -30,7 +30,7 @@ authority; this page only names the files beside it.
 | E-TRUNC, four truncation levels on the long handoffs | 0057 | `results/e9t/compare.json` `0572662307f3` | `hossainpazooki/linear-ceiling-e9t-2026-10-08` |
 | second family E8, Llama-3.2-3B → 3.1-8B, all-sequence arm | 0040, 0053 | `results/e8fa/summary.json` `9ddb66cc2796` | `emmmy/linear-ceiling-e8f-2026-09-18` |
 | second family E9 short cell | 0044, 0045 | `results/e9f/summary.json` `e1e5feb8aadd`; tail `results/e9f/tail.json` `c35c48b9dbbe` | `emmmy/linear-ceiling-e9f-2026-09-19` |
-| second family long cell at a native receiver | 0051 | `results/e9fl/summary.json` `1ac712b3897e` | `hossainpazooki/linear-ceiling-e9fl-2026-10-07` (private as of 2026-10-11) |
+| second family long cell at a native receiver | 0051 | `results/e9fl/summary.json` `1ac712b3897e` | `hossainpazooki/linear-ceiling-e9fl-2026-10-07` (public since 2026-10-13) |
 | same-model extension to two more models | 0048 | `results/consolidation/` | see entry 0048 |
 | cache behaviour, next-token sensitivity | 0049 | `results/cache-behavior/summary.json`; the entry's CYCLIC arm is the file's `arms.scrambled` key (reuse and random keep their names) | see entry 0049 |
 | corpus and headroom, E7 | 0015, 0018, 0022, 0024 | `results/e7/` (recomputed from raw traces by `summarize_e7`) | traces rebuilt from `config/e7-manifest.json` |

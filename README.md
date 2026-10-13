@@ -154,8 +154,8 @@ tools work; it does not prove a scientific claim. Mapped to files:
 
 Raw model outputs never enter git history. Each GPU run's tensors are backed up to a Hugging Face dataset after the
 run is verified at home; the backup is transport, not evidence, and `tools/hf_verify_backup.py <repo_id> <local_root>`
-checks every file in both directions before it counts. Seven of the eight datasets are public and need no token; the
-second family's long cell (`e9fl`) is still private as of 2026-10-11.
+checks every file in both directions before it counts. All eight datasets are public and need no token (the second
+family's long cell, `e9fl`, was made public on 2026-10-13).
 
 | dataset | what it holds | entries |
 |---|---|---|
@@ -165,7 +165,7 @@ second family's long cell (`e9fl`) is still private as of 2026-10-11.
 | [`hossainpazooki/linear-ceiling-e9s-2026-09-13`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9s-2026-09-13) | the 25 shorter handoffs re-run under the long run's scaled receiver | 0037–0038 |
 | [`emmmy/linear-ceiling-e8f-2026-09-18`](https://huggingface.co/datasets/emmmy/linear-ceiling-e8f-2026-09-18) | the second model family's calibration (Llama-3.2-3B → Llama-3.1-8B): dumps, the k = 1/4/8 mappers | 0040 |
 | [`emmmy/linear-ceiling-e9f-2026-09-19`](https://huggingface.co/datasets/emmmy/linear-ceiling-e9f-2026-09-19) | the second model family's short cell | 0042–0044 |
-| [`hossainpazooki/linear-ceiling-e9fl-2026-10-07`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9fl-2026-10-07) | the second model family's long cell at a native receiver (private) | 0050–0051 |
+| [`hossainpazooki/linear-ceiling-e9fl-2026-10-07`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9fl-2026-10-07) | the second model family's long cell at a native receiver | 0050–0051 |
 | [`hossainpazooki/linear-ceiling-e9t-2026-10-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9t-2026-10-08) | E-TRUNC: the 35 long handoffs at four sender-truncation levels | 0055, 0057 |
 
 Protocol R8 in `docs/gpu-experiment-protocol.md` governs the push and the restore; after a restore the gates decide,
