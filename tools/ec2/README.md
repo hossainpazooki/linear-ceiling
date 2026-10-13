@@ -1,7 +1,7 @@
 # tools/ec2 — driving a rented EC2 GPU instance from home over ssh
 
 The ssh form of `tools/jupyterhub/` (which drives a JupyterHub-only box). First used for the E9-long sitting,
-2026-09-10 (runbook `docs/2026-09-10-e9l-gpu-runbook.md`). The protocol is `docs/gpu-experiment-protocol.md`
+2026-09-10 (runbook `docs/runbooks/2026-09-10-e9l-gpu-runbook.md`). The protocol is `docs/gpu-experiment-protocol.md`
 R1–R12 unchanged; the only thing a rented instance changes is the release step (R7 step 6: terminate and prove
 it, instead of stopping a hub server) and that nobody else shares the login (R7 step 0 still runs and is expected
 to find only us).

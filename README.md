@@ -195,7 +195,7 @@ claim that rests on it.
 |---|---|
 | trace a paper figure to its bytes | `docs/paper-to-record.md` |
 | read what the MLSys draft changes from the camera-ready | `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md`, then `docs/drafts/tables/` |
-| understand why the program asked these questions | `docs/background.md`, `docs/gap-map.md`, `docs/2026-09-06-gap-map-revisited.md` |
+| understand why the program asked these questions | `docs/design/background.md`, `docs/design/gap-map.md`, `docs/design/2026-09-06-gap-map-revisited.md` |
 | find a runbook, seed, design or status note | `docs/README.md` |
 | work in the repo as an agent | `AGENTS.md`; `docs/agent/repo-architecture.md` for the module map |
 | see what went wrong before and how it was caught | the ledger's corrective entries (0021, 0045, 0058, 0059) and `docs/reviews/` |

@@ -17,7 +17,7 @@ SCOPE_SENTENCE = ("The screen predicts what a linear mapper can achieve; retenti
 # Verbatim source documents: committed exactly as authored (the design spec and the docs it
 # governs). They must not be edited to dodge this lint, so they are exempted by exact filename
 # instead of relying on the paraphrase heuristic to spare them.
-EXEMPT = {"docs/2026-08-26-kv-handoff-screen-design.md", "docs/2026-08-26-seed-w1.md", "docs/gap-map.md"}
+EXEMPT = {"docs/design/2026-08-26-kv-handoff-screen-design.md", "docs/design/2026-08-26-seed-w1.md", "docs/design/gap-map.md"}
 
 # Sentence boundary: standard terminal punctuation only. An earlier version also treated the
 # unicode arrow "->" as a boundary, to stop a false positive on ledger.md H-S3 (a long

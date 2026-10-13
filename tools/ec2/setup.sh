@@ -4,7 +4,7 @@
 # Inputs uploaded to ~ before this runs: k1.json, k1.safetensors (the mapper, R3), traces.tar.gz (the manifest's bytes),
 # and -- for a pair whose weights are GATED -- hf-cache.tar.gz, the pre-staged HF cache (see "weights" below).
 # Defaults below are entry 0035's: EXP=e9l, the Qwen pair, and the mapper and manifest shas of the R3 table of
-# docs/2026-09-10-e9l-gpu-runbook.md. EVERY pin is overridable from the environment, and a second family changes
+# docs/runbooks/2026-09-10-e9l-gpu-runbook.md. EVERY pin is overridable from the environment, and a second family changes
 # nothing here but those values -- box.sh ssh 'setsid nohup env EXP=... PAIR=... UP_SHA=... bash ~/setup.sh ...'.
 # Both clones come from https://github.com/hossainpazooki/... AT A SHA, so the upstream commit and every
 # linear-ceiling commit this sitting needs MUST BE PUSHED to those remotes before a box is brought up; a sha that

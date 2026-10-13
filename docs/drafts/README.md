@@ -56,7 +56,7 @@ drafts (0050/0051 long cell, 0052/0053 E8 amendment) and appended before them, s
 `ledger_check` chains by file order. Ordering guard: 0047 present, 0054 absent. *(0054 APPENDED 2026-10-04, `a2742b9`.)*
 
 **Staged 2026-10-04 (night): `append_0056.py` — co-author pilot figures admitted to paper text by operator ruling** (the two
-merged co-author documents `docs/2026-10-01-cache-behavior-h100.md` and `docs/2026-10-01-a100-analysis.md` may be cited under a
+merged co-author documents `docs/pilots/2026-10-01-cache-behavior-h100.md` and `docs/pilots/2026-10-01-a100-analysis.md` may be cited under a
 provenance sentence; supersedes the "in any paper" clauses of 0046/0047; R1/R8/R12 for LEDGER figures unchanged, so 0048/0049 still
 need the operator's run or the admission procedure; types no figure). 0055 is the E-TRUNC registration (PR #17, merged `c37f626`; appended `a5c8691`). 0056 APPENDED `caccab5`.
 Ordering guard: 0054 present, 0056 absent. Next free number: **0057**.
@@ -75,7 +75,7 @@ IN-PROCESS over the four passes and states every count from it; reads the two re
 E9-long sitting's duration from 0036 and its peak/rate from the runbook. Needs the four `e9 --align-only --config
 config/e9t-*.toml` passes on the registrant's machine. *(Allocator state after 2026-10-04: appended in file order 0047, 0054, 0052, 0056, 0055, 0053, 0050 (`cff787f`, script retired); staged 0048/0049 and 0051. Next free number: **0057**.)*
 
-*(2026-10-07: 0047's operator run is DONE and backed up (runbook `docs/2026-10-06-cache-behavior-runpod-runbook.md`); `append_0049.py`
+*(2026-10-07: 0047's operator run is DONE and backed up (runbook `docs/runbooks/2026-10-06-cache-behavior-runpod-runbook.md`); `append_0049.py`
 now asserts the OPERATOR's inputs manifest `2aeee576…` with its pinned fields checked against the pilot's freeze record, per the operator
 ruling of 2026-10-07 quoted in the script (the pilot's frozen `9a6f2923…` embeds the sha of a private file); its `report["identity"]`
 key bug fixed. Still queued behind 0048 (`PREV = "0048"`) unless the operator re-sequences. 0046's operator run is in progress.)*
@@ -104,7 +104,7 @@ ends 0048, 0049, 0058. Still staged: 0051, 0057.)*
 
 *(**0051 APPENDED 2026-10-08** by the operator on the Mac mini, chain `75a47a51de6e` (`91cea79`; script retired `62982a8`): the Llama
 long cell ran 2026-10-07 on a RunPod secure A100-SXM4-80GB, 32 of 32, complete, R8 `hossainpazooki/linear-ceiling-e9fl-2026-10-07`
-verified; runbook `docs/2026-10-07-llama-long-cell-runpod-runbook.md`. Before the append the script gained `--dataset`, the 0058
+verified; runbook `docs/runbooks/2026-10-07-llama-long-cell-runpod-runbook.md`. Before the append the script gained `--dataset`, the 0058
 wording, and a computed paragraph stating the coverage pin's two renderings (0050's `16121e67` is the CRLF bytes; the box's LF
 rendering is `9f10092b`). File order now ends 0049, 0058, 0051. Still staged: 0057 only. Next free number: **0059**.)*
 
@@ -127,7 +127,7 @@ references; the per-handoff causal clause replaced by the pooled-median move wit
 Nothing staged. Next free number: **0060**.)*
 
 **Staged 2026-10-09: `append_0060.py` — the MLSys 2027 cut, the FIGURE SET frozen** (operator: "write entry 0060 summarizing
-experiments addressing review"). Maps the LCFM reviewers' points (`docs/2026-09-30-review-response-map.md` rows W1–W8) to the
+experiments addressing review"). Maps the LCFM reviewers' points (`docs/reviews/2026-09-30-review-response-map.md` rows W1–W8) to the
 experiments run since — the second pair (0044 / 0053 / 0051), the same-model extension (0048), E-TRUNC (0055 / 0057), the tails
 and native-window subset (0045), cache behaviour (0049), the two correctives (0058 / 0059) — with every figure READ from its
 summary file in-process (`results/{e9,e9l,e9f,e9fl}/summary.json`, `e9s/compare.json`, `e8fa` and `e9c` summaries,
@@ -155,7 +155,7 @@ and 2026-10-10; the rule for printing one of these quantiles in the paper is `ta
 (the first file of `docs/drafts/tables/`, paper-table drafts with their sources). The number 0061 was never used. Nothing staged.
 Next free number: **0061**.)*
 
-**Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/2026-10-04-e-trunc-gpu-runbook.md`).
+**Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
 read from `results/e9t/shrinkage.json` (review `docs/reviews/2026-10-04-0055-stated-figures-recomputed.md`). Needs `--box --launched
@@ -234,15 +234,15 @@ summarizer or comparison, or a bridge/profile block in the summary; states the t
 written after the run, kept dumps under `results/e9s/scratch/`). **0038 is allocated here**; origin's ledger ended at 0037 when it
 was staged. If the corrective f* entry (another session, 2026-09-11) lands first, this script and its `NUM` strings move to 0039.
 Do not run it while a hardlinked R8 stage of `results/e9s/` is uploading. Earlier (2026-09-13, later): **0037 APPENDED** 2026-09-13 (chain `f24f8df65f91`, `ledger ok`; script retired in the same
-change; the run itself is on a rented EC2 L40S, runbook `docs/2026-09-13-e9s-gpu-runbook.md`; its figures enter by their own
+change; the run itself is on a rented EC2 L40S, runbook `docs/runbooks/2026-09-13-e9s-gpu-runbook.md`; its figures enter by their own
 entry, number allocated at staging). Earlier that day: **`append_0037.py` STAGED** (E9 scaled short cell registration: 0029's 25 handoffs under 0036's
 receiver configuration and pin, `config/e9s.toml`; descriptive, no hypothesis row, no verdict; the comparison reader is
 `linear_ceiling.e9_compare`; refuses until `results/e9s/align/coverage.json` reproduces 0029's included set, alignments and
 keep draw exactly, `results/e9s/` holds nothing else, and the upstream HEAD is at 0036's pin). **0037 is allocated here.** If
 the corrective entry on the f* reading (another session, 2026-09-11) lands first, it takes 0037 and this script, its `NUM`,
-and `config/e9s.toml` `[e9.gate]` move to 0038 in one commit. Earlier (2026-09-10): **0035 APPENDED** 2026-09-09 (`bacfe86`, script retired `d582f48`); **0036 APPENDED** 2026-09-10 (H-E9L = HELD, 35 scored of 35, from a passing in-process `summarize_e9 --config config/e9l.toml`; script retired in the same change; run on a rented EC2 L40S, runbook `docs/2026-09-10-e9l-gpu-runbook.md`). Earlier that day: **`append_0035.py` STAGED** (E9-long registration: H-E9L row `unresolved`, cap 81,920 by YaRN, floor 32,768, the 35 newly included handoffs, controls incl. the configuration bridge and length profiles, the run order + stopping rule, the paper re-scope superseding 0032's space clause; refuses until `config/e9l.toml` carries the real upstream pin, the upstream HEAD is at it with the RoPE spec, and `results/e9l/` holds nothing but `align/coverage.json`). **`append_0036.py` STAGED** (E9-long figures + H-E9L verdict from an in-process `summarize_e9 --config config/e9l.toml`; `verdict: H-E9L = <CELL>` line; run facts as arguments `--box/--launched/--finished`, `--cutoff-reason` required on a partial close; the bridge reading leads the entry when it is SCALED RECEIVER ONLY; refuses until 0035 is on the ledger and the summary passes). Earlier: **0034 appended** by `append_0034.py` (both summarizers in-process, both passed; script deleted in the
+and `config/e9s.toml` `[e9.gate]` move to 0038 in one commit. Earlier (2026-09-10): **0035 APPENDED** 2026-09-09 (`bacfe86`, script retired `d582f48`); **0036 APPENDED** 2026-09-10 (H-E9L = HELD, 35 scored of 35, from a passing in-process `summarize_e9 --config config/e9l.toml`; script retired in the same change; run on a rented EC2 L40S, runbook `docs/runbooks/2026-09-10-e9l-gpu-runbook.md`). Earlier that day: **`append_0035.py` STAGED** (E9-long registration: H-E9L row `unresolved`, cap 81,920 by YaRN, floor 32,768, the 35 newly included handoffs, controls incl. the configuration bridge and length profiles, the run order + stopping rule, the paper re-scope superseding 0032's space clause; refuses until `config/e9l.toml` carries the real upstream pin, the upstream HEAD is at it with the RoPE spec, and `results/e9l/` holds nothing but `align/coverage.json`). **`append_0036.py` STAGED** (E9-long figures + H-E9L verdict from an in-process `summarize_e9 --config config/e9l.toml`; `verdict: H-E9L = <CELL>` line; run facts as arguments `--box/--launched/--finished`, `--cutoff-reason` required on a partial close; the bridge reading leads the entry when it is SCALED RECEIVER ONLY; refuses until 0035 is on the ledger and the summary passes). Earlier: **0034 appended** by `append_0034.py` (both summarizers in-process, both passed; script deleted in the
 same commit set); **no drafts staged**. Earlier (2026-09-08): **0033 appended** by `append_0033.py` (prose amended first to state the two provenances of the n = 420
-dumps — source CPU 2026-08-24, target GPU 2026-09-08 per `docs/2026-09-08-n420-target-dump-runbook.md`; script deleted in the
+dumps — source CPU 2026-08-24, target GPU 2026-09-08 per `docs/runbooks/2026-09-08-n420-target-dump-runbook.md`; script deleted in the
 same commit set), the registered fit launched; **`append_0034.py` staged** (the figures entry: refuses until 0033 is committed
 and the e8c / e9c chain has run). Earlier: **two drafts staged, in this order: `append_0033.py` (registration of the calibration-size sensitivity: the k = 1 mapper refit upstream on the n = 420 dumps under a tag, E8 arms rescored under 0030's protocol into `results/e8c/`, the E9 cross arm re-scored on the kept subset; descriptive) and `append_0034.py` (its figures, from `summarize_e8 --config config/e8c.toml` and `e9_rescore summarize` in-process).** **0033 is BLOCKED as staged (pick-up 2026-09-07): the n = 420 TARGET dump does not exist upstream (killed 2026-08-25 at 358/420, zero bytes; upstream learnings) and the script's own `meta.json` assert refuses; its prose says "pre-existing" and needs the operator's ruling (re-dump and amend, or drop) before it runs.** 0031 (E8 amendment figures) and 0032 (E9 admitted to the LCFM 4-pager) were appended 2026-09-07 by `append_0031.py` / `append_0032.py`, 0031 with every figure from `summarize_e8 --config config/e8a.toml` in-process; both scripts are retired in the same commit set. Numbers were allocated at staging (2026-09-06). 0028 (the keep-subset re-score tolerance, post-run, pre-verdict) and
 0029 (H-E9 verdict, `verdict: H-E9 = HELD`) were appended 2026-09-04 by `append_0028.py` / `append_0029.py`,
@@ -261,7 +261,7 @@ from a pinned revision, never HEAD, and a retire step is chained to the append w
 from `config/e8a.toml` and the 0020 record) with its figures entry staged as `append_0031.py` (runs `summarize_e8
 --config config/e8a.toml` in-process; refuses until 0030 is committed, the re-pin recorded and the rescoring done). Formerly queued as the **E8 amendment** (`--holdout-frac 1.0` on
 `36d73b3`, per-sequence moments from the `--per-token` record, re-pin). **E-RL** (KV reuse across RL
-post-training checkpoints) is designed only — `docs/2026-09-02-e-rl-design.md` — and has no
+post-training checkpoints) is designed only — `docs/design/2026-09-02-e-rl-design.md` — and has no
 registration script; it takes a number when its script is staged, not before. The 0022 tokenizer
 sensitivity (`summarize_e7 --strategy-override`) gets no entry of its own: it ships in the 0009
 successor bundled with n = 420, per 0022's "one replay supersedes the figures once."
