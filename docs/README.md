@@ -41,17 +41,17 @@ the sitting produced.
 
 `2026-08-26-seed-w1.md` · `2026-09-01-lcfm-gpu-plan.md` · `2026-09-01-measurement-lane-evidence.md` ·
 `2026-09-01-swe-bench-trace-recon.md` · `2026-09-02-e-rl-design.md` (unregistered) · `2026-09-08-seed-e9-long-half.md` ·
-`2026-09-11-gpu-runs-after-the-pivot.md` · `2026-09-13-e-rl-validation.md` · `2026-09-13-seed-e9-scaled-short-cell.md` ·
-`2026-09-14-seed-condition-1.md` · `2026-09-19-async-rl-arr-design.md` (moved out) · `2026-10-01-mlsys-box-plan.md` ·
-`2026-10-01-run-queue-farhan.md` (the ask to a co-author with his own compute).
+`2026-09-13-seed-e9-scaled-short-cell.md`.
 
 ## Status notes and pilot analyses (dated; superseded by later entries)
 
-`2026-09-14-condition-1-board-source.md` · `2026-09-14-condition-1-status.md` · `2026-09-14-e9s-result-note.md` ·
-`2026-09-20-astra_review.md` · `2026-09-30-review-response-map.md` · `2026-09-30-team-status-wednesday.md` ·
-`2026-10-01-a100-analysis.md` · `2026-10-01-cache-behavior-h100.md`. The pilot analyses are the co-author documents
-entry 0056 lets the paper cite under a provenance sentence; the operator's registered runs (0048, 0049) are the
-figures.
+`2026-09-20-astra_review.md` · `2026-09-30-review-response-map.md` · `2026-10-01-a100-analysis.md` ·
+`2026-10-01-cache-behavior-h100.md`. The pilot analyses are the co-author documents entry 0056 lets the paper cite
+under a provenance sentence; the operator's registered runs (0048, 0049) are the figures.
+
+Pruned 2026-10-13: superseded outlines, status notes, plans, two archived READMEs and scratch probes that no ledger
+entry, live document or code cites by path were removed from the tree (26 files); they remain in git history at every
+commit before the removal.
 
 ## Process records
 
@@ -59,4 +59,3 @@ figures.
   that date remain in git history; the ledger cites this path once, at entry 0007).
 - `probes/` — scratch probes that entries 0026 and 0028 cite.
 - `provenance/` — borrowed-fact provenance.
-- `archive/` — superseded READMEs, verbatim.

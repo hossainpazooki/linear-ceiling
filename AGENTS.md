@@ -111,7 +111,7 @@ learnings 2026-10-01 and 2026-10-02), so a red Windows suite is read against tho
 - `config/`: registered experiment configs and manifests. `ledger/ledger.md`: the record.
 - `docs/drafts/` append scripts + allocator · `docs/reviews/` review records · `docs/paper/` outlines (the manuscript is not in this repo) ·
   `docs/probes/` scratch probes entries cite · `docs/provenance/` verbatim outside records with hashes ·
-  `docs/archive/` superseded READMEs · dated `docs/*.md` design, recon and status documents (the scope authority among them).
+  dated `docs/*.md` design, recon and status documents (the scope authority among them).
 - `docs/gpu-experiment-protocol.md` + dated runbooks · `docs/agent/` commands and architecture.
 - `tools/`: GPU box drivers, HF backup push/verify, pilot code. `proofs/`: the Lean 4 formalization.
 - `UPSTREAM.md`: the pin chain and the provenance table for everything borrowed.

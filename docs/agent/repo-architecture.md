@@ -108,7 +108,6 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 | `docs/paper/` | paper outlines and seeds; the manuscript source is not in this repository |
 | `docs/probes/` | scratch probes entries 0026 and 0028 cite (SDPA memory probe, the shipped candidate module's validation, the matching-platform re-score and its determinism test) |
 | `docs/provenance/` | verbatim copies of outside records, with hashes (e.g. the A100 fork's ledger excerpt) |
-| `docs/archive/` | superseded READMEs, verbatim |
 | `docs/gpu-experiment-protocol.md` | standing GPU rules R1–R12 |
 | `docs/*-runbook.md` | one dated runbook per GPU sitting |
 | `docs/agent/` | this file and the command reference |
