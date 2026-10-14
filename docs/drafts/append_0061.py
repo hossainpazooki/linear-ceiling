@@ -68,6 +68,7 @@ for key in base:
 assert set(cfg) - set(base) == {"random_control_fractions"}, "the amendment adds exactly one key"
 assert cfg["oracle_fractions"] == cfg["random_control_fractions"] == [0.05, 0.10, 0.20], "ruling B's budgets"
 assert base["oracle_fractions"] == [] and "random_control_fractions" not in base
+candidate_arms = 3 + len(cfg["oracle_fractions"]) + len(cfg["random_control_fractions"])
 e9l = load_e9_config(R / "config" / "e9l.toml", R)
 assert cfg["tau_K"] == e9l.rule["tau_K"] and cfg["rope"] == e9l.rope and cfg["context_cap"] == e9l.context_cap == 81920
 src = run.read_text(encoding="utf-8")
@@ -105,7 +106,7 @@ place, against the reused predecessors, and the prediction sensitivity that rema
 (`{s12(CONFIG_SHA)}…`): every key equal in value to entry {REG}'s `config/cache-behavior.toml` (`{s12(BASE_CONFIG_SHA)}…`,
 unchanged) except `oracle_fractions = [0.05, 0.10, 0.20]` and the one added key `random_control_fractions = [0.05, 0.10, 0.20]`;
 receiver `{cfg['model']}@{s12(cfg['revision'])}`, Transformers {cfg['transformers']}, PyTorch {cfg['torch']}, fp32, SDPA, the long cell's YaRN schedule, cap
-{cfg['context_cap']:,}, seed {cfg['seed']}, τ_K = {cfg['tau_K']!r} used only to rank and to name the archived tail. Driver `tools/cache_behavior/core.py`
+{cfg['context_cap']:,}, seed {cfg['seed']}, τ_K = {cfg['tau_K']!r} names the archived tail; ranking uses δ_K directly. Driver `tools/cache_behavior/core.py`
 `{s12(CORE_SHA)}…` (byte-identical to {REG}'s) and `run.py` `{s12(RUN_SHA)}…`, which differs from {REG}'s `{s12(RUN_SHA_0047)}…` in exactly two
 places: the arm list reads the optional `random_control_fractions` (absent in {REG}'s config, so that registration's arms are
 unchanged) and adds one branch that draws the random-selection subset; tests `tests/test_cache_behavior.py` (the
@@ -135,9 +136,10 @@ this entry registers — whether ranked selection buys more than its budget. **N
 on KL or top-1 is read: {RUN_ENTRY}'s "no downstream task-quality number is claimed" stands; an achieved KL is a
 prediction-sensitivity figure on fixed text, not task accuracy and not a serving cost.
 
-**The registered run (the operator's).** Requested only after this entry is committed. Card: 80 GB (entry {RUN_ENTRY}'s
-peak was 24.95 GiB with eight arm passes per handoff now instead of three: the bound is {RUN_ENTRY}'s 92 minutes × 8/3,
-replaced by the probe on the largest case). R2–R8 of `docs/gpu-experiment-protocol.md`; output tree `{OUTPUT}/`
+**The registered run (the operator's).** Requested only after this entry is committed. Card: 80 GB. Each handoff has
+{candidate_arms} candidate-cache passes, plus FRESH; the largest handoff also runs the fresh-repeat and prefix-copy controls.
+The largest-case probe supplies the time and memory estimate: repair changes the number and size of prefill calls,
+so scaling {RUN_ENTRY}'s total runtime by the arm count does not establish a bound. R2–R8 of `docs/gpu-experiment-protocol.md`; output tree `{OUTPUT}/`
 (`report.json`, per-case `.npz`, `summary.json`), {RUN_ENTRY}'s `{BASE_OUTPUT}/` untouched; mirrored home, verified, and
 backed up to a Hub dataset by `tools/hf_verify_backup.py` before the figures entry.
 
@@ -153,8 +155,9 @@ refuses on any disagreement; no figure is typed.
 drivers and summarizers.
 
 **Scope.** One receiver, one corpus, the 35 long handoffs; fixed proprietary-model text; same-model only; three budgets
-and two selection rules; selection by archived δ_K is an oracle (it reads the fresh states), so ORACLE-f bounds what a
-δ-informed selector could achieve and is not a deployable policy; generation quality after reuse not measured.
+and two selection rules; selection by archived δ_K reads the fresh states. ORACLE-f measures this offline ranking's
+prediction sensitivity, with no optimality bound on KL or top-1 agreement and no deployable selection policy;
+generation quality after reuse not measured.
 
 prior-entries-sha256: PLACEHOLDER
 """

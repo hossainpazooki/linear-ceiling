@@ -305,15 +305,20 @@ def test_invalid_random_control_budgets_fail_before_model_loading(random_fractio
         driver.run(None, {"oracle_fractions": [.2], "random_control_fractions": random_fractions}, None)
 
 
-def test_random_control_arm_matches_the_oracle_budget_and_differs_in_selection(model, tmp_path, monkeypatch):
-    # Repair amendment (ruling B, 2026-10-13): at each budget the random-selection control recomputes exactly
-    # as many matched tokens as the oracle arm, chosen by make_rng(seed + index + 1000003), and on a
-    # non-constant delta the two selections differ. The registered 0047 config carries no
-    # `random_control_fractions`, so the key is optional and its absence adds no arm.
+@pytest.mark.parametrize("fraction,budget", [(.05, 1), (.1, 2), (.2, 4)])
+def test_random_control_arm_matches_the_oracle_budget_and_differs_in_selection(
+        model, tmp_path, monkeypatch, fraction, budget):
     cfg = tomllib.loads((driver.ROOT / "config/cache-behavior-repair.toml").read_text())
     cfg.update(chunk_tokens=2, continuation_chunk=2, attention_queries=2,
                attention_query_chunk=1, prefix_control_tokens=2,
-               oracle_fractions=[.2], random_control_fractions=[.2])
+               oracle_fractions=[fraction], random_control_fractions=[fraction])
+    selections = []
+
+    def capture_selection(model, receiver, pairs, candidate, chunk, recompute=()):
+        selections.append(sorted(recompute))
+        return construct(model, receiver, pairs, candidate, chunk, recompute)
+
+    monkeypatch.setattr(driver, "construct", capture_selection)
     monkeypatch.setattr(model, "to", lambda device: model)
     monkeypatch.setattr(driver.AutoConfig, "from_pretrained", lambda *a, **k: model.config)
     monkeypatch.setattr(driver.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: model)
@@ -339,11 +344,14 @@ def test_random_control_arm_matches_the_oracle_budget_and_differs_in_selection(m
                            config=driver.ROOT / "config/cache-behavior-repair.toml", resume=False, probe=True)
     driver.run(args, cfg, manifest)
     arms = json.loads((args.output / "report.json").read_text())["scores"]["largest"]["arms"]
-    assert set(arms) >= {"reuse", "random", "scrambled", "oracle_ranked_20pct", "random_ranked_20pct"}
-    assert arms["oracle_ranked_20pct"]["recomputed"] == arms["random_ranked_20pct"]["recomputed"] == 4
-    expected = sorted(make_rng(cfg["seed"] + 0 + 1_000_003).permutation(n)[:4].tolist())
-    assert expected != [0, 1, 2, 3], "the fixture's seed must make the random draw differ from the oracle's"
+    oracle, random = (f"{arm}_ranked_{fraction * 100:g}pct" for arm in ("oracle", "random"))
+    assert set(arms) == {"reuse", "random", "scrambled", oracle, random}
+    assert arms[oracle]["recomputed"] == arms[random]["recomputed"] == budget
+    expected = sorted(make_rng(cfg["seed"] + 1_000_003).permutation(n)[:budget].tolist())
+    assert selections[-2] == list(range(budget))
+    assert selections[-1] == expected
+    assert selections[-1] != selections[-2]
     with np.load(args.output / "largest.npz") as arrays:
-        assert arrays["oracle_ranked_20pct_kl"].shape == arrays["random_ranked_20pct_kl"].shape == (2,)
+        assert arrays[f"{oracle}_kl"].shape == arrays[f"{random}_kl"].shape == (2,)
     summary = summarize(args.output, inputs)
-    assert "random_ranked_20pct" in summary["arms"] and "oracle_ranked_20pct" in summary["arms"]
+    assert random in summary["arms"] and oracle in summary["arms"]
