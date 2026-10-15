@@ -32,3 +32,4 @@ Format (approved by the operator 2026-10-10):
 | [T02](T02-e-trunc-paragraph.md) | APPROVED 2026-10-10 | the E-TRUNC paragraph (§4); §X cross-reference open, filled by a superseding file |
 | [T03](T03-second-pair-section.md) | DRAFT | §4.x second pair Llama-3.2-3B → Llama-3.1-8B: table, P1–P4, App. A scoping sentences; P2 tail-sentence placement open |
 | [T04](T04-r12-0051-recompute.md) | APPROVED 2026-10-13 | R12 recompute of 0051 (Llama long cell) from the Hub mirror: 18 figures, entry vs recomputed, all equal |
+| [T05](T05-e-beh-subsection.md) | P1 APPROVED 2026-10-15; P2, P3 open | the E-BEH subsection (§4, after T02): P1 the behavioural check from 0049; P2 repair arms after 0061 runs; P3 scope and the practitioner band |
