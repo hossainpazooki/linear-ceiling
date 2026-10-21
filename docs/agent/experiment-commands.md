@@ -191,3 +191,14 @@ watchdog, spend, terminate; every sitting since 2026-10-06). Pre-rental checks:
 `tools/emit_tau.py` (a second family's τ lines from its own E8 report, before its config can load). The
 consolidation (`tools/consolidation/`) and cache-behavior (`tools/cache_behavior/`) drivers are run as their
 runbooks say.
+
+## Task-quality pilot gate (unregistered; ruling C2 of the 2026-10-13 plan)
+
+Fresh arm only, three handoffs, before any registration; needs the traces, an alignment pass and the pinned
+receiver in the local HF cache. The same venv as the cache-behavior driver.
+
+```
+$PY -m tools.task_quality.pilot --items --cell results/e9l/align --output results/task-quality/items-e9l.json   # items per handoff: candidate lines, distinct, in R, valid (every answer token in M), by kind; also the short cell with results/e9/align
+$PY -m tools.task_quality.pilot --run --items-file results/task-quality/items-e9l.json --output results/task-quality/pilot --device cpu   # shortest/middle/longest sender above the item floor; both prompt forms; greedy
+$PY -m tools.task_quality.pilot --summarize --output results/task-quality/pilot   # fail-closed: every score recomputed from the stored prediction; the gate read per prompt form
+```

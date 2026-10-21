@@ -80,7 +80,7 @@ Every experiment invokes the upstream by subprocess in the upstream's own enviro
 ## `tests/`
 
 Most modules have a `tests/test_<module>.py`; a few are covered by a neighbour (`test_e0_cli.py` for `e0`). They also cover the tool drivers (`test_runpod_*`,
-`test_consolidation_*`, `test_cache_behavior.py`); synthetic and offline. A few pins need local data and
+`test_consolidation_*`, `test_cache_behavior.py`, `test_task_quality.py`); synthetic and offline. A few pins need local data and
 skip without it (e.g. `LC_REAL_TRACES=1` for `tests/test_e7_sensitivity.py`). `tests/test_imports.py` reserves the
 one full upstream sha in `UPSTREAM.md` for `linear_ceiling.UPSTREAM_SHA`.
 
@@ -121,6 +121,7 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 | `tools/jupyterhub/` · `tools/ec2/` · `tools/runpod/` | GPU box drivers: JupyterHub-only box from home; any box over ssh (EC2, or a RunPod pod once up); RunPod pod lifecycle, every sitting since 2026-10-06 |
 | `tools/preflight_pair.py` · `tools/emit_tau.py` | pre-rental checks for a new pair; a family's τ lines from its own E8 report |
 | `tools/consolidation/` · `tools/cache_behavior/` | drivers and fail-closed readers for the registered runs of entries 0046 and 0047 |
+| `tools/task_quality/` | task-quality pilot gate (unregistered): structured-field recall items from the traces, located in R against the archived matched set, and the fresh-arm pilot with its fail-closed reader |
 | `tools/seam_pilot/` · `tools/cache_injection_pilots/` | preserved exploratory pilots; not registered results (see each README) |
 
 ## `proofs/`
