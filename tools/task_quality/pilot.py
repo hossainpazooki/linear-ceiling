@@ -13,6 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
+from linear_ceiling.hashing import sha256_text_file
 from linear_ceiling.rng import make_rng
 from .items import (KINDS, alignment_file, canonical_contains, contains, exact_match, first_span_exact,
                     handoff_texts, included_alignments, items_for_handoff, token_f1)
@@ -26,11 +27,24 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def text_digest(path):
+    # Text files (config, code, JSON) hash newline-normalized, as the ledger cites configs.
+    return sha256_text_file(Path(path))
+
+
+def same_text(stored, path):
+    # A CRLF checkout of an unchanged text file is not drift (the E8 precedent): the stored hash may be
+    # the normalized one or the raw bytes of either rendering.
+    return stored in (text_digest(path), digest(path))
+
+
 def write(path, body):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(body, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    # One newline on every platform, so a JSON artifact hashes the same wherever it is written.
+    with temporary.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(body, indent=2, allow_nan=False) + "\n")
     temporary.replace(path)
 
 
@@ -55,7 +69,7 @@ def extract_cell(args, cfg):
     align_dir = ROOT / args.cell
     rows = included_alignments(align_dir)
     body = {"cell": args.cell, "coverage_sha256": digest(align_dir / "coverage.json"),
-            "config_sha256": digest(args.config), "handoffs": []}
+            "config_sha256": text_digest(args.config), "handoffs": []}
     for row in rows:
         hid = row["handoff_id"]
         trace_path, handoff = handoff_texts(args.traces, hid)
@@ -170,14 +184,14 @@ def run(args, cfg):
     import transformers
     from tools.cache_behavior.core import prefill
     items_body = json.loads(Path(args.items_file).read_text(encoding="utf-8"))
-    if items_body["config_sha256"] != digest(args.config):
+    if not same_text(items_body["config_sha256"], args.config):
         raise ValueError("items were extracted under a different configuration")
     device = torch.device(args.device)
     tokenizer = load_tokenizer(cfg)
     model = load_model(cfg, device)
     stop_ids = {tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|endoftext|>")}
-    identity = {"config_sha256": digest(args.config), "items_sha256": digest(args.items_file),
-                "code_sha256": {name: digest(Path(__file__).with_name(name)) for name in ("pilot.py", "items.py")},
+    identity = {"config_sha256": text_digest(args.config), "items_sha256": text_digest(args.items_file),
+                "code_sha256": {name: text_digest(Path(__file__).with_name(name)) for name in ("pilot.py", "items.py")},
                 "model": cfg["model"], "model_revision": cfg["revision"], "transformers": transformers.__version__,
                 "torch": torch.__version__, "device": str(device), "dtype": "float32",
                 "machine": platform.machine(), "system": platform.system()}
@@ -245,7 +259,7 @@ def summarize(output):
     (first def-span exact match, containment after canonicalization) are derived here only."""
     report = json.loads((Path(output) / "report.json").read_text(encoding="utf-8"))
     cfg = tomllib.loads((ROOT / "config/task-quality-pilot.toml").read_text(encoding="utf-8"))
-    if report["identity"]["config_sha256"] != digest(ROOT / "config/task-quality-pilot.toml"):
+    if not same_text(report["identity"]["config_sha256"], ROOT / "config/task-quality-pilot.toml"):
         raise ValueError("report was produced under a different configuration")
     forms = list(report["prompts"])
     per_handoff = {form: [] for form in forms}
@@ -268,6 +282,7 @@ def summarize(output):
                                       **{key: float(np.mean([r[key] for r in form2])) for key in SCORERS}})
     low, high = cfg["gate"]
     body = {"complete": report["complete"], "handoffs": len(report["handoffs"]),
+            "reader_code_sha256": {name: text_digest(Path(__file__).with_name(name)) for name in ("pilot.py", "items.py")},
             "interpretation": "Fresh-arm pilot on three handoffs; a power gate, not a registered result.",
             "gate": cfg["gate"], "forms": {}}
     for form in forms:

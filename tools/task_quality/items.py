@@ -176,7 +176,11 @@ def contains(prediction, gold):
 
 
 # The span a generation is read by, per kind: the first def-line, the first path, the first org/repo.
-SPANS = {"signature": re.compile(r"def [A-Za-z_]\w*\(.*?\)(?: -> [^`\n]+?)?:"),
+# A def-line may wrap inside its parentheses (DOTALL) and may end without its colon (a fenced code
+# block drops it); the span ends at the colon, a backtick, a line end or the end of the text. The
+# parentheses may not swallow a blank line or a second `def `, so an unclosed decoy does not run
+# into the next def-line.
+SPANS = {"signature": re.compile(r"def [A-Za-z_]\w*\((?:(?!\n\s*\n|def )[\s\S])*?\)(?: -> [^`\n:]+?)?(?::|(?=[`\n])|$)", re.M),
          "file": re.compile(r"[\w.-]+(?:/[\w.-]+)+\.\w+"),
          "repository": re.compile(r"[\w.-]*\w/[\w.-]*\w")}
 
@@ -194,7 +198,7 @@ def first_span_exact(prediction, gold, kind="signature"):
     # The reading proposed after the pilot: the FIRST span of the item's kind that the generation
     # emits equals the field. A preamble does not fail it; a hedge list is read by its first entry.
     m = SPANS[kind].search(prediction)
-    return m is not None and canonical(m.group(0)) == canonical(gold)
+    return m is not None and canonical(m.group(0)).rstrip(":") == canonical(gold).rstrip(":")
 
 
 def canonical_contains(prediction, gold):

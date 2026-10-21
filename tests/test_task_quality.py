@@ -134,6 +134,31 @@ def test_scoring_is_judge_free_and_tolerant_of_wrapping_only():
     assert first_span_exact("It is in `pkg/core.py`, see x.py", "pkg/core.py", "file")
     assert first_span_exact("The repo is org/repo.", "org/repo", "repository")
     assert canonical_contains('x def _verify(self, option="warn"): y', gold)
+    # Two real pilot generations the first reader failed for no reason of content: a fenced block
+    # drops the colon; a wrapped parameter list breaks the line inside the parentheses.
+    appended = "def append(self, card=None, useblanks=True, bottom=False, end=False):"
+    assert first_span_exact("```python\ndef append(self, card=None, useblanks=True, bottom=False, end=False)\n```", appended)
+    collect = "def collect(self, objs, source=None, nullable=False, collect_related=True, source_attr=None, ...):"
+    assert first_span_exact("def collect(self, objs, source=None, nullable=False, collect_related=True,\n"
+                            "            source_attr=None, ...):", collect)
+    assert first_span_exact("def append(self, card=None):", appended) is False   # wrong arity still fails
+    assert first_span_exact("def f(x) -> Tuple[int, str]:\nmore", "def f(x) -> Tuple[int, str]:")
+    assert first_span_exact("`def f(x) -> int` is it", "def f(x) -> int:")
+    # An unclosed decoy never swallows the next def-line into its parentheses (skeptic pass, 2026-10-21).
+    assert first_span_exact("def foo(a, b is the method.\ndef foo(a, b):", "def foo(a, b):")
+    assert first_span_exact("not def bar(x but rather:\n\ndef foo(self, a):", "def foo(self, a):")
+
+
+def test_writes_are_lf_and_text_hashes_ignore_the_checkout_newline(tmp_path):
+    from tools.task_quality import pilot
+    path = tmp_path / "a.json"
+    pilot.write(path, {"k": [1, 2]})
+    assert b"\r\n" not in path.read_bytes()
+    crlf = tmp_path / "b.json"
+    crlf.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+    assert pilot.text_digest(crlf) == pilot.text_digest(path) == pilot.digest(path) != pilot.digest(crlf)
+    assert pilot.same_text(pilot.digest(crlf), crlf) and pilot.same_text(pilot.digest(path), crlf)
+    assert not pilot.same_text("0" * 64, path)
 
 
 def test_pilot_handoffs_are_shortest_middle_longest_sender_above_the_floor():
