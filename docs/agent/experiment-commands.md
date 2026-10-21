@@ -202,3 +202,22 @@ $PY -m tools.task_quality.pilot --items --cell results/e9l/align --output result
 $PY -m tools.task_quality.pilot --run --items-file results/task-quality/items-e9l.json --output results/task-quality/pilot --device cpu   # shortest/middle/longest sender above the item floor; both prompt forms; greedy
 $PY -m tools.task_quality.pilot --summarize --output results/task-quality/pilot   # fail-closed: every score recomputed from the stored prediction; the gate read per prompt form
 ```
+
+## Benchmark control pilot (unregistered; plan §5 source B, seed 2026-10-21 T5)
+LongBench v1 `2wikimqa` and `hotpotqa` (200 items each) composed into a standalone handoff: `config/benchmark-control-pilot.toml`
+pins the Hub revision, the jsonl shas under the gitignored `data/longbench/`, the scorer's upstream commit and the composition.
+```
+$PY -m tools.task_quality.benchmark --table --output results/benchmark-control/pilot      # per item: S and R lengths, the passage's token span in each; the three pilot items per set
+$PY -m tools.task_quality.benchmark --run --output results/benchmark-control/pilot --device cpu   # fresh arm, three items per set, both prompt forms, plus a no-context control row
+$PY -m tools.task_quality.benchmark --summarize --output results/benchmark-control/pilot  # fail-closed: every F1 recomputed; the gate read per set and form
+```
+
+## Task-quality cell (drafted for registration; unregistered until its entry is appended)
+`config/task-quality-cell.toml` pins both items files by sha and names each cell's E9 archive (alignment pairs, per-token
+record, score files, every one checked against the hash the items file or the archive report pins). CUDA for the real
+run (the largest sender first as the memory probe); the synthetic tests run the same code on CPU.
+```
+$PY -m tools.task_quality.cell --run --cell long --output results/task-quality-cell/long --probe   # R2: the largest sender only
+$PY -m tools.task_quality.cell --run --cell long --output results/task-quality-cell/long --resume  # verifies the identity, continues
+$PY -m tools.task_quality.cell --summarize --output results/task-quality-cell/long              # fail-closed: every score recomputed; headline, retention, sensitivity
+```

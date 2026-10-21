@@ -121,7 +121,7 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 | `tools/jupyterhub/` · `tools/ec2/` · `tools/runpod/` | GPU box drivers: JupyterHub-only box from home; any box over ssh (EC2, or a RunPod pod once up); RunPod pod lifecycle, every sitting since 2026-10-06 |
 | `tools/preflight_pair.py` · `tools/emit_tau.py` | pre-rental checks for a new pair; a family's τ lines from its own E8 report |
 | `tools/consolidation/` · `tools/cache_behavior/` | drivers and fail-closed readers for the registered runs of entries 0046 and 0047 |
-| `tools/task_quality/` | task-quality pilot gate (unregistered): structured-field recall items from the traces, located in R against the archived matched set, and the fresh-arm pilot with its fail-closed reader |
+| `tools/task_quality/` | task-quality pilot gate (unregistered): structured-field recall items from the traces, located in R against the archived matched set, and the fresh-arm pilot with its fail-closed reader; `benchmark.py` composes LongBench v1 QA items into a standalone handoff for the benchmark control's pilot, scored by `longbench_metrics.py` (LongBench's `qa_f1_score`, copied verbatim with its provenance); `cell.py` is the cell driver (drafted for registration): the items under FRESH, REUSE, RANDOM and REPAIR-f caches built with `tools/cache_behavior/core.py`, a fail-closed reader with the headline, retention and the sensitivity table |
 | `tools/seam_pilot/` · `tools/cache_injection_pilots/` | preserved exploratory pilots; not registered results (see each README) |
 
 ## `proofs/`
