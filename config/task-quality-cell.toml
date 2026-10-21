@@ -1,0 +1,59 @@
+# Task-quality cell (ruling C of the 2026-10-13 plan; registration drafted 2026-10-21, unregistered until its
+# entry is appended). Structured-field recall under the cache-behavior arms, on the handoffs whose sender
+# holds structured code-search results (the item floor below), long and short cells. The receiver is the
+# registered E-BEH receiver (config/cache-behavior.toml): same model, revision, YaRN schedule and cap.
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+context_cap = 81920
+chunk_tokens = 256
+seed = 20261022
+# C3's floor: a handoff with fewer valid form-2' items (signature plus file) is void and listed, not scored.
+min_form2_items = 10
+# Per handoff: every valid form-2' item up to this many, drawn by seed (the pilot's rule); the repository item always.
+max_items_per_handoff = 40
+max_new_tokens = 64
+stop_at_newline = false
+# Prompt forms scored under every arm; the headline reads one, the sensitivity table reads both.
+forms = ["chat", "plain"]
+# Repair arms (0061's ORACLE-f shape): the top-f matched tokens by archived token-mean delta_K recomputed in place.
+repair_fractions = [0.05, 0.10, 0.20]
+bootstrap_resamples = 2000
+
+# The headline reading: per-handoff accuracy under this form and scorer over these kinds; median with p10/p90 by
+# e7_stats and a bootstrap interval of the median over handoffs; retention raw and floor-normalized against RANDOM.
+[headline]
+form = "chat"
+scorer = "first_span_exact"
+kinds = ["signature"]
+
+[rope]
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
+
+# Each cell: the items file (every handoff's items with their receiver positions, extracted by
+# tools.task_quality.pilot --items and pinned by sha) and the E9 archive that holds the alignment pairs,
+# the per-token record and the score files the items file and the archive report pin.
+[cells.long]
+items_file = "results/task-quality/items-e9l.json"
+items_sha256 = "8153e9d30d04b9c7cebe7bf44a661eab4df56a170635204f52ce8da660ce9239"
+archive = "results/e9l"
+
+[cells.short]
+items_file = "results/task-quality/items-e9.json"
+items_sha256 = "96499cb24cb88f4c233245bd2793b73728105124e3f25c6ac9862f33a0cb958a"
+archive = "results/e9"
+
+# Question text per item kind, as the pilot asked them.
+[questions]
+file = "In which file is the class `{cls}` defined? Answer with the path only."
+signature = "What is the signature of the method `{method}` of the class `{cls}`? Answer with the signature line only."
+repository = "Which repository is cloned in the workspace? Answer with the repository name only."
+
+[prompts.plain]
+before = "\n\nQuestion: "
+after = "\nAnswer:"
+
+[prompts.chat]
+before = "\n<|im_start|>user\n"
+after = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
