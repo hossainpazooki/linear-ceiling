@@ -18,6 +18,20 @@ excluded by config (below the agent floor, entry 0011).
 Tokenizer: the pair's shared Qwen3 tokenizer, read from the snapshot's `tokenizer.json` after
 `weights.assert_shared_vocab` has passed. The token file has the upstream's `[n_seqs, seq_len]`
 int64 layout so `scripts/dump_kv.py --tokens` consumes it unchanged.
+
+MLPerf Agentic Inference (the 2026-10-22 plan, cell 1a; config/e8m.toml, config/e8mf.toml): one flat
+JSONL under `traces/mlperf-agentic/` (gitignored), one row per message, grouped by `conversation_id`
+and ordered by `turn`; its first row is a `_type = "dataset_metadata"` record with no conversation
+and is skipped. Two suites out of the one file, split by the row field `_source`: present on every
+Workato workflow row (`mlperf-workflow`), absent on the DeepSWE coding rows (`mlperf-coding`).
+Rendering is `render_mlperf_rows`: the role tags above, with `reasoning_content` KEPT ahead of the
+content (the benchmark's own template keeps it, so the text a serving engine caches includes it),
+`tool_calls` as name(arguments) and the contents of `tool_results`. The shared system prompt and
+tool schema that each conversation's first row carries in `system` / `tools` are NOT rendered: all
+500 workflow conversations share one ~30K-token prefix, and under the FIRST-window rule it would
+make every drawn workflow window the same tokens. The same sampling rule then applies unchanged.
+Exported with `python -m linear_ceiling.e8_text --suites ... --out <jsonl>` for the lag-ladder
+builder that re-tokenizes the rendered trajectories under its instrument's tokenizer.
 """
 import json
 from dataclasses import dataclass
@@ -33,6 +47,9 @@ from linear_ceiling.hashing import sha256_file_bytes
 from linear_ceiling.rng import make_rng
 
 ROLE_TAGS = {"system": "[system]", "user": "[user]", "assistant": "[assistant]", "tool": "[tool]"}
+MLPERF_SUITES = ("mlperf-coding", "mlperf-workflow")
+MLPERF_DIR = "mlperf-agentic"           # under traces/; every *.jsonl there is read
+MLPERF_SOURCE_FIELD = "_source"         # on the Workato (workflow) rows only; the coding rows carry no such field
 
 
 @dataclass(frozen=True)
@@ -54,15 +71,79 @@ def render_messages(messages: list[dict]) -> str:
         if body:
             lines.append(body)
         for tc in (m.get("tool_calls") or []) if isinstance(m.get("tool_calls"), list) else []:
-            if not isinstance(tc, dict):
-                continue
-            fn = tc.get("function") if isinstance(tc.get("function"), dict) else tc
-            args = fn.get("arguments", fn.get("args", ""))
-            if isinstance(args, dict):
-                args = json.dumps(args, separators=(",", ":"), ensure_ascii=False)
-            lines.append(f"{fn.get('name') or ''}({args or ''})")
+            line = _tool_call_line(tc)
+            if line is not None:
+                lines.append(line)
         parts.append("\n".join(lines))
     return "\n".join(parts)
+
+
+def _tool_call_line(tc) -> str | None:
+    """`name(arguments)` for one tool call (0016 §4); None for a malformed entry."""
+    if not isinstance(tc, dict):
+        return None
+    fn = tc.get("function") if isinstance(tc.get("function"), dict) else tc
+    args = fn.get("arguments", fn.get("args", ""))
+    if isinstance(args, dict):
+        args = json.dumps(args, separators=(",", ":"), ensure_ascii=False)
+    return f"{fn.get('name') or ''}({args or ''})"
+
+
+def render_mlperf_rows(rows: list[dict]) -> str:
+    """Role-tagged rendering of one MLPerf Agentic Inference conversation (one row per message, in turn
+    order): reasoning_content kept, tool calls as name(arguments), tool results' contents; the first row's
+    shared `system` / `tools` prefix is not rendered (module docstring)."""
+    parts = []
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        role = str(r.get("role") or "assistant")
+        lines = [ROLE_TAGS.get(role, f"[{role}]")]
+        reasoning = r.get("reasoning_content")
+        if isinstance(reasoning, str) and reasoning:
+            lines.append(reasoning)
+        body = content_text(r.get("content"))
+        if body:
+            lines.append(body)
+        for tc in (r.get("tool_calls") or []) if isinstance(r.get("tool_calls"), list) else []:
+            line = _tool_call_line(tc)
+            if line is not None:
+                lines.append(line)
+        for tr in (r.get("tool_results") or []) if isinstance(r.get("tool_results"), list) else []:
+            c = tr.get("content") if isinstance(tr, dict) else tr
+            body = content_text(c) if isinstance(c, (str, list)) else (
+                json.dumps(c, ensure_ascii=False) if c is not None else "")
+            if body:
+                lines.append(body)
+        parts.append("\n".join(lines))
+    return "\n".join(parts)
+
+
+def mlperf_suite(rows: list[dict]) -> str:
+    """mlperf-workflow when any row carries `_source` (the Workato rows do); otherwise mlperf-coding."""
+    return "mlperf-workflow" if any(isinstance(r, dict) and MLPERF_SOURCE_FIELD in r for r in rows) else "mlperf-coding"
+
+
+def iter_mlperf_texts(traces_dir: Path, suites: tuple[str, ...]):
+    """TraceText per conversation of the requested MLPerf suites, traj_id = conversation_id, sorted."""
+    wanted = tuple(s for s in suites if s in MLPERF_SUITES)
+    if not wanted:
+        return
+    convs: dict[str, list[dict]] = {}
+    for f in sorted((Path(traces_dir) / MLPERF_DIR).glob("*.jsonl")):
+        with open(f, encoding="utf-8") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                if not isinstance(r, dict) or r.get("_type") == "dataset_metadata" or "conversation_id" not in r:
+                    continue
+                convs.setdefault(str(r["conversation_id"]), []).append(r)
+    for cid in sorted(convs):
+        rows = sorted(convs[cid], key=lambda r: int(r["turn"]))
+        suite = mlperf_suite(rows)
+        if suite in wanted:
+            yield TraceText(suite, cid, render_mlperf_rows(rows))
 
 
 def iter_trace_texts(e7: E7Config, suites: tuple[str, ...]):
@@ -97,6 +178,7 @@ def iter_trace_texts(e7: E7Config, suites: tuple[str, ...]):
                         text = "\n".join(f"{ROLE_TAGS.get(m.role, '[' + m.role + ']')}\n{t}"
                                          for m, t in zip(traj.messages, texts))
                         yield TraceText("swe-bench", f"{sub.name}/{tid}", text)
+    yield from iter_mlperf_texts(e7.traces_dir, suites)
 
 
 def sample_windows(items: list[TraceText], encode, cfg: E8Config) -> tuple[np.ndarray, list[dict]]:
@@ -145,3 +227,40 @@ def write_tokens(cfg: E8Config, tokens: np.ndarray, manifest: list[dict]) -> Pat
         {"rule": "ledger entry 0016 section 4", "shape": list(tokens.shape),
          "sha256": sha256_file_bytes(out), "rows": manifest}, indent=1), encoding="utf-8")
     return out
+
+
+def export_rendered(traces_dir: Path, suites: tuple[str, ...], out: Path) -> tuple[Path, dict[str, int]]:
+    """The rendered trajectories as JSONL, one {suite, traj_id, text} per line sorted by (suite, traj_id),
+    for a sibling builder under another tokenizer (lag-ladder tools/agentic_tokens.py). Returns the path and
+    the per-suite counts."""
+    from collections import Counter
+    from linear_ceiling.config import E7Config
+    e7 = E7Config(traces_dir=Path(traces_dir), results_dir=Path(traces_dir), pricing={}, thresholds={},
+                  tokenizer={}, lane_b_policy="", config_path=Path(traces_dir))
+    items = sorted(iter_trace_texts(e7, tuple(suites)), key=lambda t: (t.suite, t.traj_id))
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", encoding="utf-8", newline="\n") as fh:
+        for t in items:
+            fh.write(json.dumps({"suite": t.suite, "traj_id": t.traj_id, "text": t.text}, ensure_ascii=False) + "\n")
+    return out, dict(Counter(t.suite for t in items))
+
+
+def main(argv=None) -> int:
+    import argparse
+    from linear_ceiling import REPO_ROOT
+    from linear_ceiling.config import load_e7_config
+    ap = argparse.ArgumentParser(description="export the rendered agent trajectories (0016 s4 rendering) as JSONL")
+    ap.add_argument("--e7-config", default=str(REPO_ROOT / "config" / "e7.toml"))
+    ap.add_argument("--traces-dir", default=None, help="override the e7 config's traces_dir")
+    ap.add_argument("--suites", nargs="+", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args(argv)
+    traces = Path(a.traces_dir) if a.traces_dir else load_e7_config(Path(a.e7_config), REPO_ROOT).traces_dir
+    out, counts = export_rendered(traces, tuple(a.suites), Path(a.out))
+    print(f"{sha256_file_bytes(out)}  {out.as_posix()}  " + " ".join(f"{s}={n}" for s, n in sorted(counts.items())))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
