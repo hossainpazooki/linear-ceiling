@@ -37,7 +37,7 @@ load-bearing), host RAM ≥ 48 GB, 8 vCPU, ssh as `root` on the mapped port, no 
 Per handoff: one sender prefill (|S| up to 80,111 tokens), one FRESH receiver prefill, five cache constructions
 (REUSE-ALL, RANDOM, REPAIR-5/10/20 %: each the gap tokens recomputed against the assembled cache plus the copies), then
 up to 41 items × 2 forms × 6 arms greedy decodes of ≤ 64 tokens with the cache cropped back after each. 0049's record
-gives the only measured anchor: 35 handoffs × 3 arm passes in 92 minutes on an A100 80 GB. Scaling by passes
+gives the only measured anchor: 35 handoffs × 3 arm passes in about 92 minutes of wall time on an A100 80 GB (entry 0049's first paragraph: launched 2026-10-06T23:50Z, finished 2026-10-07T01:22Z). Scaling by passes
 (6 constructions + 1 sender prefill per handoff against 0049's 4) and adding the decodes (about 500 per handoff, each
 a question prefill of ~40 tokens plus ≤ 64 single-token steps against a 10k–25k-token cache) gives **3–5 h for the
 long cell (25 handoffs)** and **1–2 h for the short cell (14)**; the probe replaces this bound with a time before the
