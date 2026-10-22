@@ -136,7 +136,8 @@ on KL or top-1 is read: {RUN_ENTRY}'s "no downstream task-quality number is clai
 prediction-sensitivity figure on fixed text, not task accuracy and not a serving cost.
 
 **The registered run (the operator's).** Requested only after this entry is committed. Card: 80 GB (entry {RUN_ENTRY}'s
-peak was 24.95 GiB with eight arm passes per handoff now instead of three: the bound is {RUN_ENTRY}'s 92 minutes × 8/3,
+peak was 24.95 GiB with nine arm passes per handoff now instead of three: the bound is three times {RUN_ENTRY}'s run,
+92 minutes by its own launched and finished timestamps,
 replaced by the probe on the largest case). R2–R8 of `docs/gpu-experiment-protocol.md`; output tree `{OUTPUT}/`
 (`report.json`, per-case `.npz`, `summary.json`), {RUN_ENTRY}'s `{BASE_OUTPUT}/` untouched; mirrored home, verified, and
 backed up to a Hub dataset by `tools/hf_verify_backup.py` before the figures entry.
