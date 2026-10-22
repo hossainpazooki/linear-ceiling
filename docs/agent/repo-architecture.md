@@ -53,7 +53,9 @@ E7 (public traces):
   measurable subset.
 - `e7_stats` — the pinned handoff-level quantile convention.
 
-E8 (mapper content shift): `e8_text` (0016 §4 sampling + Qwen tokenizer from the snapshot) · `e8` (gate + driver
+E8 (mapper content shift): `e8_text` (0016 §4 sampling + Qwen tokenizer from the snapshot; since 2026-10-22 also
+the MLPerf Agentic Inference adapter: `render_mlperf_rows`, `iter_mlperf_texts`, suites `mlperf-coding` /
+`mlperf-workflow` split by the `_source` row field, and a JSONL export of the rendered trajectories) · `e8` (gate + driver
 by subprocess; never imports kvt) · `summarize_e8`. `config.E8Config.mapper_tag` is the E8 half of entry 0033.
 
 E9 (handoffs):
@@ -86,7 +88,7 @@ one full upstream sha in `UPSTREAM.md` for `linear_ceiling.UPSTREAM_SHA`.
 
 ## `config/`
 
-One TOML per experiment cell (`e0`, `e7`, `e8`, `e8a`, `e8c`, `e8f`, `e8fa`, `e9`, `e9c`, `e9s`, `e9l`, `e9f`, `e9fl`,
+One TOML per experiment cell (`e0`, `e7`, `e8`, `e8a`, `e8c`, `e8f`, `e8fa`, `e8m`, `e8mf`, `e9`, `e9c`, `e9s`, `e9l`, `e9f`, `e9fl`,
 `e9t-{full,l65,l49,l32}`, `consolidation`, `cache-behavior`), plus `seal.toml` and the manifests
 `e7-manifest.json` and `consolidation-manifest.json`. Seeds and thresholds live here and nowhere else. A config is
 registered by a ledger entry and committed unmodified before its run; the gates check its hash, so editing one

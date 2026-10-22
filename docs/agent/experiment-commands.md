@@ -86,6 +86,22 @@ $PY -m linear_ceiling.e8 --config config/e8c.toml           # CPU: 0030's protoc
 $PY -m linear_ceiling.summarize_e8 --config config/e8c.toml # fail-closed, as e8a; also refuses on swapped mapper bytes
 ```
 
+### E8m / E8mf — MLPerf Agentic Inference text (the 2026-10-22 plan, cell 1a; UNREGISTERED, descriptive)
+
+The 0016 §4 sampling rule over two new suites, `mlperf-coding` and `mlperf-workflow`, read from the gitignored
+`traces/mlperf-agentic/*.jsonl` (the MLCommons dataset, fetched by curl, SHA-256 against its README). Reasoning kept,
+the shared system/tools prefix not rendered (`e8_text` docstring). `[e8.gate]` names an entry the ledger does not
+have, so `--check` refuses until the registering entry lands and the number is corrected in the same commit.
+
+```
+$PY -m linear_ceiling.e8_text --suites mlperf-coding mlperf-workflow --out data/e8m/rendered_mlperf.jsonl   # CPU: the rendered trajectories as JSONL (sha printed); lag-ladder's tools/agentic_tokens.py reads it
+$PY -m linear_ceiling.e8 --check --config config/e8m.toml    # Qwen3 pair gate: refuses while [e8.gate]'s entry is not on the ledger
+$PY -m linear_ceiling.e8 --config config/e8m.toml            # sample 50 x 1024 (25 per suite) under the Qwen3 tokenizer -> data/e8m -> dumps -> results/e8m/report.json
+$PY -m linear_ceiling.e8 --check --config config/e8mf.toml   # Llama pair gate, the family pin 06f8d55
+$PY -m linear_ceiling.e8 --config config/e8mf.toml           # the same draw rule under the Llama-3 BPE (a different 50 windows) -> data/e8mf -> results/e8mf/report.json
+$PY -m linear_ceiling.summarize_e8 --config config/e8m.toml  # fail-closed, as e8 (and e8mf)
+```
+
 ## E9 — native short cell (completed: H-E9 HELD, entry 0029; gate entries 0019 + 0023 + 0025 + 0026 + 0027)
 
 Calibrate τ before the GPU run; the gate does not check for it and the summarizer refuses without it.
