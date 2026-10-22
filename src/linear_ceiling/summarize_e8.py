@@ -207,6 +207,21 @@ def _amendment_figures(cfg: E8Config, k: int, rep: dict, g: dict, a: dict, gpt: 
                      "drop_lower_2.5": quantile(drop_b.tolist(), 0.025), "drop_upper_97.5": quantile(drop_b.tolist(), 0.975),
                      "reps": reps, "seed": int(cfg.amendment["bootstrap_seed"]) + k, "n_seqs": S}
     out["bootstrap"] = boot
+    # A fresh amendment run (no reused prior report: the cell drew, dumped and scored its own text) has no 0016-protocol
+    # figure to compare against, so one is recomputed here from the same per-sequence moments: pooled R^2 over the LAST
+    # ceil(holdout_frac x S) sequences in id order, the rows score_mapper holds out under 0016 -- reported beside the
+    # every-sequence reading for comparability with the cells read under that protocol (0020, 0040).
+    if not rep.get("reused_agent_dumps_from"):
+        ids = [int(i) for i in zs["agent"]["seq_ids"]]
+        n_hold = int(math.ceil(float(cfg.holdout_frac) * S))
+        last = sorted(range(S), key=lambda p: ids[p])[S - n_hold:]
+        agent_h = {key: _pooled_from_seqs(zs["agent"], key, last) for key in ("K", "V")}
+        drop_h = {key: float(g[f"{key}_r2_heldout_layer_mean"]) - agent_h[key] for key in ("K", "V")}
+        out["heldout_0016_protocol"] = {"agent": agent_h, "drop": drop_h,
+                                        "band_outcome": {key: band_outcome(drop_h[key], cfg.band) for key in ("K", "V")},
+                                        "holdout_frac_agent": cfg.holdout_frac, "n_heldout_seqs": n_hold,
+                                        "seq_ids": [ids[p] for p in last]}
+        out["change_from_heldout"] = {key: float(a[f"{key}_r2_heldout_layer_mean"]) - agent_h[key] for key in ("K", "V")}
     prior_ref = rep.get("reused_agent_dumps_from") or {}
     prior_path = Path(REPO_ROOT) / prior_ref.get("report", "")
     if prior_ref and prior_path.exists():
@@ -235,8 +250,8 @@ def _amendment_md(cfg: E8Config, rep: dict, amend: dict) -> str:
             "drop K / V (all) | drop 95% K | drop 95% V | per-seq agent K median (p10, p90) |", "|---|---|---|---|---|---|---|---|---|"]
     for k in cfg.report_k:
         m, r = amend[k], rep["per_k"][str(k)]
-        pr = m.get("prior_0016_protocol", {}).get("agent", {})
-        ch = m.get("change_from_prior", {})
+        pr = (m.get("prior_0016_protocol") or m.get("heldout_0016_protocol") or {}).get("agent", {})
+        ch = m.get("change_from_prior") or m.get("change_from_heldout") or {}
         b, ps = m["bootstrap"], m["per_sequence"]
         rows.append(f"| {k} | {m['n_heldout_seqs']['agent']} / {m['n_heldout_tokens']['agent']} | "
                     f"{r['agent']['K']:.4f} / {r['agent']['V']:.4f} | "
@@ -245,6 +260,12 @@ def _amendment_md(cfg: E8Config, rep: dict, amend: dict) -> str:
                     f"[{b['K']['drop_lower_2.5']:+.4f}, {b['K']['drop_upper_97.5']:+.4f}] | "
                     f"[{b['V']['drop_lower_2.5']:+.4f}, {b['V']['drop_upper_97.5']:+.4f}] | "
                     f"{ps['agent_K']['median']:.4f} ({ps['agent_K']['p10']:.4f}, {ps['agent_K']['p90']:.4f}) |")
+    if any("heldout_0016_protocol" in amend[k] for k in cfg.report_k):
+        h = amend[cfg.report_k[0]]["heldout_0016_protocol"]
+        rows.append("")
+        rows.append(f"The 0016-protocol column is this run's own last ceil({cfg.holdout_frac} x S) = {h['n_heldout_seqs']} agent "
+                    f"sequences (ids {h['seq_ids']}), recomputed from the per-sequence moments -- no prior run is reused; "
+                    "the change column is every-sequence minus that.")
     return "\n".join(rows)
 
 

@@ -296,3 +296,15 @@ post-training checkpoints) is designed only — `docs/design/2026-09-02-e-rl-des
 registration script; it takes a number when its script is staged, not before. The 0022 tokenizer
 sensitivity (`summarize_e7 --strategy-override`) gets no entry of its own: it ships in the 0009
 successor bundled with n = 420, per 0022's "one replay supersedes the figures once."
+
+**`append_0063.py` — the TASK-QUALITY cell registered (ruling C of the 2026-10-13 plan; staged 2026-10-21).** Structured-field
+recall of method signature lines, asked after R and answered by greedy decoding under FRESH, REUSE-ALL, RANDOM and REPAIR-f
+caches (0047's / 0061's `core.py`, byte-identical), on the handoffs of 0036 and 0038 whose sender holds structured
+code-search results (floor 10 valid form-2' items: 25 long and 14 short run, the rest listed void). Pins by LF-normalized
+sha `config/task-quality-cell.toml`, `tools/task_quality/{items,pilot,cell}.py`, the two tests, the two items files and the
+two C2 pilot reports; re-derives both pilot summaries in-process with the pinned reader and reads every count from the
+items files. Headline chat form, first def-span exact match, signature items; median with p10/p90 by `e7_stats`, a 2,000-
+resample bootstrap of the median, retention raw and floor-normalized against RANDOM; the plain form and the other scorers
+in a sensitivity table. DESCRIPTIVE, no band. Refuses unless the items files and pilot reports are present at their hashes
+(copy them under `results/task-quality/` from the machine that produced them, or re-extract from the verified mirrors) and
+nothing exists under `results/task-quality-cell/`. Ordering guard: 0062 present, 0063 absent. Next free number: **0064**.

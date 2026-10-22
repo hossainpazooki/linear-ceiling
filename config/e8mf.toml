@@ -1,0 +1,51 @@
+# E8 on MLPerf Agentic Inference text, SECOND MODEL FAMILY (the 2026-10-22 plan, cell 1a): config/e8m.toml's cell
+# on meta-llama/Llama-3.2-3B -> meta-llama/Llama-3.1-8B, exactly as config/e8f.toml carried entry 0016's cell to
+# this pair. DESCRIPTIVE, UNREGISTERED (see [e8.gate]); every figure is stated for the Llama pair alone and never
+# pooled with the Qwen figures. The text, its rendering, the suites, the license notes and the sampling rule are
+# config/e8m.toml's, read there; the DRAW differs, because the Llama-3 BPE tokenizes the same trajectories into
+# different token counts, so this is a different 50 windows and not a re-use of data/e8m (as e8f.toml vs e8.toml).
+#
+# The pair's matched-KV premise, the llama3 RoPE factors and why the pin must contain the RoPE-spec commit are
+# stated in config/e8f.toml and hold unchanged here. e8.assert_ready refuses until this file and ledger/ledger.md
+# (with 0009, 0016, 0039 and [e8.gate]'s entry) are committed unmodified AND the upstream checkout is at
+# `upstream_sha` with a clean tree.
+
+[e8]
+pair = "llama3.2-3b-to-llama3.1-8b"  # as config/e8f.toml: the name carries BOTH sides (cross-release inside one family)
+results_dir = "results/e8mf"         # a NEW directory, never e8f's
+tokens_dir = "data/e8mf"             # gitignored; the Llama-tokenized MLPerf token file and its manifest
+upstream_path = "../kv-transfer-replication"
+upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"   # the family pin (config/e8f.toml, e8fa, e9f, e9fl): one pin per family
+scope_note = "off-policy text for Llama-3; MLPerf Agentic Inference trajectories (DeepSWE coding + Workato workflow), reasoning kept, shared system prefix not rendered; cross-release pair (source 3.2, receiver 3.1); matched-KV (8 x 128 both sides); not a real switch point; descriptive"
+
+[e8.gate]                            # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016), never replacing them
+required_entries = ["0039", "0064"]  # 0039 registered this family's E8 cell (the pair, the pin, the mappers); 0064 is
+                                     # the PROVISIONAL number of the MLPerf registration, allocated by
+                                     # docs/drafts/README.md at staging and moved with config/e8m.toml in one commit.
+
+[e8.mappers]                         # the EXISTING Llama mappers of 0039/0040: mappers/<pair>/k<k>
+verdict_k = 1
+report_k = [1, 4, 8]
+
+[e8.arms]
+generic_dumps = "data/kv/llama3.2-3b-to-llama3.1-8b"   # relative to upstream; the pair's own n = 50 dumps (0040)
+agent_dumps = "results/e8mf/kv/agent"          # relative to this repo; written by the driver
+holdout_frac = 0.2
+agent_holdout_frac = 1.0                       # arm (b) over every sequence, as config/e8m.toml (ruled 2026-10-22); fresh dumps
+stride = 4
+
+[e8.amendment]                       # as config/e8m.toml
+entry = "0064"                       # PROVISIONAL, = the second entry of [e8.gate]
+bootstrap_seed = 64
+bootstrap_reps = 2000
+
+[e8.text]                            # config/e8m.toml's rule; the draw differs under the Llama-3 BPE
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["mlperf-coding", "mlperf-workflow"]
+window = "first"
+
+[e8.band]
+holds_max_drop = 0.05
+degrades_min_drop = 0.15

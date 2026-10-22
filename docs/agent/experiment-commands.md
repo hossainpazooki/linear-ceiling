@@ -86,6 +86,22 @@ $PY -m linear_ceiling.e8 --config config/e8c.toml           # CPU: 0030's protoc
 $PY -m linear_ceiling.summarize_e8 --config config/e8c.toml # fail-closed, as e8a; also refuses on swapped mapper bytes
 ```
 
+### E8m / E8mf — MLPerf Agentic Inference text (the 2026-10-22 plan, cell 1a; UNREGISTERED, descriptive)
+
+The 0016 §4 sampling rule over two new suites, `mlperf-coding` and `mlperf-workflow`, read from the gitignored
+`traces/mlperf-agentic/*.jsonl` (the MLCommons dataset, fetched by curl, SHA-256 against its README). Reasoning kept,
+the shared system/tools prefix not rendered (`e8_text` docstring). `[e8.gate]` names an entry the ledger does not
+have, so `--check` refuses until the registering entry lands and the number is corrected in the same commit.
+
+```
+$PY -m linear_ceiling.e8_text --suites mlperf-coding mlperf-workflow --out data/e8m/rendered_mlperf.jsonl   # CPU: the rendered trajectories as JSONL (sha printed); lag-ladder's tools/agentic_tokens.py reads it
+$PY -m linear_ceiling.e8 --check --config config/e8m.toml    # Qwen3 pair gate: refuses while [e8.gate]'s entry is not on the ledger
+$PY -m linear_ceiling.e8 --config config/e8m.toml            # sample 50 x 1024 (25 per suite) under the Qwen3 tokenizer -> data/e8m -> dumps -> results/e8m/report.json
+$PY -m linear_ceiling.e8 --check --config config/e8mf.toml   # Llama pair gate, the family pin 06f8d55
+$PY -m linear_ceiling.e8 --config config/e8mf.toml           # the same draw rule under the Llama-3 BPE (a different 50 windows) -> data/e8mf -> results/e8mf/report.json
+$PY -m linear_ceiling.summarize_e8 --config config/e8m.toml  # fail-closed, as e8 (and e8mf)
+```
+
 ## E9 — native short cell (completed: H-E9 HELD, entry 0029; gate entries 0019 + 0023 + 0025 + 0026 + 0027)
 
 Calibrate τ before the GPU run; the gate does not check for it and the summarizer refuses without it.
@@ -207,3 +223,33 @@ consolidation (`tools/consolidation/`) and cache-behavior (`tools/cache_behavior
 runbooks say. The cache-behavior REPAIR amendment (staged entry 0061) is the same driver under
 `--config config/cache-behavior-repair.toml --output results/cache-behavior-repair` with 0049's prepared `--inputs`
 reused; it adds the `oracle_ranked_<f>pct` and `random_ranked_<f>pct` arms and nothing else.
+
+## Task-quality pilot gate (unregistered; ruling C2 of the 2026-10-13 plan)
+
+Fresh arm only, three handoffs, before any registration; needs the traces, an alignment pass and the pinned
+receiver in the local HF cache. The same venv as the cache-behavior driver.
+
+```
+$PY -m tools.task_quality.pilot --items --cell results/e9l/align --output results/task-quality/items-e9l.json   # items per handoff: candidate lines, distinct, in R, valid (every answer token in M), by kind; also the short cell with results/e9/align
+$PY -m tools.task_quality.pilot --run --items-file results/task-quality/items-e9l.json --output results/task-quality/pilot --device cpu   # shortest/middle/longest sender above the item floor; both prompt forms; greedy
+$PY -m tools.task_quality.pilot --summarize --output results/task-quality/pilot   # fail-closed: every score recomputed from the stored prediction; the gate read per prompt form
+```
+
+## Benchmark control pilot (unregistered; plan §5 source B, seed 2026-10-21 T5)
+LongBench v1 `2wikimqa` and `hotpotqa` (200 items each) composed into a standalone handoff: `config/benchmark-control-pilot.toml`
+pins the Hub revision, the jsonl shas under the gitignored `data/longbench/`, the scorer's upstream commit and the composition.
+```
+$PY -m tools.task_quality.benchmark --table --output results/benchmark-control/pilot      # per item: S and R lengths, the passage's token span in each; the three pilot items per set
+$PY -m tools.task_quality.benchmark --run --output results/benchmark-control/pilot --device cpu   # fresh arm, three items per set, both prompt forms, plus a no-context control row
+$PY -m tools.task_quality.benchmark --summarize --output results/benchmark-control/pilot  # fail-closed: every F1 recomputed; the gate read per set and form
+```
+
+## Task-quality cell (drafted for registration; unregistered until its entry is appended)
+`config/task-quality-cell.toml` pins both items files by sha and names each cell's E9 archive (alignment pairs, per-token
+record, score files, every one checked against the hash the items file or the archive report pins). CUDA for the real
+run (the largest sender first as the memory probe); the synthetic tests run the same code on CPU.
+```
+$PY -m tools.task_quality.cell --run --cell long --output results/task-quality-cell/long --probe   # R2: the largest sender only
+$PY -m tools.task_quality.cell --run --cell long --output results/task-quality-cell/long --resume  # verifies the identity, continues
+$PY -m tools.task_quality.cell --summarize --output results/task-quality-cell/long              # fail-closed: every score recomputed; headline, retention, sensitivity
+```

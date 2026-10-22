@@ -1,0 +1,71 @@
+# E8 on MLPerf Agentic Inference text (the 2026-10-22 plan, cell 1a): the instrument of ledger entry 0009, amended
+# by 0016, with the two agent-text suites swapped for the MLCommons MLPerf Agentic Inference dataset, on the Qwen3
+# 0.6B -> 1.7B pair. DESCRIPTIVE: this cell carries no hypothesis row and re-decides nothing; H-E8 is 0009/0020's.
+# Its figures are read beside the Qwen cells' own values and never pooled with them. UNREGISTERED: see [e8.gate].
+#
+# Text. One flat JSONL under traces/mlperf-agentic/ (gitignored; fetched by curl from the MLCommons endpoint,
+# SHA-256 checked against the dataset README; the registering entry pins that sha). One row per message, grouped
+# by conversation_id and ordered by turn. Two suites out of the one file, split by the `_source` row field, which
+# the Workato workflow rows carry and the DeepSWE coding rows do not: `mlperf-coding` (113 trajectories) and
+# `mlperf-workflow` (500). Rendering (src/linear_ceiling/e8_text.py, render_mlperf_rows): the 0016 role tags,
+# reasoning_content KEPT ahead of the content, tool calls as name(arguments), tool results' contents. The shared
+# system prompt + tool schema on each conversation's first row is NOT rendered: all 500 workflow conversations
+# share one prefix of about 30K tokens, and under the FIRST-window rule every drawn workflow window would be the
+# same tokens. Eligibility under seq_len = 1024 from the census of 2026-10-22: coding 113/113, workflow 492/500,
+# both far above the 25 per suite the equal stratification needs, so n_seqs = 50 stands.
+#
+# Licenses (LICENSES.txt and NOTICE shipped with the dataset, read as written): DeepSWE "Mixed" -- Datacurve's
+# Apache-2.0 covers its task specs, harness, verifiers and curation only; the published traces are MLCommons
+# derivative works under MLCommons' Apache-2.0; upstream project code inside the traces under each project's own
+# permissive license (none copyleft). Workato conversations CC BY 4.0 with an attribution header that must be
+# preserved verbatim wherever the data is distributed. Nothing derived is committed (data/ and traces/ are
+# gitignored; the registering entry carries hashes only); the rendered export and token files drop that header, so
+# they are not distributed from here, and any copy that leaves the machine carries NOTICE and LICENSES.txt beside it.
+#
+# e8.assert_ready refuses until this file and ledger/ledger.md (with 0009, 0016 and [e8.gate]'s entry) are
+# committed unmodified AND the upstream checkout is at `upstream_sha` with a clean tree for every path E8 invokes.
+
+[e8]
+pair = "qwen3-0.6b-to-1.7b"          # the Qwen pair of 0009/0016, with its fitted mappers upstream
+results_dir = "results/e8m"          # a NEW directory: the registration script's "holds nothing yet" gate reads it
+tokens_dir = "data/e8m"              # gitignored; the MLPerf token file and its manifest live here
+upstream_path = "../kv-transfer-replication"   # the identical string every other config uses: ONE clone, moved per cell
+# PROVISIONAL pin: the family pin of config/e8f.toml (contains 0030's 223f469 and the Llama PAIRS entry), so the two
+# MLPerf cells (this file and config/e8mf.toml) move the clone once. The registering entry confirms or replaces it.
+upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"
+scope_note = "off-policy text for Qwen3; MLPerf Agentic Inference trajectories (DeepSWE coding + Workato workflow), reasoning kept, shared system prefix not rendered; not a real switch point; descriptive"
+
+[e8.gate]                            # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016), never replacing them
+required_entries = ["0064"]          # PROVISIONAL. Entry numbers are allocated ONLY by docs/drafts/README.md at
+                                     # staging time, in staging order. The committed ledger has no such entry, so
+                                     # `e8 --check` refuses on this file by construction; the number moves in the
+                                     # same commit as the staged append script, before any run.
+
+[e8.mappers]                         # upstream artifacts, read-only: mappers/<pair>/k<k>; the EXISTING mappers (0016)
+verdict_k = 1
+report_k = [1, 4, 8]
+
+[e8.arms]
+generic_dumps = "data/kv/qwen3-0.6b-to-1.7b"   # relative to upstream; the archived n = 50 dumps (0016 corrects 0009)
+agent_dumps = "results/e8m/kv/agent"           # relative to this repo; written by the driver
+holdout_frac = 0.2                             # arm (a): the mapper's own held-out sequences (0016)
+agent_holdout_frac = 1.0                       # arm (b): EVERY agent sequence, 0030's protocol (ruled 2026-10-22): the mapper was
+                                               # never fit on them, and the 0016 hold-out (the LAST 10 rows) would read only
+                                               # workflow windows of this suite-blocked file. No reuse_agent_dumps_from: fresh dumps.
+stride = 4
+
+[e8.amendment]                       # per-sequence R2 and the seeded bootstrap of the drop (0030's readout), on this cell's own run
+entry = "0064"                       # PROVISIONAL, = [e8.gate]; moves with it in the staging commit
+bootstrap_seed = 64                  # the entry number, as 0030 used 30 and 0052 used 52
+bootstrap_reps = 2000
+
+[e8.text]                            # the sampling rule registered in 0016, byte-for-byte; only the suites differ
+seed = 8
+n_seqs = 50
+seq_len = 1024
+suites = ["mlperf-coding", "mlperf-workflow"]  # stratified equally (25 + 25); one window per trajectory
+window = "first"                     # the first seq_len tokens of the role-tagged concatenation
+
+[e8.band]                            # entry 0009, frozen: absolute drop in held-out pooled R2 (descriptive here)
+holds_max_drop = 0.05
+degrades_min_drop = 0.15

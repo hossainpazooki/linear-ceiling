@@ -1,0 +1,42 @@
+# Task-quality pilot gate (ruling C2): three handoffs, fresh arm only, before any registration.
+# The receiver is the registered E-BEH receiver (config/cache-behavior.toml): same model,
+# revision, YaRN schedule and cap, so a fresh accuracy read here transfers to the cell.
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+context_cap = 81920
+chunk_tokens = 256
+seed = 20261015
+# Pilot handoffs: shortest, middle and longest sender of the long cell among the handoffs with at
+# least min_form2_items valid form-2' items (0046's bridge rule over the void rule's survivors; C3's floor).
+cell_align = "results/e9l/align"
+min_form2_items = 10
+# Per handoff: every valid form-2' item up to this many, drawn by seed; the repository item always.
+max_items_per_handoff = 40
+max_new_tokens = 64
+# Decoding stops at end-of-text or the cap. A newline stop cut chat-form answers that follow a preamble.
+stop_at_newline = false
+# Gate (C2): register only if the median per-handoff accuracy on form-2' items, under the prompt form
+# and scorer chosen for registration, lies in this interval. Exact match is the reading; literal
+# containment of the field is stored beside it for the registration to choose.
+gate = [0.2, 0.9]
+
+[rope]
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
+
+# Question text per item kind; {cls} and {method} are filled from the item.
+[questions]
+file = "In which file is the class `{cls}` defined? Answer with the path only."
+signature = "What is the signature of the method `{method}` of the class `{cls}`? Answer with the signature line only."
+repository = "Which repository is cloned in the workspace? Answer with the repository name only."
+
+# Prompt forms: R stays the raw receiver prompt (its tokens are the matched set); the question is
+# appended after it. Both forms run in the pilot; registration pins one.
+[prompts.plain]
+before = "\n\nQuestion: "
+after = "\nAnswer:"
+
+[prompts.chat]
+before = "\n<|im_start|>user\n"
+after = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"

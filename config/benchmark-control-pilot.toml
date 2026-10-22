@@ -1,0 +1,62 @@
+# Benchmark control pilot (plan 2026-10-13 §5, ground-truth source B): two public QA sets composed
+# into a standalone handoff, fresh arm only, before any registration. The receiver is the registered
+# E-BEH receiver (config/cache-behavior.toml; the same as config/task-quality-pilot.toml): same model,
+# revision, YaRN schedule and cap. The purpose is context, not power: a number other groups report,
+# beside which the cell's retention statistics can be read.
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+context_cap = 81920
+chunk_tokens = 256
+seed = 20261021
+# LongBench's own generation cap for both sets (LongBench/config/dataset2maxlen.json at the pinned commit).
+max_new_tokens = 32
+stop_at_newline = false
+# Gate read per set over the three pilot items, [low, high], as context (ruling 1 of the 2026-10-21 seed).
+gate = [0.2, 0.9]
+# The question: LongBench's instruction for these sets (dataset2prompt.json at the pinned commit, without
+# its passage framing, which R supplies) plus CacheBlend's "Answer within 5 words". {input} is the item's question.
+question = "Answer the question based on the given passages. Only give me the answer and do not output any other words. Answer within 5 words. Question: {input}"
+
+[rope]
+rope_type = "yarn"
+factor = 2.5
+original_max_position_embeddings = 32768
+
+# LongBench v1 (not LongBench-E, not v2): the Hub dataset at a pinned revision; data.zip and the two
+# jsonl files pinned by sha256. Each set has 200 items; passages stay inside the native window.
+[data]
+hub_repo = "zai-org/LongBench"
+hub_revision = "5e628be450b7e67fb7ae6e201bd6d8f7056f7672"
+zip_sha256 = "cb45b11a4133c6bc1d6a44b0f8e701335ff1e543195db1103472e575857f7f64"
+
+[data.sets]
+2wikimqa = { path = "data/longbench/2wikimqa.jsonl", sha256 = "dda279cf93a99e1e5bfa3291fb199fd55978d10a1feb31822953cf77a1742e37" }
+hotpotqa = { path = "data/longbench/hotpotqa.jsonl", sha256 = "a0005ab2a1bc2ac3a70352dccbf96cccc4e0aac6bb677f6a55180fa51b92ef6f" }
+
+# The scorer is LongBench's qa_f1_score, copied verbatim into tools/task_quality/longbench_metrics.py.
+[scorer]
+source_repo = "https://github.com/THUDM/LongBench"
+file_path = "LongBench/metrics.py"
+commit_sha = "c5ea10bcd06285223c58dfed76bbc92d22273709"
+file_sha256 = "e22e2a2662e0f7e683137fa3541f64edb6a801e9138d16d2f3459a6ab9941323"
+
+# Composition, standalone: S is a sender system prompt plus the passage as one tool result; R is the
+# E-BEH receiver's template around the same tool result. The tool result is JSON-rendered on one line,
+# as the traces render tool results, so the passage's bytes are identical in S and R. This is one
+# rendering among possible ones; the entry says so.
+[composition]
+sender_system = "You are an autonomous research assistant. You retrieve passages with the tool SEARCH_PASSAGES and answer questions from what they say."
+sender_before = "\nHumanMessage: Retrieve the passages relevant to the question and read them.\nAIMessage: \nToolMessage: "
+sender_after = "\n"
+receiver_prefix = "The following is the run of the agent after it tried to answer the question. Analyse the contents and messages of the run and give a short summary of what the agent did. \nHumanMessage: Retrieve the passages relevant to the question and read them.\nAIMessage: \nToolMessage: "
+receiver_suffix = "\nHumanMessage: Placeholder message\n. Provide the output in the form of 5-7 chronological points."
+tool_key = "passages"
+
+# Prompt forms, as in the task-quality pilot: R stays the raw receiver prompt; the question is appended.
+[prompts.plain]
+before = "\n\n"
+after = "\nAnswer:"
+
+[prompts.chat]
+before = "\n<|im_start|>user\n"
+after = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"

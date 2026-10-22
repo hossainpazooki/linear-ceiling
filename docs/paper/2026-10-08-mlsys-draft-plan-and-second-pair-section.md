@@ -28,6 +28,10 @@ columns, **up to 10 pages not including references**, the MLSys 2025 style files
 | **new §4.x "A second source→receiver pair"** | absent | **T03** (`docs/drafts/tables/T03-second-pair-section.md`): one table, P1–P4, the App. A scoping sentences; DRAFT, awaiting per-paragraph approval | 0039, 0042, 0044, 0050, 0051, 0053 |
 | §4, E-TRUNC | — | **T02** (`docs/drafts/tables/T02-e-trunc-paragraph.md`): one paragraph (length vs. handoff identity) carrying 0055's two limitations; APPROVED 2026-10-10; the §X cross-reference is filled by a superseding file | 0055, 0057 |
 | Lean | no claim | no claim (`lake build` has not run on an operator machine) | CLAUDE.md rule |
+| **§4, E-BEH (cache behaviour)** | appendix tables only (pilot figures) | **T05** (`docs/drafts/tables/T05-e-beh-subsection.md`): one half-page subsection after E-TRUNC — the three arms' medians from 0049, the repair arms once 0061 runs (the achieved counterpart of 0058's oracle removal fraction; closes W3's CacheBlend comparison), and the sentence that this is prediction sensitivity on fixed text, not task quality; DRAFT, per-paragraph approval (ruling 2026-10-15) | 0047, 0049, 0058, 0061 (staged) |
+| §1 motivation, practitioner framing | absent | one sentence citing Carson's three Harnesses posts for FRAMING only (byte-exact reuse, hit rate at a discounted read price; no deployed acceptance rule for inexact reuse); the wording and bib entries are in the operator's private brief of 2026-10-15; never a figure, never the private exchange | published posts; ruling 2026-10-15 |
+| E-BEH band | none (0049 descriptive) | a later band entry on 0049's statistic with the practitioner rule as rationale, quoted from a `docs/reviews/` consultation record; the paper cites the ENTRY if it lands before the freeze, else the subsection stays descriptive and Limitations says so | ruling 2026-10-15 |
+
 
 Page budget: the camera-ready's main text is ~4 pages in the NeurIPS one-column style; the MLSys two-column 10-page
 limit leaves room for the second-pair section (~0.75 page with its table), the moved App. C controls (~0.5 page) and
