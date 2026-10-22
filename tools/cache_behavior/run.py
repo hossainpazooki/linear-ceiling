@@ -223,9 +223,14 @@ def summarize(output, inputs=None):
 
 def run(args, cfg, manifest):
     # Keep the numeric budgets; display labels must never round the selected fraction.
+    # `random_control_fractions` (repair amendment, ruling B 2026-10-13): the selection control for each
+    # oracle budget -- the same number of matched tokens, chosen uniformly at random without replacement.
+    # Absent in config/cache-behavior.toml (entry 0047's run), so that registration reads unchanged.
+    random_fractions = cfg.get("random_control_fractions", [])
     arm_fractions = [("reuse", 0), ("random", 0), ("scrambled", 0)] + [
-        (f"oracle_ranked_{f * 100:g}pct", f) for f in cfg["oracle_fractions"]]
-    if (any(not 0 < f <= 1 for f in cfg["oracle_fractions"])
+        (f"oracle_ranked_{f * 100:g}pct", f) for f in cfg["oracle_fractions"]] + [
+        (f"random_ranked_{f * 100:g}pct", f) for f in random_fractions]
+    if (any(not 0 < f <= 1 for f in list(cfg["oracle_fractions"]) + list(random_fractions))
             or len({arm for arm, _ in arm_fractions}) != len(arm_fractions)):
         raise ValueError("oracle fractions must be in (0, 1] with distinct labels")
     # Set before loading CUDA tensors; deterministic cuBLAS otherwise refuses GEMMs.
@@ -331,6 +336,11 @@ def run(args, cfg, manifest):
                 candidate = relocated_candidate(source, pairs, freq, np.roll(np.arange(len(pairs)), len(pairs) // 2))
             elif arm.startswith("oracle_ranked_"):
                 removed = np.argsort(-token_mean(delta), kind="stable")[:int(np.ceil(len(pairs) * fraction))]
+            elif arm.startswith("random_ranked_"):
+                # Same budget as the oracle arm at this fraction; a stream distinct from the RANDOM arm's
+                # noise (seed + index) so the two controls never share draws.
+                budget = int(np.ceil(len(pairs) * fraction))
+                removed = make_rng(cfg["seed"] + index + 1_000_003).permutation(len(pairs))[:budget]
             cache, counts = construct(model, receiver, pairs, candidate, cfg["chunk_tokens"], removed)
             logits = continuation_logits(model, cache, continuation, cfg["continuation_chunk"])
             compared = compare_logits(fresh_logits, logits)

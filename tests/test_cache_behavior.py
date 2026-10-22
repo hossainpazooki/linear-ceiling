@@ -297,3 +297,53 @@ def test_resumed_probe_keeps_one_handoff_and_exact_recompute_budget(model, tmp_p
 def test_invalid_recompute_budgets_fail_before_model_loading(fractions):
     with pytest.raises(ValueError, match="oracle fractions"):
         driver.run(None, {"oracle_fractions": fractions}, None)
+
+
+@pytest.mark.parametrize("random_fractions", [[1.01], [0], [.1, .1]])
+def test_invalid_random_control_budgets_fail_before_model_loading(random_fractions):
+    with pytest.raises(ValueError, match="oracle fractions"):
+        driver.run(None, {"oracle_fractions": [.2], "random_control_fractions": random_fractions}, None)
+
+
+def test_random_control_arm_matches_the_oracle_budget_and_differs_in_selection(model, tmp_path, monkeypatch):
+    # Repair amendment (ruling B, 2026-10-13): at each budget the random-selection control recomputes exactly
+    # as many matched tokens as the oracle arm, chosen by make_rng(seed + index + 1000003), and on a
+    # non-constant delta the two selections differ. The registered 0047 config carries no
+    # `random_control_fractions`, so the key is optional and its absence adds no arm.
+    cfg = tomllib.loads((driver.ROOT / "config/cache-behavior-repair.toml").read_text())
+    cfg.update(chunk_tokens=2, continuation_chunk=2, attention_queries=2,
+               attention_query_chunk=1, prefix_control_tokens=2,
+               oracle_fractions=[.2], random_control_fractions=[.2])
+    monkeypatch.setattr(model, "to", lambda device: model)
+    monkeypatch.setattr(driver.AutoConfig, "from_pretrained", lambda *a, **k: model.config)
+    monkeypatch.setattr(driver.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: model)
+    monkeypatch.setattr(torch.cuda, "get_device_name", lambda device: "CPU test")
+    monkeypatch.setattr(torch.cuda, "max_memory_allocated", lambda device: 0)
+    for name in ("empty_cache", "reset_peak_memory_stats"):
+        monkeypatch.setattr(torch.cuda, name, lambda *a: None)
+    monkeypatch.setattr(torch, "use_deterministic_algorithms", lambda enabled: None)
+    monkeypatch.setattr(driver, "sync", lambda device: None)
+    inputs = tmp_path / "inputs"
+    inputs.mkdir()
+    n = 20
+    tokens = np.arange(1, n + 1)
+    delta = np.zeros((n, 2, 2), dtype=np.float32)
+    delta[:4] = 1.0                      # the oracle ranks the first four tokens highest
+    np.savez(inputs / "largest.npz", sender=tokens, receiver=tokens,
+             pairs=np.column_stack((np.arange(n), np.arange(n))), continuation=np.array([21, 22, 23]),
+             delta_K=delta, tail_K=np.zeros(n, dtype=bool))
+    manifest = {"records": [{"handoff": "largest", "file": "largest.npz", "sender_tokens": n,
+                             "excluded": False, "archived_mean": {"K": 0, "V": 0}}]}
+    (inputs / "manifest.json").write_text(json.dumps(manifest))
+    args = SimpleNamespace(device="cuda", inputs=inputs, output=tmp_path / "output",
+                           config=driver.ROOT / "config/cache-behavior-repair.toml", resume=False, probe=True)
+    driver.run(args, cfg, manifest)
+    arms = json.loads((args.output / "report.json").read_text())["scores"]["largest"]["arms"]
+    assert set(arms) >= {"reuse", "random", "scrambled", "oracle_ranked_20pct", "random_ranked_20pct"}
+    assert arms["oracle_ranked_20pct"]["recomputed"] == arms["random_ranked_20pct"]["recomputed"] == 4
+    expected = sorted(make_rng(cfg["seed"] + 0 + 1_000_003).permutation(n)[:4].tolist())
+    assert expected != [0, 1, 2, 3], "the fixture's seed must make the random draw differ from the oracle's"
+    with np.load(args.output / "largest.npz") as arrays:
+        assert arrays["oracle_ranked_20pct_kl"].shape == arrays["random_ranked_20pct_kl"].shape == (2,)
+    summary = summarize(args.output, inputs)
+    assert "random_ranked_20pct" in summary["arms"] and "oracle_ranked_20pct" in summary["arms"]
