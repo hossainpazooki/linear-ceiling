@@ -14,10 +14,13 @@
 # same tokens. Eligibility under seq_len = 1024 from the census of 2026-10-22: coding 113/113, workflow 492/500,
 # both far above the 25 per suite the equal stratification needs, so n_seqs = 50 stands.
 #
-# Licenses (LICENSES.txt and NOTICE shipped with the dataset): DeepSWE traces Apache-2.0 (Datacurve) with
-# permissive upstream project licenses inside the traces; Workato conversations CC BY 4.0; the MLCommons
-# compilation Apache-2.0. Attribution travels with any derived artefact; the token files stay gitignored and only
-# the manifest of conversation ids and hashes is committed.
+# Licenses (LICENSES.txt and NOTICE shipped with the dataset, read as written): DeepSWE "Mixed" -- Datacurve's
+# Apache-2.0 covers its task specs, harness, verifiers and curation only; the published traces are MLCommons
+# derivative works under MLCommons' Apache-2.0; upstream project code inside the traces under each project's own
+# permissive license (none copyleft). Workato conversations CC BY 4.0 with an attribution header that must be
+# preserved verbatim wherever the data is distributed. Nothing derived is committed (data/ and traces/ are
+# gitignored; the registering entry carries hashes only); the rendered export and token files drop that header, so
+# they are not distributed from here, and any copy that leaves the machine carries NOTICE and LICENSES.txt beside it.
 #
 # e8.assert_ready refuses until this file and ledger/ledger.md (with 0009, 0016 and [e8.gate]'s entry) are
 # committed unmodified AND the upstream checkout is at `upstream_sha` with a clean tree for every path E8 invokes.
