@@ -31,7 +31,13 @@ report_k = [1, 4, 8]
 generic_dumps = "data/kv/llama3.2-3b-to-llama3.1-8b"   # relative to upstream; the pair's own n = 50 dumps (0040)
 agent_dumps = "results/e8mf/kv/agent"          # relative to this repo; written by the driver
 holdout_frac = 0.2
+agent_holdout_frac = 1.0                       # arm (b) over every sequence, as config/e8m.toml (ruled 2026-10-22); fresh dumps
 stride = 4
+
+[e8.amendment]                       # as config/e8m.toml
+entry = "0064"                       # PROVISIONAL, = the second entry of [e8.gate]
+bootstrap_seed = 64
+bootstrap_reps = 2000
 
 [e8.text]                            # config/e8m.toml's rule; the draw differs under the Llama-3 BPE
 seed = 8

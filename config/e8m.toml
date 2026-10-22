@@ -48,8 +48,16 @@ report_k = [1, 4, 8]
 [e8.arms]
 generic_dumps = "data/kv/qwen3-0.6b-to-1.7b"   # relative to upstream; the archived n = 50 dumps (0016 corrects 0009)
 agent_dumps = "results/e8m/kv/agent"           # relative to this repo; written by the driver
-holdout_frac = 0.2                             # arm (a)'s protocol, matched exactly (0016)
+holdout_frac = 0.2                             # arm (a): the mapper's own held-out sequences (0016)
+agent_holdout_frac = 1.0                       # arm (b): EVERY agent sequence, 0030's protocol (ruled 2026-10-22): the mapper was
+                                               # never fit on them, and the 0016 hold-out (the LAST 10 rows) would read only
+                                               # workflow windows of this suite-blocked file. No reuse_agent_dumps_from: fresh dumps.
 stride = 4
+
+[e8.amendment]                       # per-sequence R2 and the seeded bootstrap of the drop (0030's readout), on this cell's own run
+entry = "0064"                       # PROVISIONAL, = [e8.gate]; moves with it in the staging commit
+bootstrap_seed = 64                  # the entry number, as 0030 used 30 and 0052 used 52
+bootstrap_reps = 2000
 
 [e8.text]                            # the sampling rule registered in 0016, byte-for-byte; only the suites differ
 seed = 8

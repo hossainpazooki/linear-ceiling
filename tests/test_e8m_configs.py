@@ -22,7 +22,9 @@ def test_e8m_is_e8s_instrument_on_the_mlperf_suites():
     assert c.text == MLPERF_TEXT and {k: v for k, v in c.text.items() if k != "suites"} == {k: v for k, v in e8.text.items() if k != "suites"}
     assert c.band == e8.band and c.generic_dumps == e8.generic_dumps
     assert (c.verdict_k, c.report_k, c.holdout_frac, c.stride) == (e8.verdict_k, e8.report_k, e8.holdout_frac, e8.stride)
-    assert c.mapper_tag is None and c.amendment is None and c.agent_holdout_frac is None and c.reuse_agent_dumps_from is None
+    # arm (b) over every sequence with 0030's readout, on this cell's OWN dumps (no reuse); ruled 2026-10-22
+    assert c.mapper_tag is None and c.reuse_agent_dumps_from is None and c.agent_holdout_frac == 1.0
+    assert c.amendment == {"entry": "0064", "bootstrap_seed": 64, "bootstrap_reps": 2000} and e8.amendment is None
     assert c.scope_note and "MLPerf" in c.scope_note and "reasoning kept" in c.scope_note
 
 
@@ -33,6 +35,7 @@ def test_e8mf_is_e8fs_pair_on_e8ms_text():
     assert c.text == m.text == MLPERF_TEXT and c.band == f.band
     assert (c.verdict_k, c.report_k, c.holdout_frac, c.stride) == (f.verdict_k, f.report_k, f.holdout_frac, f.stride)
     assert "Llama-3" in c.scope_note and "MLPerf" in c.scope_note and "matched-KV" in c.scope_note
+    assert c.agent_holdout_frac == 1.0 and c.amendment == m.amendment and c.reuse_agent_dumps_from is None and f.amendment is None
 
 
 def test_the_gates_are_additive_and_name_an_entry_the_ledger_does_not_have():
