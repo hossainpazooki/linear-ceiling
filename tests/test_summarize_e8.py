@@ -174,3 +174,37 @@ def test_refuses_swapped_mapper_bytes(ran):
     (cfg.upstream_path / "mappers" / cfg.pair / "k1.safetensors").write_bytes(b"\x00\x00")
     with pytest.raises(ValueError, match="mapper artifacts"):
         summarize(cfg, runner=runner)
+
+
+@pytest.fixture
+def ran_fresh_amendment(ran, tmp_path):
+    """An amendment-protocol cell on its OWN draw and dumps (the MLPerf cells): no reuse_agent_dumps_from."""
+    import dataclasses
+    cfg, _, runner = ran
+    acfg = dataclasses.replace(cfg_for(tmp_path, cfg.upstream_path, amendment=True), reuse_agent_dumps_from=None,
+                               results_dir=tmp_path / "results" / "e8m", tokens_dir=tmp_path / "data" / "e8m")
+    from tests.test_e8 import E7Config
+    e7 = E7Config(traces_dir=tmp_path / "traces", results_dir=tmp_path / "r7", pricing={}, thresholds={},
+                  tokenizer={}, lane_b_policy="x", config_path=tmp_path / "c7")
+    driver.run(acfg, e7, repo_root=tmp_path, runner=runner)
+    return acfg, acfg.results_dir / "report.json", runner
+
+
+def test_fresh_amendment_run_reports_the_0016_protocol_figure_from_its_own_last_rows(ran_fresh_amendment):
+    """A cell read under the every-sequence protocol on its own dumps still reports the 0016 hold-out figure beside it:
+    pooled R^2 over the LAST ceil(holdout_frac x S) sequences, recomputed from the per-sequence moments."""
+    import math
+    acfg, rp, runner = ran_fresh_amendment
+    rep = json.loads(rp.read_text(encoding="utf-8"))
+    assert "reused_agent_dumps_from" in rep and not rep["reused_agent_dumps_from"]
+    md = summarize(acfg, runner=runner)
+    fig = json.loads((acfg.results_dir / "summary.json").read_text(encoding="utf-8"))
+    k1 = fig["per_k"]["1"]
+    assert "prior_0016_protocol" not in k1 and "change_from_prior" not in k1
+    h = k1["heldout_0016_protocol"]
+    n_hold = math.ceil(0.2 * N_SEQS)
+    assert h["n_heldout_seqs"] == n_hold and h["seq_ids"] == list(range(N_SEQS))[-n_hold:] and h["holdout_frac_agent"] == 0.2
+    # the synthetic record gives every sequence the pooled R^2, so the last-rows figure equals the every-sequence one
+    assert h["agent"]["K"] == pytest.approx(0.61) and h["agent"]["V"] == pytest.approx(0.44)
+    assert k1["change_from_heldout"]["K"] == pytest.approx(0.0) and h["band_outcome"]["K"] in ("HOLDS", "UNRESOLVED", "DEGRADES")
+    assert "0016-protocol column is this run's own last ceil(0.2 x S)" in md and f"ids {h['seq_ids']}" in md
