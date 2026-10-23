@@ -467,7 +467,17 @@ def cmd_terminate(a) -> int:
     # until the home side has written its verification file. --force is for the guardrails, which
     # must always be able to stop the meter.
     verify = Path(str(st.get("verify_file") or "")) if st.get("verify_file") else None
-    pid = a.pod or st.get("pod_id")
+    pid = getattr(a, "pod", None) or st.get("pod_id")
+    if st.get("terminated_spend") is not None and not st.get("pod_id"):
+        # 2026-10-23: a close (watchdog TTL or an earlier terminate) writes pod_id null. The interlock below
+        # then compares the receipt against null and refuses "does not match this sitting's pod_id", which
+        # reads as a receipt defect when the pod is simply gone. Say "closed" when the named pod is not
+        # billing; a pod that IS still listed after a close is some other sitting's and falls through to the
+        # interlock, which refuses it.
+        if not pid or pid not in {p["id"] for p in pods()}:
+            print(f"sitting already closed (PROVEN GONE, sitting ${float(st['terminated_spend']):.4f}); "
+                  + (f"{pid} is not listed" if pid else "nothing to terminate"))
+            return 0
     if not a.force and verify is not None:
         ok, why = _check_verify_interlock(st, verify, pid)
         if not ok:

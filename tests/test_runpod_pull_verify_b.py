@@ -158,6 +158,30 @@ def test_new_terminate_receipt_is_nonce_and_pod_bound_but_legacy_a_still_works(t
                                           legacy, "pod-b")[0]
 
 
+def test_terminate_after_a_close_says_closed_not_interlock_mismatch(tmp_path, monkeypatch, capsys):
+    """A watchdog close writes pod_id null; the interlock then refused the intact receipt as 'does not
+    match this sitting's pod_id' (2026-10-23, after a TTL kill). The closed state must be named first."""
+    import argparse
+    receipt = tmp_path / "verified.json"
+    receipt.write_text(json.dumps({
+        "schema": rp.VERIFY_RECEIPT_SCHEMA, "verify_nonce": "nonce", "pod_id": "pod-gone",
+        "created_utc": "time", "verified_utc": "later", "report_sha256": "a" * 64,
+    }), encoding="utf-8")
+    closed = {"verify_nonce": "nonce", "pod_id": None, "created_utc": "time",
+              "terminated_spend": 21.201, "verify_file": str(receipt)}
+    monkeypatch.setattr(rp, "load_state", lambda: closed)
+    monkeypatch.setattr(rp, "pods", lambda: [])
+    assert rp.cmd_terminate(argparse.Namespace(pod="pod-gone", force=False)) == 0
+    out = capsys.readouterr().out
+    assert "already closed" in out and "pod-gone is not listed" in out
+    assert rp.cmd_terminate(argparse.Namespace(pod=None, force=False)) == 0
+    assert "nothing to terminate" in capsys.readouterr().out
+    # a pod still listed after a close is another sitting's: the interlock, not the closed branch, decides
+    monkeypatch.setattr(rp, "pods", lambda: [{"id": "pod-live", "name": "linear-ceiling-x"}])
+    with pytest.raises(SystemExit, match="does not match this sitting's pod_id"):
+        rp.cmd_terminate(argparse.Namespace(pod="pod-live", force=False))
+
+
 def test_binding_refuses_live_sitting_a_state():
     state = {"name": "linear-ceiling-sitting-a", "pod_id": "a", "verify_nonce": "n", "verify_file": "v"}
     with pytest.raises(ValueError, match="wrong sitting"):
