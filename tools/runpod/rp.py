@@ -360,7 +360,7 @@ def cmd_up(a) -> int:
 
 
 def _create_input(a, pubkey: str) -> dict:
-    inp = {"cloudType": a.cloud, "gpuCount": 1, "gpuTypeId": a.gpu, "name": a.name,
+    inp = {"cloudType": a.cloud, "gpuCount": a.gpus, "gpuTypeId": a.gpu, "name": a.name,
            "imageName": a.image, "containerDiskInGb": a.disk, "volumeInGb": 0,
            "minMemoryInGb": a.min_ram, "minVcpuCount": a.min_vcpu,
            "ports": "22/tcp", "startSsh": True, "supportPublicIp": True,
@@ -787,6 +787,9 @@ def build_parser() -> argparse.ArgumentParser:
     # and 160 GB is ~149 GiB, leaving ~54 GiB of margin. This figure is registered by NO ledger entry
     # -- it is operational, and was checked against 0042/0043 before changing.
     p.add_argument("--disk", type=int, default=160, help="container disk GB (ephemeral; no volume)")
+    # 2026-10-23: the Kimi float32 reference (192 GB of weights) needs two cards; --price and --max-price are the
+    # POD's $/h (RunPod bills the pod), so pass the per-card price times --gpus.
+    p.add_argument("--gpus", type=int, default=1, help="GPUs per pod (gpuCount); --price is the pod's $/h, i.e. per-card x this")
     # 48 GB, measured not guessed: kvt/models.load_model calls from_pretrained(dtype=float32) with NO
     # device_map and only then .to(device), so the whole fp32 model materialises in host RAM first --
     # 29.91 GiB for Llama-3.1-8B (32 x 4096 x ... verified from the gated config). 48 leaves ~18 GiB of
