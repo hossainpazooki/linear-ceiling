@@ -1,7 +1,7 @@
 # E8 on MLPerf Agentic Inference text (the 2026-10-22 plan, cell 1a): the instrument of ledger entry 0009, amended
 # by 0016, with the two agent-text suites swapped for the MLCommons MLPerf Agentic Inference dataset, on the Qwen3
 # 0.6B -> 1.7B pair. DESCRIPTIVE: this cell carries no hypothesis row and re-decides nothing; H-E8 is 0009/0020's.
-# Its figures are read beside the Qwen cells' own values and never pooled with them. UNREGISTERED: see [e8.gate].
+# Its figures are read beside the Qwen cells' own values and never pooled with them. Registered by the entry [e8.gate] names.
 #
 # Text. One flat JSONL under traces/mlperf-agentic/ (gitignored; fetched by curl from the MLCommons endpoint,
 # SHA-256 checked against the dataset README; the registering entry pins that sha). One row per message, grouped
@@ -36,10 +36,9 @@ upstream_sha = "06f8d55592570deae70c3feb9f84a75c4044fb03"
 scope_note = "off-policy text for Qwen3; MLPerf Agentic Inference trajectories (DeepSWE coding + Workato workflow), reasoning kept, shared system prefix not rendered; not a real switch point; descriptive"
 
 [e8.gate]                            # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016), never replacing them
-required_entries = ["0064"]          # PROVISIONAL. Entry numbers are allocated ONLY by docs/drafts/README.md at
-                                     # staging time, in staging order. The committed ledger has no such entry, so
-                                     # `e8 --check` refuses on this file by construction; the number moves in the
-                                     # same commit as the staged append script, before any run.
+required_entries = ["0064"]          # allocated by docs/drafts/README.md at staging (2026-10-26), with the staged
+                                     # append script in the same commit. `e8 --check` refuses on this file until
+                                     # that entry is on the committed ledger, and refuses before any run.
 
 [e8.mappers]                         # upstream artifacts, read-only: mappers/<pair>/k<k>; the EXISTING mappers (0016)
 verdict_k = 1
@@ -55,7 +54,7 @@ agent_holdout_frac = 1.0                       # arm (b): EVERY agent sequence, 
 stride = 4
 
 [e8.amendment]                       # per-sequence R2 and the seeded bootstrap of the drop (0030's readout), on this cell's own run
-entry = "0064"                       # PROVISIONAL, = [e8.gate]; moves with it in the staging commit
+entry = "0064"                       # = [e8.gate]
 bootstrap_seed = 64                  # the entry number, as 0030 used 30 and 0052 used 52
 bootstrap_reps = 2000
 

@@ -277,3 +277,13 @@ resample bootstrap of the median, retention raw and floor-normalized against RAN
 in a sensitivity table. DESCRIPTIVE, no band. Refuses unless the items files and pilot reports are present at their hashes
 (copy them under `results/task-quality/` from the machine that produced them, or re-extract from the verified mirrors) and
 nothing exists under `results/task-quality-cell/`. Ordering guard: 0062 present, 0063 absent. Next free number: **0064**.
+
+**`append_0064.py` — E8 on the MLPerf Agentic Inference text REGISTERED on both pairs (the 2026-10-22 plan, cell 1a; staged
+2026-10-26).** `config/e8m.toml` (Qwen3 0.6B → 1.7B) and `config/e8mf.toml` (Llama-3.2-3B → Llama-3.1-8B): the 0016 §4 sampling
+rule over two new suites of the MLCommons dataset (113 DeepSWE coding traces, 500 Workato workflow conversations; reasoning kept,
+the shared ≈ 31K-token system prefix not rendered), 25 + 25 windows per pair, arm (b) over every sequence with the 0016
+last-ten figure beside it. One bridge with lag-ladder: the Qwen token file is, id for id, the file its entry 0030 reads (one
+sha, `9dce6082d057…`). DESCRIPTIVE, no hypothesis row, no band decision. Refuses unless both configs are committed unmodified
+and name 0064 in `[e8.gate]`, the adapter and tests are the committed files, the dataset, the rendered export and both token
+manifests re-derive, the family pin contains 0030's upstream commit, and nothing exists under `results/e8m` or `results/e8mf`
+(R1). Ordering guard: 0061, 0062, 0063 present, 0064 absent. Next free number: **0065**.

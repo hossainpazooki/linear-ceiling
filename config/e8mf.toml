@@ -1,6 +1,6 @@
 # E8 on MLPerf Agentic Inference text, SECOND MODEL FAMILY (the 2026-10-22 plan, cell 1a): config/e8m.toml's cell
 # on meta-llama/Llama-3.2-3B -> meta-llama/Llama-3.1-8B, exactly as config/e8f.toml carried entry 0016's cell to
-# this pair. DESCRIPTIVE, UNREGISTERED (see [e8.gate]); every figure is stated for the Llama pair alone and never
+# this pair. DESCRIPTIVE, registered by the second entry of [e8.gate]; every figure is stated for the Llama pair alone and never
 # pooled with the Qwen figures. The text, its rendering, the suites, the license notes and the sampling rule are
 # config/e8m.toml's, read there; the DRAW differs, because the Llama-3 BPE tokenizes the same trajectories into
 # different token counts, so this is a different 50 windows and not a re-use of data/e8m (as e8f.toml vs e8.toml).
@@ -20,8 +20,8 @@ scope_note = "off-policy text for Llama-3; MLPerf Agentic Inference trajectories
 
 [e8.gate]                            # ADDED to the driver's REQUIRED_ENTRIES (0009, 0016), never replacing them
 required_entries = ["0039", "0064"]  # 0039 registered this family's E8 cell (the pair, the pin, the mappers); 0064 is
-                                     # the PROVISIONAL number of the MLPerf registration, allocated by
-                                     # docs/drafts/README.md at staging and moved with config/e8m.toml in one commit.
+                                     # the MLPerf registration, allocated by docs/drafts/README.md at staging
+                                     # (2026-10-26) and named here and in config/e8m.toml in one commit.
 
 [e8.mappers]                         # the EXISTING Llama mappers of 0039/0040: mappers/<pair>/k<k>
 verdict_k = 1
@@ -35,7 +35,7 @@ agent_holdout_frac = 1.0                       # arm (b) over every sequence, as
 stride = 4
 
 [e8.amendment]                       # as config/e8m.toml
-entry = "0064"                       # PROVISIONAL, = the second entry of [e8.gate]
+entry = "0064"                       # = the second entry of [e8.gate]
 bootstrap_seed = 64
 bootstrap_reps = 2000
 

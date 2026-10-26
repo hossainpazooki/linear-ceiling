@@ -38,12 +38,11 @@ def test_e8mf_is_e8fs_pair_on_e8ms_text():
     assert c.agent_holdout_frac == 1.0 and c.amendment == m.amendment and c.reuse_agent_dumps_from is None and f.amendment is None
 
 
-def test_the_gates_are_additive_and_name_an_entry_the_ledger_does_not_have():
+def test_the_gates_are_additive_and_name_the_registering_entry():
     m, f = _load("e8m"), _load("e8mf")
     assert m.gate == ("0064",) and f.gate == ("0039", "0064")        # 0039 stays: it registered the Llama E8 cell
     assert e8_driver.required_entries(m) == e8_driver.REQUIRED_ENTRIES + ("### 0064 ",)
     assert e8_driver.required_entries(f) == e8_driver.REQUIRED_ENTRIES + ("### 0039 ", "### 0064 ")
     ledger = (REPO_ROOT / "ledger" / "ledger.md").read_text(encoding="utf-8")
-    # unregistered by construction: the day 0064 lands, this assertion and the PROVISIONAL note in both configs go
-    # together, in the staging commit that fixes the number
-    assert "### 0064 " not in ledger and "### 0039 " in ledger
+    # flipped in the 0064 staging commit (2026-10-26): red until append_0064.py lands the entry, green from then on
+    assert "### 0064 " in ledger and "### 0039 " in ledger
