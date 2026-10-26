@@ -4210,3 +4210,100 @@ is a different cohort (0038's 25 handoffs, pooled over their full matched sets) 
 tokens; both models native, so the cell says nothing about a sender-native / receiver-scaled pairing; descriptive.
 
 prior-entries-sha256: 72bd3d3c3f8efa3ce2c3f97551f27113836c7c0cdf8340e47a2f5fcf640e1a99
+
+### 0063 — 2026-10-26 — Task-quality cell registered before any operator prefill: structured-field recall of signature lines under FRESH, REUSE-ALL, RANDOM and REPAIR-f caches on the handoffs whose sender holds structured code-search results, long and short cells; the C2 pilot gate recorded; descriptive, no band, no cell moves
+
+**Why, and why now.** Every registered statistic so far is a deviation, a KL or a flip on fixed text; entry 0049's
+sentence "no downstream task-quality number is claimed" stands. Reviewers asked what a reused cache does to a task. The
+2026-10-13 plan (private; ruling C) chose structured-field recall from the trace itself as the ground truth: fields the
+sender's tool results render verbatim and the receiver prompt R re-renders, so the answer's tokens lie inside the matched
+set M and a question about them is a question about the reused states. This entry registers that cell, after a CPU pilot
+read its power. It is CONTEXT for the registered statistics, not a verdict on them: a task number beside the KL.
+
+**What is registered, by hash (text files newline-normalized, as the ledger cites configs).** `config/task-quality-cell.toml`
+(`cce4326c0ed0…`): receiver `Qwen/Qwen3-1.7B@70d244cc86cc`, fp32, SDPA, the long cell's YaRN schedule
+(factor 2.5, original 32,768), cap 81,920, 256-token prefill chunks — entry 0047's receiver,
+unchanged; seed 20261022; item floor 10; at most 40 form-2' items per handoff drawn by seed, the
+repository item always; greedy decoding to end-of-text or 64 tokens, no newline stop; two prompt forms (chat: the
+question in the receiver's chat template with an empty think block; plain: "Question: … Answer:"); repair budgets
+[0.05, 0.1, 0.2] (entry 0061's). Code: `tools/task_quality/items.py` `f5360038cef4…` (extraction, location in R,
+the scorers), `pilot.py` `009ff9f04601…` (the items driver, the gate, the draw), `cell.py` `bb015afd0eb4…` (the cell driver
+and its fail-closed reader), over `tools/cache_behavior/core.py` `f346b5fdf3d3…` (byte-identical to 0047's and 0061's
+cache construction); tests `tests/test_task_quality.py` and `tests/test_task_quality_cell.py` (synthetic archive, real
+tiny-model CPU forwards). Inputs: the items files `results/task-quality/items-e9l.json` `8153e9d30d04…` and
+`items-e9.json` `96499cb24cb8…`, extracted under `config/task-quality-pilot.toml` `ea4e2abb01aa…` from the
+verified E9 mirrors (coverage `074c04f19470…` and `2eae665b3d4a…`, raw bytes as the mirrors are verified), each handoff's
+trace and alignment file pinned inside them; the archives' alignment pairs as M, per-token record and score files, each checked against the hash the items file
+or the archive report pins. No new alignment, no new trace.
+
+**Items (form 2' of the plan).** From each sender's rendered code-search blocks: the signature line of a method listed as
+a member of a class (key `Class.method`, answer the `def …:` line as rendered), the file where a class is defined, and
+the cloned repository. One item per key; a key rendered with two answers is dropped as ambiguous. An item is valid iff
+the anchor's first occurrence lies in R and every token of the answer is in M (the archived pairs), decided by the
+receiver tokenizer's offsets against the archived receiver ids. The question is appended after the whole R, so the
+answer's tokens are the reused states under every arm. Long cell: 1,792 valid signature items, 51 file items and
+35 repository items over 35 handoffs; form-2' items per handoff median 21, max 201. Short cell: 645 / 23 / 25 over
+25; median 15, max 93.
+
+**The population, stated.** The floor voids 10 of 35 long handoffs (5 hold no item at all) and 11 of 25 short ones (5 with none); the
+cell runs 25 long and 14 short handoffs. Voiding is by tool usage, not length: the voided long senders' median is
+47,698.5 tokens against 52,692.0 for the kept. The cell is "handoffs whose sender holds structured code-search results"; the
+void handoffs are listed in the report and no accuracy is imputed to them.
+
+**Arms.** FRESH: the receiver's own prefill of R. REUSE-ALL, RANDOM and REPAIR-f exactly as entries 0047 and 0061
+construct them (the same `core.py`): the sender's matched states relocated to R; the norm-matched random perturbation of
+the fresh states; the top-f matched tokens by archived token-mean δ_K recomputed in place against reused predecessors.
+CYCLIC and the random-selection control are not run here. Under each cache every drawn item's question is appended
+after R, decoded, and the cache returned to R before the next item; the continuation is not scored and no KL is read.
+
+**Readout, fixed now (ruling C3).** Headline: under the CHAT form, per handoff, the fraction of signature items whose
+FIRST def-span in the generation equals the rendered field after undoing the trace's JSON escaping and collapsing
+whitespace, the trailing colon ignored (`items.first_span_exact`, pinned above; a preamble does not fail it, a hedge
+list is read by its first entry). Over the handoffs: median with p10 / p90 by `e7_stats`, handoffs weighted equally, and a
+percentile interval of the median from 2,000 seeded resamples of handoffs. Retention per arm: raw (arm over FRESH per
+handoff) and floor-normalized ((arm − RANDOM) / (FRESH − RANDOM) per handoff), the handoffs whose denominator is not
+positive counted as void and listed by id in the summary. Beside the accuracy, per form and arm, the reader reports the
+mean generated tokens and the fraction of items at the 64-token cap (the `length` block of `summary.json`), so a
+retention figure is never read without how long the generations under that arm ran.
+Beside it, descriptive: the same statistic under the PLAIN form
+and under every scorer (whole-generation exact match, containment, token F1, canonical containment), on signature items
+and on form-2' items (signature plus file); file and repository items reported by kind only — they scored 3 of 3 under
+both forms in the pilot and are treated as guessable without context, so they are out of the headline. **No band is
+registered**; the first run is descriptive and a later entry may register one.
+
+**The pilot gate, recorded (ruling C2).** Three handoffs (shortest, middle, longest sender above the floor), FRESH only,
+both forms, on this receiver on CPU; the gate [0.2, 0.9] read as context. Run 2 (`results/task-quality/pilot/report.json`
+`6e194dc79a58…`, the narrower extraction) and run 3 (`pilot-widened/report.json` `e069f14326d8…`, the pinned
+extraction), re-read here by the pinned reader: chat first-span per handoff 1.000 / 1.000 / 0.800 (median 1.000) and
+0.964 / 0.975 / 0.667 (median 0.964); plain 0.957 / 0.800 / 0.700 (median 0.800) and 0.929 / 0.700 / 0.667 (median
+0.700); pooled signature first-span chat 0.971 (n = 70) and 0.874 (n = 95). Run 1 (two handoffs, a
+newline stop) is superseded and kept at `6b85322681cb…`. Both chat medians exceed the gate's ceiling of 0.9, as do two
+of the three handoffs in each run; the ceiling was a proxy for context-independence, and most of the pilot's chat misses
+are retrieval confusions between same-named methods of different classes in S (the rest alter a parameter list), not
+answers from no context, so the chat form is registered and the gate reading is reported as it is. The plain form
+continued the trace's own rendering to the token cap on every item and is kept as a sensitivity row, not the instrument.
+
+**The registered run (the operator's).** Requested only after this entry is committed: `tools.task_quality.cell --run`
+per cell, the largest sender first as the memory probe (R2), `--resume` verifying the identity; output `results/task-quality-cell/long/`
+and `results/task-quality-cell/short/` (`report.json`, `summary.json`), mirrored home and verified before the figures entry. Card: 80 GB.
+Cost is ASSUMED until the probe times it: per handoff one sender prefill, one FRESH prefill and five cache constructions,
+then up to 41 items × 2 forms × 6 arms short decodes.
+
+**Gate and enforcement.** The driver refuses an items file, alignment, score or per-token file whose hash differs from
+its pin, records the config, items and source hashes, runtime and device in `report.json`, and re-reads every score from
+the stored prediction after each handoff. This script refuses if any pinned file differs, if the cell and pilot
+configurations disagree on the receiver or the items rule, if either pilot summary fails to re-derive, or if `results/task-quality-cell`
+holds a run. The figures enter by their own entry, which calls `tools.task_quality.cell.summarize` in-process over the
+operator's verified output, asserts the report's hashes equal the hashes above, and refuses on any disagreement; no
+figure is typed.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045, 0047,
+0049, 0058, 0061, 0062 and their records; `config/cache-behavior*.toml` and their output trees; `config/e9*.toml`; the
+E9 drivers and summarizers; the standing sentence of 0049.
+
+**Scope.** One receiver, two repositories' traces, fixed proprietary-model text, same-model reuse only; one item kind in
+the headline; accuracy of a 1.7B receiver on a recall question, not the agent's task success; the question sits after
+the whole R, so a seam-local reading needs a later entry; no public benchmark (a composition of LongBench items into a
+standalone handoff is piloted separately and enters by its own entry, if at all).
+
+prior-entries-sha256: 454d74398487a2db4c90b14d9a6ca5c395e62b146ffb1268a4e75a6a62c12fd1
