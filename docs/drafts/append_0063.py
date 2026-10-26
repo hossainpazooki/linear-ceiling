@@ -36,10 +36,10 @@ CONFIG_SHA = "cce4326c0ed0c139ac702179d5eefa195de866ccefc47e5f91bf18247d3e5d80" 
 PILOT_CONFIG_SHA = "ea4e2abb01aa5c5ff2109f3a2337f2085af3c5fc576de115b8e17a31445d326b"   # config/task-quality-pilot.toml, the items' and the gate's configuration
 ITEMS_SHA = "f5360038cef454361294a074768fbed549ffbed1aa042163e3ff2066924c8d2e"   # tools/task_quality/items.py: extraction, location in R, the scorers
 PILOT_SHA = "009ff9f04601e3c07a0bf779f0c16bc847b3c03409df8ce13d6e44a3576534e8"   # tools/task_quality/pilot.py: extraction driver, the gate, the draw
-CELL_SHA = "412b88a3d001c6cc5773671bc1b3438030b960e53509a496e23c9ef74a3670e5"    # tools/task_quality/cell.py: the cell driver and its reader
+CELL_SHA = "bb015afd0eb4d4b8390cb589e8cf8af8d87914bf4eeadcc7ec5b544ffffbde4d"    # tools/task_quality/cell.py: the cell driver and its reader
 CORE_SHA = "f346b5fdf3d3feff5918e3a0e95f1e084f154317213ba68ce1913ec5acdcade5"   # tools/cache_behavior/core.py, as 0047 / 0061 pin it
 TESTS_SHA = {"tests/test_task_quality.py": "9600fab36c643b4eafa14f1660a88a5b91b035fa31a3db10fb2b5714934c8ecf",
-             "tests/test_task_quality_cell.py": "374282b8453cf97a32823daa9058c5ef02e8f6cea07a121923b6ece09d901dce"}
+             "tests/test_task_quality_cell.py": "ac3bdcff1a1754923a6c6f9cf75c1d69ae79a6da74919120df7376778735abdb"}
 ITEMS_FILES_SHA = {"long": "8153e9d30d04b9c7cebe7bf44a661eab4df56a170635204f52ce8da660ce9239",     # results/task-quality/items-e9l.json
                    "short": "96499cb24cb88f4c233245bd2793b73728105124e3f25c6ac9862f33a0cb958a"}    # results/task-quality/items-e9.json
 PILOT_REPORTS_SHA = {"pilot": "6e194dc79a58b80af52e898a996f2df52db49e5b10c8635243e15db8bae0f14f",           # run 2, results/task-quality/pilot/report.json
@@ -185,7 +185,10 @@ whitespace, the trailing colon ignored (`items.first_span_exact`, pinned above; 
 list is read by its first entry). Over the handoffs: median with p10 / p90 by `e7_stats`, handoffs weighted equally, and a
 percentile interval of the median from {cfg['bootstrap_resamples']:,} seeded resamples of handoffs. Retention per arm: raw (arm over FRESH per
 handoff) and floor-normalized ((arm − RANDOM) / (FRESH − RANDOM) per handoff), the handoffs whose denominator is not
-positive counted as void and listed by id in the summary. Beside it, descriptive: the same statistic under the PLAIN form
+positive counted as void and listed by id in the summary. Beside the accuracy, per form and arm, the reader reports the
+mean generated tokens and the fraction of items at the {cfg['max_new_tokens']}-token cap (the `length` block of `summary.json`), so a
+retention figure is never read without how long the generations under that arm ran.
+Beside it, descriptive: the same statistic under the PLAIN form
 and under every scorer (whole-generation exact match, containment, token F1, canonical containment), on signature items
 and on form-2' items (signature plus file); file and repository items reported by kind only — they scored 3 of 3 under
 both forms in the pilot and are treated as guessable without context, so they are out of the headline. **No band is

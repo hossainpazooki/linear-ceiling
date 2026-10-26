@@ -312,6 +312,9 @@ resample bootstrap of the median, retention raw and floor-normalized against RAN
 in a sensitivity table. DESCRIPTIVE, no band. Refuses unless the items files and pilot reports are present at their hashes
 (copy them under `results/task-quality/` from the machine that produced them, or re-extract from the verified mirrors) and
 nothing exists under `results/task-quality-cell/`. Ordering guard: 0062 present, 0063 absent. Next free number: **0064**.
+*(Re-staged 2026-10-26 after #27 merged: ask 12 of the #27 review packet (the length guard) stood at its default IN, so
+`cell.py`'s reader reports mean generated tokens and the fraction at the cap per form and arm, and the script re-pins
+`cell.py` and `tests/test_task_quality_cell.py`; the entry's readout states the guard. Nothing else in the draft moved.)*
 
 **`append_0064.py` — E8 on the MLPerf Agentic Inference text REGISTERED on both pairs (the 2026-10-22 plan, cell 1a; staged
 2026-10-26).** `config/e8m.toml` (Qwen3 0.6B → 1.7B) and `config/e8mf.toml` (Llama-3.2-3B → Llama-3.1-8B): the 0016 §4 sampling
