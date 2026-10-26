@@ -329,3 +329,15 @@ manifests re-derive, the family pin contains 0030's upstream commit, and nothing
 (R1). Ordering guard: 0061, 0062, 0063 present, 0064 absent. Next free number: **0065**.
 
 *(2026-10-26: **0064 APPENDED** (`8d3a48a`, chain `d26c6c9c…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0063, 0064. Still staged: nothing. Next free number: **0065**.)*
+
+**Staged 2026-10-26: `append_0065.py` — the MLSys 2027 cut RESTATED (operator ruling 2026-10-24: "remove linear ceiling's
+freeze"; drafted that day, staged after 0064 appended).** 0060's "Nothing registered after this entry enters the submission" is withdrawn; "a figure that changes re-enters
+only through a later entry" is kept and used. The submission draws on every figure an entry on the ledger states at the cut,
+2026-10-29 16:00 UTC (09:00 PDT), read from its summary file by sha through AGENTS.md's admitted evidence path; the commit at
+the cut is pinned by the reconciliation record, as 0060 provides. 0060's table, wording invariants and conditions stand; no
+figure is admitted by name; lag-ladder's figures enter through its own ledger; the MLPerf per-window join is stated only by
+the entry that reads 0064's run. Ruling-only: no summarizer, no `verdict:` line, nothing under `results/`. Every cited
+sentence located by search inside its entry (0060 ×4, 0064 ×2, AGENTS.md, the draft plan); lag-ladder 0036 read from the
+sibling clone (HEAD, entry sha and chain line recorded; refuses when the clone is absent). Refuses until
+`docs/paper-to-record.md` names 0065 and this README's last allocator line reads 0066. Ordering guard: 0061, 0062, 0063 and
+0064 present, 0065 absent. Next free number: **0066**.

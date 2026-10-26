@@ -21,6 +21,10 @@ figure. Where the submitted text and the record disagree, that review says so; t
 Entry 0060 (2026-10-10) froze the figure set: a table mapping each reviewer point W1–W8 to the experiment that answers
 it, the entry and ledger line, and the figure as read from its summary file with the file's sha12. That table is the
 authority; this page only names the files beside it.
+Entry 0065 (2026-10-26) restated the cut: 0060's "nothing registered after this entry" sentence is withdrawn, and the
+submission may draw on every figure an entry on the ledger states at the cut (2026-10-29 16:00 UTC), each read from its
+summary file by sha through the admitted evidence path; 0060's table, invariants and conditions stand. A figures entry
+appended after the cut is camera-ready or later-venue material, never the submission's.
 
 | cell | entry | summary file (local mirror, sha12 as recomputed 2026-10-11) | backup dataset |
 |---|---|---|---|
