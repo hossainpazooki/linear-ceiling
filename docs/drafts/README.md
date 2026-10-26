@@ -341,3 +341,5 @@ sentence located by search inside its entry (0060 ×4, 0064 ×2, AGENTS.md, the 
 sibling clone (HEAD, entry sha and chain line recorded; refuses when the clone is absent). Refuses until
 `docs/paper-to-record.md` names 0065 and this README's last allocator line reads 0066. Ordering guard: 0061, 0062, 0063 and
 0064 present, 0065 absent. Next free number: **0066**.
+
+*(2026-10-26: **0065 APPENDED** (`ea2cf92`, chain `55051035…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0064, 0065. Still staged: nothing. Next free number: **0066**.)*
