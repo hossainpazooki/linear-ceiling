@@ -398,9 +398,31 @@ def _check_rope_meta(cfg: E9Config, rep: dict, scored: list) -> dict | None:
     receiver, which is exactly what has no bridge. MIXED evidence refuses everywhere: some handoffs with
     the block and some without, or some dumps recorded and some not, is doubt, not history.
 
+    The position (a) compares is what the run DEMANDS of a dump: the cap, which is what a run may ask for. A
+    truncated NATIVE cell (a sender head-truncated to L with no [e9.rope]; registration entry 0062) is the one
+    exception, registered: it keeps the long cap because inclusion is decided on the FULL |S| (0055) while every
+    dump it writes is S' = S[-L:], S' plus R's first token (the prefix control) or R, so its demand is the longest
+    of those over the scored handoffs, read from the alignment records, and the cap sits above the receiver's
+    native window BY REGISTRATION. Scoped to that cell: every other config keeps the cap as the demand and its
+    summary unchanged.
+
     Returns the block the summary states, or None when the report carries no records at all."""
     recs, missing = _rope_records(rep, scored)
     native_long = bool(cfg.context_floor) and cfg.rope is None
+    demand, window = cfg.context_cap, {"basis": "context_cap", "demand": cfg.context_cap}
+    if cfg.rope is None and getattr(cfg, "sender_head_truncate", None):
+        al = {a.get("handoff_id"): a for a in rep.get("alignments") or []}
+        absent = [h for h in scored if h not in al]
+        if absent:
+            raise ValueError(f"native-window control: {len(absent)} scored handoffs carry no alignment record (first: "
+                             f"{absent[0]}); the dumped lengths of a truncated native cell cannot be read")
+        lens = {h: max(_dumped_sender_len(cfg, al[h]["n_sender"]) + 1, int(al[h]["n_receiver"])) for h in scored}
+        demand = max(lens.values(), default=0)
+        window = {"basis": "dumped_length", "demand": demand, "context_cap": cfg.context_cap,
+                  "sender_head_truncate": cfg.sender_head_truncate,
+                  "longest": max(lens, key=lens.get) if lens else None,
+                  "note": "a truncated native cell: every dump is S' = S[-L:], S' + 1 (the prefix control) or R, so the "
+                          "position the run asks for is the longest of those, not the cap it includes under"}
     if not recs:
         # An EMPTY record set is not weaker evidence than an all-unrecorded one, it is the same
         # absence, so it refuses in the same place: where the two asserts below ARE the registered
@@ -435,8 +457,10 @@ def _check_rope_meta(cfg: E9Config, rep: dict, scored: list) -> dict | None:
         if not isinstance(mpe, int) or isinstance(mpe, bool) or mpe <= 0:
             raise ValueError(f"per-dump RoPE record: {lbl} records max_position_embeddings {mpe!r}; the "
                              "native-window control has nothing to read")
-        if cfg.context_cap > mpe:
-            raise ValueError(f"context cap {cfg.context_cap} is outside the window {lbl} recorded "
+        if demand > mpe:
+            what = (f"context cap {cfg.context_cap}" if window["basis"] == "context_cap"
+                    else f"dumped length {demand} (S' + 1 or R of {window['longest']})")
+            raise ValueError(f"{what} is outside the window {lbl} recorded "
                              f"(max_position_embeddings {mpe}); the run asked for positions the dump's own "
                              "configuration does not declare")
         chk, atol = r.get("check_max_abs"), r.get("check_atol")
@@ -472,6 +496,8 @@ def _check_rope_meta(cfg: E9Config, rep: dict, scored: list) -> dict | None:
                              f"attention_scaling {r.get('attention_scaling')!r}, not 1.0; the box applied a "
                              "scaled RoPE the registration does not describe")
     return {"recorded": True, "n_dumps": len(recs), "context_cap": cfg.context_cap,
+            # the window block appears only where the demand is NOT the cap, so every existing cell's summary is byte-identical
+            **({"window": window} if window["basis"] != "context_cap" else {}),
             "registered_rope": cfg.rope, "spec_check_max_abs": worst_check, "spec_check_atol": atol,
             "by_role": {role: {"n_dumps": sum(1 for r in recs.values() if r.get("which") == role),
                                **{f: rec.get(f) for f in _ROPE_IDENTITY_FIELDS}}
@@ -952,8 +978,11 @@ def summarize(cfg: E9Config, runner=subprocess.run, encoder=None, e7=None) -> st
                      "the RoPE-spec commit); the native-window and frequency-identity controls did not run\n")
     elif rope_meta:
         rope_line = (f"per-dump RoPE record ({rope_meta['n_dumps']} dumps, spec-vs-model check max |diff| "
-                     f"{rope_meta['spec_check_max_abs']:.1e} within {rope_meta['spec_check_atol']:.0e}): cap "
-                     f"{cfg.context_cap} inside every dump's recorded window ("
+                     f"{rope_meta['spec_check_max_abs']:.1e} within {rope_meta['spec_check_atol']:.0e}): "
+                     + (f"cap {cfg.context_cap}" if "window" not in rope_meta else
+                        f"longest dumped length {rope_meta['window']['demand']} (a truncated native cell; the cap "
+                        f"{cfg.context_cap} is for inclusion and sits above the native window by registration)")
+                     + " inside every dump's recorded window ("
                      + ", ".join(f"{role} {b['max_position_embeddings']}" for role, b in rope_meta["by_role"].items())
                      + "); frequencies identical across every dump of each role ("
                      + ", ".join(f"{role} inv_freq {str(b['inv_freq_sha256'])[:12]}" for role, b in rope_meta["by_role"].items())

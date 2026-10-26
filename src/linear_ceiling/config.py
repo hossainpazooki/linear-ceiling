@@ -259,11 +259,19 @@ class E9Config:
     # `summarize_e9_trunc`): the truncated levels' configs, the common-subset floor, the reading's margin and
     # the two records the reading is measured against. None on every other cell.
     trunc: dict | None = None
+    # ---- the L32-NATIVE cell (operator ruling A, 2026-10-13; registration entry number assigned at staging):
+    # a truncated level with NO [e9.rope], both models under their native RoPE, paired by `summarize_e9_native`
+    # with the YaRN level of the same L on the same tokens. [e9.native] names the FULL cell whose [e9.trunc]
+    # defines M_cap and the floor, the YaRN level, the margin and the two records the reading is measured
+    # against. None on every other cell; a config carrying it must register a truncation and no rope.
+    native: dict | None = None
 
 
 _ROPE_KEYS = ("rope_type", "factor", "original_max_position_embeddings")
 _TRUNC_KEYS = ("levels", "out_dir", "margin_abs", "min_common_matched", "seam_far_bin",
                "short_scaled_compare", "long_summary", "bootstrap_seed", "bootstrap_reps")
+_NATIVE_KEYS = ("full_config", "yarn_level", "out_dir", "margin_abs", "short_native_compare", "trunc_compare",
+                "bootstrap_seed", "bootstrap_reps")
 
 
 def load_e9_config(path: Path, repo_root: Path) -> E9Config:
@@ -372,6 +380,35 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         if isinstance(bs, bool) or isinstance(br, bool) or not isinstance(bs, int) or not isinstance(br, int) or br < 100:
             raise ValueError(f"{path.name} [e9.trunc] bootstrap_seed must be an int and bootstrap_reps an int >= 100")
     order = e9.get("order", {})
+    # ---- the L32-native cell's own section: a truncated level under the native RoPE, read against the YaRN level
+    # of the same L. It needs the truncation (a native cell at full length is the short cell, config/e9.toml) and
+    # refuses a rope (the comparison's whole content is native vs scaled) and a bridge (nothing scaled to bridge to).
+    native_sec = e9.get("native")
+    if native_sec is not None:
+        native_sec = dict(native_sec)
+        missing = [k for k in _NATIVE_KEYS if k not in native_sec]
+        extra = sorted(set(native_sec) - set(_NATIVE_KEYS))
+        if missing or extra:
+            raise ValueError(f"{path.name} [e9.native] needs exactly {list(_NATIVE_KEYS)} (missing {missing}, extra {extra})")
+        if trunc is None:
+            raise ValueError(f"{path.name}: [e9.native] belongs to a truncated level ([e9.alignment] sender_head_truncate); "
+                             "the native cell at full length is config/e9.toml")
+        if rope is not None or e9.get("bridge") is not None:
+            raise ValueError(f"{path.name}: [e9.native] registers both models under their native RoPE; no [e9.rope] and no "
+                             "[e9.bridge] may be present")
+        if floor <= 0:
+            raise ValueError(f"{path.name}: [e9.native] pairs with a long-cell level and needs context_floor > 0")
+        m = native_sec["margin_abs"]
+        if isinstance(m, bool) or not isinstance(m, (int, float)) or not (0 < float(m) < 1):
+            raise ValueError(f"{path.name} [e9.native] margin_abs must be a number in (0, 1): the absolute band around each "
+                             "reference far-from-seam median")
+        for key in ("full_config", "yarn_level", "out_dir", "short_native_compare", "trunc_compare"):
+            v = native_sec[key]
+            if not (isinstance(v, str) and v.strip()) or Path(v).is_absolute():
+                raise ValueError(f"{path.name} [e9.native] {key} must be a non-empty repo-relative path")
+        bs, br = native_sec["bootstrap_seed"], native_sec["bootstrap_reps"]
+        if any(isinstance(x, bool) or not isinstance(x, int) for x in (bs, br)) or br < 100:
+            raise ValueError(f"{path.name} [e9.native] bootstrap_seed must be an int and bootstrap_reps an int >= 100")
     order_by = str(order.get("by", "id"))
     if order_by not in ("id", "n_sender_asc", "n_sender_desc"):
         raise ValueError(f"{path.name} [e9.order] by must be 'id', 'n_sender_asc' or 'n_sender_desc' (entry 0035; "
@@ -424,7 +461,7 @@ def load_e9_config(path: Path, repo_root: Path) -> E9Config:
         rule=dict(e9["rule"]), controls=dict(e9["controls"]), config_path=path,
         context_floor=floor, rope=rope, required_entries=req, order_by=order_by, allow_partial=allow_partial,
         bridge=bridge, profiles=profiles, e8_report=e8_report,
-        sender_head_truncate=int(trunc) if trunc is not None else None, trunc=trunc_sec,
+        sender_head_truncate=int(trunc) if trunc is not None else None, trunc=trunc_sec, native=native_sec,
     )
 
 
