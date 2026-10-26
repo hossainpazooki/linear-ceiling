@@ -316,6 +316,8 @@ nothing exists under `results/task-quality-cell/`. Ordering guard: 0062 present,
 `cell.py`'s reader reports mean generated tokens and the fraction at the cap per form and arm, and the script re-pins
 `cell.py` and `tests/test_task_quality_cell.py`; the entry's readout states the guard. Nothing else in the draft moved.)*
 
+*(2026-10-26: **0063 APPENDED** (`6f40d90`, chain `454d7439…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0062, 0063. Still staged: 0064. Next free number: **0065**.)*
+
 **`append_0064.py` — E8 on the MLPerf Agentic Inference text REGISTERED on both pairs (the 2026-10-22 plan, cell 1a; staged
 2026-10-26).** `config/e8m.toml` (Qwen3 0.6B → 1.7B) and `config/e8mf.toml` (Llama-3.2-3B → Llama-3.1-8B): the 0016 §4 sampling
 rule over two new suites of the MLCommons dataset (113 DeepSWE coding traces, 500 Workato workflow conversations; reasoning kept,
