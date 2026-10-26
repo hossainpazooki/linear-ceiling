@@ -4307,3 +4307,90 @@ the whole R, so a seam-local reading needs a later entry; no public benchmark (a
 standalone handoff is piloted separately and enters by its own entry, if at all).
 
 prior-entries-sha256: 454d74398487a2db4c90b14d9a6ca5c395e62b146ffb1268a4e75a6a62c12fd1
+
+### 0064 — 2026-10-26 — MLPerf Agentic Inference text registered before any dump: E8 on both pairs over the MLCommons trajectories (`config/e8m.toml`, `config/e8mf.toml`), reasoning kept, the shared system prefix not rendered; descriptive, no hypothesis row, no cell moves
+
+**Why.** Every E8 figure on this ledger reads the agent-trace shift on tau2-bench and SWE-bench windows (0020, 0040,
+0030, 0053). The MLPerf Agentic Inference benchmark is the workload the field will quote for agent serving with
+prefix reuse, and it ships its own recorded trajectories. This entry registers the same instrument on that text — the 0009
+mapper on the existing fitted mappers of each pair, 0016 §4's sampling rule byte-for-byte, two new suites out of one file —
+BEFORE any token is dumped, and decides nothing: **no hypothesis row, no `verdict:` line; H-E8 was decided by 0020 and
+does not move**, and the band is reported as 0009 writes it, descriptive. Every figure is read beside the pair's own
+tau2/SWE-bench figure and never pooled with it.
+
+**The text, as verified.** The MLCommons dataset, one flat JSONL of 40700 message rows in
+613 trajectories (SHA-256 `1beb24c88212…`, equal to its README's; fetched by curl into the gitignored
+`traces/mlperf-agentic/`): 113 DeepSWE coding traces and 500 Workato workflow conversations, split by the
+`_source` row field, which every Workato row carries and no DeepSWE row does — a field, not a content heuristic. Licenses
+ship with it (`LICENSES.txt` `b5bf35ea84d1…`, `NOTICE` `c1eee41d1147…`), read as they are written: DeepSWE is listed
+"Mixed" — Datacurve AI Inc.'s Apache-2.0 covers its task specifications, harness, verifiers and curation only; the published
+execution traces are MLCommons derivative works under MLCommons' Apache-2.0; the upstream project code inside the traces
+carries each project's own license (Apache-2.0, MIT, BSD, ISC, Unlicense; "all included licenses are permissive; none are
+copyleft or share-alike"). Workato conversations CC BY 4.0, with an attribution header the NOTICE requires preserved
+verbatim wherever the data is distributed. Obligations, stated rather than claimed met: nothing derived is committed (`data/`
+and `traces/` are gitignored; this entry carries hashes only), the rendered export and the token files DROP the CC BY
+header, so they are not distributed from this repository, and any copy that leaves the sitting machine (the private backup)
+carries `NOTICE` and `LICENSES.txt` beside it — an operator rule, enforced by no code here. Rendering (`src/linear_ceiling/e8_text.py` `a9c7ce64294b…`, `render_mlperf_rows`): rows grouped by
+conversation id and ordered by turn, the 0016 role tags, `reasoning_content` KEPT ahead of the content (the benchmark's
+template keeps it, so the text a serving engine caches includes it), tool calls as `name(arguments)`, tool results'
+contents. **The shared system prompt and tool schema on each conversation's first row is NOT rendered**: all 500
+workflow conversations open with one identical prefix of about 31K tokens, and under `window = "first"` every workflow
+window would be the same 1,024 tokens — the failure 0040 disclosed on the Llama draw (42 distinct windows of 50, one
+preamble nine times) by construction and for every row. Rendered export `58b3b1e25063…` (the lag-ladder cell reads it).
+The old suites' rendering is unchanged: all 924 tau2-bench / SWE-bench texts rendered byte-identically under the
+pre-adapter module and this one at build (`tests/test_e8_text.py` `20dac6326cee…` covers the two renderers on
+a fixture and the old suites' blindness to the new directory; it does not re-render the real corpus). The DeepSWE traces
+also open with a shared system block (77 tokens, one for all 113), likewise not rendered.
+
+**The draw** (`[e8.text]` of both configs: seed 8, n = 50, len = 1,024, `mlperf-coding` + `mlperf-workflow` stratified 25 + 25,
+window "first", skipped never padded — 0016 §4's rule unchanged, only the suites differ). Eligibility, recomputed from the
+export under the Qwen3 tokenizer on 2026-10-22: 113/113 coding and 492/500 workflow trajectories reach 1,024 tokens, so n = 50
+stands without a rule change. Qwen pair: `data/e8m/agent_n50_len1024_seed8.npy` `9dce6082d057…`, manifest
+`08f05359e524…`; Llama pair: `data/e8mf/agent_n50_len1024_seed8.npy` `529adf74b2ba…`, manifest `c141a1158460…` — the
+same rule under the Llama-3 BPE is a different 50 windows, as 0039 stated for e8f. Both: **50 distinct windows, 25 per suite**,
+recomputed by this script. The Qwen file is, id for id, the token file lag-ladder's entry 0030 reads under the seed-1 readers (its
+`tools/agentic_tokens.py` rebuilds the draw under the Qwen2.5 tokenizer and asserts the equality row by row; both repositories
+pin `9dce6082d057…`), so every one of these fifty windows carries a mapper reading here and a reader reading there. Said once, not adjusted for: the first 1,024 tokens of a coding trace are mostly its task statement
+(median first user turn ≈ 1,100 tokens under Qwen3), so this cell reads the opening of an agent trajectory, not the
+accumulated history where the long form lives (a later registration at the 0036/0051 lengths, not this one).
+
+**Protocol.** 0030's protocol, ruled 2026-10-22: arm (b) scored over EVERY agent sequence (`agent_holdout_frac = 1.0`; the mapper was never fit on them), per-sequence R² from the per-token records, seeded percentile bootstrap of the drop (`[e8.amendment]`, seed 64 + k, 2,000 reps), on this cell's OWN dumps — no `reuse_agent_dumps_from`, so the driver samples, dumps and scores in one run and the summarizer's 0030 readout applies to it. Why not 0016's hold-out: the token file is written suite by suite, so the LAST ceil(0.2 × 50) = 10 rows are all workflow windows ({'mlperf-workflow': 10}) and no coding window would enter the figure. For comparability with 0020 and 0040 the 0016-protocol figure — pooled R² over those last ten rows — is reported BESIDE the every-sequence reading, recomputed by the summarizer from the same per-sequence moments; that readout does not exist for a fresh run today (it reads a reused prior report only) and is added in this commit set with a test, or the registration does not append. Mappers: the EXISTING fitted mappers of each pair (`verdict_k = 1`, reported at k = 1, 4, 8; p/n
+0.10 / 0.40 / 0.80 on both pairs, 0039); arm (a) the archived generic dumps (`data/kv/<pair>`), arm (b) the MLPerf dumps
+under `results/e8m/kv/agent` and `results/e8mf/kv/agent`; stride 4. Band (0009, frozen): HOLDS ≤ 0.05 drop / DEGRADES ≥ 0.15 /
+UNRESOLVED between, K and V separately — reported, not verdict-bearing. Read beside: Qwen k = 1 on tau2/SWE-bench
+(0020) `| 1 (verdict-bearing) | 0.6814 / 0.5133 | 0.5629 / 0.3418 | +0.1185 / +0.1715 | UNRESOLVED / DEGRADES |`; Llama k = 1 (0040) `| 1 (verdict-bearing, K and V separately) | 0.7139 / 0.4711 | 0.7311 / 0.4599 | -0.0172 / +0.0111 | HOLDS / HOLDS |`. Scope note carried into every report: "off-policy text for Qwen3; MLPerf Agentic Inference trajectories (DeepSWE coding + Workato workflow), reasoning kept, shared system prefix not rendered; not a real switch point; descriptive".
+
+**Pin.** `upstream_sha = 06f8d55592570deae70c3feb9f84a75c4044fb03` for both cells — the family pin of `config/e8f.toml`, which contains 0030's
+`223f469` and the Llama `PAIRS` entry, so the one clone moves once for the two sittings; checked by this script
+(`merge-base --is-ancestor`). Nothing upstream changes.
+
+**Gate and enforcement.** `e8 --check --config config/e8m.toml` refuses until entries 0009/0016/0064 are in the committed
+ledger (`config/e8mf.toml`: 0009/0016/0039/0064), the config is committed unmodified, and the upstream is at the pin
+with every invoked path clean; `[e8.gate]` EXTENDS the driver's premise entries. `summarize_e8` is the only reader of the
+figures: it re-runs the upstream scorer on the fingerprinted dumps, cross-checks arm (a) against the archived `r2.json`,
+and refuses on disagreement. This script refuses if either config is modified or does not name this entry, if any pinned
+file differs, if the dataset's bytes are not the README's sha, if either token file is not 50 distinct windows at 25 + 25,
+if the pin lacks `223f469`, or if `results/e8m/` or `results/e8mf/` holds anything (R1). Pinned at append: `config/e8m.toml`
+`fe98ab7ef85c…`, `config/e8mf.toml` `6f4ec1e07bbc…`, `src/linear_ceiling/e8.py` `656431dc8d4f…`,
+`tests/test_e8m_configs.py` `567573939eaf…`.
+
+**Run.** One sitting after this entry is committed: `e8 --config config/e8m.toml` then `--config config/e8mf.toml` (the Llama
+8B in fp32 wants the 80 GB card), `summarize_e8` per config, outputs mirrored home and verified before the figures entry.
+Budget ASSUMED until timed: 4–5 h wall on an A100 (the plan of 2026-10-22, §6). The figures enter by their own entry, which
+runs `summarize_e8` in-process; no figure is typed.
+
+**Consequences in this commit set.** `config/e8m.toml` and `config/e8mf.toml` (`[e8.gate]` to this number, `[e8.amendment]`
+entry likewise, PROVISIONAL notes dropped), `tests/test_e8m_configs.py` (the absence assertion flipped),
+`src/linear_ceiling/summarize_e8.py` (the 0016-protocol figure recomputed from the per-sequence moments over the last ten
+rows of a fresh amendment run, reported beside the every-sequence reading) and `tests/test_summarize_e8.py`, this script
+retired after the append.
+
+**What this does NOT touch.** Every cell and verdict; τ_K, τ_agent_K, the rule, the band; `config/e8.toml`, `config/e8a.toml`,
+`config/e8f.toml`, `config/e8fa.toml`, every `config/e9*.toml` and their output trees; entries 0020, 0030, 0039,
+0040, 0053, 0060 and the frozen figure set.
+
+**Scope.** Two pairs, one direction each, off-policy text for both; the opening window of recorded trajectories from one
+benchmark release, two suites; reasoning text included; the provider's shared prefix excluded by rule; a registration, not
+a result.
+
+prior-entries-sha256: d26c6c9cd715c4a31ea85a8d8de7b016bf0c89866d0946ff3d96af553fe274d2
