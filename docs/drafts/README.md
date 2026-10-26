@@ -327,3 +327,5 @@ sha, `9dce6082d057…`). DESCRIPTIVE, no hypothesis row, no band decision. Refus
 and name 0064 in `[e8.gate]`, the adapter and tests are the committed files, the dataset, the rendered export and both token
 manifests re-derive, the family pin contains 0030's upstream commit, and nothing exists under `results/e8m` or `results/e8mf`
 (R1). Ordering guard: 0061, 0062, 0063 present, 0064 absent. Next free number: **0065**.
+
+*(2026-10-26: **0064 APPENDED** (`8d3a48a`, chain `d26c6c9c…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0063, 0064. Still staged: nothing. Next free number: **0065**.)*
