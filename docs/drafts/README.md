@@ -188,6 +188,8 @@ M_cap within ±0.005 of native-short → THE SCALING; within ±0.005 of YaRN-L32
 no band, no `verdict:` line. Pins the three source files by LF-normalized sha, so any edit to them before the append re-stages the
 script. Ordering guard: 0061 present, 0062 absent. Next free number: **0063**.
 
+*(2026-10-26: **0062 APPENDED** (`3541e16`, chain `72bd3d3c…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0061, 0062. Still staged: 0063, 0064. Next free number: **0065**.)*
+
 **Staged 2026-10-04 (late): `append_0057.py` — E-TRUNC figures** (registered by 0055; runbook `docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md`).
 DESCRIPTIVE, no `verdict:` line. Runs `summarize_e9` on each of the four levels in-process, then `summarize_e9_trunc.compare_levels`;
 prints the reading the reader returns; carries 0055's two limitations and an erratum to 0055's re-matching sentence with its counts
