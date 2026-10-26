@@ -4394,3 +4394,48 @@ benchmark release, two suites; reasoning text included; the provider's shared pr
 a result.
 
 prior-entries-sha256: d26c6c9cd715c4a31ea85a8d8de7b016bf0c89866d0946ff3d96af553fe274d2
+
+### 0065 — 2026-10-26 — MLSys 2027 cut, restated: 0060's "nothing registered after this entry enters the submission" withdrawn; the submission draws on every figure an entry on this ledger states at the cut (2026-10-29 16:00 UTC), read from its summary file; 0060's set, invariants and conditions stand; descriptive, no cell moves
+
+**What this entry is.** 0060 (line 4027) froze the figure set on 2026-10-10 in two sentences (line 4033): "Nothing registered after this entry enters the submission; a figure that changes re-enters only through a later entry."
+This entry **withdraws the first sentence and keeps the second**, which is the mechanism it uses. The rule from here: **the
+MLSys 2027 submission may draw on every figure that an entry on this ledger states at the cut — 2026-10-29 16:00 UTC (09:00 PDT;
+the deadline is 2026-10-30 19:00 UTC (noon PDT))** — each figure as its summary file states it, with the file's sha, entering paper text
+only by the admitted evidence path (`AGENTS.md` line 44: "A scientific figure or claim enters paper text only through the admitted evidence path: a ledger entry that states it, or a document a ledger entry explicitly admits for citation."). A staged script that has not
+appended admits nothing. 0060's gate stands as written (line 4034): "0006's gate restated: only numbers that recompute clean from `results/` via a fail-closed summarizer enter." The commit at which the ledger
+stood at the cut is pinned by the reconciliation record at submission, as 0060 already provides (line 4035; the
+camera-ready precedent `docs/reviews/2026-10-07-submitted-camera-ready-reconciled-against-the-record-and-the-operator-runs.md`, `c6456a43be59…`). After the cut a later entry's figure goes to the camera-ready
+or a later venue, never into the submission. Nothing is measured here.
+
+**Why the freeze moves from an entry number to a date.** Four registrations were drafted for this submission after
+0060, on the operator's rulings of 2026-10-13 and 2026-10-22: 0061 (line 4075), 0062 (line 4145), 0063 (line 4214) and 0064
+(line 4311). The draft plan as revised after the freeze (`docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md`, now `1beb70aa0e65…`; 0060 cited it at
+`1fda36fc2653…`) names 0061 in its E-BEH row and conditions the band on the freeze in words that presume a date, not a
+number (line 33: "the paper cites the ENTRY if it lands before the freeze, else the subsection stays descriptive and Limitations says so"). The plan and the freeze have disagreed since that revision; this entry repairs the record
+by rule rather than by naming figures that have not been read. The gate
+"appended before the cut" is one the reconciliation record can check against a commit; "registered before 0060" cannot
+be checked against a deadline. Third, the benchmark anchor: 0064 registers E8 on the MLPerf Agentic Inference windows and
+states (line 4351) that its Qwen token file is, id for id, the token file lag-ladder's entry 0030 reads under the seed-1 readers; lag-ladder has read the windows 0064 draws
+(its n = 50) under its readers (its ledger's entry 0036 — clone HEAD `dac4b6b`, entry text sha12 `3ea39d7c3847`, its chain line `3cd422e79c8d…` covering the entries before it — which states in those words that "the reading lands with held-out text, not with the trainer's prompts"; read from the sibling clone on 2026-10-26). A figure set that could admit neither half would leave the paper's one benchmark
+cell outside its own record.
+
+**What stands.** 0060's table — every entry, line, figure and sha12 it names — remains admitted as stated; its wording
+invariants bind the submission unchanged; its conditions stand as it wrote them (the L32-native E-TRUNC cell it carried is
+now registered by 0062 and enters, like every other cell, only through a figures entry on the ledger before the cut).
+0060's sentence that reviewer nits N1 and N2 "are manuscript matters" (line 4065) is kept and extended: a figure read by
+lag-ladder's ledger enters this paper's text through that ledger's own entries, never through this one; a join of the two
+records on the MLPerf windows (0064's mapper reading beside lag-ladder's reader reading, window by window) is a figure with
+no verdict, recomputed from both summary files by sha, and is stated by this ledger only in the entry that reads 0064's run.
+
+**What this does NOT touch.** No `verdict:` line; every cell as decided; τ_K, τ_V, τ_agent_K, the band, the ladder, the kept
+dumps; 0060's table and invariants; 0064's own "does not touch" clause (line 4390) remains true of 0064. No figure is
+admitted by name: 0061–0064 admit figures only through their own figures entries, each read from its summary file, each
+on the ledger before the cut or not in the submission at all. Nothing runs under this entry.
+
+**Consequences in this commit set.** `docs/paper-to-record.md` ("The MLSys figure set") gains one sentence pointing at this entry; the
+drafts README's allocator. Nothing under `results/`.
+
+**Numbering.** 0065 is the number the drafts README allocates at staging, after 0064's script is staged; ordering guard 0061, 0062, 0063 and 0064 present, 0065 absent.
+Next free number after this entry: 0066.
+
+prior-entries-sha256: 550510352931d3bc59dc5319746a0e329260344e019f86df11699e0ad2795500
