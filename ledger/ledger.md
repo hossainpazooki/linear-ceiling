@@ -4141,3 +4141,72 @@ and two selection rules; selection by archived δ_K is an oracle (it reads the f
 δ-informed selector could achieve and is not a deployable policy; generation quality after reuse not measured.
 
 prior-entries-sha256: aa8f79b8f0071e47aee1374094fce925ff50e292a184d25de82f2f2b8ea10be3
+
+### 0062 — 2026-10-26 — E-TRUNC, the L32-NATIVE cell registered before any prefill: entry 0055's L32 level with both models under their native RoPE, paired with the L32 YaRN level of entry 0057 on the same tokens; descriptive, no band, no cell moves
+
+**Why, and why now.** Entry 0057 read the L32 level's far-from-seam median on M_cap at 0.0868, above both the
+scaled-short level 0.0381 and the long level 0.0629 (read from `results/e9t/compare.json` `0572662307f3…`), and
+read it as UNATTRIBUTED. Every E-TRUNC level ran the receiver under 0036's YaRN, so the record cannot say whether a
+truncated sender at the native cap would read the same under a receiver that is NOT scaled -- whether the L32 excess is
+the handoffs' or the scaled receiver's. Entry 0055's ruling 3 said "include it, keep R under YaRN, and state so" and
+deferred the cell for want of a sender-native / receiver-scaled instrument. Operator ruling A (2026-10-13) takes both sides
+NATIVE instead, and the alignment passes show that needs no new dump instrument: the longest dumped LENGTH of this
+cell is 32,769 (the dumped sender at most 32,768, plus one for the prefix control; |R| at most
+25,073), inside the receiver's declared window of 40,960 (`max_position_embeddings`, `Qwen/Qwen3-1.7B` `config.json` at
+revision `70d244cc86cc…`, the revision entry 0047 pins; the sender's model, which dumps S' for the cross arm, is read the same way
+off its own dumps at summary time), while the 81,920 cap is for inclusion only (decided on the FULL |S|, 0055).
+This entry registers that cell and the two reader changes it needs, before any prefill.
+
+**What is registered, by hash (text files newline-normalized, as the ledger cites configs).** `config/e9t-l32n.toml`
+(`5e01f133c3c0…`): `config/e9t-l32.toml` (`3c0663fbb651…`, 0055's, unchanged) byte for byte except the results and
+scratch directories, `[e9.gate]` (ends at this entry), the `[e9.rope]` and `[e9.bridge]` blocks REMOVED, and an `[e9.native]`
+block naming the FULL cell (`config/e9t-full.toml` `005d8d102deb…`, whose `[e9.trunc]` defines M_cap, the |M_cap| ≥ 2,000 floor
+and the 16+ bin), the YaRN level it pairs with, the margin (±0.005, as 0055 ruling 1), the two reference records and the
+bootstrap (seed 62, 2,000 reps). Same pair, pin `063f4023fdde`, rule, τ, ladder, controls, seam bins, block floor, keep
+draw, mapper, profiles, cap 81,920, floor 32,768, `sender_head_truncate = 32768`, longest sender first with the partial
+close allowed. Instrument: (i) `summarize_e9` (`12a645af2315…`) -- on a cell that registers a truncation and no
+`[e9.rope]`, and on no other, the native-window control compares the longest DUMPED length over the scored handoffs (S'
+plus one, or R, read from the alignment records) to each dump's recorded `max_position_embeddings` instead of the cap,
+and the summary states which basis it read; every existing cell's summary is unchanged. (ii) `[e9.native]` in `config.py`
+(`56ef7e845ed2…`): refused on any cell without a truncation, or with a rope or a bridge. (iii) `summarize_e9_native`
+(`7741fe19fb20…`), the paired reader, tested on synthetic cells (`tests/test_summarize_e9_native.py`).
+
+**Alignment, read from the passes (CPU, before any prefill).** `results/e9t-l32n/align/coverage.json` (`be3e02040766…`):
+68 observed · 35 included · 33 excluded, the same as every E-TRUNC level; the native cell's matched set equals the L32
+level's (`d07606d8d3e8…`) on **35 of 35** handoffs, 343,130 matched tokens, by construction (the same
+S', the same R, the same aligner; the reader refuses otherwise rather than intersecting). M_cap under the four E-TRUNC
+levels: **21 enter, 14 void** under the floor, 154,620 common tokens -- exactly 0057's used set, void set and
+token count, so the native level is read on the tokens 0057's reading was read on.
+
+**The reading, fixed now (descriptive).** The far-from-seam (16+, FULL's causal seam frame) pooled MEDIAN δ_K of the
+native level on M_cap over the non-void handoffs, against two levels read from the record, never typed: 0038's
+NATIVE-short far-from-seam median, 0.0195 (`results/e9s/compare.json` `a0699a826f1f…`, `median_native`), and 0057's
+YaRN-L32 median on M_cap, 0.0868, recomputed by the reader on the same tokens and refused if it is not the record's.
+Within ±0.005 of the native-short level: the L32 excess reads as **THE SCALING** (the YaRN receiver accounts for it);
+within ±0.005 of the YaRN-L32 level: **NOT THE SCALING** (a native receiver reproduces it); between: **UNATTRIBUTED**, said
+so. The two levels sit 0.0673 apart, so the margin cannot span both. Beside it: the paired difference
+native − YaRN per handoff (mean δ_K over M_cap), median over handoffs with the seeded bootstrap; each cell's mean δ_K,
+tokens over τ_K, f* on the ladder and far-from-seam median on M_cap. A run closed partial (longest sender first) compares
+on the commonly scored prefix: the YaRN level is recomputed on those tokens and read against, with the record's figure
+over its full used set stated beside it. No hypothesis cell moves; H-E9L and every verdict stand.
+
+**The registered run (the operator's).** Requested only after this entry is committed, on the same card as entry 0061's
+(ruling F). `e9 --check --config config/e9t-l32n.toml` requires 0019/0023/0025/0027/0035/0055/0062 committed, the
+config committed unmodified, the upstream at `063f4023fdde` clean, the mapper by sha. R2–R8 of
+`docs/gpu-experiment-protocol.md`; output tree `results/e9t-l32n/` (report, scores, per-token records, controls, three
+kept dumps), mirrored home, verified and backed up before the figures entry. Then `summarize_e9_native`: `summarize_e9` on the
+native cell and on the L32 level (fail-closed, the gate; the native-window control on basis "dumped_length"), the paired
+comparison, `results/e9tn/compare.{json,md}`. The figures enter by their own entry, every number read from those files.
+
+**Gate and enforcement.** This script refuses if any pinned file differs, if the alignment check fails in-process, if
+M_cap here is not 0057's, if the premise above fails against the pinned `config.json`, or if `results/e9t-l32n/` or
+`results/e9tn/` holds anything but the alignment passes and the alignment check's own output (R1).
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0036, 0038, 0055, 0057 and their
+records; `config/e9t-{full,l65,l49,l32}.toml` and `results/e9t*/` as they stand; the E9 driver; `summarize_e9_trunc`.
+
+**Scope.** One receiver, one pair, one corpus, the 35 long handoffs at one truncation level; the native-short reference
+is a different cohort (0038's 25 handoffs, pooled over their full matched sets) while the YaRN-L32 reference is the same
+tokens; both models native, so the cell says nothing about a sender-native / receiver-scaled pairing; descriptive.
+
+prior-entries-sha256: 72bd3d3c3f8efa3ce2c3f97551f27113836c7c0cdf8340e47a2f5fcf640e1a99
