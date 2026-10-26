@@ -235,6 +235,7 @@ def summarize(output):
     handoff_ids = [hid for hid in report["run_order"] if hid in report["handoffs"]]
     acc = {form: {scorer: {arm: {"form2": [], "signature": []} for arm in arms} for scorer in SCORERS} for form in forms}
     by_kind = {form: {arm: {kind: [] for kind in KINDS} for arm in arms} for form in forms}
+    lengths = {form: {arm: [] for arm in arms} for form in forms}   # generated tokens per item, as the driver recorded them
     n_items = {"form2": [], "signature": []}
     for hid in handoff_ids:
         items = report["handoffs"][hid]["items"]
@@ -254,6 +255,10 @@ def summarize(output):
                         if it["kind"] == "signature":
                             rows[scorer][arm]["signature"].append(float(scores[scorer]))
                     by_kind[form][arm][it["kind"]].append(float(scores[head["scorer"]]))
+                    n_gen = int(stored["generated_tokens"])
+                    if not 0 <= n_gen <= cfg["max_new_tokens"]:
+                        raise ValueError(f"generated_tokens outside [0, max_new_tokens]: {hid} {arm} {form}")
+                    lengths[form][arm].append(n_gen)
             for scorer in SCORERS:
                 for arm in arms:
                     for pool in ("form2", "signature"):
@@ -278,6 +283,13 @@ def summarize(output):
                                    for scorer in SCORERS} for form in forms},
             "by_kind": {form: {arm: {kind: {"n": len(rows), "mean": float(np.mean(rows))}
                                      for kind, rows in by_kind[form][arm].items() if rows} for arm in arms} for form in forms},
+            # Length guard: a retention figure is read beside how long the generations were, so that a truncated or
+            # runaway decode under one arm is visible next to its accuracy (the plain pilot ran to the cap on every item).
+            "length": {form: {arm: {"n": len(lengths[form][arm]),
+                                    "cap": cfg["max_new_tokens"],
+                                    "mean_generated_tokens": float(np.mean(lengths[form][arm])) if lengths[form][arm] else float("nan"),
+                                    "at_cap": float(np.mean([n == cfg["max_new_tokens"] for n in lengths[form][arm]])) if lengths[form][arm] else float("nan")}
+                              for arm in arms} for form in forms},
             "assembly": {arm: {"copied": [report["handoffs"][h]["assembly"][arm]["copied"] for h in handoff_ids],
                                "recomputed": [report["handoffs"][h]["assembly"][arm]["recomputed"] for h in handoff_ids]}
                          for arm in arms}}

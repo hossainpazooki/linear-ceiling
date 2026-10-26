@@ -107,7 +107,8 @@ def synthetic_cell(tmp_path, monkeypatch, model):
     (tmp_path / "config").mkdir()
     config_path = tmp_path / "config" / "task-quality-cell.toml"
     config_path.write_text("\n".join([f"seed = {cfg['seed']}", f"min_form2_items = {cfg['min_form2_items']}",
-                                      f"bootstrap_resamples = {cfg['bootstrap_resamples']}", "[headline]",
+                                      f"bootstrap_resamples = {cfg['bootstrap_resamples']}",
+                                      f"max_new_tokens = {cfg['max_new_tokens']}", "[headline]",
                                       f'form = "{cfg["headline"]["form"]}"', f'scorer = "{cfg["headline"]["scorer"]}"',
                                       'kinds = ["signature"]']) + "\n", encoding="utf-8")
     monkeypatch.setattr(cell, "ROOT", tmp_path)
@@ -138,6 +139,11 @@ def test_run_scores_every_arm_and_the_summary_reads_the_headline(model, tmp_path
     assert head["retention"]["reuse"]["floor_normalized"]["void_handoffs"] == report["run_order"]
     assert summary["by_kind"]["chat"]["fresh"]["repository"]["mean"] == 0.0
     assert summary["sensitivity"]["plain"]["contains"]["form2"]["fresh"]["median"] == 0.5
+    # Length guard: every item's generated length is read beside the accuracy, per form and arm.
+    length = summary["length"]["chat"]["fresh"]
+    assert length["n"] == 10 and length["cap"] == 3 and 0.0 <= length["at_cap"] <= 1.0
+    assert 0.0 <= length["mean_generated_tokens"] <= 3.0
+    assert set(summary["length"]["plain"]) == set(report["arms"])
     # Resume with an unchanged identity rewrites nothing; a tampered score is refused by the reader.
     before = (tmp_path / "out" / "report.json").read_bytes()
     args.resume = True
