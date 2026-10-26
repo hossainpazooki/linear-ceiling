@@ -169,6 +169,8 @@ run). DESCRIPTIVE, no band, no `verdict:` line. The figures entry is unwritten (
 verified mirror, checking the restated arms against 0049). Ordering guard: 0060 present, 0061 absent. `--preview` RAN 2026-10-13 on
 Windows (exit 0, 69 lines). Next free number: **0062**.
 
+*(2026-10-26: **0061 APPENDED** (`c2cb71b`, chain `aa8f79b8…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0060, 0061. Still staged: 0062, 0063, 0064. Next free number: **0065**.)*
+
 **Staged 2026-10-13, after `append_0061.py`: `append_0062.py` — the L32-NATIVE cell** (operator ruling A, 2026-10-13, same private
 design §9; supersedes the wording of 0055's ruling 3, "keep R under YaRN", because every dump of the cell — S' = S[−32768:], S' + 1 for
 the prefix control, R at most 25,073 — sits inside the receiver's declared native window, so both models run native and no per-dump
