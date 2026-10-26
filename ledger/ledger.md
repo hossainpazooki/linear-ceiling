@@ -4071,3 +4071,73 @@ unrun appendix) are manuscript matters.
 0057 present, 0060 absent. Next free number after this entry: 0061.
 
 prior-entries-sha256: 84e861624edec6bd66434931317c89208b758347cd83e7a6b18ac7750e37e357
+
+### 0061 — 2026-10-26 — Cache-behavior REPAIR amendment registered before any operator prefill: oracle-ranked recompute of the top 5 / 10 / 20 % of matched tokens against the reused cache, with a random-selection control at each budget, on entry 0036's 35 long handoffs; descriptive, no band, no cell moves
+
+**Why, and why now.** Entry 0047 registered the cache-behavior comparison with no repair arm (`oracle_fractions = []`)
+and its run, entry 0049, measured how far reading the assembled same-model cache moves the receiver's next-token
+predictions (reuse median mean-KL 0.1424 nats, top-1 0.9020, against 11.2981 / 0.0471 for a
+norm-matched random cache and 0.2826 / 0.8549 for the cyclic permutation; read from `results/cache-behavior/summary.json`
+`5228de0dd8c4…`, the file 0049 pins).
+Reviewer weakness W3 (`docs/2026-09-30-review-response-map.md`) and the CacheBlend line it cites ask what a bounded
+repair buys: entry 0045 states the mean after REMOVING the top 10 % / 20 % of tokens, and entry 0058 reads f* as the
+oracle REMOVAL fraction, not a repair cost. This entry registers the achieved counterpart: the same tokens RECOMPUTED in
+place, against the reused predecessors, and the prediction sensitivity that remains. Operator ruling B, 2026-10-13.
+
+**What is registered, by hash (text files newline-normalized, as the ledger cites configs).** `config/cache-behavior-repair.toml`
+(`97aa99b1958e…`): every key equal in value to entry 0047's `config/cache-behavior.toml` (`53c664556d18…`,
+unchanged) except `oracle_fractions = [0.05, 0.10, 0.20]` and the one added key `random_control_fractions = [0.05, 0.10, 0.20]`;
+receiver `Qwen/Qwen3-1.7B@70d244cc86cc`, Transformers 5.17.0, PyTorch 2.14.0, fp32, SDPA, the long cell's YaRN schedule, cap
+81,920, seed 20261001, τ_K = 0.3186442653116294 used only to rank and to name the archived tail. Driver `tools/cache_behavior/core.py`
+`f346b5fdf3d3…` (byte-identical to 0047's) and `run.py` `e137f1d8b8c5…`, which differs from 0047's `15e1ff8c1dbc…` in exactly two
+places: the arm list reads the optional `random_control_fractions` (absent in 0047's config, so that registration's arms are
+unchanged) and adds one branch that draws the random-selection subset; tests `tests/test_cache_behavior.py` (the
+budget equality and the selection difference, on a real tiny-model CPU forward). Inputs: the operator's prepared inputs of
+entry 0049 (manifest `2aeee5769c0a…`, the 35 handoffs of 0036 in archived order, the archived alignment
+pairs as M, the recorded continuation C capped at 256 tokens), reused byte for byte; `--prepare` is not re-run.
+
+**Arms.** FRESH, REUSE-ALL, RANDOM and CYCLIC exactly as 0047 registered them (the same code path; their figures are
+restated by this run as a within-run control against 0049, never re-read as new figures). Added, per budget
+f ∈ {0.05, 0.10, 0.20} of each handoff's |M| (⌈|M| × f⌉ tokens): **ORACLE-f** — the ⌈|M| × f⌉ matched tokens with the
+largest archived token-mean δ_K (stable descending argsort) are recomputed in receiver order against the cache assembled
+so far, so a recomputed token reads reused predecessors and later tokens read recomputed ones; the other matched tokens
+keep the relocated sender states. **RANDOM-f** — the same number of matched tokens drawn uniformly without replacement by
+`make_rng(seed + handoff index + 1000003)`, a stream distinct from the RANDOM arm's noise. No arm recomputes the
+unmatched tokens differently from REUSE-ALL. All arms score the same C[1:] under the same teacher-forced history.
+
+**Numerical controls, readout, stopping rule.** As 0047, unchanged: fresh repeat exact, prefix copy over
+128 tokens ≤ 0.0005, archive bridge within 0.001 + 0.01 × |archived|, TF32 off,
+deterministic algorithms; per token KL(p_FRESH ‖ p_ARM) and top-1 agreement; per handoff mean KL, p90 KL, top-1 rate; over
+the 35, median with p10 / p90 by `e7_stats`, handoffs weighted equally; largest sender first as the memory probe; stop on
+any failed control, bridge, hash or OOM, keep the completed prefix, resume only unchanged. The attention slice of 0047
+is recorded as before and is not the object of this entry.
+
+**The reading, fixed now (descriptive).** For each budget, ORACLE-f's and RANDOM-f's median mean-KL and top-1 are stated
+beside REUSE-ALL's and FRESH's (KL 0 by definition); the pair (ORACLE-f, RANDOM-f) at one budget is the only comparison
+this entry registers — whether ranked selection buys more than its budget. **No band is registered** and no threshold
+on KL or top-1 is read: 0049's "no downstream task-quality number is claimed" stands; an achieved KL is a
+prediction-sensitivity figure on fixed text, not task accuracy and not a serving cost.
+
+**The registered run (the operator's).** Requested only after this entry is committed. Card: 80 GB (entry 0049's
+peak was 24.95 GiB with nine arm passes per handoff now instead of three: the bound is three times 0049's run,
+92 minutes by its own launched and finished timestamps,
+replaced by the probe on the largest case). R2–R8 of `docs/gpu-experiment-protocol.md`; output tree `results/cache-behavior-repair/`
+(`report.json`, per-case `.npz`, `summary.json`), 0049's `results/cache-behavior/` untouched; mirrored home, verified, and
+backed up to a Hub dataset by `tools/hf_verify_backup.py` before the figures entry.
+
+**Gate and enforcement.** The driver asserts the config hash and every input's hash and records the source hashes,
+runtime and GPU in `report.json`; this script refuses if any pinned file differs, if 0047's config changed, or if
+`results/cache-behavior-repair` holds a run (R1). The figures enter by their own entry, which calls `tools.cache_behavior.run.summarize`
+in-process over the operator's verified output, asserts the report's source hashes equal the hashes above, checks
+the restated REUSE-ALL / RANDOM / CYCLIC figures against 0049's within the summarizer's own tolerance, and
+refuses on any disagreement; no figure is typed.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045,
+0047, 0049, 0058 and their records; `config/cache-behavior.toml` and `results/cache-behavior/`; `config/e9*.toml`; the E9
+drivers and summarizers.
+
+**Scope.** One receiver, one corpus, the 35 long handoffs; fixed proprietary-model text; same-model only; three budgets
+and two selection rules; selection by archived δ_K is an oracle (it reads the fresh states), so ORACLE-f bounds what a
+δ-informed selector could achieve and is not a deployable policy; generation quality after reuse not measured.
+
+prior-entries-sha256: aa8f79b8f0071e47aee1374094fce925ff50e292a184d25de82f2f2b8ea10be3
