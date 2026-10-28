@@ -8,7 +8,7 @@
 </p>
 
 The pre-registered experiment record behind *KV Cache Drift Across Handoffs in Long-Horizon Agents* (NeurIPS 2026
-Workshop on Long Context Foundation Models) and its MLSys 2027 extension. When a language model reads a prompt it
+Workshop on Long Context Foundation Models) and the full paper that extends it to the weights axis. When a language model reads a prompt it
 builds a **KV cache**, an internal record that saves it from processing the same text again. An agent handoff
 re-renders that prompt: same content at new positions, new tokens at the seam, sometimes a different model. This
 repository measures how far the cache drifts at real handoffs, with every number recomputed from raw output and every
@@ -194,7 +194,7 @@ claim that rests on it.
 | if you want to | read |
 |---|---|
 | trace a paper figure to its bytes | `docs/paper-to-record.md` |
-| read what the MLSys draft changes from the camera-ready | `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md`, then `docs/drafts/tables/` |
+| read what the full paper changes from the camera-ready | `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md`, then `docs/drafts/tables/` |
 | understand why the program asked these questions | `docs/design/background.md`, `docs/design/gap-map.md`, `docs/design/2026-09-06-gap-map-revisited.md` |
 | find a runbook, seed, design or status note | `docs/README.md` |
 | work in the repo as an agent | `AGENTS.md`; `docs/agent/repo-architecture.md` for the module map |

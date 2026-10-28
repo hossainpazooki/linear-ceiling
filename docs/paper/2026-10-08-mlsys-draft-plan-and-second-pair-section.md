@@ -1,5 +1,10 @@
 # MLSys 2027 draft — the delta from the submitted camera-ready, and the index of the drafted sections
 
+**Status 2026-10-27 (entry 0066):** the conference submission this plan targeted was not made. The delta table in §1
+still lists what changes from the submitted text; the destination is now the workshop camera-ready (nine one-column
+pages, due 2026-11-13) and then the full paper at the next reviewed venue. The two-column ten-page budget below no longer
+applies; a dated camera-ready plan supersedes this file's §1 when written.
+
 **Date:** 2026-10-08 (sections moved to `docs/drafts/tables/` 2026-10-10) · **Status:** plan, operator-side. Nothing is
 manuscript text until the operator approves it paragraph by paragraph (the 2026-10-04 shape: paragraph, then
 "Changes, and why" with entry:line per figure). The drafted paragraphs and tables live as `T<nn>` files under

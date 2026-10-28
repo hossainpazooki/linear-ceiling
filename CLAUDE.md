@@ -73,7 +73,7 @@ The minute-by-minute log goes into the dated runbook as it happens, never recons
   registered tolerance or control moves only through an entry, in 0028's shape.
 - If a file named `LEARNINGS.md` exists at the repository root, read it before any paper work. It is untracked
   (gitignored) and arrives out of band: the co-authors' digest of the private learnings and handoff records, for
-  writing the MLSys draft. Its figures are pointers into the ledger, not evidence; every number still comes from
+  writing the paper. Its figures are pointers into the ledger, not evidence; every number still comes from
   the entry or summary file it names. A clone without the file loses nothing that is on the record.
 - Learnings and session briefs are private since 2026-10-13: a learning (with its `re-verify:` line, run from the
   written file before the block is handed over) goes to `~/dev/briefs/linear-ceiling/learnings/`, a brief to

@@ -1,7 +1,8 @@
 # Paper to record: where every printed figure comes from
 
 Two papers draw on this record: the LCFM workshop paper (camera-ready sha256 `6c706bef…`, built 2026-10-04,
-[OpenReview](https://openreview.net/forum?id=kEGVswNFaq)) and the MLSys 2027 draft. Neither paper's LaTeX is in this
+[OpenReview](https://openreview.net/forum?id=kEGVswNFaq)) and the full paper that extends it, whose first public form
+is that paper's camera-ready (entry 0066). Neither paper's LaTeX is in this
 repository. What is here is the chain a reader can follow from a printed number back to the bytes it was read from:
 
     paper sentence or cell  →  paste source (docs/drafts/tables/T<nn>)  →  ledger entry:line  →  summary file + sha256  →  Hugging Face dataset
@@ -16,7 +17,7 @@ submitted PDF against the ledger, the Lean formalization and the two operator ru
 figure. Where the submitted text and the record disagree, that review says so; the MLSys delta table in
 `docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md` §1 is the list of what changes.
 
-## The MLSys figure set
+## The figure set
 
 Entry 0060 (2026-10-10) froze the figure set: a table mapping each reviewer point W1–W8 to the experiment that answers
 it, the entry and ledger line, and the figure as read from its summary file with the file's sha12. That table is the
@@ -25,6 +26,10 @@ Entry 0065 (2026-10-26) restated the cut: 0060's "nothing registered after this 
 submission may draw on every figure an entry on the ledger states at the cut (2026-10-29 16:00 UTC), each read from its
 summary file by sha through the admitted evidence path; 0060's table, invariants and conditions stand. A figures entry
 appended after the cut is camera-ready or later-venue material, never the submission's.
+Entry 0066 (2026-10-27) withdrew that cut: the conference submission was not made. The workshop camera-ready (nine
+pages, due 2026-11-13) draws on every figure an entry on the ledger states at its own cut, 2026-11-10 16:00 UTC, by the same
+rule; a figures entry appended after that is material for the full paper at the next reviewed venue, which takes its
+own cut entry when chosen.
 
 | cell | entry | summary file (local mirror, sha12 as recomputed 2026-10-11) | backup dataset |
 |---|---|---|---|

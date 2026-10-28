@@ -2,7 +2,11 @@
 
 Supersedes `docs/2026-10-01-anonymity-denylist.md` (generated at e3a9dfb, before the camera-ready, the eight-author
 CITATION.cff, the README rewrite, the OpenReview link, and the removal of `docs/handoff/` and `docs/learnings/` from the tree).
-Why it is needed again: MLSys review is double-blind (the 2026 call, the format proxy for 2027: "authors must avoid
+**Status 2026-10-27 (entry 0066):** the conference submission this list was refreshed for was not made; the workshop
+camera-ready is non-anonymous and needs no mirror. The list is kept for the next double-blind venue, and the venue
+term `mlsys` is in the pattern below so that a mirror is venue-free as well as author-free.
+
+Why it was needed again: MLSys review is double-blind (the 2026 call, the format proxy for 2027: "authors must avoid
 identifying themselves either explicitly or implicitly"; non-compliant submissions "will be rejected without review"),
 so a code link in the MLSys submission must point at a re-cut of `origin/lcfm_anon` made from the submission commit with
 this list applied. If the submission carries no code link, this list and the mirror are unnecessary.
@@ -11,7 +15,7 @@ Rule (learning 2026-09-21): `origin/lcfm_anon` is the double-blind copy; it cens
 infrastructure-only records. Before any re-mirror, every file below is either censored or dropped; a new term is added
 here before it is added to the tree. The pattern is case-insensitive; `yan` is word-bounded.
 
-Pattern: `hossainpazooki|pazooki|hossain|ishmam|farhan|ritvikagg|ritvik|aggarwal|emersony99|emerson|nadathur|vikram|muhzain05|zain|asad|alake|lingyuan|yan|samuel|muhammad|algoverse|emmmy|neuriv|de anza|university of (alberta|toronto|utah)|kegvswnfaq`
+Pattern: `hossainpazooki|pazooki|hossain|ishmam|farhan|ritvikagg|ritvik|aggarwal|emersony99|emerson|nadathur|vikram|muhzain05|zain|asad|alake|lingyuan|yan|samuel|muhammad|algoverse|emmmy|neuriv|de anza|university of (alberta|toronto|utah)|kegvswnfaq|mlsys`
 
 Added since 2026-10-01: `hossain` (surname alone, README and pyproject), `zain` and `asad` separately (CITATION splits the
 name), `yan`, `samuel`, `muhammad` (the three author names the old pattern missed), the four GitHub handles that appear in

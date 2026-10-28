@@ -343,3 +343,12 @@ sibling clone (HEAD, entry sha and chain line recorded; refuses when the clone i
 0064 present, 0065 absent. Next free number: **0066**.
 
 *(2026-10-26: **0065 APPENDED** (`ea2cf92`, chain `55051035…`; script retired in the retire commit; run with `--date 2026-10-26`). File order now ends 0064, 0065. Still staged: nothing. Next free number: **0066**.)*
+
+**Staged 2026-10-27: `append_0066.py` — the conference cut WITHDRAWN (operator rulings 2026-10-27: the submission is not made;
+the workshop camera-ready, nine pages, due 2026-11-13, is the one paper's first public form).** Withdraws 0065's
+2026-10-29 cut and sets the camera-ready's own, 2026-11-10 16:00 UTC: every figure an entry on the ledger states by then enters,
+by sha, through AGENTS.md's admitted evidence path; the next reviewed venue takes its own cut entry when chosen. 0060's
+table, invariants and conditions stand; 0065's mechanism stands. Venue-neutral: cites 0060/0065 by number. Ruling-only:
+no summarizer, no `verdict:` line, nothing under `results/`. Locates 0060's mechanism sentence and four 0065 sentences by
+search. Refuses until `docs/paper-to-record.md` names 0066 with the cut, the denylist pattern carries the venue term, and
+this README's last allocator line reads 0067. Ordering guard: 0065 present, 0066 absent. Next free number: **0067**.

@@ -11,7 +11,7 @@ this page resolves them.
 | `paper-to-record.md` | every figure the papers print, traced to its entry, its summary file and its paste source |
 | `gpu-experiment-protocol.md` | the standing rules R1–R12 that bind every GPU run |
 | `2026-10-03-co-author-run-admission.md` | how a co-author's GPU run enters the ledger |
-| `2026-10-13-anonymity-denylist.md` | the terms the double-blind mirror censors; refreshed for the MLSys re-cut |
+| `2026-10-13-anonymity-denylist.md` | the terms a double-blind mirror censors; refreshed 2026-10-13, the venue term added 2026-10-27 (entry 0066) |
 | `design/2026-08-26-kv-handoff-screen-design.md` | the design spec; the scope authority |
 | `design/background.md` · `design/gap-map.md` · `design/2026-09-06-gap-map-revisited.md` | how the program got its shape, and the motivating claims read against the record |
 
@@ -24,7 +24,7 @@ this page resolves them.
 | `reviews/` | dated adversarial reads of the record, the camera-ready, the co-author runs and the reviewer responses; each a finished document |
 | `pilots/` | the two co-author pilot analyses and the freeze record that entry 0056 admits for paper citation under a provenance sentence |
 | `drafts/` | staged append scripts and `drafts/tables/` (the paper's paste-source tables); its README is the only entry-number allocator |
-| `paper/` | the MLSys draft plan and delta index |
+| `paper/` | the full paper's draft plan and delta index (dated 2026-10-08; its status line says what still holds) |
 | `agent/` | command reference and module map for agents working in the repo |
 | `probes/` | scratch probes that entries 0026 and 0028 cite |
 | `provenance/` | borrowed-fact provenance and frozen input manifests |
