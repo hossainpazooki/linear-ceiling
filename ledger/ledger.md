@@ -4439,3 +4439,45 @@ drafts README's allocator. Nothing under `results/`.
 Next free number after this entry: 0066.
 
 prior-entries-sha256: 550510352931d3bc59dc5319746a0e329260344e019f86df11699e0ad2795500
+
+### 0066 — 2026-10-27 — The conference cut withdrawn: the submission 0065 cut for is not made; the workshop camera-ready (nine pages, due 2026-11-13) is the one paper's first public form and draws on every figure an entry on this ledger states at its own cut (2026-11-10 16:00 UTC); 0060's set, invariants and conditions stand; descriptive, no cell moves
+
+**What this entry is.** 0065 (line 4398) replaced 0060's entry-number freeze with a date cut for a conference submission
+(line 4402: an entry on this ledger "may draw on every figure that an entry on this ledger states at the cut" — 2026-10-29 16:00 UTC). **That submission is not made** (operator ruling
+2026-10-27: the full text of the one paper, both axes, could not be written in the days that remained, and a partial text
+that could not cite its own weights-axis sections would not be the paper). This entry withdraws the 2026-10-29 16:00 UTC cut and sets
+the next one. The first public form of the one paper is the workshop camera-ready — the successor of the submitted text
+reconciled at `docs/reviews/2026-10-07-submitted-camera-ready-reconciled-against-the-record-and-the-operator-runs.md` (`c6456a43be59…`) — nine pages, due 2026-11-13, non-anonymous, non-archival. **It may draw on
+every figure that an entry on this ledger states at 2026-11-10 16:00 UTC**, each figure as its summary file states it, with the
+file's sha, entering paper text only by the admitted evidence path (`AGENTS.md` line 44: "A scientific figure or claim enters paper text only through the admitted evidence path: a ledger entry that states it, or a document a ledger entry explicitly admits for citation."). A staged
+script that has not appended admits nothing. The next reviewed venue takes its own cut entry when it is chosen; nothing
+is said about it here. Nothing is measured here.
+
+**What stands.** 0060's mechanism, which 0065 kept (line 4034: "a figure that changes re-enters only through a later entry."), is the mechanism this entry uses.
+0060's table remains admitted as 0065 stated it (line 4422); its wording invariants bind the camera-ready as they bound
+the submission; its conditions stand as written. 0065's sentence on the sibling record stands (line 4425): a figure read
+by the holdover ledger enters the paper through that ledger's own entries, never through this one, and the camera-ready's
+cut applies to both ledgers by date. 0065's "After the cut a later entry's figure goes to the camera-ready or a later venue, never into the submission." (line 4407) is superseded only in its last clause: there
+is no submission for a later figure to be kept out of; a figures entry appended after 2026-11-10 16:00 UTC is material for the full
+paper at the next venue.
+
+**The record and the venue.** The living documents of this repository name no venue from this entry on ("the conference
+submission", "the full paper"); the appended entries that name one (0060, 0065) are immutable and stay as written, as does
+every dated record. The anonymity list (`docs/2026-10-13-anonymity-denylist.md`) gains the venue term in its pattern so that any future double-blind
+mirror is venue-free; the camera-ready itself is non-anonymous and needs no mirror. The camera-ready's appendix tells the
+venue history in the record's own words, by entry number (0060, 0065, this entry), so a reader of the public record and a
+reader of the paper find the same account.
+
+**What this does NOT touch.** No `verdict:` line; every cell as decided; τ_K, τ_V, τ_agent_K, the band, the ladder, the kept
+dumps; 0060's table and invariants; the registrations 0061–0064 and their figures entries, which enter the camera-ready if
+on the ledger at the cut and the full paper otherwise. No figure is admitted by name. Nothing runs under this entry.
+
+**Consequences in this commit set.** `docs/paper-to-record.md` (the figure-set section names this entry and the cut); `README.md`, `CLAUDE.md`,
+`docs/README.md` (venue-neutral wording); `docs/2026-10-13-anonymity-denylist.md` (status paragraph; the venue term in the pattern); a status line atop
+`docs/paper/2026-10-08-mlsys-draft-plan-and-second-pair-section.md` (superseded as a venue plan; its delta table stands;
+the page budget is the camera-ready's nine pages); the drafts README's allocator. Nothing under `results/`.
+
+**Numbering.** 0066 is the number the drafts README allocates at staging; ordering guard 0065 present, 0066 absent.
+Next free number after this entry: 0067.
+
+prior-entries-sha256: 7e5c13f9d1d4a207cf6d8be7cdfee862dd98d8ab5271d2cecae95af1835bc53d
