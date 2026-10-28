@@ -352,3 +352,5 @@ table, invariants and conditions stand; 0065's mechanism stands. Venue-neutral: 
 no summarizer, no `verdict:` line, nothing under `results/`. Locates 0060's mechanism sentence and four 0065 sentences by
 search. Refuses until `docs/paper-to-record.md` names 0066 with the cut, the denylist pattern carries the venue term, and
 this README's last allocator line reads 0067. Ordering guard: 0065 present, 0066 absent. Next free number: **0067**.
+
+*(2026-10-27: **0066 APPENDED** (`4af0228`, chain `7e5c13f9…`; script retired in the retire commit; run with `--date 2026-10-27`). File order now ends 0065, 0066. Still staged: nothing. Next free number: **0067**.)*
