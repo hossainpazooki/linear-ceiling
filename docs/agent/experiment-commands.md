@@ -220,9 +220,11 @@ watchdog, spend, terminate; every sitting since 2026-10-06). Pre-rental checks:
 `tools/preflight_pair.py` (a pair against its models' own config and tokenizer files, CPU-only) and
 `tools/emit_tau.py` (a second family's τ lines from its own E8 report, before its config can load). The
 consolidation (`tools/consolidation/`) and cache-behavior (`tools/cache_behavior/`) drivers are run as their
-runbooks say. The cache-behavior REPAIR amendment (staged entry 0061) is the same driver under
-`--config config/cache-behavior-repair.toml --output results/cache-behavior-repair` with 0049's prepared `--inputs`
-reused; it adds the `oracle_ranked_<f>pct` and `random_ranked_<f>pct` arms and nothing else.
+runbooks say. The cache-behavior REPAIR amendment (entry 0061; its inputs amended by 0067) is the same driver under
+`--config config/cache-behavior-repair.toml --inputs results/cache-behavior-repair/inputs --output results/cache-behavior-repair`.
+Those inputs are prepared by the same driver under the repair config, on Linux, and equal 0049's byte for byte. The
+driver's `check()` refuses 0049's own manifest under any config but 0047's, and `--config` defaults to 0047's, so pass it
+explicitly. It adds the `oracle_ranked_<f>pct` and `random_ranked_<f>pct` arms and nothing else.
 
 ## Task-quality pilot gate (unregistered; ruling C2 of the 2026-10-13 plan)
 

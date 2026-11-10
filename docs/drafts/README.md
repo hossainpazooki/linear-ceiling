@@ -354,3 +354,13 @@ search. Refuses until `docs/paper-to-record.md` names 0066 with the cut, the den
 this README's last allocator line reads 0067. Ordering guard: 0065 present, 0066 absent. Next free number: **0067**.
 
 *(2026-10-27: **0066 APPENDED** (`4af0228`, chain `7e5c13f9…`; script retired in the retire commit; run with `--date 2026-10-27`). File order now ends 0065, 0066. Still staged: nothing. Next free number: **0067**.)*
+
+**Staged 2026-11-10: `append_0067.py` — entry 0061's inputs re-prepared under its own config.** The driver 0061 pins
+(`run.py` `e137f1d8b8c5…`) refuses 0049's prepared inputs under the repair config: `check()` requires the manifest's
+`config_sha256` to equal `--config`'s digest, and 0049's records 0047's (`53c664556d18…`). So 0061's run could not start.
+This entry takes the exit that changes no code: the pinned driver's `--prepare` under `config/cache-behavior-repair.toml`
+(`97aa99b1958e…`), on Linux from an LF checkout, writes `results/cache-behavior-repair/inputs/` (manifest `7b27942c1da9…`).
+At append the script checks that every record and file equals 0049's (manifest `2aeee5769c0a…`) byte for byte, that only
+`config_sha256` moved, that 0061's four pins are unchanged, and R1 on 0061's output tree. No figure, no `verdict:` line.
+Edits `docs/agent/experiment-commands.md`, the one living doc that named 0049's inputs for 0061. Ordering guard: 0061
+present, 0066 last, 0067 absent. Next free number: **0068**.
