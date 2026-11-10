@@ -366,3 +366,14 @@ Edits `docs/agent/experiment-commands.md`, the one living doc that named 0049's 
 present, 0066 last, 0067 absent. Next free number: **0068**.
 
 *(2026-11-10: **0067 APPENDED** (`f7ee797`, chain `09e91d54…`; script retired in the retire commit; run with `--date 2026-11-10`). File order now ends 0066, 0067. Still staged: nothing. Next free number: **0068**.)*
+
+**Staged 2026-11-10: `append_0068.py` — E8 ran on the MLPerf Agentic Inference text: both cells' figures (registered by
+0064).** Reads by digest the `summary.json` of a `summarize_e8` run off the pod at the pin (the upstream clone here is
+past the pin on E8's paths, so no summarizer runs at append), and states its float-only difference from the pod's
+summaries. Arm (b) over every agent sequence, with the 0016-protocol figure beside it. The per-window join with
+lag-ladder's 0036 reading of the same fifty windows (Spearman's ρ, 36 values, a figure with no verdict) is stated here,
+the entry 0065 reserves it for. One clause each names the entry's departures from 0064's plan, 0065's sources and
+lag-ladder 0030's wording of the join. Every input is passed by argument and pinned by sha256, and any other refuses: the
+off-repository summary pair, the sitting's records, and lag-ladder's home summary. No `verdict:` line, no hypothesis row,
+nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose E8m heading still read UNREGISTERED. Ordering
+guard: 0064 present, 0067 last, 0068 absent. Next free number: **0069**.

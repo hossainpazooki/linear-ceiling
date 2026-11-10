@@ -86,12 +86,13 @@ $PY -m linear_ceiling.e8 --config config/e8c.toml           # CPU: 0030's protoc
 $PY -m linear_ceiling.summarize_e8 --config config/e8c.toml # fail-closed, as e8a; also refuses on swapped mapper bytes
 ```
 
-### E8m / E8mf — MLPerf Agentic Inference text (the 2026-10-22 plan, cell 1a; UNREGISTERED, descriptive)
+### E8m / E8mf — MLPerf Agentic Inference text (the 2026-10-22 plan, cell 1a; registered 0064, ran: figures 0068, descriptive)
 
 The 0016 §4 sampling rule over two new suites, `mlperf-coding` and `mlperf-workflow`, read from the gitignored
 `traces/mlperf-agentic/*.jsonl` (the MLCommons dataset, fetched by curl, SHA-256 against its README). Reasoning kept,
-the shared system/tools prefix not rendered (`e8_text` docstring). `[e8.gate]` names an entry the ledger does not
-have, so `--check` refuses until the registering entry lands and the number is corrected in the same commit.
+the shared system/tools prefix not rendered (`e8_text` docstring). `[e8.gate]` names 0064, the
+registering entry. Both cells ran in one sitting; 0068 states the figures, read by digest from a `summarize_e8` run
+off the pod at the pin.
 
 ```
 $PY -m linear_ceiling.e8_text --suites mlperf-coding mlperf-workflow --out data/e8m/rendered_mlperf.jsonl   # CPU: the rendered trajectories as JSONL (sha printed); lag-ladder's tools/agentic_tokens.py reads it
