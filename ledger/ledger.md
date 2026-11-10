@@ -4530,3 +4530,127 @@ entry 0061 except its one inputs sentence; `results/cache-behavior/inputs/` (rea
 0067 absent. Next free number after this entry: 0068.
 
 prior-entries-sha256: 09e91d548b139bfe191bb16b10726148132f929672c59acfaae52c0f5917d4a2
+
+### 0068 — 2026-11-10 — E8 ran on the MLPerf Agentic Inference text `[BASELINE, DESCRIPTIVE]`: both pairs, arm (b) over every agent sequence with the 0016-protocol figure beside it; the summary recomputed off the pod; no hypothesis row, no cell moves
+
+**Provenance.** Registered by 0064 before any dump. `config/e8m.toml` (`fe98ab7ef85c`) and `config/e8mf.toml`
+(`6f4ec1e07bbc`) committed unmodified and equal to the configs each run recorded; upstream at the pin
+`06f8d55`; this repository at `c95570d` on the pod. One sitting on one NVIDIA A100-SXM4-80GB
+(81,920 MiB); the upstream environment torch 2.15.0+cu132 (CUDA available: True), transformers 5.22.2,
+safetensors 0.8.0, numpy 2.5.4, as its setup log records them; setup's R1 check passed (neither results directory
+existed). `e8 --config config/e8m.toml` then `--config config/e8mf.toml`, each rc 0 (`run e8m rc 0 01:45:06`,
+`run e8mf rc 0 02:14:30` UTC), each followed by the driver's token-file check (`TOKENS_OK` with the file's sha256) and the
+pod's own `summarize_e8` (`SUMMARY_RC 0`). Two earlier launches in the same sitting stopped before any dump: setup on a tar
+ownership refusal, the chain at a gated-model download. Records pulled with equal digests at both ends (results
+`f646312b5572…`, aux `07dbfc4297cc…`); the dumps and records backed up to
+the private dataset (132 files, `manifest: 132 wanted, 0 missing, 0 lfs-sha mismatches`,
+`MANIFEST_OK`; that check compares the LFS files by digest and the small files by name only). All off-repository.
+
+**What ran.** 0064's registered protocol, unchanged: 0009's instrument, 0016's sampling rule on the two MLPerf suites, 0030's protocol.
+The existing fitted mappers of each pair; arm (a) the archived generic dumps at the mapper's own held-out fraction 0.2; arm (b)
+this cell's own dumps scored over EVERY agent sequence (50 sequences, 12,800
+tokens at stride 4); per-sequence R² from the per-token records; a seeded percentile bootstrap of the drop (seed
+64 + k, 2,000 reps); and the 0016-protocol figure
+recomputed beside it from the same per-sequence moments, pooled R² over the last ten rows (ids 40–49,
+all `mlperf-workflow` on both pairs).
+
+**The draw, recomputed from the token files.** The pod's files equal 0064's pins byte for byte: Qwen `9dce6082d057…`,
+Llama `529adf74b2ba…`. Each is 50 rows of 1,024 tokens:
+50 and 50 distinct windows, 25 `mlperf-coding`
+rows then 25 `mlperf-workflow` rows (Qwen), and
+25 then 25 (Llama). The pod-written
+manifests (`63c7b18c44ea…`, `4697b9998be0…`) are not the bytes 0064 pinned
+(`08f05359e524…`, `c141a1158460…`). The pinned copies carry CRLF line endings
+(209 and 209 CRs); with those removed, each equals the pod's byte for byte.
+
+| pair | k | arm (a) generic K / V | arm (b) agent, every sequence K / V | drop K / V | drop 95% K | drop 95% V | band K / V (descriptive) |
+|---|---|---|---|---|---|---|---|
+| qwen3-0.6b-to-1.7b | 1 (verdict k) | 0.6814 / 0.5133 | **0.6066 / 0.3753** | +0.0748 / +0.1380 | [+0.0670, +0.0826] | [+0.1259, +0.1500] | UNRESOLVED / UNRESOLVED |
+| qwen3-0.6b-to-1.7b | 4 | 0.5907 / 0.3361 | **0.4410 / 0.0166** | +0.1497 / +0.3196 | [+0.1353, +0.1624] | [+0.2927, +0.3442] | UNRESOLVED / DEGRADES |
+| qwen3-0.6b-to-1.7b | 8 | 0.0984 / -0.6412 | **-0.3444 / -1.7633** | +0.4428 / +1.1221 | [+0.4096, +0.4766] | [+1.0384, +1.2034] | DEGRADES / DEGRADES |
+| llama3.2-3b-to-llama3.1-8b | 1 (verdict k) | 0.7139 / 0.4711 | **0.7191 / 0.4458** | -0.0052 / +0.0252 | [-0.0096, -0.0011] | [+0.0179, +0.0323] | HOLDS / HOLDS |
+| llama3.2-3b-to-llama3.1-8b | 4 | 0.6183 / 0.2909 | **0.6065 / 0.2011** | +0.0117 / +0.0897 | [+0.0035, +0.0196] | [+0.0726, +0.1059] | HOLDS / UNRESOLVED |
+| llama3.2-3b-to-llama3.1-8b | 8 | -0.0591 / -0.9696 | **-0.1679 / -1.3971** | +0.1088 / +0.4275 | [+0.0817, +0.1356] | [+0.3711, +0.4842] | UNRESOLVED / DEGRADES |
+
+The 0016-protocol figure, beside it (pooled over the last ten rows; the change is every-sequence arm (b) minus this one):
+
+| pair | k | arm (b) last ten K / V | drop K / V | band K / V | change K / V |
+|---|---|---|---|---|---|
+| qwen3-0.6b-to-1.7b | 1 (verdict k) | 0.6292 / 0.4107 | +0.0522 / +0.1026 | UNRESOLVED / UNRESOLVED | -0.0226 / -0.0354 |
+| qwen3-0.6b-to-1.7b | 4 | 0.4755 / 0.0967 | +0.1152 / +0.2395 | UNRESOLVED / DEGRADES | -0.0345 / -0.0801 |
+| qwen3-0.6b-to-1.7b | 8 | -0.2601 / -1.5043 | +0.3585 / +0.8631 | DEGRADES / DEGRADES | -0.0843 / -0.2590 |
+| llama3.2-3b-to-llama3.1-8b | 1 (verdict k) | 0.7307 / 0.4623 | -0.0168 / +0.0088 | HOLDS / HOLDS | -0.0116 / -0.0165 |
+| llama3.2-3b-to-llama3.1-8b | 4 | 0.6295 / 0.2437 | -0.0112 / +0.0472 | HOLDS / HOLDS | -0.0230 / -0.0425 |
+| llama3.2-3b-to-llama3.1-8b | 8 | -0.0935 / -1.2474 | +0.0344 / +0.2778 | HOLDS / DEGRADES | -0.0744 / -0.1497 |
+
+Read beside, as 0064 quoted them, on tau2-bench / SWE-bench windows at the 0016 protocol and never pooled with the rows above:
+Qwen (0020) `| 1 (verdict-bearing) | 0.6814 / 0.5133 | 0.5629 / 0.3418 | +0.1185 / +0.1715 | UNRESOLVED / DEGRADES |`; Llama (0040) `| 1 (verdict-bearing, K and V separately) | 0.7139 / 0.4711 | 0.7311 / 0.4599 | -0.0172 / +0.0111 | HOLDS / HOLDS |`.
+
+**Per-sequence R²** (a share of the pooled decomposition, SST around the global held-out mean), median (p10, p90):
+
+| pair | k | agent K | agent V | generic K | generic V |
+|---|---|---|---|---|---|
+| qwen3-0.6b-to-1.7b | 1 | 0.6055 (0.5738, 0.6565) | 0.3755 (0.3252, 0.4493) | 0.6835 (0.6653, 0.7019) | 0.5096 (0.4942, 0.5492) |
+| qwen3-0.6b-to-1.7b | 4 | 0.4378 (0.3830, 0.5204) | 0.0289 (-0.1035, 0.1567) | 0.5960 (0.5683, 0.6229) | 0.3203 (0.2937, 0.4100) |
+| qwen3-0.6b-to-1.7b | 8 | -0.3304 (-0.4962, -0.1686) | -1.7095 (-2.1235, -1.3612) | 0.1074 (0.0103, 0.1822) | -0.7107 (-0.8031, -0.3692) |
+| llama3.2-3b-to-llama3.1-8b | 1 | 0.7186 (0.7012, 0.7438) | 0.4418 (0.4178, 0.4863) | 0.7595 (0.5911, 0.7895) | 0.5205 (0.3336, 0.5764) |
+| llama3.2-3b-to-llama3.1-8b | 4 | 0.6038 (0.5788, 0.6521) | 0.1892 (0.1401, 0.2919) | 0.6912 (0.3928, 0.7269) | 0.3554 (0.0889, 0.4496) |
+| llama3.2-3b-to-llama3.1-8b | 8 | -0.1811 (-0.2634, -0.0256) | -1.4450 (-1.6007, -1.0900) | 0.1084 (-0.5074, 0.2153) | -0.7873 (-1.3942, -0.5658) |
+
+Bootstrap bounds within 1e-3 of a band line: qwen3-0.6b-to-1.7b k = 1 V upper 97.5% bound 0.150016, 1.6e-05 above 0.15. The band reads the point drop. No bound is read by anything.
+
+**Pod and home.** Every figure in the three tables, and the bound in the bound line, is from `summarize_e8` run off the
+pod, at the pin: the upstream at `06f8d55`
+with torch 2.15.0+cpu, transformers 5.22.2, safetensors 0.8.0 and numpy 2.5.4 (the pod's versions, torch's
+CPU build), and this repository at `c95570d` with torch 2.15.0+cpu, safetensors 0.8.0 and numpy 2.5.4
+(the pod's versions there). Its inputs were the pod's report, records and token files, without the pod's summary; the
+agent dumps from the backup; and the archived generic dumps and mappers, by the run's fingerprints. Its `summary.json`,
+sha256 (newline-normalized) Qwen `808959fbfdf3…`,
+Llama `bcc8012f640b…`, is what this entry reads, by digest, rather than running `summarize_e8`
+at append, as 0064 planned. The pod's summaries (sha256 `95fa3689cbe4…`, `8c4bb39e364d…`) differ from those in floats only:
+- qwen3-0.6b-to-1.7b: 96 of 105 float fields differ, max abs 1.70e-08, max rel 4.0e-07; all 91 non-float fields equal, the 12 band words among them; the point drop nearest a band line is 3.04e-04 from it (17,876× the largest difference);
+- llama3.2-3b-to-llama3.1-8b: 96 of 105 float fields differ, max abs 3.38e-09, max rel 7.9e-08; all 91 non-float fields equal, the 12 band words among them; the point drop nearest a band line is 2.77e-03 from it (819,480× the largest difference).
+
+Every point drop and every bootstrap bound lies on the same side of both band lines in the two summaries. The cause is
+inferred and was not tested: the pod's
+upstream scorer ran torch's CUDA build, and the home one ran the CPU build.
+
+**Per window, beside lag-ladder's 0036 (a figure, no verdict).** The Qwen file is the token file lag-ladder's 0030 / 0036 read
+under seed 1's readers (0064). Joined on row id: this cell's arm (b) per-sequence R² at k = 1, from the
+home run's re-scored record `results/e8m/recheck/agent_k1.npz` (`94fb0b3d21d9…`; equal to the run's recorded list within
+the summarizer's tolerance; 0065 named both summary files, and this cell's summary carries no per-window value), and
+lag-ladder's per-sequence mean per-token KL (B1) at each lag, from its home `summary.json`
+(`d91315247d79…`, the one 0036 cites). The figure is Spearman's rank correlation over all 50 windows, and within each
+suite over 25:
+
+| lag | ρ, R² K vs B1: all / coding / workflow | ρ, R² V vs B1: all / coding / workflow |
+|---|---|---|
+| 1 | -0.217 / -0.118 / -0.004 | -0.264 / -0.112 / -0.111 |
+| 2 | -0.272 / -0.109 / -0.019 | -0.305 / -0.105 / -0.108 |
+| 4 | -0.199 / -0.104 / +0.042 | -0.249 / -0.132 / -0.055 |
+| 8 | -0.275 / -0.099 / -0.002 | -0.321 / -0.121 / -0.135 |
+| 16 | -0.299 / -0.115 / -0.045 | -0.352 / -0.148 / -0.181 |
+| 32 | -0.321 / -0.105 / -0.082 | -0.374 / -0.158 / -0.218 |
+
+The two instruments read different positions of the same window. The mapper scores every 4th of
+all 1,024 positions, and the readers score the last 256 after a 768-token prefix. They are different models: the Qwen3
+0.6B → 1.7B mapper, and the Qwen2.5-1.5B readers at GRPO lags 1–32. Both readings carry the same suite split, so the pooled
+column may reflect the suite difference alone; the within-suite columns are there for that reason. These are 36
+correlations on 50 windows, in a form this entry fixes (0065 registered the join, not its statistic), stated without an
+interval or a test. Lag-ladder's 0030 named the per-sequence R² drop beside the per-window median KL. Measured from arm
+(a)'s pooled R², one constant across windows, the drop orders the windows in reverse, so each of its ρ is the one above
+with the sign flipped; and the one per-window KL value lag-ladder's summary carries is B1, a mean, whose median is taken
+over windows. A negative ρ means the windows the mapper fits worse are the windows where the stale reader draws more KL.
+That sign is for orientation only.
+
+**What this establishes, stated narrowly.** On the two pairs, how much held-out pooled R² the existing k = 1, 4, 8 mappers lose
+from generic calibration text to the opening 1,024 tokens of MLPerf Agentic Inference trajectories (DeepSWE coding and Workato
+workflow, reasoning kept, the shared system prefix not rendered), over every agent sequence and at the 0016 protocol. **Not
+established.** Anything about H-E8, which is 0020's and unchanged. Anything on-policy, or at a real switch point. The
+accumulated history past the opening window: the first 1,024 tokens of a coding trace are mostly its task statement (0064).
+Anything pooled across the two pairs or with the tau2-bench / SWE-bench figures. Anything causal from the per-window join.
+
+**Scope.** All of 0009's, 0016's, 0030's, 0039's and 0064's limits. No hypothesis cell changes with this entry. Nothing under
+`results/` or `data/` is committed; this script is retired after the append.
+
+prior-entries-sha256: 1533fbc1a3742116e76988bcc21d31c7a85fd25382cffe257e118bdd54908d9f
