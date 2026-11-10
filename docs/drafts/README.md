@@ -377,3 +377,5 @@ lag-ladder 0030's wording of the join. Every input is passed by argument and pin
 off-repository summary pair, the sitting's records, and lag-ladder's home summary. No `verdict:` line, no hypothesis row,
 nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose E8m heading still read UNREGISTERED. Ordering
 guard: 0064 present, 0067 last, 0068 absent. Next free number: **0069**.
+
+*(2026-11-10: **0068 APPENDED** (`4875633`, chain `1533fbc1…`; script retired in the retire commit; run with `--date 2026-11-10`). File order now ends 0067, 0068. Still staged: nothing. Next free number: **0069**.)*
