@@ -4481,3 +4481,52 @@ the page budget is the camera-ready's nine pages); the drafts README's allocator
 Next free number after this entry: 0067.
 
 prior-entries-sha256: 7e5c13f9d1d4a207cf6d8be7cdfee862dd98d8ab5271d2cecae95af1835bc53d
+
+### 0067 — 2026-11-10 — Entry 0061's inputs re-prepared under its own config: the driver 0061 pins refuses entry 0049's prepared inputs under the repair config, so `--prepare` re-ran on the same archive and reproduced 0049's 35 records byte for byte, only the manifest's config digest moving; no code, config, arm or reading changes; descriptive, no cell moves
+
+**What is wrong in 0061.** Entry 0061 registers its run on "the operator's prepared inputs of entry 0049 (manifest
+`2aeee5769c0a…`, …), reused byte for byte; `--prepare` is not re-run." The driver 0061 pins, `tools/cache_behavior/run.py` (`e137f1d8b8c5…`),
+cannot run on those inputs under the repair config. Every action except `--prepare` first calls `check()`, and `check()`
+refuses ("configuration changed after preparation") unless the manifest's `config_sha256` equals the digest of the
+`--config` file. Entry 0049's manifest records entry 0047's config (`53c664556d18…`); 0061's run reads
+`config/cache-behavior-repair.toml` (`97aa99b1958e…`). So `--check`, `--probe`, `--run` and `--summarize` each refuse, and
+0061's run could not start on any card. Found before any 0061 prefill; nothing of 0061 has run (R1, below).
+
+**The exit taken.** Either the driver or the manifest has to change. This entry changes only the manifest, and only by the
+pinned driver's own hand: `run.py --prepare` under `config/cache-behavior-repair.toml`, on the archive, traces and evidence
+manifest that 0049's preparation read, writes 0061's inputs to `results/cache-behavior-repair/inputs/`. No code, config, test or registered
+value changes: `run.py`, `core.py` and both configs are at the hashes 0061 cites. The preparation runs on Linux from an
+LF checkout, as 0049's did; the driver writes the manifest with the platform's newline and digests the config's raw
+bytes.
+
+**What the re-preparation produced, checked by this script at append.** Manifest `7b27942c1da9…`. Its 35 records
+are 0049's 35, in the same order and with every field equal (0 excluded). Each prepared file is byte-identical
+(sha256) to 0049's file of the same name and to its own record's hash, and the folder holds no other file. Of the
+manifest's 5 top-level fields beside the records, 4 equal 0049's (`archive_config_sha256`, `archive_report_sha256`, `corpus_manifest_sha256`, `evidence_sha256_manifest`). `config_sha256` reads
+`97aa99b1958e…`, the repair config's, where 0049's reads `53c664556d18…`. So 0061's run reads, byte for
+byte, the inputs 0061 registered, and only the identity the driver checks has moved. The script repeats `check()`'s
+input comparisons (the three config digests, each file's hash, the cohort size) but not its runtime pin. The operator's block runs
+the driver's own `--check` on these inputs before the append and stops unless it passes under the repair config and refuses
+under 0047's.
+
+**0061 as amended.** Its inputs sentence reads: the inputs at `results/cache-behavior-repair/inputs/` (manifest `7b27942c1da9…`), prepared by
+the pinned driver under the repair config, every record and file byte-identical to entry 0049's (manifest
+`2aeee5769c0a…`). Everything else in 0061 stands as registered: the arms, the budgets, the selection seed, the
+numerical controls, the readout, the stopping rule, the card, the output tree `results/cache-behavior-repair/`, the mirror and backup, and
+the figures entry's checks, to which this entry adds one: that entry must also assert that the report's
+`identity.manifest_sha256` is `7b27942c1da9…`. 0061's
+run is requested only after this entry is on main.
+
+**Gate and enforcement.** This script refuses unless all of these hold. 0061 is on the ledger and its inputs sentence occurs
+once. The four files 0061 pins are at its hashes. 0049's manifest is unchanged. The new manifest's sha256 is exactly
+the value pinned when this entry was drafted, so a re-preparation that differs in any byte refuses. Every record and
+file equals 0049's. `config_sha256` is the repair config's digest. `results/cache-behavior-repair` holds no run (R1: no `report.json`, no
+`summary.json`).
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0047 and 0049 and their records;
+entry 0061 except its one inputs sentence; `results/cache-behavior/inputs/` (read, not written); `config/`, `tools/`, `tests/`.
+
+**Numbering.** 0067 is the number the drafts README allocates at staging; ordering guard 0061 present, 0066 last,
+0067 absent. Next free number after this entry: 0068.
+
+prior-entries-sha256: 09e91d548b139bfe191bb16b10726148132f929672c59acfaae52c0f5917d4a2
