@@ -364,3 +364,5 @@ At append the script checks that every record and file equals 0049's (manifest `
 `config_sha256` moved, that 0061's four pins are unchanged, and R1 on 0061's output tree. No figure, no `verdict:` line.
 Edits `docs/agent/experiment-commands.md`, the one living doc that named 0049's inputs for 0061. Ordering guard: 0061
 present, 0066 last, 0067 absent. Next free number: **0068**.
+
+*(2026-11-10: **0067 APPENDED** (`f7ee797`, chain `09e91d54…`; script retired in the retire commit; run with `--date 2026-11-10`). File order now ends 0066, 0067. Still staged: nothing. Next free number: **0068**.)*
