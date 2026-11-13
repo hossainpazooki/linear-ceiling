@@ -389,3 +389,5 @@ handoff) are recounted from the sitting's logs, passed by argument and pinned by
 States the stopping-rule ruling of 2026-11-11, confirmed by the operator 2026-11-13. No `verdict:` line, no hypothesis
 row, nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose REPAIR paragraph did not say the run had
 its figures. Ordering guard: 0047, 0049, 0061 and 0067 present, 0068 last, 0069 absent. Next free number: **0070**.
+
+*(2026-11-13: **0069 APPENDED** (`17e7c4d`, chain `11488ca9…`; script retired in the retire commit; run with `--date 2026-11-13`). File order now ends 0068, 0069. Still staged: nothing. Next free number: **0070**.)*
