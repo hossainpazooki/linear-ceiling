@@ -247,7 +247,7 @@ $PY -m tools.task_quality.benchmark --run --output results/benchmark-control/pil
 $PY -m tools.task_quality.benchmark --summarize --output results/benchmark-control/pilot  # fail-closed: every F1 recomputed; the gate read per set and form
 ```
 
-## Task-quality cell (drafted for registration; unregistered until its entry is appended)
+## Task-quality cell (registered 0063; ran, long and short cells: figures 0070, descriptive)
 `config/task-quality-cell.toml` pins both items files by sha and names each cell's E9 archive (alignment pairs, per-token
 record, score files, every one checked against the hash the items file or the archive report pins). CUDA for the real
 run (the largest sender first as the memory probe); the synthetic tests run the same code on CPU.

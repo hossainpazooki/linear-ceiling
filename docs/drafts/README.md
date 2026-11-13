@@ -391,3 +391,13 @@ row, nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose 
 its figures. Ordering guard: 0047, 0049, 0061 and 0067 present, 0068 last, 0069 absent. Next free number: **0070**.
 
 *(2026-11-13: **0069 APPENDED** (`17e7c4d`, chain `11488ca9…`; script retired in the retire commit; run with `--date 2026-11-13`). File order now ends 0068, 0069. Still staged: nothing. Next free number: **0070**.)*
+
+**Staged 2026-11-13: `append_0070.py` — the task-quality cell's figures, long and short cells (registered by 0063).** Runs
+`tools.task_quality.cell.summarize` in-process over each cell's home mirror and refuses unless the rewritten summary is the
+pod's byte for byte, and asserts the config, code, items-file and receiver pins 0063 states against both reports. Run facts
+(the times, one chain launch per cell, the long cell's home verify before the short cell's launch, the allocator warnings
+per handoff) are recounted from the sitting's logs, passed by argument and pinned by sha256, as are the backup's verify log
+and the stopped first sitting's report, read only for the repeatability sentence. Carries the stopping-rule reading 0069
+states. No `verdict:` line, no hypothesis row, nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose
+task-quality heading still read unregistered. Ordering guard: 0063 present, 0069 last and stating the ruling, 0070 absent.
+Next free number: **0071**.
