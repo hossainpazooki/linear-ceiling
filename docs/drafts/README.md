@@ -379,3 +379,13 @@ nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose E8m h
 guard: 0064 present, 0067 last, 0068 absent. Next free number: **0069**.
 
 *(2026-11-10: **0068 APPENDED** (`4875633`, chain `1533fbc1…`; script retired in the retire commit; run with `--date 2026-11-10`). File order now ends 0067, 0068. Still staged: nothing. Next free number: **0069**.)*
+
+**Staged 2026-11-13: `append_0069.py` — the cache-behavior REPAIR run's figures (registered by 0061, its inputs re-prepared
+by 0067).** Runs `tools.cache_behavior.run.summarize` in-process over the home mirror and refuses unless the rewritten
+summary, its line endings normalized, is the pod's byte for byte. Asserts the config, driver and manifest pins 0061 and 0067
+state, and refuses unless the restated REUSE-ALL, RANDOM and CYCLIC statistics, the attention slice and every field each
+handoff shares with 0049's report equal 0049's exactly. Run facts (times, the one attempt, the allocator warnings per
+handoff) are recounted from the sitting's logs, passed by argument and pinned by sha256, as is the backup's verify log.
+States the stopping-rule ruling of 2026-11-11, confirmed by the operator 2026-11-13. No `verdict:` line, no hypothesis
+row, nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose REPAIR paragraph did not say the run had
+its figures. Ordering guard: 0047, 0049, 0061 and 0067 present, 0068 last, 0069 absent. Next free number: **0070**.
