@@ -1,27 +1,48 @@
-# Lean 4 formalization of the theory in *KV Cache Drift Across Handoffs in Long-Horizon Agents*
+# Lean 4 formalization of the theory in *Carryover Effects in KV Caches Reused in Agentic Workflows and RL Training*
 
-Machine-checked proofs of the theoretical content of the paper (earlier title: *Carryover*,
-hence the namespace). It covers the registered statistic of ledger entry 0023 (the paper's
-Equations `eq:delta` and `eq:fstar`), Theorem `thm:identity`, Theorem `thm:sandwich`, Corollary
-`cor:seam`, Assumption `ass:rope`, Proposition `prop:attn` with its value remark, and the
-reported numbers the theorems explain. Labels such as `thm:identity` refer to the paper's LaTeX
-source, which lives in the authors' Overleaf project rather than in this repository.
+Machine-checked proofs of the theoretical content of the paper (earlier titles: *KV Cache Drift
+Across Handoffs in Long-Horizon Agents* and, before it, *Carryover*, hence the namespace). It
+covers the registered statistic of ledger entry 0023 (the paper's Equations `eq:delta` and
+`eq:fstar`), Theorem `thm:identity`, Theorem `thm:sandwich`, Corollary `cor:seam`, Assumption
+`ass:rope`, Proposition `prop:attn` with its value remark, and the numbers of the version titled
+*KV Cache Drift Across Handoffs in Long-Horizon Agents* that the theorems explain. Labels such as
+`thm:identity` refer to the paper's LaTeX source, which lives in the authors' Overleaf project
+rather than in this repository.
 
 `fstar` is the exact-criterion version of `f_star` in `src/linear_ceiling/e9_pertoken.py`: both
 sort the deviations in descending order and take the least `k < n` whose remaining-token mean is
 at most `τ`, else `1`. The implementation judges "at most `τ`" to a relative tolerance of `1e-9`
-(plus `1e-15`) for float32 records; the theorems use the exact criterion, as the paper states.
+(plus `1e-15`) for float32 records; the theorems use the exact criterion.
 
 Every file compiles against Mathlib, and no file contains `sorry` or `admit` or declares an axiom. The
 52 headline results depend only on Lean's three standard axioms, `propext`, `Classical.choice` and
 `Quot.sound` (`Audit.lean` prints them).
 
-**Status, honestly stated.** On 2026-11-13 (UTC), on one macOS 27 machine (arm64), `lake build` of this
-package at the pins below exited 0 and printed `Build completed successfully`, and `lake env lean Audit.lean`
-printed the 52 headline results, each depending only on `propext`, `Classical.choice` and `Quot.sound`. The
-other 59 of the 111 theorems and lemmas in `Carryover/` were type-checked by that build and are not printed by
-the audit. The build has not been run in CI, on Linux or on Windows. The paper makes no claim that rests on
-this build.
+**Status, honestly stated.** On 2026-11-13 (UTC), on one macOS 27 machine (arm64), with Lean `v4.34.0` and
+Mathlib `v4.34.0` at the pins below, `lake build` of this package exited 0 and printed `Build completed
+successfully`, and `lake env lean Audit.lean` printed the 52 headline results, each depending only on
+`propext`, `Classical.choice` and `Quot.sound`. This was done twice that day, each time rebuilding the
+package's six modules, and the two audit outputs are byte-identical. Both runs built the files of commit
+`22b8664`; the commit that gives this README its present text changes no other file in `proofs/`. The other
+59 of the 111 theorems and lemmas in `Carryover/` were type-checked by that build and are not printed by the
+audit. The build has not been run in CI, on Linux or on Windows.
+
+## The paper's results and their declarations
+
+These declarations state the paper's two theorems, its corollary and its proposition; each is among
+the 52 that `Audit.lean` prints.
+
+| Paper | Lean declarations |
+|---|---|
+| Theorem 1 (`thm:identity`) | `thm_identity` (the whole statement); its parts `mean_devLH`, `mu_dev`, `theorem1` and `theorem1_verdict` in `Identity.lean`, and `fstar_eq_zero_iff` in `Fstar.lean` |
+| Theorem 2 (`thm:sandwich`) | `fstar_antitone` (nonincreasing in `τ`) and `theorem2_sandwich` (the displayed bounds), in `Fstar.lean` |
+| Corollary 3 (`cor:seam`) | `cor_seam` and `cor_seam_positions` (the upper bound and `f*(τ) = 0`), `cor_seam_converse`, `cor_seam_large_n`, in `Seams.lean` |
+| Proposition 4 (`prop:attn`) | `abs_deltaZ_le` (logits), `prop_attn_weights_iSup` (weights), `prop_attn_diffuse` and `prop_attn_diffuse_causal` (diffuse), `prop_attn_tail_ret` (general), `prop_attn_concentrated_ret` (concentrated), in `Attention.lean` |
+
+That each declaration states the paper's result was checked by reading the two side by side.
+Several Lean statements are more general than the paper's (see *Modeling choices*). The sentence of
+Assumption `ass:rope` on the YaRN temperature is not formalized: the temperature is absorbed into
+`‖q_i‖`.
 
 ## Building
 
@@ -51,7 +72,7 @@ current pins. `.lake/` is git-ignored.
 | `Carryover/Identity.lean` | Equation `eq:delta`, `R²` with the centered denominator, Theorem 1 (`μ = 1 − R̄²` and the verdict clause, for `L` layers and `H` heads), the retained-mean exchange used in the proof of Proposition 4 |
 | `Carryover/Seams.lean` | Corollary 3 (both directions), with the near-seam set built from `m` windows of at most `w` matched tokens, or from receiver positions |
 | `Carryover/Attention.lean` | Assumption `ass:rope`, the causally masked softmax, its Jacobian / mean-value bound, Proposition 4 (logits, weights, diffuse, general, concentrated), the value remark |
-| `Carryover/Numbers.lean` | The reported numbers that Theorems 1 and 2 explain (Tables 1, 2 and 6, the configuration bridge, the matched configuration comparison) |
+| `Carryover/Numbers.lean` | The numbers of the *KV Cache Drift* version that Theorems 1 and 2 explain (that version's Tables 1, 2 and 6, the configuration bridge, the matched configuration comparison) |
 | `Audit.lean` | `#print axioms` for every headline result |
 | `check.sh` | Builds and audits with `lean` directly, without `lake` |
 
@@ -102,6 +123,9 @@ Keys of one attention query are indexed by the `N = |R|` receiver positions.
 | Matched comparison: `0 ≤ p(τ_K) ≤ μ/τ_K` on medians; shares `0.43`, `0.39` | `matched_upper_chain`, `matched_shares` |
 | Seam levels: `0.03 < 0.0629 < τ_K`; far level within `τ_K` gives `f* = 0` | `seam_levels`, `far_level_zero` |
 
+The last six rows are the number checks of `Carryover/Numbers.lean`. They are those of the *KV Cache Drift*
+version, and the tables they name are that version's.
+
 ## Empirical scope
 
 These proofs establish conditional mathematical statements. The numerical lemmas are
@@ -134,7 +158,7 @@ across configurations. The attention result holds the query fixed.
 
 ## Discrepancies found and fixed in the paper
 
-This pass (2026-10-03, marked in purple in the paper source):
+This pass (2026-10-03):
 
 * Theorem 1 used `μ` without defining it. The statement now defines `μ = n⁻¹ ∑_{t∈M} δ(t)`
   (`thm_identity`); Theorem 2 and Corollary 3 use the same `μ`.

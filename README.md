@@ -176,8 +176,8 @@ not the download.
 `proofs/` is a Lean 4 formalization of the paper's theory: the registered statistic (`fstar` is the exact-criterion
 twin of `e9_pertoken.f_star`), Theorem 1 (μ = 1 − R̄²), Theorem 2, Corollary 3 on seams and Proposition 4 on attention
 under the RoPE assumption, with the reported numbers the theorems explain. `proofs/README.md` maps each paper statement
-to its theorem, pins the toolchain, and states the build's status plainly: it has not run in CI, and the paper makes no
-claim that rests on it.
+to its theorem, pins the toolchain, and states the build's status plainly: `lake build` passed on one macOS machine
+and has not run in CI. It lists the declarations that state the paper's two theorems, corollary and proposition.
 
 ## Contributing
 
