@@ -4721,3 +4721,88 @@ rules; selection by archived δ_K is an oracle (it reads the fresh states) and i
 what a δ-informed selector could achieve, as 0061's scope has it, is not shown (above); generation quality after reuse not measured.
 
 prior-entries-sha256: 11488ca90b715495375ed58eb2fab29dccfa0263f678cad9b643f1eaf334b608
+
+### 0070 — 2026-11-13 — Task-quality cell ran `[BASELINE, DESCRIPTIVE]`: structured-field recall of signature lines under FRESH, REUSE-ALL, RANDOM and REPAIR-f caches, long and short cells; no band, no cell moves
+
+**Setup, as registered (0063).** RunPod community, 1x NVIDIA A100-SXM4-80GB, one pod for both cells. Long cell: probe on the largest
+sender launched 2026-11-12T05:16:19Z, run launched 06:05:45Z, finished 17:00:39Z. Short cell, launched on the same pod once the long cell
+had been pulled home and verified: probe 17:04:54Z, run 17:17:06Z, finished 20:51:59Z. GPU `NVIDIA A100-SXM4-80GB`, PyTorch 2.14.0+cu130,
+Transformers 5.17.0, CUDA 13.0, fp32; config `cce4326c0ed0…`, `cell.py` `bb015afd0eb4…`, `pilot.py` `009ff9f04601…`,
+`items.py` `f5360038cef4…`, `core.py` `f346b5fdf3d3…` as committed, run at commit `f98d53b`; items files `8153e9d30d04…` (long) and
+`96499cb24cb8…` (short), each equal to its report's `identity.items_sha256`. 25 of 25 long and 14 of 14 short handoffs, every
+return code 0, no partial close; 10 long and 11 short handoffs void under the item floor and listed in the reports, as registered. Peak
+allocation 24.95 GiB (long), 13.84 GiB (short). Mirrored home and verified: the summary recomputed at home at the pinned commit is
+byte-identical to the one the pod wrote, in both cells. Backup: a private Hub dataset (R8, verified both ways before this
+entry). Pinned: long `report.json` `f8054e6e259c…`, `summary.json` `3eb17759faef…`; short `report.json`
+`01d955983cae…`, `summary.json` `0173777cc014…`.
+
+**An earlier sitting, stopped; none of its scores enters the figures.** A first sitting of the long cell was stopped after 2 of its 25
+handoffs by the operator's ruling of 2026-11-12, when the projection from those two handoffs put the cell outside the sitting's time limit
+(0063: the cost "is ASSUMED until the probe times it"). The long cell was run again from its first handoff on a new pod, and the figures
+here are that run's alone. As a description of repeatability, not a registered control: on the two handoffs both sittings scored,
+7,372 of 8,248 fields of the two reports' handoff records are equal and the 876 that differ are all timings; the 15 fields of the identity
+block are equal.
+
+**Allocator warnings.** The long cell's logs hold 20 `CUDACachingAllocator` warnings ("memory allocation failed with OOM on device 0"): 3 on the first handoff in run order (the probe), 2 on each of handoffs 2 to 4, one on each of handoffs 5 to 15, none on handoffs 16 to 25. The
+short cell's logs hold none. None raised an error: no traceback, and every probe and run exited 0. The runbook's stopping rule is "stop on any
+hash refusal or OOM". By the operator's ruling (2026-11-11, restated 2026-11-13) the reading given for 0061's run carries to this one. Verbatim: "An OOM in that rule is an out-of-memory error that ends the driver or fails a handoff. A warning from the caching allocator that it freed its cache and retried, after which the handoff scored with every control passing, is not one." This cell
+registers none of 0047's numerical controls (fresh repeat, prefix copy) and no archive bridge. What held in its place: all 25 long handoffs scored; the driver's hash checks on the items file, the alignment files and the
+archive raised nothing; and the summarizer, which recomputes every stored score from the stored prediction, found no difference.
+
+**Figures (`cell.summarize` in-process; headline as registered: CHAT form, signature items, first def-span exact; per handoff the
+fraction of items correct; median with p10 / p90 over handoffs, `e7_stats` convention, handoffs weighted equally; the interval is the
+percentile interval of the median from 2,000 seeded resamples of handoffs).** Retention is the arm's accuracy over FRESH's per handoff.
+RANDOM scores 0 on every handoff of both cells, so the floor-normalized retention equals the raw retention on every handoff and in its
+median, p10 and p90, and no handoff's denominator is void. The reader draws the two intervals from separate resamples; where the
+floor-normalized interval differs from the raw one it is printed beside it. Generation lengths are over all drawn items of every kind.
+
+*Long cell* (25 handoffs; 746 signature, 25 file and 25 repository items drawn, 796 in all, 9,552 decodes; signature items per handoff 10 to 40).
+- **FRESH**: accuracy 0.8462 (p10 0.4615, p90 1.0000; median's 95 % interval [0.6667, 0.9000]); generations, all drawn items, mean 36.1 tokens, 0.121 at the 64-token cap.
+- **REUSE-ALL**: accuracy 0.7692 (p10 0.4103, p90 1.0000; median's 95 % interval [0.5517, 0.8947]); retention 0.9737 (p10 0.7368, p90 1.0357; [0.9000, 1.0000]); generations, all drawn items, mean 32.9 tokens, 0.077 at the 64-token cap.
+- **RANDOM**: accuracy 0.0000 (p10 0.0000, p90 0.0000; median's 95 % interval [0.0000, 0.0000]); retention 0.0000 (p10 0.0000, p90 0.0000; [0.0000, 0.0000]); generations, all drawn items, mean 63.9 tokens, 0.997 at the 64-token cap.
+- **REPAIR-0.05**: accuracy 0.8000 (p10 0.3750, p90 0.9487; median's 95 % interval [0.5862, 0.8947]); retention 0.9737 (p10 0.7778, p90 1.0556; [0.8947, 1.0000]); generations, all drawn items, mean 36.6 tokens, 0.107 at the 64-token cap.
+- **REPAIR-0.10**: accuracy 0.8158 (p10 0.3750, p90 0.9630; median's 95 % interval [0.5862, 0.9000]); retention 0.9583 (p10 0.8235, p90 1.0000; [0.9000, 1.0000]); generations, all drawn items, mean 37.1 tokens, 0.132 at the 64-token cap.
+- **REPAIR-0.20**: accuracy 0.7895 (p10 0.4000, p90 1.0000; median's 95 % interval [0.5500, 0.9000]); retention 0.9583 (p10 0.7895, p90 1.0385; [0.9000, 1.0000]); generations, all drawn items, mean 36.4 tokens, 0.119 at the 64-token cap.
+- REUSE-ALL against FRESH per handoff: below on 13, equal on 7, above on 5 of 25.
+- PLAIN form, generation length over all drawn items, mean tokens / fraction at the cap, FRESH / REUSE-ALL / RANDOM / REPAIR-0.05 / -0.10 / -0.20: 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000.
+- CHAT form, signature items, median over handoffs, FRESH / REUSE-ALL / RANDOM / REPAIR-0.05 / -0.10 / -0.20: exact_match 0.0000 / 0.0000 / 0.0000 / 0.0000 / 0.0000 / 0.0000; contains 0.8158 / 0.7407 / 0.0000 / 0.7778 / 0.7692 / 0.7632; token_f1 0.2152 / 0.1771 / 0.0546 / 0.2125 / 0.2164 / 0.2257; canonical_contains 0.8421 / 0.7692 / 0.0000 / 0.8000 / 0.8158 / 0.7750.
+- PLAIN form, signature items, median over handoffs, FRESH / REUSE-ALL / RANDOM / REPAIR-0.05 / -0.10 / -0.20: first_span_exact 0.7179 / 0.7692 / 0.0000 / 0.7778 / 0.7436 / 0.7692; exact_match 0.0526 / 0.1000 / 0.0000 / 0.0526 / 0.0769 / 0.0769; contains 0.7000 / 0.7105 / 0.0000 / 0.7000 / 0.7179 / 0.7436; token_f1 0.4887 / 0.4982 / 0.0453 / 0.4666 / 0.4867 / 0.4477; canonical_contains 0.7179 / 0.7692 / 0.0000 / 0.7692 / 0.7436 / 0.7692.
+- Form-2' items (signature plus file), CHAT first-span, same order: 0.8750 / 0.8000 / 0.0000 / 0.8125 / 0.8250 / 0.8000; the other form-2' rows are in `summary.json` (`sensitivity`).
+- By kind only, CHAT, pooled mean over items (out of the headline): file (n = 25) 0.920 / 0.920 / 0.000 / 0.960 / 0.960 / 0.960; repository (n = 25) 0.960 / 0.640 / 0.000 / 0.760 / 0.760 / 0.880.
+
+*Short cell* (14 handoffs; 406 signature, 16 file and 14 repository items drawn, 436 in all, 5,232 decodes; signature items per handoff 9 to 40).
+- **FRESH**: accuracy 0.9024 (p10 0.8462, p90 0.9524; median's 95 % interval [0.8974, 0.9245]); generations, all drawn items, mean 36.0 tokens, 0.119 at the 64-token cap.
+- **REUSE-ALL**: accuracy 0.8944 (p10 0.6667, p90 0.9524; median's 95 % interval [0.8684, 0.9231]); retention 1.0000 (p10 0.9429, p90 1.0286; [0.9714, 1.0000]); generations, all drawn items, mean 32.0 tokens, 0.060 at the 64-token cap.
+- **RANDOM**: accuracy 0.0000 (p10 0.0000, p90 0.0000; median's 95 % interval [0.0000, 0.0000]); retention 0.0000 (p10 0.0000, p90 0.0000; [0.0000, 0.0000]); generations, all drawn items, mean 62.7 tokens, 0.977 at the 64-token cap.
+- **REPAIR-0.05**: accuracy 0.8974 (p10 0.6667, p90 0.9259; median's 95 % interval [0.8496, 0.9149]); retention 1.0000 (p10 0.9143, p90 1.0278; [0.9558, 1.0000]), floor-normalized interval [0.9500, 1.0000]; generations, all drawn items, mean 34.6 tokens, 0.073 at the 64-token cap.
+- **REPAIR-0.10**: accuracy 0.8819 (p10 0.6667, p90 0.9487; median's 95 % interval [0.8421, 0.9048]); retention 0.9718 (p10 0.9143, p90 1.0278; [0.9480, 1.0000]), floor-normalized interval [0.9459, 1.0000]; generations, all drawn items, mean 34.5 tokens, 0.073 at the 64-token cap.
+- **REPAIR-0.20**: accuracy 0.8932 (p10 0.7143, p90 0.9487; median's 95 % interval [0.8462, 0.9024]); retention 0.9726 (p10 0.9143, p90 1.0000; [0.9550, 1.0000]); generations, all drawn items, mean 34.4 tokens, 0.067 at the 64-token cap.
+- REUSE-ALL against FRESH per handoff: below on 6, equal on 6, above on 2 of 14.
+- Under the item floor on signature items alone: `20241025_composio_swekit/astropy__astropy-14182_traj#78` (1 handoff; it meets the registered floor of 10 on form-2' items and stays in the 14).
+- PLAIN form, generation length over all drawn items, mean tokens / fraction at the cap, FRESH / REUSE-ALL / RANDOM / REPAIR-0.05 / -0.10 / -0.20: 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000 ; 64.0 / 1.000.
+- CHAT form, signature items, median over handoffs, FRESH / REUSE-ALL / RANDOM / REPAIR-0.05 / -0.10 / -0.20: exact_match 0.0000 / 0.0476 / 0.0000 / 0.0000 / 0.0000 / 0.0000; contains 0.8509 / 0.8601 / 0.0000 / 0.8441 / 0.8441 / 0.8441; token_f1 0.2848 / 0.3041 / 0.0502 / 0.1920 / 0.2171 / 0.2195; canonical_contains 0.8846 / 0.8819 / 0.0000 / 0.8645 / 0.8734 / 0.8609.
+- PLAIN form, signature items, median over handoffs, FRESH / REUSE-ALL / RANDOM / REPAIR-0.05 / -0.10 / -0.20: first_span_exact 0.8819 / 0.8846 / 0.0000 / 0.8481 / 0.8718 / 0.8661; exact_match 0.0125 / 0.0363 / 0.0000 / 0.0125 / 0.0513 / 0.0125; contains 0.8454 / 0.8053 / 0.0000 / 0.8258 / 0.8120 / 0.7479; token_f1 0.3978 / 0.3849 / 0.0365 / 0.3666 / 0.4108 / 0.3513; canonical_contains 0.8750 / 0.8618 / 0.0000 / 0.8461 / 0.8609 / 0.8516.
+- Form-2' items (signature plus file), CHAT first-span, same order: 0.9000 / 0.8839 / 0.0000 / 0.8750 / 0.8750 / 0.8750; the other form-2' rows are in `summary.json` (`sensitivity`).
+- By kind only, CHAT, pooled mean over items (out of the headline): file (n = 16) 0.812 / 0.875 / 0.000 / 0.812 / 0.812 / 0.875; repository (n = 14) 0.857 / 0.429 / 0.000 / 0.571 / 0.714 / 0.857.
+
+**Reading (descriptive; no band, no threshold).** Under RANDOM, the norm-matched random perturbation of the fresh states, the receiver
+recalls no signature line in either cell and almost every generation runs to the token cap. Under the reused cache the median accuracy
+is below FRESH's in both cells, 0.7692 against 0.8462 on the long handoffs and 0.8944 against 0.9024 on the short ones, and
+the intervals of the two medians overlap in both. The median retention is 0.9737 (long) and 1.0000 (short), each interval
+reaching 1; the p10 of retention over handoffs is 0.7368 and 0.9429. The repair arms read 0.8000 / 0.8158 / 0.7895 (long)
+and 0.8974 / 0.8819 / 0.8932 (short) at 5 / 10 / 20 %: their intervals overlap FRESH's and REUSE-ALL's, and this run does not order them
+by budget. Under the PLAIN form every generation of every arm runs to the 64-token cap in both cells, and REUSE-ALL's median is above
+FRESH's (0.7692 against 0.7179; 0.8846 against 0.8819): the sign of the median difference is not the same under
+the two forms, and the sensitivity rows carry no interval. This is the accuracy of a 1.7B receiver on a recall question whose answer
+tokens lie inside the reused states. As 0063 registered it, it is context beside the KL of 0049, a task number beside it, and not a
+verdict on any registered statistic or the agent's task success; 0049's standing sentence is not touched.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045, 0047, 0049, 0058,
+0061, 0062 and their records; `config/cache-behavior*.toml` and their output trees; `config/e9*.toml`; the E9 drivers and summarizers; the standing sentence of 0049.
+
+**Scope.** One receiver, two repositories' traces, fixed proprietary-model text, same-model reuse only; one item kind in
+the headline; accuracy of a 1.7B receiver on a recall question, not the agent's task success; the question sits after
+the whole R, so a seam-local reading needs a later entry; no public benchmark (a composition of LongBench items into a
+standalone handoff is piloted separately and enters by its own entry, if at all).
+
+prior-entries-sha256: d83c321144974e784935de59659e0978bdf7943f958955c6798f3798ea54ea2f
