@@ -131,12 +131,13 @@ FILE order, not number order, so an entry can be numbered after staged drafts an
 The Lean 4 formalization of the paper's theory: 0023's statistic (`fstar` is the exact-criterion twin of
 `e9_pertoken.f_star`), Theorem 1 (μ = 1 − R̄²), Theorem 2, Corollary 3 (seams), Proposition 4 (attention under
 `ass:rope`) and the reported numbers in `Carryover/Numbers.lean`; `Audit.lean` prints the axioms of all 52 headline
-results (only `propext`, `Classical.choice`, `Quot.sound`; no `sorry`). Toolchain Lean v4.34.0-rc2 + Mathlib
-pinned in `lean-toolchain` / `lake-manifest.json`; build with
-`cd proofs && lake exe cache get && lake build && lake env lean Audit.lean`, or `./check.sh` where `lake` is broken
-(needs the Mathlib build in `.lake/packages`; ~21 min, mostly loading Mathlib). Not run in CI. "Lean" may be
-claimed in the paper only after `lake build` has passed on the committed tree; `.lake/` is git-ignored. Details:
-`proofs/README.md`.
+results (only `propext`, `Classical.choice`, `Quot.sound`; no `sorry`). Toolchain Lean v4.34.0 + Mathlib v4.34.0
+pinned in `lean-toolchain` / `lakefile.toml` / `lake-manifest.json`; build with
+`cd proofs && lake exe cache get && lake build && lake env lean Audit.lean` (`lake build` and the audit passed
+on 2026-11-13 UTC on one macOS 27 machine, arm64; not run in CI, on Linux or on Windows), or `./check.sh`, which
+uses `lean` without `lake` (needs the Mathlib build in `.lake/packages`; not yet run at these pins). "Lean" may
+be claimed in the paper only after `lake build` has passed on the committed tree; `.lake/` is git-ignored.
+Details: `proofs/README.md`.
 
 ## `UPSTREAM.md`
 

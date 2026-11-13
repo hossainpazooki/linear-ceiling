@@ -12,18 +12,20 @@ sort the deviations in descending order and take the least `k < n` whose remaini
 at most `τ`, else `1`. The implementation judges "at most `τ`" to a relative tolerance of `1e-9`
 (plus `1e-15`) for float32 records; the theorems use the exact criterion, as the paper states.
 
-Every file compiles against Mathlib with no `sorry`, no `admit` and no new axioms. The only
-axioms used are Lean's three standard ones: `propext`, `Classical.choice` and `Quot.sound`
-(`Audit.lean` prints them for all 52 headline results).
+Every file compiles against Mathlib, and no file contains `sorry` or `admit` or declares an axiom. The
+52 headline results depend only on Lean's three standard axioms, `propext`, `Classical.choice` and
+`Quot.sound` (`Audit.lean` prints them).
 
-**Status, honestly stated.** The build has not been run in CI and has not been reproduced on an operator
-machine; the only full run on record is the macOS one described under `check.sh` below (2026-10-03). The
-repository therefore claims that these files exist and are pinned, not that a reader's `lake build` has been
-seen to pass here. The paper makes no claim that rests on this build.
+**Status, honestly stated.** On 2026-11-13 (UTC), on one macOS 27 machine (arm64), `lake build` of this
+package at the pins below exited 0 and printed `Build completed successfully`, and `lake env lean Audit.lean`
+printed the 52 headline results, each depending only on `propext`, `Classical.choice` and `Quot.sound`. The
+other 59 of the 111 theorems and lemmas in `Carryover/` were type-checked by that build and are not printed by
+the audit. The build has not been run in CI, on Linux or on Windows. The paper makes no claim that rests on
+this build.
 
 ## Building
 
-Toolchain: Lean `v4.34.0-rc2`, Mathlib `v4.34.0-rc2` (pinned in `lean-toolchain`,
+Toolchain: Lean `v4.34.0`, Mathlib `v4.34.0` (pinned in `lean-toolchain`,
 `lakefile.toml` and `lake-manifest.json`). Install Lean with `elan`.
 
 ```sh
@@ -34,12 +36,12 @@ lake env lean Audit.lean    # prints the axioms of every headline result
 ./check.sh                  # the same two steps without lake (see below)
 ```
 
-`check.sh` compiles each module with `lean -o` in dependency order and then runs `Audit.lean`.
-Use it where `lake` is unavailable: on one macOS machine (checked 2026-10-03), `lake` for this
-toolchain exits with `SIGTRAP` (exit code 133) before doing any work, even for `lake --version`,
-while `lean` runs normally. It needs the Mathlib build in `.lake/packages`, from
-`lake exe cache get` or from another project with the same `lake-manifest.json`. The full run
-took about 21 minutes there, almost all of it loading Mathlib. `.lake/` is git-ignored.
+`check.sh` compiles each module with `lean -o` in dependency order and then runs `Audit.lean`,
+without `lake`. It needs the Mathlib build in `.lake/packages`, from `lake exe cache get` or from
+another project with the same `lake-manifest.json`. It was written for the earlier pins, the release
+candidate `v4.34.0-rc2`, whose `lake` exits with `SIGTRAP` (exit code 133) on macOS 27, even for
+`lake --version` (lean4 issue 15087, closed as fixed in `v4.34.0`). It has not been run at the
+current pins. `.lake/` is git-ignored.
 
 ## Files
 
@@ -51,7 +53,7 @@ took about 21 minutes there, almost all of it loading Mathlib. `.lake/` is git-i
 | `Carryover/Attention.lean` | Assumption `ass:rope`, the causally masked softmax, its Jacobian / mean-value bound, Proposition 4 (logits, weights, diffuse, general, concentrated), the value remark |
 | `Carryover/Numbers.lean` | The reported numbers that Theorems 1 and 2 explain (Tables 1, 2 and 6, the configuration bridge, the matched configuration comparison) |
 | `Audit.lean` | `#print axioms` for every headline result |
-| `check.sh` | Builds and audits with `lean` directly, for machines where `lake` is broken |
+| `check.sh` | Builds and audits with `lean` directly, without `lake` |
 
 ## Paper statement → Lean theorem
 
