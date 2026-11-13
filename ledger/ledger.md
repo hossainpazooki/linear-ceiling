@@ -4654,3 +4654,70 @@ Anything pooled across the two pairs or with the tau2-bench / SWE-bench figures.
 `results/` or `data/` is committed; this script is retired after the append.
 
 prior-entries-sha256: 1533fbc1a3742116e76988bcc21d31c7a85fd25382cffe257e118bdd54908d9f
+
+### 0069 — 2026-11-13 — Cache-behavior REPAIR ran `[BASELINE, DESCRIPTIVE]`: oracle-ranked recompute of the top 5 / 10 / 20 % of matched tokens against the reused cache, beside a random selection at each budget, on the 35 long handoffs; no band, no cell moves
+
+**Setup, as registered (0061, its inputs sentence as amended by 0067).** RunPod community NVIDIA A100-SXM4-80GB (one card); probe on the
+largest handoff launched 2026-11-11T16:29:41Z, run launched 16:58:33Z, finished 23:49:55Z, one attempt, no restart of the driver; GPU
+`NVIDIA A100-SXM4-80GB`, PyTorch 2.14.0+cu130, Transformers 5.17.0, CUDA 13.0; config `97aa99b1958e…`, driver `core.py`
+`f346b5fdf3d3…` / `run.py` `e137f1d8b8c5…` as committed, run at commit `f98d53b`. Inputs: manifest `7b27942c1da9…` (0067),
+equal to the report's `identity.manifest_sha256`. 35 of 35 handoffs scored, 8,908 continuation tokens, none excluded; peak allocation
+24.95 GiB. Backup: a private Hub dataset (R8, verified both ways before this entry). Pinned: `report.json` `21b62a01a504…`,
+`summary.json` `9f343af85ea3…` as the home machine wrote it; with its line endings normalized it is `99c2cace0d30…`, byte for byte
+the summary the pod wrote (0 of 147 leaves differ).
+
+**Wall time.** 0061 sized the run at three times 0049's 92 minutes, "replaced by the probe on the largest case". The probe took 29
+minutes and the run 6 hours 51 minutes. The sitting's time limit was raised twice while the run was in progress: once by the party
+running the sitting under a standing rule for a watched run, once by the operator's approval. No figure depends on the wall time.
+
+**Allocator warnings, and the stopping rule's "OOM".** The probe and run logs hold 25 `CUDACachingAllocator` warnings ("memory allocation
+failed with OOM on device 0"): 3 on the first handoff in run order (the probe), none on handoffs 2 to 16, one on each of handoffs 17 to 32, and two on each of handoffs 33 to 35. None raised an error: no traceback, the probe and the run exited 0, and the driver has no
+out-of-memory handler. Entry 0049's run met the same on its probe: its runbook (`docs/runbooks/2026-10-06-cache-behavior-runpod-runbook.md`)
+records three such warnings on the same handoff on the same card type and reads them as "retries, not failures"; it says that run's
+logs were pulled home and hashed, but no copy of them is found now, so whether its later handoffs had more is not known. Ruling of
+2026-11-11, made on the operator's delegation with 7 of the 35 handoffs scored, before the run completed and before any complete summary
+of it existed; by its own account the party ruling had opened the partial report of the first five handoffs and compared the fields it
+shares with 0049's, not the repair arms. The operator confirmed it on 2026-11-13, after the run had completed, in the knowledge that
+0049's run had recorded the same three warnings. Verbatim: "An OOM in that rule is an out-of-memory error that ends the driver or fails a handoff. A warning from the caching allocator that it freed its cache and retried, after which the handoff scored with every control passing, is not one." And: "If a warning ever coincides with a control, bridge or hash failure, or with a restated figure that differs from 0049's beyond the summarizer's tolerance, that is a stop under the rule as it stands." None did. For every one
+of the 35 handoffs the archive bridge (70 values), the peak allocation, the continuation-token count, the witness count and the three
+restated arms equal entry 0049's report field for field, and so do the two controls on the probe handoff, the only handoff that carries
+them (708 fields equal, 0 differing; timing fields and each case file's name and hash aside).
+
+**Numerical controls (registered limits in 0047, unchanged by 0061):** fresh-repeat maximum logit error 0.00e+00, prefix-copy
+maximum logit error 2.90e-04 (limit 5e-4), on the probe handoff, the only one that carries the two controls. Every per-handoff
+archive bridge passed, or the driver would have stopped before scoring that handoff.
+
+**The restated arms, a within-run control against 0049 (not new figures).** REUSE-ALL, RANDOM and CYCLIC: 27 of 27 summary
+statistics equal entry 0049's exactly (0 differing). The fresh-attention slice: 27 of 27 statistics equal 0049's.
+
+**Figures (`run.summarize` in-process: every case record re-hashed, the scored set checked against the registered 35, the logit witness
+re-checked; medians with p10 / p90 over handoffs, `e7_stats` convention, handoffs weighted equally).** KL is KL(fresh ‖ candidate) per
+scored token, averaged per handoff. FRESH is 0 by definition. A budget f is ⌈|M| × f⌉ matched tokens of each handoff.
+
+- **REUSE-ALL (assembled same-model cache), as 0049**: mean KL per handoff 0.1424 (p10 0.0802, p90 0.1900) nats; p90 KL 0.3022 (p10 0.1768, p90 0.4713); top-1 agreement 0.9020 (p10 0.8549, p90 0.9216).
+- **ORACLE-0.05 (the top 5 % of matched tokens by archived δ_K, recomputed)**: mean KL per handoff 0.0676 (p10 0.0240, p90 0.1423) nats; p90 KL 0.1299 (p10 0.0603, p90 0.3763); top-1 agreement 0.9216 (p10 0.8824, p90 0.9569).
+- **RANDOM-0.05 (the same number of matched tokens drawn uniformly, recomputed)**: mean KL per handoff 0.1401 (p10 0.0778, p90 0.1834) nats; p90 KL 0.2817 (p10 0.1748, p90 0.4545); top-1 agreement 0.9020 (p10 0.8627, p90 0.9216).
+- **ORACLE-0.10 (the top 10 % of matched tokens by archived δ_K, recomputed)**: mean KL per handoff 0.0481 (p10 0.0164, p90 0.1317) nats; p90 KL 0.1026 (p10 0.0431, p90 0.3478); top-1 agreement 0.9373 (p10 0.8941, p90 0.9608).
+- **RANDOM-0.10 (the same number of matched tokens drawn uniformly, recomputed)**: mean KL per handoff 0.1393 (p10 0.0788, p90 0.1712) nats; p90 KL 0.2592 (p10 0.1680, p90 0.4208); top-1 agreement 0.9020 (p10 0.8613, p90 0.9216).
+- **ORACLE-0.20 (the top 20 % of matched tokens by archived δ_K, recomputed)**: mean KL per handoff 0.0340 (p10 0.0121, p90 0.1112) nats; p90 KL 0.0837 (p10 0.0267, p90 0.2468); top-1 agreement 0.9529 (p10 0.9020, p90 0.9725).
+- **RANDOM-0.20 (the same number of matched tokens drawn uniformly, recomputed)**: mean KL per handoff 0.1186 (p10 0.0736, p90 0.1601) nats; p90 KL 0.2567 (p10 0.1503, p90 0.4536); top-1 agreement 0.9020 (p10 0.8613, p90 0.9333).
+
+**Reading (the registered pair at each budget; descriptive).** The pair (ORACLE-f, RANDOM-f) at one budget is the only comparison
+0061 registers. In median mean-KL the ranked selection reads below the uniform selection of the same size at every budget:
+0.0676 against 0.1401 / 0.0481 against 0.1393 / 0.0340 against 0.1186 nats at 5 / 10 / 20 %. In median top-1 agreement it reads above:
+0.9216 against 0.9020 / 0.9373 against 0.9020 / 0.9529 against 0.9020. Stated beside the pair, as registered and not compared
+with it here: REUSE-ALL's median mean-KL 0.1424 and top-1 0.9020; FRESH's 0 and 1 by definition. No paired per-handoff
+statistic, band or threshold is registered and none is read. The ranking is an oracle: it reads the fresh states, and a
+recomputed fraction of matched tokens is not a serving cost. 0061's scope says ORACLE-f "bounds what a δ-informed selector could
+achieve"; that is not shown, there or here: ranking by archived δ_K is not shown to give the lowest mean KL at a budget, so another
+choice of the same number of tokens could score lower. **Top-1 agreement is not
+task accuracy and no acceptance threshold exists**; "no downstream task-quality number is claimed" stands.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0029, 0036, 0038, 0044, 0045, 0047, 0049, 0058 and
+their records; `config/cache-behavior.toml` and `results/cache-behavior/`; `config/e9*.toml`; the E9 drivers and summarizers.
+
+**Scope.** One receiver, one corpus, the 35 long handoffs; fixed proprietary-model text; same-model only; three budgets and two selection
+rules; selection by archived δ_K is an oracle (it reads the fresh states) and is not a deployable policy; that ORACLE-f bounds
+what a δ-informed selector could achieve, as 0061's scope has it, is not shown (above); generation quality after reuse not measured.
+
+prior-entries-sha256: 11488ca90b715495375ed58eb2fab29dccfa0263f678cad9b643f1eaf334b608
