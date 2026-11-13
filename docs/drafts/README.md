@@ -401,3 +401,5 @@ and the stopped first sitting's report, read only for the repeatability sentence
 states. No `verdict:` line, no hypothesis row, nothing under `results/`. Edits `docs/agent/experiment-commands.md`, whose
 task-quality heading still read unregistered. Ordering guard: 0063 present, 0069 last and stating the ruling, 0070 absent.
 Next free number: **0071**.
+
+*(2026-11-13: **0070 APPENDED** (`c06d0bd`, chain `d83c3211…`; script retired in the retire commit; run with `--date 2026-11-13`). File order now ends 0069, 0070. Still staged: nothing. Next free number: **0071**.)*
