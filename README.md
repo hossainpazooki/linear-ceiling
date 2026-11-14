@@ -124,7 +124,8 @@ python -m linear_ceiling.e9_tail --config config/e9l.toml               # the pe
 ```
 
 What the GPU step needs and does not ship: the public agent trajectories under `traces/` (rebuilt from
-`config/e7-manifest.json` by `e7_manifest fetch`), the pinned upstream instrument named in `UPSTREAM.md` (invoked
+`config/e7-manifest.json` by `e7_manifest fetch`), the pinned upstream instrument
+[`kv-transfer-replication`](https://github.com/hossainpazooki/kv-transfer-replication) at the pin in `UPSTREAM.md` (invoked
 by subprocess; the gate refuses if its pin does not hold), the pair's mapper, and one 40–80 GB card for one sitting.
 Each sitting has a dated runbook listed in `docs/README.md`, and the standing rules R1–R12 are in
 `docs/gpu-experiment-protocol.md`. The complete command reference, with what each gate refuses until, is
