@@ -434,3 +434,11 @@ ledger against HEAD and runs `ledger_check` before and after its write. No `verd
 under `results/`. Ordering guard: 0047, 0049 and 0069 present, 0072 last, 0073 absent. Next free number: **0074**.
 
 *(2026-11-14: **0073 APPENDED** (`4bfb99e`, chain `189745d5…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0072, 0073. Still staged: nothing. Next free number: **0074**.)*
+
+**Staged 2026-11-14: `append_0074.py` — note to 0047 and 0061: both register the fresh repeat as exact, while the driver
+of each of their two runs of record stops only when either control exceeds 0.0005; both runs' fresh repeat is exactly
+0.** Descriptive; no figure moves. Computes every line and value it states: from this ledger, from 0049's and 0069's
+`report.json` under `results/` (each pinned by its full sha256), and from each run's driver and config read with
+`git show` at `7c9a5fd` and `f98d53b` (pinned by sha256). Checks the ledger against HEAD and runs `ledger_check` before
+and after its write. No `verdict:` line, no hypothesis row, nothing under `results/`. Ordering guard: 0047, 0049, 0061
+and 0069 present, 0073 last, 0074 absent. Next free number: **0075**.
