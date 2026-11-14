@@ -30,6 +30,9 @@ Entry 0066 (2026-10-27) withdrew that cut: the conference submission was not mad
 pages, due 2026-11-13) draws on every figure an entry on the ledger states at its own cut, 2026-11-10 16:00 UTC, by the same
 rule; a figures entry appended after that is material for the full paper at the next reviewed venue, which takes its
 own cut entry when chosen.
+Entry 0072 (2026-11-14) lists the entries appended after that cut that the camera-ready also draws figures from: this
+ledger's 0069 and 0071 and the holdover ledger's 0039, each registered before the cut. Any other figures entry appended
+after the cut stays material for the full paper.
 
 | cell | entry | summary file (local mirror, sha12 as recomputed 2026-10-11) | backup dataset |
 |---|---|---|---|

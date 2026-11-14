@@ -414,3 +414,12 @@ before and after its write. No `verdict:` line, no hypothesis row, nothing under
 0071 absent. Next free number: **0072**.
 
 *(2026-11-14: **0071 APPENDED** (`1e99784`, chain `518c6e5c…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0070, 0071. Still staged: nothing. Next free number: **0072**.)*
+
+**Staged 2026-11-14: `append_0072.py` — the camera-ready's figure set listed, past 0066's cut.** Descriptive: lists the
+entries appended after 0066's cut that the camera-ready also draws figures from, this ledger's 0069 and 0071 and the
+holdover ledger's 0039, and the one figure drawn past the entries, from 0036's run files. Computes every line and date
+it states, from this ledger, from the holdover ledger at `840098e` (read with `git show` and pinned by sha256) and from
+the commit log, and refuses unless the entries appended after the cut are exactly the listed ones and 0070. Checks the
+ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row, nothing
+under `results/`. Edits `docs/paper-to-record.md`, whose figure-set section stated 0066's cut alone. Ordering guard:
+0036, 0045, 0060, 0061, 0062, 0066, 0067 and 0069 present, 0071 last, 0072 absent. Next free number: **0073**.
