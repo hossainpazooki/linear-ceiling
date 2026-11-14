@@ -157,8 +157,9 @@ tools work; it does not prove a scientific claim. Mapped to files:
 
 Raw model outputs never enter git history. Each GPU run's tensors are backed up to a Hugging Face dataset after the
 run is verified at home; the backup is transport, not evidence, and `tools/hf_verify_backup.py <repo_id> <local_root>`
-checks every file in both directions before it counts. All eight datasets are public and need no token (the second
-family's long cell, `e9fl`, was made public on 2026-10-13).
+checks every file in both directions before it counts. The nine datasets below are public and need no token (the
+second family's long cell, `e9fl`, was made public on 2026-10-13; the repair run's after entry 0069). The backups
+that entries 0048, 0049, 0068, 0070 and 0071 describe are not public and are not listed.
 
 | dataset | what it holds | entries |
 |---|---|---|
@@ -170,6 +171,7 @@ family's long cell, `e9fl`, was made public on 2026-10-13).
 | [`emmmy/linear-ceiling-e9f-2026-09-19`](https://huggingface.co/datasets/emmmy/linear-ceiling-e9f-2026-09-19) | the second model family's short cell | 0042–0044 |
 | [`hossainpazooki/linear-ceiling-e9fl-2026-10-07`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9fl-2026-10-07) | the second model family's long cell at a native receiver | 0050–0051 |
 | [`hossainpazooki/linear-ceiling-e9t-2026-10-08`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-e9t-2026-10-08) | E-TRUNC: the 35 long handoffs at four sender-truncation levels | 0055, 0057 |
+| [`hossainpazooki/linear-ceiling-cache-behavior-repair-2026-11-11`](https://huggingface.co/datasets/hossainpazooki/linear-ceiling-cache-behavior-repair-2026-11-11) | the cache-behavior repair run on the 35 long handoffs: oracle-ranked and random recompute of 5 / 10 / 20 % of matched tokens | 0061, 0067, 0069 |
 
 Protocol R8 in `docs/gpu-experiment-protocol.md` governs the push and the restore; after a restore the gates decide,
 not the download.
