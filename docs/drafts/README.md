@@ -412,3 +412,5 @@ States the τ calibration's place in 0023's order as 0038 does. Checks the ledge
 before and after its write. No `verdict:` line, no hypothesis row, nothing under `results/`. Edits
 `docs/agent/experiment-commands.md`, whose L32-native heading still read staged. Ordering guard: 0062 present, 0070 last,
 0071 absent. Next free number: **0072**.
+
+*(2026-11-14: **0071 APPENDED** (`1e99784`, chain `518c6e5c…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0070, 0071. Still staged: nothing. Next free number: **0072**.)*
