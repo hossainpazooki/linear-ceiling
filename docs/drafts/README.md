@@ -432,3 +432,5 @@ states: from this ledger, from 0049's `report.json` and inputs manifest and 0069
 pinned by its full sha256), and from 0049's driver read with `git show` at `7c9a5fd` (pinned by sha256). Checks the
 ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row, nothing
 under `results/`. Ordering guard: 0047, 0049 and 0069 present, 0072 last, 0073 absent. Next free number: **0074**.
+
+*(2026-11-14: **0073 APPENDED** (`4bfb99e`, chain `189745d5…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0072, 0073. Still staged: nothing. Next free number: **0074**.)*
