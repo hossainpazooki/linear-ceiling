@@ -4932,3 +4932,32 @@ also draws figures from the entries listed here); the drafts README's allocator.
 Next free number after this entry: 0073.
 
 prior-entries-sha256: 3e9a96f3cbbd3004d883d6e88b1f8465637e889bdca285e4d7e2aa63b4ac78cb
+
+### 0073 — 2026-11-14 — Erratum to 0049: its two numerical controls ran on one handoff, not on all scored handoffs, and its driver, not its reader, stops on a failed archive bridge; no figure moves
+
+**The controls.** 0049 (line 3732) reads: "fresh-repeat maximum logit error 0.00e+00, prefix-copy maximum logit error
+2.90e-04 (limit 5e-4), over all scored handoffs." (line 3754). Its `report.json` (`3564605773bb…`) carries the two
+controls on one of its 35 scored handoffs, the first in its run order
+(`20241016_composio_swekit/django__django-11087_traj#152`); the other 34 carry none. The driver 0049 ran
+(`tools/cache_behavior/run.py` `15e1ff8c1dbc…` at `7c9a5fd`) puts the handoff with the most sender tokens first (lines
+153-154), as 0047 registered ("The largest sender is scored first as the retained memory probe.", lines 3246-3247),
+computes both controls on that handoff alone (lines 291-308), and stops if either exceeds the limit. The two figures are
+that handoff's, and they stand. "Over all scored handoffs" is withdrawn: the sentence reads "on the probe handoff, the
+only one that carries the two controls", as 0069 (line 4658) states the same controls for its own run (line 4687), whose
+`report.json` (`21b62a01a504…`) carries them on the same handoff alone, with the same two values.
+
+**The archive bridge.** 0049 continues: "Every per-handoff archive bridge passed, or the reader would have refused."
+(lines 3754-3755). The reader, `run.summarize` (lines 157-221), checks no bridge. The driver checks the bridge on every
+handoff (lines 314-317), before it scores that handoff's arms (line 326) and writes its record (line 346), and stops on
+a failure. The sentence reads "or the driver would have stopped before scoring that handoff", as in 0069 (lines
+4687-4688). All 35 handoffs scored, so every bridge passed.
+
+**What this does NOT touch.** No `verdict:` line; every cell as decided; every figure of 0049 and 0069; 0047's
+registered limits; both reports. Nothing runs under this entry.
+
+**Consequences in this commit set.** The drafts README's allocator. Nothing under `results/`.
+
+**Numbering.** 0073 is the number the drafts README allocates at staging; ordering guard 0072 present, 0073 absent. Next
+free number after this entry: 0074.
+
+prior-entries-sha256: 189745d5f18e5fb11f22790909ad909c9960c32479eb45698186e82ed7ab9f46
