@@ -4880,3 +4880,55 @@ the same tokens; both models native, so the cell says nothing about a sender-nat
 removal fraction (0058); generation quality after reuse not measured; descriptive.
 
 prior-entries-sha256: 518c6e5c889286695add368142479963ebce59ba6b9a987bc9947a14ba4c5265
+
+### 0072 — 2026-11-14 — The camera-ready's figure set listed: beside every figure on either ledger at 0066's cut (2026-11-10 16:00 UTC), it draws figures from the entries appended after that cut and listed here, this ledger's 0069 and 0071 and the holdover ledger's 0039, each registered before the cut and listed here with its figures in hand; for these entries 0066's clause on the figures entries of 0061 to 0064 and its "No figure is admitted by name" change, as do its sentence on the venue history in the camera-ready's appendix and, for Figure 2(a)'s curve alone, its sentence on how each figure is read, and the rest of 0066 stands; descriptive, no cell moves
+
+**What this entry is.** 0066 (line 4443) set the camera-ready's cut: the camera-ready "may draw on every figure that an
+entry on this ledger states at 2026-11-10 16:00 UTC" (lines 4450-4451). The cut applies to both ledgers by date (lines 4458-4460), and a
+figures entry appended after it is material for the full paper at the next venue (lines 4461-4462). The camera-ready also
+draws figures from the entries listed below, each appended after that time. This entry lists them, and so closes the camera-ready's
+figure set: every figure of either record that the camera-ready prints comes from an entry on either ledger at 0066's cut
+or from an entry listed here, but for one drawing: Figure 2(a) is drawn directly from the files of 0036's run (line 2178). Its 35 ticks are the per-handoff means that `results/e9l/tail.json` holds (0060 names that file with its sha, line 4047); its curve is drawn from the 35 handoffs' score files and per-token files, each pinned by the sha256 that `results/e9l/report.json` records for it, and 0045 pins that report (lines 3037-3038). No entry tabulates the curve or the 35 means. Every other figure is read as its summary file states it, with the file's sha, by the
+admitted evidence path, as 0066 states. Nothing is measured here.
+
+**The entries listed.**
+- This ledger's 0069 (line 4658): the figures of the repair arms that 0061 registered (line 4075) on 2026-10-26, run on
+  the inputs that 0067 re-prepared (line 4485) on 2026-11-10, both before the cut. Its run started and finished on
+  2026-11-11; 0069 was appended on 2026-11-13.
+- This ledger's 0071 (line 4810): the figures of the L32-native cell that 0062 registered (line 4145) on 2026-10-26,
+  before the cut. Its run started on 2026-11-11 and finished on 2026-11-12 (0071's Setup line); 0071 was appended on 2026-11-14.
+- The holdover ledger's 0039 (that ledger's line 1963): the outcome of the run that its 0035 (line 1684) registered on
+  2026-10-24, before the cut. It was appended on 2026-11-11, after the run. Its figures enter the paper through that
+  ledger's own entry, as 0065's sentence requires (lines 4458-4459); this entry only lists it past the cut.
+
+**When each was listed.** The holdover ledger's 0039 came first: it was appended on 2026-11-11 with its outcome stated.
+Later that day, while 0061's run was in progress and before its outcome was complete, it was decided, on the operator's
+delegation, to move the cut to 2026-11-12 16:00 UTC by a new entry, so that 0061's figures, and the holdover ledger's 0039, might
+enter the camera-ready. The same day, before 0062's run
+began, a place in the camera-ready was kept for 0062's figures.
+After that, with 0061's run still in progress, the operator ruled, verbatim: "cut is fluid as we write and as results come in". No such entry was appended,
+and the date 2026-11-12 16:00 UTC was not kept after the operator's sentence; 0069, appended on 2026-11-13, is after it as well. No entry
+moved the cut. Only this entry's list comes with every listed entry's figures in hand. This ledger's 0070 was also
+appended after the cut (line 4725) and is not one of the entries listed here: the camera-ready draws no figure from it
+and says only that its cell has run. Its figures, like those of any entry appended after the cut and not listed here,
+are material for the full paper at the next venue, as 0066 says.
+
+**What changes in 0066, and what stands.** Four statements of 0066 change. For the entries listed here, its clause that
+the figures entries of 0061 to 0064 "enter the camera-ready if on the ledger at the cut and the full paper otherwise" (lines 4472-4473), and its "No figure is admitted
+by name" (line 4473): 0069 and 0071, the figures entries of 0061 and 0062, were not on the ledger at the cut, and this entry lists them for the
+camera-ready. Its sentence "The camera-ready's appendix tells the venue history in the record's own words, by entry number (0060, 0065, this entry)" (lines 4467-4469): the camera-ready does not tell that history; the record does. And,
+for Figure 2(a)'s curve alone, its sentence on how each figure is read, "each figure as its summary file states it, with the file's sha, entering paper text only by the admitted evidence path" (lines 4451-4452): the curve is drawn as
+the sentence on Figure 2(a) above states.
+Everything else in 0066 stands as written. Its three statements of 2026-11-10 16:00 UTC (its heading, line
+4443; lines 4450-4451; lines 4461-4462) stand; for the camera-ready they are read with this entry's list beside them.
+
+**What this does NOT touch.** No `verdict:` line; every cell as decided; the entries listed, which this entry neither
+restates nor re-reads. No figure is admitted by value. Nothing runs under this entry.
+
+**Consequences in this commit set.** `docs/paper-to-record.md` (the figure-set sentence, lines 29-35: the camera-ready
+also draws figures from the entries listed here); the drafts README's allocator. Nothing under `results/`.
+
+**Numbering.** 0072 is the number the drafts README allocates at staging; ordering guard 0071 present, 0072 absent.
+Next free number after this entry: 0073.
+
+prior-entries-sha256: 3e9a96f3cbbd3004d883d6e88b1f8465637e889bdca285e4d7e2aa63b4ac78cb
