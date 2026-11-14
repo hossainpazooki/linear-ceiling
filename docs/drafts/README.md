@@ -423,3 +423,5 @@ the commit log, and refuses unless the entries appended after the cut are exactl
 ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row, nothing
 under `results/`. Edits `docs/paper-to-record.md`, whose figure-set section stated 0066's cut alone. Ordering guard:
 0036, 0045, 0060, 0061, 0062, 0066, 0067 and 0069 present, 0071 last, 0072 absent. Next free number: **0073**.
+
+*(2026-11-14: **0072 APPENDED** (`74718d0`, chain `3e9a96f3…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0071, 0072. Still staged: nothing. Next free number: **0073**.)*
