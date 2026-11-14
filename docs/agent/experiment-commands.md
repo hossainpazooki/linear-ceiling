@@ -166,7 +166,7 @@ $PY -m linear_ceiling.e9 --check --config config/e9t-<level>.toml        # gate 
 $PY -m linear_ceiling.summarize_e9_trunc                        # after the four runs: summarize_e9 per level (fail-closed, the gate), then the paired comparison on M_cap, the |M_cap| >= 2000 void gate, and the registered +/-0.005 reading of L32's far-from-seam median against 0038 / 0036 (READ from results/e9s/compare.json and results/e9l/summary.json) -> results/e9t/compare.{json,md}
 ```
 
-## E-TRUNC, the L32-native cell (staged 0062; descriptive)
+## E-TRUNC, the L32-native cell (registered 0062; ran: figures 0071, descriptive)
 
 Operator ruling A (2026-10-13): the L32 level with BOTH models under their native RoPE, `config/e9t-l32n.toml`
 (`config/e9t-l32.toml` minus `[e9.rope]` and `[e9.bridge]`, plus `[e9.native]`), paired token by token with the L32

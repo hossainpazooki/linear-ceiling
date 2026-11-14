@@ -403,3 +403,12 @@ task-quality heading still read unregistered. Ordering guard: 0063 present, 0069
 Next free number: **0071**.
 
 *(2026-11-13: **0070 APPENDED** (`c06d0bd`, chain `d83c3211…`; script retired in the retire commit; run with `--date 2026-11-13`). File order now ends 0069, 0070. Still staged: nothing. Next free number: **0071**.)*
+
+**Staged 2026-11-14: `append_0071.py` — the L32-native cell's figures (registered by 0062).** Reads the summarizer's files
+by digest, as `append_0068.py` did, and does not run `summarize_e9` at append. Asserts the config, source, upstream and
+reference pins 0062 states, and recounts the run facts (the times, the chain, the puller, the controls and fingerprinted
+files both homes hashed) from the sitting's logs, passed by argument and pinned by sha256, as is the backup's verify log.
+States the τ calibration's place in 0023's order as 0038 does. Checks the ledger against HEAD and runs `ledger_check`
+before and after its write. No `verdict:` line, no hypothesis row, nothing under `results/`. Edits
+`docs/agent/experiment-commands.md`, whose L32-native heading still read staged. Ordering guard: 0062 present, 0070 last,
+0071 absent. Next free number: **0072**.
