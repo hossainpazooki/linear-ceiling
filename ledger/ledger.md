@@ -4806,3 +4806,77 @@ the whole R, so a seam-local reading needs a later entry; no public benchmark (a
 standalone handoff is piloted separately and enters by its own entry, if at all).
 
 prior-entries-sha256: d83c321144974e784935de59659e0978bdf7943f958955c6798f3798ea54ea2f
+
+### 0071 — 2026-11-14 — E-TRUNC, the L32-native cell ran `[BASELINE, DESCRIPTIVE]`: 0055's L32 level with both models under their native RoPE, paired with 0057's YaRN L32 level on the same tokens; the registered reading reads "unattributed"; descriptive, no cell moves
+
+**Setup, as registered (0062).** RunPod community, 1x NVIDIA A100-SXM4-80GB, the card entry 0061's run used (as entry 0062 registers), after that run
+had been pulled home and verified; chain launched 2026-11-11T23:55:26Z, driver up 23:57:44Z, the 35th handoff and driver exit 0 by
+2026-11-12T01:15:57Z; 35 of 35 registered handoffs, no partial close, no resume. Upstream pin `063f4023fdde…`; config
+`5e01f133c3c0…`, report `f11742a01190…`; run at linear-ceiling `f98d53b`. Backup: a private Hub dataset (R8, verified both ways before this
+entry). Pinned: `results/e9t-l32n/summary.json` `e6a88722b0dc…`, `results/e9tn/compare.json` `8a7bc89ceac6…`, `compare.md` `587b14455ac7…`,
+the files of the `summarize_e9_native` run that exited 0 (item 5), which this entry reads by digest rather than running it at append.
+
+**Coverage file, two renderings of one content.** Entry 0062 pins `results/e9t-l32n/align/coverage.json` by the sha of the home file's raw
+bytes at registration, `be3e02040766…` (CRLF). The box wrote the same lines with LF endings and the mirror carries that rendering,
+`a3e17b0f6763…`; both shas are derived from the mirror's file here. The other files of the alignment passes compare as follows: the JSON
+files are equal once line endings are normalized, and the `.npz` files hold equal arrays and differ only in the zip header's
+creating-system byte.
+
+**Home side, stated before any figure.** (1) A departure from 0023's order that moves no figure, as entry 0038 records for its cell: the
+τ calibration (`summarize_e9 --calibrate-tau --config config/e9t-l32n.toml`; `results/e9t-l32n/calibration/tau.json` `cc7a69220da6…`) was written
+at home at 2026-11-12T02:28:25Z, after the GPU run (done 01:15:57Z) and before the summary, not before the run; the summarizer refuses without the file. The calibration reads only the upstream mapper
+(`2fd05c333156…` / `cd6a8d939b36…`), the archived generic dumps, the archived `r2.json` and E8's report (`5c4e70a097c2…`), no artifact of
+this run. It gave τ_K, τ_V and τ_agent_K equal to the L32 level's calibration at the same pin: 58 of the file's 59 fields are equal, and
+the other is the hash of the calibration's own `r2.json`, which differs in a timing field. The summarizer recomputed it
+(tau recomputation (entry 0059): config vs recomputed K 3.7e-10, V 3.7e-09, agent_K 0.0e+00 (tolerance 1e-07, |a-b|/max(1,|a|,|b|); measured on arm64 Darwin, numpy 2.5.3); the readings use the config's registered tau). (2) The calibration reads the upstream mapper record
+`results/mapper/qwen3-0.6b-to-1.7b/r2.json` in the CRLF rendering of the arm64 home's clone, `18d2276f28e9…`, the sha 0023 registers and
+0059 names beside the bytes committed at the pin, `99177e9c8950…`. The two differ by line endings only. (3) In each of the three kept
+directories, `S.npy` and `R.npy` carry no fingerprint in `report.json` (6 files); every other kept file does. (4) The mirror was pulled
+to a Windows home during the run. After a failed first copy, the small files were re-copied and hashed against the box's own listing
+(145 at the repair; at the close 216 small files and 8 box files equal, none differing), and the 340 score, token and
+kept-dump files `report.json` fingerprints all match it, as do its 8 control files. The mirror was then copied to the
+arm64 home that ran the summary; all 500 files hashed equal on both. (5) The summary
+ran on the arm64 home from an export of the tree at `f98d53b` with the mirror and the traces linked in; its second attempt exited 0, the
+first having stopped on a missing link before any scoring. (6) `summarize_e9_native` re-ran `summarize_e9` on the L32 level, as
+registered: that level's `summary.json` came out byte for byte the one its runbook records (`eb12ae5b86ce…`,
+`docs/runbooks/2026-10-04-e-trunc-gpu-runbook.md`), which is 0062's "every existing cell's summary is unchanged" checked on the one cell
+the pairing reads. Its recheck scratch was rewritten; the files that changed differ in a wall-time field or a hash over one.
+
+**Controls.** Pipeline identity on the largest handoff, from `report.json`: 32,768 pairs, maximum squared deviation 0.0. As the reader
+printed them (`summarize_e9` on the native cell, the gate): per-dump RoPE record (106 dumps, spec-vs-model check max |diff| 6.0e-08 within 1e-05): longest dumped length 32769 (a truncated native cell; the cap 81920 is for inclusion and sits above the native window by registration) inside every dump's recorded window (source 40960, target 40960); frequencies identical across every dump of each role (source inv_freq f601af216424, target inv_freq f601af216424); NATIVE receiver -- no [e9.rope] and no bridge, so this IS the control. keep-subset re-score (entry 0028): 3 kept handoffs; per-head sums within 4.1e-06 relative (tolerance 1e-05); every square within 4.5e-03 relative (tolerance 1e-02); bit-identical fraction >= 0.039; effect on the statistic: max |delta_token diff| 6.5e-06, max |f*(tau) diff| 0.0e+00.
+prefix-invariance control (entry 0025): max centered delta 0.000e+00 over 32768 positions, tolerance 1.0e-04. The cell's own f*(τ_K), the oracle removal fraction (0058), on the same-model keys over its 35 scored
+handoffs: 0.0000 (p10 0.0000, p90 0.0000); the reader prints the 0023 band word for it, HOLDS, which this entry does not read as a verdict: the
+cell has no hypothesis row.
+
+**Coverage and the void gate.** 35 handoffs scored at the native cell and at every E-TRUNC level. Under the registered floor of
+2,000 common matched tokens, 14 are void, the same 14 that 0057 names, and 21 are compared on 154,620 common
+tokens: 0057's used set and token count, as 0062 registered. Stated limitation (0055): the
+comparison speaks for the handoffs whose receiver re-renders enough of the late sender context to survive head truncation, not for the
+long cohort as a whole.
+
+**Figures on M_cap (`summarize_e9_native`: `summarize_e9` passed on the native cell and on the L32 level first; medians over the
+21 compared handoffs, `e7_stats` convention; δ in R²'s units, 0023; the config's registered τ_K = 0.3186442653116294; f* is the oracle removal fraction, 0058).**
+
+- **NATIVE (S[−32,768:], both models under native RoPE)**: median over handoffs of mean δ_K 0.1105, of the fraction over τ_K 0.0726; f*(0.3186) 0.0000, f*(0.1) 0.0174, f*(0.03) 0.6017; far-from-seam (16+) pooled median 0.0556, mean 0.1038 over 150,517 tokens.
+- **L32768 (S[−32,768:], the YaRN receiver of 0057, recomputed on the same tokens)**: median over handoffs of mean δ_K 0.1390, of the fraction over τ_K 0.0868; f*(0.3186) 0.0000, f*(0.1) 0.0971, f*(0.03) 0.9893; far-from-seam (16+) pooled median 0.0868, mean 0.1341 over 150,517 tokens.
+- **Paired, native − YaRN, mean δ_K over M_cap per handoff**: median -0.0292 (p10 -0.0454, p90 -0.0135; bootstrap 95 % of the median [-0.0367, -0.0259], seed 62, 2,000 reps); negative on 21 of 21 handoffs, the one nearest zero -0.0040.
+
+**The registered reading (ruling A, 0062).** The far-from-seam (16+) pooled median δ_K of the native level on M_cap is **0.0556**,
+against the native-short level 0.0195 (0038, read from `results/e9s/compare.json` `a0699a826f1f…`, 25 handoffs)
+and the YaRN L32 level 0.0868 on the same tokens (0057, `results/e9t/compare.json` `0572662307f3…`; the reader recomputed it and it
+equals the record's), margin ±0.005: **the L32 excess reads as "unattributed"**. The label alone does not say where the value
+sits: it is 0.0361 above the native-short level and 0.0312 below the YaRN level, with 0.0673 between the two. The label is the
+registered reading; this entry reads no share of the gap from it. Entry 0057's reading printed the same word on the same 21 compared
+and 14 void handoffs, the set being the same by registration; it read the YaRN L32 level against the scaled-short and long levels, which
+is another reading.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule, the bands; entries 0036, 0038, 0055, 0057 and their records;
+`config/e9t-{full,l65,l49,l32}.toml`; `results/e9t/` and `results/e9t-{full,l65,l49,l32}/` as they stand, item 6 aside; the E9
+driver; `summarize_e9_trunc`.
+
+**Scope.** One receiver, one pair, one corpus, the 35 long handoffs at one truncation level, compared on the 21 above the floor; M_cap
+sits at late sender positions; the native-short reference is a different cohort (0038's 25 handoffs, pooled over their full matched sets) while the YaRN-L32 reference is
+the same tokens; both models native, so the cell says nothing about a sender-native / receiver-scaled pairing; f* is read as the oracle
+removal fraction (0058); generation quality after reuse not measured; descriptive.
+
+prior-entries-sha256: 518c6e5c889286695add368142479963ebce59ba6b9a987bc9947a14ba4c5265
