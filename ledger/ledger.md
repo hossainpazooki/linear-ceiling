@@ -4961,3 +4961,51 @@ registered limits; both reports. Nothing runs under this entry.
 free number after this entry: 0074.
 
 prior-entries-sha256: 189745d5f18e5fb11f22790909ad909c9960c32479eb45698186e82ed7ab9f46
+
+### 0074 — 2026-11-14 — Note to 0047 and 0061: both register the fresh repeat as exact, while the driver of each of their two runs of record stops on the controls' size only when either exceeds 0.0005; in both runs the fresh repeat is exactly 0 on the probe handoff, so the registered rule was met and nothing moves
+
+**The registrations.** 0047 (line 3212) reads: "Fresh repeat: a second FRESH pass must reproduce the first's logits
+exactly. Prefix copy over 128 tokens: maximum logit error ≤ 0.0005." (lines 3243-3244). 0061 (line 4075) keeps the
+controls: "As 0047, unchanged: fresh repeat exact, prefix copy over 128 tokens ≤ 0.0005, …" (lines 4108-4109).
+
+**The drivers.** The run of 0047, entered as 0049 (line 3732), ran `tools/cache_behavior/run.py` (`15e1ff8c1dbc…`) at
+`7c9a5fd`, with `config/cache-behavior.toml` (`53c664556d18…`) setting `control_max_logit_error = 0.0005` (line 13).
+Inside `if index == 0:` (line 291), that is on the first handoff of the run order alone, it records the fresh repeat's
+maximum logit error (line 295) and the prefix copy's (line 305), and stops if the larger of the two exceeds the limit
+(lines 307-308). The run of 0061, entered as 0069 (line 4658), ran `tools/cache_behavior/run.py` (`e137f1d8b8c5…`) at
+`f98d53b`, with `config/cache-behavior-repair.toml` (`97aa99b1958e…`) setting `control_max_logit_error = 0.0005` (line
+20); the same check is at lines 296, 300, 310 and 312-313. Neither driver, nor any other file under `tools/` or `src/`
+at either commit, checks the fresh repeat on its own: each would have accepted a fresh-repeat error up to 0.0005, where
+0047 and 0061 allow none.
+
+**The two runs of record.** This entry covers the two runs under `results/` registered with an exact fresh repeat, and
+no other output. Each is two launches into one output tree. The `--probe` launch scores the first handoff of the run
+order alone (line 273 at `7c9a5fd`, line 278 at `f98d53b`), and so computes and checks both controls. The
+`--run --resume` launch then continues that tree: an existing output needs `--resume` (lines 258-259; 263-264), and a
+handoff already scored is skipped (lines 275-276; 280-281), so the control block does not run again. For 0049 the
+runbook `docs/runbooks/2026-10-06-cache-behavior-runpod-runbook.md` records the two launches (lines 182 and 190); for
+0069, its setup sentence (lines 4660-4661), which with 0069's "the first handoff in run order (the probe)" (line 4674)
+and "on the probe handoff, the only one that carries the two controls" (line 4687) places the controls in the probe
+launch. 0049's `results/cache-behavior/report.json` (`3564605773bb…`) and 0069's
+`results/cache-behavior-repair/report.json` (`21b62a01a504…`) each carry the controls on the same handoff,
+`20241016_composio_swekit/django__django-11087_traj#152`, and in each the fresh repeat's maximum logit error is recorded
+as 0.0, exactly 0. The prefix copy's is 2.90e-04 in both, within 0.0005.
+
+**Consequence.** Both runs met the rule as registered, on the probe handoff, the only one that carries the controls
+(0073). 0069's append script (`docs/drafts/append_0069.py` at `40fbdd9`, line 341) already required the recorded fresh
+repeat to equal 0.0 before 0069 was written. Every figure of 0049 and 0069 stands. A reader checks the fresh repeat by
+its recorded value against "exactly", not by the driver having run to the end.
+
+**Before any further run of record.** No driver changes under this entry. A further run of record under 0047's controls
+needs a driver that stops on any nonzero fresh-repeat error, apart from the prefix copy's 0.0005; that run is registered
+in its own entry before it runs.
+
+**What this does NOT touch.** No `verdict:` line; every cell as decided; every figure of 0049 and 0069; the drivers and
+configs; both reports. Nothing runs under this entry.
+
+**Consequences in this commit set.** The drafts README's allocator. Nothing under `results/`.
+
+**Numbering.** 0074 is the number the drafts README allocates at staging; ordering guard 0073 present, 0074 absent. Next
+free number after this entry: 0075.
+
+prior-entries-sha256: ad1384899a7d4cf571c03c235472508b5a1e8abe72e7532be61138d94006b936
