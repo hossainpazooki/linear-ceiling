@@ -442,3 +442,5 @@ of each of their two runs of record stops only when either control exceeds 0.000
 `git show` at `7c9a5fd` and `f98d53b` (pinned by sha256). Checks the ledger against HEAD and runs `ledger_check` before
 and after its write. No `verdict:` line, no hypothesis row, nothing under `results/`. Ordering guard: 0047, 0049, 0061
 and 0069 present, 0073 last, 0074 absent. Next free number: **0075**.
+
+*(2026-11-14: **0074 APPENDED** (`2e2555f`, chain `ad138489…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0073, 0074. Still staged: nothing. Next free number: **0075**.)*
