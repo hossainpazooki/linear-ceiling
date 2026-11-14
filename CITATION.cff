@@ -10,8 +10,8 @@ authors:
     email: hossain@pazooki.com
 preferred-citation:
   type: conference-paper
-  title: "KV Cache Drift Across Handoffs in Long-Horizon Agents"
-  # Author order and affiliations as printed on page 1 of the submitted camera-ready (sha256 6c706bef...).
+  title: "Carryover Effects in KV Caches Reused in Agentic Workflows and RL Training"
+  # Author order and affiliations as printed on page 1 of the paper.
   authors:
     - family-names: Pazooki
       given-names: Hossain
@@ -39,4 +39,4 @@ preferred-citation:
       affiliation: University of Utah
   collection-title: "NeurIPS 2026 Workshop on Long Context Foundation Models (non-archival)"
   year: 2026
-  url: "https://openreview.net/forum?id=kEGVswNFaq"
+  url: "https://carryover.pub"

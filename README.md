@@ -2,13 +2,15 @@
 
 <p align="center">
   <a href="https://openreview.net/forum?id=kEGVswNFaq"><img src="https://img.shields.io/badge/OpenReview-kEGVswNFaq-8c1b13.svg" alt="paper"></a>
+  <a href="https://carryover.pub"><img src="https://img.shields.io/badge/site-carryover.pub-8c1b13.svg" alt="site"></a>
   <a href="https://github.com/hossainpazooki/linear-ceiling/actions/workflows/ci.yml"><img src="https://github.com/hossainpazooki/linear-ceiling/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="license"></a>
   <a href="proofs/README.md"><img src="https://img.shields.io/badge/Lean_4-proofs%2F-informational.svg" alt="proofs"></a>
 </p>
 
-The pre-registered experiment record behind *KV Cache Drift Across Handoffs in Long-Horizon Agents* (NeurIPS 2026
-Workshop on Long Context Foundation Models) and the full paper that extends it to the weights axis. When a language model reads a prompt it
+The pre-registered experiment record for the text axis of *Carryover Effects in KV Caches Reused in Agentic Workflows
+and RL Training* (NeurIPS 2026 Workshop on Long Context Foundation Models; submitted as *KV Cache Drift Across Handoffs
+in Long-Horizon Agents*). The paper's weights axis is recorded in [`lag-ladder`](https://github.com/hossainpazooki/lag-ladder). When a language model reads a prompt it
 builds a **KV cache**, an internal record that saves it from processing the same text again. An agent handoff
 re-renders that prompt: same content at new positions, new tokens at the seam, sometimes a different model. This
 repository measures how far the cache drifts at real handoffs, with every number recomputed from raw output and every
@@ -203,13 +205,13 @@ and has not run in CI. It lists the declarations that state the paper's two theo
 ## Citation
 
 ```bibtex
-@inproceedings{pazooki2026kvdrift,
-  title     = {{KV} Cache Drift Across Handoffs in Long-Horizon Agents},
+@inproceedings{pazooki2026carryover,
+  title     = {Carryover Effects in {KV} Caches Reused in Agentic Workflows and {RL} Training},
   author    = {Pazooki, Hossain and Nadathur, Vikram and Yan, Lingyuan and Alake, Samuel and Asad, Muhammad Zain and Yu, Emerson and Aggarwal, Ritvik and Ishmam, Md Farhan},
   booktitle = {NeurIPS 2026 Workshop on Long Context Foundation Models},
   year      = {2026},
   note      = {Non-archival},
-  url       = {https://openreview.net/forum?id=kEGVswNFaq}
+  url       = {https://carryover.pub}
 }
 ```
 
