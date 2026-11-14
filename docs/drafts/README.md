@@ -425,3 +425,10 @@ under `results/`. Edits `docs/paper-to-record.md`, whose figure-set section stat
 0036, 0045, 0060, 0061, 0062, 0066, 0067 and 0069 present, 0071 last, 0072 absent. Next free number: **0073**.
 
 *(2026-11-14: **0072 APPENDED** (`74718d0`, chain `3e9a96f3…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0071, 0072. Still staged: nothing. Next free number: **0073**.)*
+
+**Staged 2026-11-14: `append_0073.py` — erratum to 0049: its two numerical controls ran on one handoff, and its driver,
+not its reader, stops on a failed archive bridge.** Descriptive; no figure moves. Computes every line and value it
+states: from this ledger, from 0049's `report.json` and inputs manifest and 0069's `report.json` under `results/` (each
+pinned by its full sha256), and from 0049's driver read with `git show` at `7c9a5fd` (pinned by sha256). Checks the
+ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row, nothing
+under `results/`. Ordering guard: 0047, 0049 and 0069 present, 0072 last, 0073 absent. Next free number: **0074**.
