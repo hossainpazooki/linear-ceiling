@@ -5,9 +5,20 @@ Across Handoffs in Long-Horizon Agents* and, before it, *Carryover*, hence the n
 covers the registered statistic of ledger entry 0023 (the paper's Equations `eq:delta` and
 `eq:fstar`), Theorem `thm:identity`, Theorem `thm:sandwich`, Corollary `cor:seam`, Assumption
 `ass:rope`, Proposition `prop:attn` with its value remark, and the numbers of the version titled
-*KV Cache Drift Across Handoffs in Long-Horizon Agents* that the theorems explain. Labels such as
-`thm:identity` refer to the paper's LaTeX source, which lives in the authors' Overleaf project
-rather than in this repository.
+*KV Cache Drift Across Handoffs in Long-Horizon Agents* that the theorems explain. Theorem 1
+(`thm:identity`), Theorem 2 (`thm:sandwich`), Corollary 3 (`cor:seam`) and Proposition 4 (`prop:attn`)
+are the four statements that the paper that is public now numbers on one counter, 1 to 4; its
+assumption and its two remarks are numbered separately.
+
+It also covers statements that are not in the paper that is public now. They belong to the next public
+form of the paper: the statements on the reader's next-token distribution under a fresh and a reused
+cache, Theorem `thm:kl`, Theorem `thm:text` with the remark that follows it, Proposition `prop:greedy`
+and Proposition `prop:flip`, except the parts named below as not formalized. Continuing the public
+paper's numbering, they would be Theorem 5, Theorem 6, Proposition 7 and Proposition 8 in that form;
+where this README writes those numbers, it means the numbers in that form.
+
+Labels such as `thm:identity` refer to the paper's LaTeX source, which lives in the authors' Overleaf
+project rather than in this repository.
 
 `fstar` is the exact-criterion version of `f_star` in `src/linear_ceiling/e9_pertoken.py`: both
 sort the deviations in descending order and take the least `k < n` whose remaining-token mean is
@@ -15,34 +26,61 @@ at most `τ`, else `1`. The implementation judges "at most `τ`" to a relative t
 (plus `1e-15`) for float32 records; the theorems use the exact criterion.
 
 Every file compiles against Mathlib, and no file contains `sorry` or `admit` or declares an axiom. The
-52 headline results depend only on Lean's three standard axioms, `propext`, `Classical.choice` and
-`Quot.sound` (`Audit.lean` prints them).
+114 headline results depend on no axiom other than Lean's three standard ones, `propext`,
+`Classical.choice` and `Quot.sound` (`Audit.lean` prints them).
 
-**Status, honestly stated.** On 2026-11-13 (UTC), on one macOS 27 machine (arm64), with Lean `v4.34.0` and
-Mathlib `v4.34.0` at the pins below, `lake build` of this package exited 0 and printed `Build completed
-successfully`, and `lake env lean Audit.lean` printed the 52 headline results, each depending only on
-`propext`, `Classical.choice` and `Quot.sound`. This was done twice that day, each time rebuilding the
-package's six modules, and the two audit outputs are byte-identical. Both runs built the files of commit
-`22b8664`; the commit that gives this README its present text changes no other file in `proofs/`. The other
-59 of the 111 theorems and lemmas in `Carryover/` were type-checked by that build and are not printed by the
-audit. The build has not been run in CI, on Linux or on Windows.
+**Status, honestly stated.** On 2026-11-17 (UTC), on one macOS 27 machine (arm64), with Lean `v4.34.0` and
+Mathlib `v4.34.0` at the pins below, `lake build` of this package compiled its eleven modules, exited 0 and
+printed `Build completed successfully`, and `lake env lean Audit.lean` printed the 114 headline results: 110
+depend on `propext`, `Classical.choice` and `Quot.sound`, and four (`gen_length`, `genStop_eq_gen_of_live`,
+`genStop_length_of_live`, `genStop_prefix`) on `propext` alone. The fifteen files that build read
+(`lean-toolchain`, `lakefile.toml`, `lake-manifest.json`, `Audit.lean`, `Carryover.lean` and the ten files of
+`Carryover/`) are, byte for byte, those of the git tree `3c0798c6f1740482c3ed7eb751facd4f9e65553e`. That tree
+is this directory in the commit that adds the five `Pred` files (`git rev-parse <commit>:proofs` prints it);
+the commit that gives this README its present text changes no other file in `proofs/`. The other 78 of the
+192 theorems and lemmas in `Carryover/` were type-checked by that build and are not printed by the audit. The
+build has not been run in CI, on Linux or on Windows.
 
 ## The paper's results and their declarations
 
-These declarations state the paper's two theorems, its corollary and its proposition; each is among
-the 52 that `Audit.lean` prints.
+The paper that is public now has two theorems, a corollary and a proposition, numbered 1 to 4. The first
+table gives the declarations that state them. The second table gives the declarations for the two
+theorems, the remark and the two propositions that belong to the next public form of the paper and are
+not in the public one; the two theorems and the two propositions are numbered 5 to 8 in that form. Each
+declaration the two tables name as stating a result is among the 114 that `Audit.lean` prints;
+`padTree`, which stands in a hypothesis, is a definition and is not printed.
 
-| Paper | Lean declarations |
+| The paper that is public now | Lean declarations |
 |---|---|
 | Theorem 1 (`thm:identity`) | `thm_identity` (the whole statement); its parts `mean_devLH`, `mu_dev`, `theorem1` and `theorem1_verdict` in `Identity.lean`, and `fstar_eq_zero_iff` in `Fstar.lean` |
 | Theorem 2 (`thm:sandwich`) | `fstar_antitone` (nonincreasing in `τ`) and `theorem2_sandwich` (the displayed bounds), in `Fstar.lean` |
 | Corollary 3 (`cor:seam`) | `cor_seam` and `cor_seam_positions` (the upper bound and `f*(τ) = 0`), `cor_seam_converse`, `cor_seam_large_n`, in `Seams.lean` |
 | Proposition 4 (`prop:attn`) | `abs_deltaZ_le` (logits), `prop_attn_weights_iSup` (weights), `prop_attn_diffuse` and `prop_attn_diffuse_causal` (diffuse), `prop_attn_tail_ret` (general), `prop_attn_concentrated_ret` (concentrated), in `Attention.lean` |
 
-That each declaration states the paper's result was checked by reading the two side by side.
-Several Lean statements are more general than the paper's (see *Modeling choices*). The sentence of
-Assumption `ass:rope` on the YaRN temperature is not formalized: the temperature is absorbed into
-`‖q_i‖`.
+| The next public form of the paper (not in the public one) | Lean declarations |
+|---|---|
+| Theorem 5 (`thm:kl`) | `kl_softmax` (part a, the per-token KL as a cumulant gap); `kl_softmax_le_osc`, `kl_softmax_le_osc_sq` and `kl_softmax_le_of_abs` (part b, upper bounds by the oscillation of the logit shift); `hell_le_kl`, `l1_sq_le_four_hell` and `l1_sq_le_four_kl` (part c, lower bounds); `control_floor`, `holds_threshold_needs_osc` and `degrades_threshold_needs_osc` (the three numbers), in `PredKL.lean` |
+| Theorem 6 (`thm:text`) | `meanKL_expect` (part a, the mean per-token KL of a text, with `kl_seqProb_expect`, `kl_seqProb` and `seqProb_marginal`); `kl_prod`, `kl_prod_eq_single`, `kl_prod_pos_of_ne`, `kl_branch_zero` and `kl_pos_of_ne` (part b, the example), in `PredKL.lean`; for part c, texts that end early, `kl_seqProb_stop` (the identity, under the hypothesis that after a text has ended both readers continue with one common law, the tree `R` of `padTree ended P R` and `padTree ended Q R`) and `meanKL_stop_bounds` (the two bounds, under that hypothesis and two more: the empty text has not ended, `ended [] = false`, and the limit is at least one token, `0 < T`), with `liveCount_pos`, `liveCount_le` and `liveCount_of_live`, in `PredStop.lean` |
+| Remark after Theorem 6 (what a low mean can still hold) | `card_ge_mul_le` and `holds_at_most_two`, in `PredKL.lean` |
+| Proposition 7 (`prop:greedy`) | `softmax_lt_iff`, `softmax_le_iff`, `argmax_stable` and `argmax_stable_of_abs` (part a), `near_tie_flip` (part c), in `PredFlip.lean`; `flip_needs_osc` (part a in contrapositive form) and `flip_forces_kl` (part b), in `PredMain.lean`; the latter is proved from `flip_forces_hell`, in `PredFlip.lean`, and `hell_le_kl`, in `PredKL.lean` |
+| Proposition 8 (`prop:flip`) | `genStop_eq_iff` (part a) and `answer_flip_stop` (part b, as far as the last table of this README says: it states neither that the two runs differ nor that its position is the first at which they differ, and both follow from what it states), in `PredStop.lean`; `flips_le_divergences` (part c), in `PredFlip.lean` |
+
+For Theorem 1 to Proposition 4, that each declaration states the paper's result was checked by reading
+the two side by side. Several Lean statements are more general than the paper's (see *Modeling choices*).
+The sentence of Assumption `ass:rope` on the YaRN temperature is not formalized: the temperature is
+absorbed into `‖q_i‖`.
+
+Of the statements that belong to the next public form of the paper (Theorem 5 to Proposition 8, not in
+the public one), these parts are not formalized. In part b of Theorem 6: the formula for a general
+source, the statement that the excess can be any factor, and the sentence that every text beginning
+with the example's token has the stated mean. Before Theorem 5: the sentence that a shift equal on
+every token leaves the distribution unchanged, which no single declaration states. And the sentences
+between the statements: the paragraph after Theorem 5, the paragraph after Theorem 6 (it says, among
+other things, that a reading on texts from one source gives no bound on a reading on texts from
+another), the part of the remark on a median, the example after Proposition 7, the paragraph after
+Proposition 8, and the sentence after its proof on the runs the paper reports. This list was made by
+reading the present text of those statements against the declarations; the proofs written in the paper
+were not compared with the Lean proofs.
 
 ## Building
 
@@ -61,8 +99,10 @@ lake env lean Audit.lean    # prints the axioms of every headline result
 without `lake`. It needs the Mathlib build in `.lake/packages`, from `lake exe cache get` or from
 another project with the same `lake-manifest.json`. It was written for the earlier pins, the release
 candidate `v4.34.0-rc2`, whose `lake` exits with `SIGTRAP` (exit code 133) on macOS 27, even for
-`lake --version` (lean4 issue 15087, closed as fixed in `v4.34.0`). It has not been run at the
-current pins. `.lake/` is git-ignored.
+`lake --version` (lean4 issue 15087, closed as fixed in `v4.34.0`). At the current pins it was run on
+2026-11-17 (UTC) on macOS 27 (arm64), with `LEAN` set to the `lean` of the `v4.34.0` toolchain: it
+compiled the ten modules and `Carryover.lean`, printed the audit's 114 results and exited 0.
+`.lake/` is git-ignored.
 
 ## Files
 
@@ -73,6 +113,11 @@ current pins. `.lake/` is git-ignored.
 | `Carryover/Seams.lean` | Corollary 3 (both directions), with the near-seam set built from `m` windows of at most `w` matched tokens, or from receiver positions |
 | `Carryover/Attention.lean` | Assumption `ass:rope`, the causally masked softmax, its Jacobian / mean-value bound, Proposition 4 (logits, weights, diffuse, general, concentrated), the value remark |
 | `Carryover/Numbers.lean` | The numbers of the *KV Cache Drift* version that Theorems 1 and 2 explain (that version's Tables 1, 2 and 6, the configuration bridge, the matched configuration comparison) |
+| `Carryover/Pred.lean` | Definitions the four files below share, in the namespace `Carryover.Pred`: a next-token distribution on a finite vocabulary (`IsDist`), `kl`, `hell`, the softmax over the whole vocabulary (`Carryover.softmax` is the masked one of `Attention.lean`), the bound `OscLe` on the oscillation of a logit shift, greedy generation `gen` |
+| `Carryover/PredKL.lean` | Next public form of the paper: Theorem 5 (the per-token KL between the fresh and the reused next-token distribution: the cumulant gap, the upper and the lower bounds, the three numbers); Theorem 6's chain rule over a generated text, its mean per-token KL and its example; the remark after Theorem 6 |
+| `Carryover/PredFlip.lean` | Next public form of the paper: Proposition 7 parts a and c (the greedy token and the logit margin, the near-tie example); the first position at which two greedy runs differ; Proposition 8 part c. Apart from the paper, in the same file: one numeric value of the Hoeffding tail expression (the inequality itself is not proved) |
+| `Carryover/PredMain.lean` | Next public form of the paper: Proposition 7 part b (a change of greedy token bounds the KL from below) and part a in contrapositive form (a changed greedy token forces the fresh logit margin to be at most any bound on the shift's oscillation); two greedy runs are equal exactly when the two rules agree along the fresh run; an answer flip forces the KL lower bound at one position |
+| `Carryover/PredStop.lean` | Next public form of the paper: the same facts for runs and texts that end before their token limit, Proposition 8 parts a and b and the part of Theorem 6 on texts that end early |
 | `Audit.lean` | `#print axioms` for every headline result |
 | `check.sh` | Builds and audits with `lean` directly, without `lake` |
 
@@ -125,6 +170,33 @@ Keys of one attention query are indexed by the `N = |R|` receiver positions.
 
 The last six rows are the number checks of `Carryover/Numbers.lean`. They are those of the *KV Cache Drift*
 version, and the tables they name are that version's.
+
+### The next-token statements (`Carryover.Pred`)
+
+At one position the vocabulary is a finite type `ι`. The reader's next-token distribution is `p = softmax z`
+under its fresh cache and `q = softmax (z + e)` under the reused cache, with `e` the shift of the logits.
+A text of `T` tokens is drawn from a tree of conditionals, one next-token distribution for each prefix.
+
+Every statement in this table belongs to the next public form of the paper; the paper that is public now
+holds none of them. Thm 5, Thm 6, Prop 7 and Prop 8 are their numbers in that form.
+
+| The next public form of the paper (not in the public one) | Lean |
+|---|---|
+| A next-token distribution; `KL(p ‖ q)`; `∑_i (√p_i − √q_i)²`; the softmax of a logit vector; a shift whose oscillation `e_i − e_j` is at most `w` | `IsDist`, `kl`, `hell`, `softmax`, `OscLe` |
+| Thm 5 (a): `KL(p ‖ q) = log ∑_i p_i exp(e_i) − ∑_i p_i e_i` | `kl_softmax` (from `softmax_shift`) |
+| Thm 5 (b): `KL(p ‖ q) ≤ w`, `≤ w²/8`, and `≤ ε²/2` when every `|e_i| ≤ ε` | `kl_softmax_le_osc`, `kl_softmax_le_osc_sq` (from `log_sum_exp_sub_le`), `kl_softmax_le_of_abs` |
+| Thm 5 (c): `∑_i (√p_i − √q_i)² ≤ KL(p ‖ q)`, `(∑_i |p_i − q_i|)² ≤ 4 ∑_i (√p_i − √q_i)²`, `(∑_i |p_i − q_i|)² ≤ 4 KL(p ‖ q)` | `hell_le_kl`, `l1_sq_le_four_hell`, `l1_sq_le_four_kl`; also `kl_nonneg`, `kl_pos_of_ne`, `kl_self` |
+| Thm 5, the numbers: `|e_i| ≤ 5e-4` gives a KL of at most `1.25e-7`; a KL above `1e-3` needs an oscillation above `0.089`; a KL of at least `1e-1` needs one above `0.894` | `control_floor`, `holds_threshold_needs_osc`, `degrades_threshold_needs_osc` |
+| Thm 6 (a): the KL between the two distributions over texts of `T` tokens is the expectation, over a text drawn from the fresh reader, of the sum over positions of the per-token KL read on that text; the expectation of the mean per-token KL is that KL divided by `T` | `seqProb`, `kl_seqProb`, `seqProb_marginal`, `kl_seqProb_expect`, `meanKL_expect` |
+| Thm 6 (b), the example on two tokens: the chain rule; equal first-token distributions and continuations that differ after one token `a` only give the probability of `a` times the KL after `a`, which is positive, while a text that starts with another token reads zero at both positions | `kl_prod`, `kl_prod_eq_single`, `kl_prod_pos_of_ne`, `kl_branch_zero`, `kl_pos_of_ne` |
+| Thm 6 (c), texts that end early. Hypothesis of `kl_seqProb_stop` and of `meanKL_stop_bounds`: after a text has ended, the fresh and the reused reader continue with one common law (the tree `R` of `padTree ended P R` and `padTree ended Q R`). Under it, the same identity with the sum taken over the positions before the text's end. Under it and two more, that the empty text has not ended (`ended [] = false`) and that the limit is at least one token (`0 < T`): the expectation of the mean over the text's own length lies between the KL divided by `T` and the KL | `padTree`, `liveCount`, `liveSum`, `kl_seqProb_stop`, `meanKL_stop_bounds`; `liveCount_pos`, `liveCount_le`, `liveCount_of_live` |
+| Remark after Thm 6: on 256 tokens, a mean per-token KL of at most `1e-3` leaves at most two positions that read `1e-1` or more | `card_ge_mul_le` (Markov), `holds_at_most_two` |
+| Prop 7 (a): the greedy token is the argmax of the logits, and a shift whose oscillation is under the fresh logit margin leaves it unchanged; in contrapositive form, if a token leads every other by a margin in the fresh logits and another token is at least as large in the reused logits, that margin is at most any bound on the shift's oscillation | `softmax_lt_iff`, `softmax_le_iff`, `argmax_stable`, `argmax_stable_of_abs`; the contrapositive form is `flip_needs_osc`, in `PredMain.lean` |
+| Prop 7 (b): a change of greedy token from `a` to `b` forces `KL(p ‖ q) ≥ (√p_a − √p_b)²/2` | `flip_forces_kl`, in `PredMain.lean` (from `flip_forces_hell`, in `PredFlip.lean`, and `hell_le_kl`, in `PredKL.lean`) |
+| Prop 7 (c): for every `η > 0` there are two distributions with `KL(p ‖ q) ≤ η` and different greedy tokens | `near_tie_flip` |
+| Prop 8 (a): two greedy runs under one stopping rule are equal exactly when the reused rule chooses the fresh rule's token at every prefix of the fresh run that has not ended | `genStop`, `genStop_eq_iff`; for runs of a fixed length `gen`, `gen_eq_iff` |
+| Prop 8 (b), as far as the declaration states it: if the answers read off the two runs differ, there is a number of steps `t < T` after which the two runs hold one common text, which has not ended and has `t` tokens; that text followed by the fresh greedy token is a prefix of the fresh run, and followed by the reused greedy token a prefix of the reused run; the two tokens differ; the KL lower bound of Prop 7 (b) holds at that text; and any bound on the oscillation of the shift there is at least any margin by which the fresh token leads in the fresh logits. The declaration states neither that the two runs differ nor that this position is the first at which they differ; both follow from what it states | `answer_flip_stop` (from `answer_flip_first_divergence_stop`, `flip_forces_kl`, `flip_needs_osc`) |
+| Prop 8 (c): over a set of problems, the answer flips are at most as many as the problems whose two runs differ | `flips_le_divergences` |
 
 ## Empirical scope
 
