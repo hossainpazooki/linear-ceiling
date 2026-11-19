@@ -454,3 +454,5 @@ input split, the main loop's caching and the reuse gap described beside it. Regi
 cited sentence by search. Refuses unless the three files are committed as-is, the config's gate names the number, the
 serving model is the pinned one, the run's limits are set and nothing exists under `results/fab-reuse/`. Checks the
 ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row. Ordering guard: 0074 last, 0075 absent. Next free number: **0076**.
+
+*(2026-11-19: **0075 APPENDED** (`7e772ef`, chain `cf0d8e47…`; script retired in the retire commit; run with `--date 2026-11-19`). File order now ends 0074, 0075. Still staged: nothing. Next free number: **0076**.)*
