@@ -1,0 +1,45 @@
+# FAB reuse opportunity (ledger entry 0075).
+# Document tokens a retrieve_information sub-call of a Finance Agent Benchmark v2 trajectory carries that an earlier
+# sub-call of the same trajectory already carried, at the same or a different token offset: an UPPER BOUND on the
+# document KV a cache keyed on the retrieved document could reuse (a cache keyed on content could reuse more), the
+# harness having sent the sub-calls with prompt caching off. No carryover, key or KL statistic.
+# `python -m linear_ceiling.fab_reuse` refuses until this file and the ledger are committed unmodified, the committed
+# ledger holds every entry in [fab_reuse.gate], and the serving model and the run's limits below are set.
+# Beside it, descriptive and under their own labels: the helper sub-calls' share of the input tokens and the main
+# loop's realized caching (the provider's counts, from the usage records), and the reuse gap in time.
+
+[fab_reuse]
+results_dir = "results/fab-reuse"
+cohort = 27                          # the public questions; one trajectory each, one run
+task_id_format = "row{row:02d}"      # the single-task id of public.csv row N (1-based)
+
+[fab_reuse.gate]
+required_entries = ["0075"]
+
+[fab_reuse.harness]                  # vals-ai/finance-agent-v2, fetched without git from codeload at the commit
+repository = "vals-ai/finance-agent-v2"
+commit = "25b6cab9bcb4f8f9857f2e1a6721732c85511c5c"
+tarball_sha256 = "cacbd021374a26f033b0ebf29e6743cc1643116c0cfba79c03038fb6c2c0e930"
+questions_csv_sha256 = "06be6a898f083132ffd1e16d2c20263c36e855084c91f19fdfc601cf6811f3be"   # data/public.csv
+model_library = "0.1.37"             # as locked by the harness's uv.lock
+model = "anthropic/claude-opus-5-5-no-fallback"   # the serving model, at the registry's default effort
+max_time_seconds = 7200              # the harness default, per question
+
+[fab_reuse.reader]                   # the handoff record's reader; its tokenizer counts every token here
+model = "Qwen/Qwen3-1.7B"
+revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+tokenizer_json_sha256 = "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+context_cap = 81920                  # the reader's registered context cap (config/cache-behavior.toml), in tokens
+
+[fab_reuse.run]                      # fixed before the run; the run's private wrapper applies them
+order = [1, 4, 7, 10, 13, 16, 19, 22, 25, 2, 5, 8, 11, 14, 17, 20, 23, 26, 3, 6, 9, 12, 15, 18, 21, 24, 27]
+last_start_utc = "2026-11-20T17:00:00Z"   # no question starts after this
+wall_seconds = 8100                  # the wrapper ends a question's process at this wall time
+token_ceiling = 3000000              # ... or once its logged calls' input tokens (provider's counts) reach this
+max_parallel = 2                     # at most this many questions run at once, started in `order`
+disk_floor_gb = 6                    # no question starts with less free disk on the run's drive
+poll_seconds = 15                    # the wrapper checks each running question's wall time and input tokens this often
+question_type_column = "Question Type"
+
+[fab_reuse.timing]
+cache_lifetimes_seconds = [300, 3600]   # the provider's two published prompt-cache lifetimes, from a request's start
