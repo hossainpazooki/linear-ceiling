@@ -444,3 +444,13 @@ and after its write. No `verdict:` line, no hypothesis row, nothing under `resul
 and 0069 present, 0073 last, 0074 absent. Next free number: **0075**.
 
 *(2026-11-14: **0074 APPENDED** (`2e2555f`, chain `ad138489…`; script retired in the retire commit; run with `--date 2026-11-14`). File order now ends 0073, 0074. Still staged: nothing. Next free number: **0075**.)*
+
+**Staged 2026-11-19: `append_0075.py` — the FAB v2 document-reuse opportunity, registered before any count.**
+Descriptive: the document tokens a `retrieve_information` sub-call of a Finance Agent Benchmark v2 trajectory carries
+that an earlier sub-call of the same trajectory already carried, at the same or a different offset, in the reader's
+tokenizer; an upper bound for a cache keyed on the retrieved document's sha256, not a realized saving, with the
+input split, the main loop's caching and the reuse gap described beside it. Registers `config/fab-reuse.toml`,
+`src/linear_ceiling/fab_reuse.py` and `tests/test_fab_reuse.py`, each pinned by sha256 at append, and locates every
+cited sentence by search. Refuses unless the three files are committed as-is, the config's gate names the number, the
+serving model is the pinned one, the run's limits are set and nothing exists under `results/fab-reuse/`. Checks the
+ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row. Ordering guard: 0074 last, 0075 absent. Next free number: **0076**.

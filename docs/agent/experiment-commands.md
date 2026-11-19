@@ -256,3 +256,12 @@ $PY -m tools.task_quality.cell --run --cell long --output results/task-quality-c
 $PY -m tools.task_quality.cell --run --cell long --output results/task-quality-cell/long --resume  # verifies the identity, continues
 $PY -m tools.task_quality.cell --summarize --output results/task-quality-cell/long              # fail-closed: every score recomputed; headline, retention, sensitivity
 ```
+
+## FAB v2 document-reuse opportunity (registered 0075; CPU; descriptive)
+`config/fab-reuse.toml` pins the harness commit and its `data/public.csv`, the serving model, the reader's
+`tokenizer.json` and context cap, and the run's order and limits. The trajectories are run outside this repository; the
+summarizer reads their logs where they are and writes figures only (counts, shares, gap times), never log text.
+```
+$PY -m pytest -q tests/test_fab_reuse.py
+$PY -m linear_ceiling.fab_reuse --runs <log root> --questions <harness>/data/public.csv --tokenizer-json <reader snapshot>/tokenizer.json   # gate first; writes results/fab-reuse/summary.json
+```

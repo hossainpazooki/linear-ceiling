@@ -76,6 +76,10 @@ E9 (handoffs):
 - `summarize_e9_trunc` — E-TRUNC: the shrinkage pre-check and the paired comparison of the truncation levels on
   the common matched subset; each level is first read by `summarize_e9`.
 
+FAB v2 (entry 0075, descriptive): `fab_reuse` — the document-reuse opportunity across a trajectory's
+`retrieve_information` sub-calls, in the reader's tokenizer, with the input split, the main loop's caching and the
+reuse gap beside it; gate first, reads a private log root, writes figures only, never log text.
+
 Every experiment invokes the upstream by subprocess in the upstream's own environment; nothing here imports
 `kvt` or copies its code.
 
