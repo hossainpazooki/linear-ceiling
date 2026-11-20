@@ -1,7 +1,9 @@
-# The cache reading of the Finance Agent run's paired helper sub-calls (ledger entry 0076, a registration).
+# The cache reading of the Finance Agent run's paired helper sub-calls (ledger entry 0076, a registration; its window
+# end amended by entry 0077).
 # Inputs: `tools/cache_behavior/run.py --prepare --config config/cache-behavior-fab.toml` (tools/cache_behavior/fab_pairs.py)
 # builds token-id pairs from the run's ended questions, by entry 0075's sub-calls and document tokens; it refuses
-# before the window ends and until the committed ledger holds 0075. The driver refuses until it holds 0076.
+# before the window ends and until the committed ledger holds 0075, 0076 and 0077. The driver refuses until it holds
+# the same three.
 # The reader, cap, chunking, continuation, controls and tau_K are config/cache-behavior.toml's (entry 0047).
 cell = "fab-pairs"
 model = "Qwen/Qwen3-1.7B"
@@ -9,7 +11,7 @@ revision = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
 transformers = "5.17.0"
 torch = "2.14.0"
 seed = 20261001
-window_end = "2026-11-20T12:00:00Z"   # a question is read only if every launch record's `end` is at or before it
+window_end = "2026-11-20T06:30:00Z"   # a question is read only if every launch record's `end` is at or before it
 min_matched_tokens = 64               # |M| below this: excluded and counted
 max_pairs = 60                        # the ceiling, taken in the registered order
 context_cap = 81920                   # exclude, never truncate: A's prefill and B plus its continuation
@@ -29,8 +31,8 @@ attention_query_chunk = 16
 oracle_fractions = []
 
 [gate]
-prepare_entries = ["0075", "0076"]
-run_entries = ["0075", "0076"]
+prepare_entries = ["0075", "0076", "0077"]
+run_entries = ["0075", "0076", "0077"]
 
 [cross_check]                         # entry 0049's probe handoff and its prepared inputs (E9-long's delta_K)
 handoff = "20241016_composio_swekit/django__django-11087_traj#152"

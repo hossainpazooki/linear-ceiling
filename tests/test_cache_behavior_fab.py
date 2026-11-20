@@ -279,8 +279,9 @@ def test_the_gate_reads_the_committed_ledger():
         fab_pairs.assert_registered(driver.ROOT, ["9999"])
 
 
-def test_prepare_refuses_until_the_ledger_holds_0076(tmp_path, monkeypatch):
-    # The registered gate: no pair is built before 0076 itself is committed, so a ledger with 0075 alone refuses.
+def test_prepare_refuses_until_the_ledger_holds_0076_and_0077(tmp_path, monkeypatch):
+    # The registered gate: no pair is built before 0076 itself is committed, so a ledger with 0075 alone refuses; nor
+    # before 0077, which amends 0076's window end, so a ledger with 0075 and 0076 refuses too.
     def ledger(text):
         shown = subprocess.CompletedProcess(["git"], 0, stdout=text, stderr="")
         monkeypatch.setattr(fab_pairs, "subprocess", SimpleNamespace(run=lambda *a, **k: shown))
@@ -288,8 +289,11 @@ def test_prepare_refuses_until_the_ledger_holds_0076(tmp_path, monkeypatch):
     ledger("### 0075 — the reuse opportunity\n")
     with pytest.raises(RuntimeError, match="no entry 0076"):
         fab_pairs.prepare(args, fab_cfg(), driver.ROOT, digest, driver.write)
-    assert not args.inputs.exists()
     ledger("### 0075 — the reuse opportunity\n### 0076 — this cell\n")
+    with pytest.raises(RuntimeError, match="no entry 0077"):
+        fab_pairs.prepare(args, fab_cfg(), driver.ROOT, digest, driver.write)
+    assert not args.inputs.exists()
+    ledger("### 0075 — the reuse opportunity\n### 0076 — this cell\n### 0077 — its window end\n")
     fab_pairs.assert_registered(driver.ROOT, fab_cfg()["gate"]["prepare_entries"])
 
 
@@ -653,13 +657,13 @@ def test_the_registered_config():
     base = tomllib.loads((driver.ROOT / "config" / "cache-behavior.toml").read_text(encoding="utf-8"))
     assert driver.is_fab(fab) and fab["cell"] == fab_pairs.CELL
     assert (fab["window_end"], fab["min_matched_tokens"], fab["max_pairs"], fab["attention_queries"]) == \
-        ("2026-11-20T12:00:00Z", 64, 60, 0)
+        ("2026-11-20T06:30:00Z", 64, 60, 0)                            # 0077 moved the window end from 12:00:00Z
     for key in ("model", "revision", "transformers", "torch", "seed", "context_cap", "chunk_tokens",
                 "continuation_tokens", "continuation_chunk", "prefix_control_tokens", "control_max_logit_error",
                 "bridge_absolute_tolerance", "bridge_relative_tolerance", "tau_K", "rope"):
         assert fab[key] == base[key], key
     assert fab["oracle_fractions"] == [] and "random_control_fractions" not in fab
-    assert fab["gate"] == {"prepare_entries": ["0075", "0076"], "run_entries": ["0075", "0076"]}
+    assert fab["gate"] == {"prepare_entries": ["0075", "0076", "0077"], "run_entries": ["0075", "0076", "0077"]}
     assert fab["cross_check"]["handoff"] == "20241016_composio_swekit/django__django-11087_traj#152"
     assert fab["host_bytes_per_matched_token"] == 4 * 28 * 8 * 128 * 2 * 4          # Qwen3-1.7B's K and V, float32
     assert (fab["host_memory_limit_GiB"], fab["host_fixed_GiB"]) == (88, 12)
