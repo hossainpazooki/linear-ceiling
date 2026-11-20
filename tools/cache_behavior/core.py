@@ -118,6 +118,23 @@ def deviation_means(fresh, reused, pairs, inv_freq):
     return output
 
 
+def token_deviation(fresh, reused, pairs, inv_freq):
+    # deviation_means' K arithmetic kept per token: [n, L, H] float64, each token's share of the layer-head's
+    # matched-set variance (0023's units), keys unrotated to position 0. Its mean over tokens, heads and layers
+    # is deviation_means(...)["K"]; the driver checks that before it uses the per-token values.
+    zero = np.zeros(len(pairs), dtype=np.int64)
+    layers = []
+    for reference, candidate in zip(fresh, reused, strict=True):
+        ref = relocate(reference[0], pairs[:, 1], zero, inv_freq).double()
+        old = relocate(candidate[0], pairs[:, 1], zero, inv_freq).double()
+        denominator = ((ref - ref.mean(-2, keepdim=True)) ** 2).sum((-2, -1))
+        if torch.any(denominator <= 0):
+            raise ValueError("degenerate matched reference variance")
+        squares = ((old - ref) ** 2).sum(-1)
+        layers.append((squares / (denominator[..., None] / len(pairs)))[0].T)
+    return torch.stack(layers, 1).numpy()
+
+
 @torch.inference_mode()
 def construct(model, receiver, pairs, candidate, chunk, recompute=()):
     # Copy selected states, then compute each gap against the assembled causal cache.

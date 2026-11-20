@@ -1,11 +1,13 @@
 # Prepare, check, run/resume, and summarize descriptive long-Qwen cache readout.
 import argparse
+from datetime import datetime, timezone
 import gc
 import hashlib
 import json
 import os
 from pathlib import Path
 import subprocess
+import time
 import tomllib
 
 import numpy as np
@@ -18,10 +20,59 @@ from linear_ceiling.e7_swe import _flatten_nodes, _llmresult_texts, load_composi
 from linear_ceiling.e9_align import handoffs_from
 from linear_ceiling.e9_pertoken import centered_delta, token_mean
 from linear_ceiling.rng import make_rng
+from . import fab_pairs
 from .core import (TailObserver, compare_logits, construct, continuation_logits, deviation_means,
-                   matched, prefill, random_candidate, relocated_candidate, sync, validate_pairs)
+                   matched, prefill, random_candidate, relocated_candidate, sync, token_deviation, validate_pairs)
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def is_fab(cfg):
+    # config/cache-behavior-fab.toml selects the paired sub-call cell; every other config reads as before.
+    return cfg.get("cell") == fab_pairs.CELL
+
+
+def fits(cfg, sender, receiver, continuation):
+    # Every config: nothing past the registered cap is read (0049's prompts are all within it).
+    if len(sender) > cfg["context_cap"] or len(receiver) + len(continuation) - 1 > cfg["context_cap"]:
+        raise ValueError("a prompt and its continuation exceed the registered context cap")
+
+
+def now_stamp():
+    return datetime.now(timezone.utc).strftime(fab_pairs.STAMP)
+
+
+def launch_lock(args, report):
+    # Once per manifest: the first launch writes the stop time and the cross-check branch beside the manifest,
+    # created exclusively, so a first launch on a manifest that was launched before is refused (a new output folder
+    # included), and a resume must match it.
+    lock = args.inputs / "launch.json"
+    body = {"manifest_sha256": report["identity"]["manifest_sha256"], "stop_at": report["stop_at"],
+            "branch": report["cross_check"]["branch"], "at": now_stamp()}
+    try:
+        with lock.open("x") as stream:
+            stream.write(json.dumps(body, indent=2) + "\n")
+    except FileExistsError:
+        raise ValueError("this manifest was launched before (launch.json beside it): one reading per manifest; "
+                         "resume that launch's output instead") from None
+
+
+def check_lock(args, report):
+    lock = args.inputs / "launch.json"
+    if not lock.exists():
+        raise ValueError("no launch.json beside the manifest: this output was not launched on these inputs")
+    body = json.loads(lock.read_text())
+    if (body["manifest_sha256"], body["stop_at"], body["branch"]) != (
+            report["identity"]["manifest_sha256"], report["stop_at"], report["cross_check"]["branch"]):
+        raise ValueError("the report's stop time or cross-check branch differs from the manifest's launch.json")
+
+
+def host_peak_gib():
+    try:
+        import resource
+    except ImportError:            # not on Linux; the pod is
+        return None
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 2**20
 
 
 def digest(path):
@@ -124,20 +175,30 @@ def check(args, cfg):
     if transformers.__version__ != cfg["transformers"] or torch.__version__.split("+")[0] != cfg["torch"]:
         raise ValueError("runtime differs from pinned experiment versions")
     manifest = json.loads((args.inputs / "manifest.json").read_text())
-    if (manifest["config_sha256"] != digest(args.config)
-            or manifest["corpus_manifest_sha256"] != digest(ROOT / "config/e7-manifest.json")
-            or manifest["archive_config_sha256"] != digest(ROOT / "config/e9l.toml")):
-        raise ValueError("configuration changed after preparation")
-    if len(manifest["records"]) != cfg["expected_handoffs"]:
-        raise ValueError("input cohort is incomplete")
+    fab = is_fab(cfg)
+    if fab:
+        fab_pairs.assert_registered(ROOT, cfg["gate"]["run_entries"])
+        fab_pairs.check_manifest(manifest, cfg, args.config, ROOT)
+    else:
+        if (manifest["config_sha256"] != digest(args.config)
+                or manifest["corpus_manifest_sha256"] != digest(ROOT / "config/e7-manifest.json")
+                or manifest["archive_config_sha256"] != digest(ROOT / "config/e9l.toml")):
+            raise ValueError("configuration changed after preparation")
+        if len(manifest["records"]) != cfg["expected_handoffs"]:
+            raise ValueError("input cohort is incomplete")
     ordered_records(manifest)
     for row in manifest["records"]:
+        if fab and row["excluded"]:        # excluded pairs are counted in the manifest and have no input file
+            continue
         if digest(args.inputs / row["file"]) != row["sha256"]:
             raise ValueError(f"input hash mismatch: {row['file']}")
         with np.load(args.inputs / row["file"], allow_pickle=False) as arrays:
             validate_pairs(arrays["sender"], arrays["receiver"], arrays["pairs"])
-            if len(arrays["delta_K"]) != len(arrays["pairs"]):
+            if fab:
+                fab_pairs.check_arrays(arrays, row)
+            elif len(arrays["delta_K"]) != len(arrays["pairs"]):
                 raise ValueError("archived deviation/matched-set mismatch")
+            fits(cfg, arrays["sender"], arrays["receiver"], arrays["continuation"])
     return manifest
 
 
@@ -150,7 +211,10 @@ def ordered_records(manifest):
     included = [row for row in manifest["records"] if not row["excluded"]]
     if not included or len({row["handoff"] for row in manifest["records"]}) != len(manifest["records"]):
         raise ValueError("prepared cohort must have unique handoffs and a nonempty included set")
-    largest = max(included, key=lambda row: row["sender_tokens"])
+    # The memory probe first: the largest prefill (fab cell: sender or receiver plus continuation), then the
+    # manifest's order (fab cell: the registered order).
+    size = fab_pairs.probe_size if manifest.get("cell") == fab_pairs.CELL else (lambda row: row["sender_tokens"])
+    largest = max(included, key=size)
     return [largest] + [row for row in included if row != largest]
 
 
@@ -161,6 +225,10 @@ def summarize(output, inputs=None):
         raise ValueError("scored handoffs must be a prefix of the unique run_order")
     if report["complete"] is not (len(scored) == len(order)):
         raise ValueError("complete flag does not match scored cohort coverage")
+    # A report without the field is an earlier run's, which always read the attention slice.
+    fab, with_attention = report.get("cell") == fab_pairs.CELL, report.get("attention_queries") != 0
+    if fab and inputs is None:
+        raise ValueError("the paired sub-call summary needs its prepared manifest")
     if inputs is not None:
         manifest_path = inputs / "manifest.json"
         if report["identity"]["manifest_sha256"] != digest(manifest_path):
@@ -169,13 +237,15 @@ def summarize(output, inputs=None):
         if (order != [row["handoff"] for row in ordered_records(manifest)]
                 or report["excluded"] != [row for row in manifest["records"] if row["excluded"]]):
             raise ValueError("report cohort differs from the prepared manifest")
-    rows, attention_rows = [], []
-    for index, result in enumerate(report["scores"].values()):
+    rows, attention_rows, fab_rows = [], [], []
+    for index, (hid, result) in enumerate(report["scores"].items()):
         if digest(output / result["file"]) != result["sha256"]:
             raise ValueError("output hash mismatch")
         with np.load(output / result["file"], allow_pickle=False) as arrays:
             n = result["scored_continuation_tokens"]
-            if n < 1 or len(arrays["continuation"]) != n + 1:
+            # The fab cell's outputs hold no token of the logs: the continuation is kept as its length and sha256.
+            stored = result["continuation_tokens"] if fab else len(arrays["continuation"])
+            if n < 1 or stored != n + 1:
                 raise ValueError("stored continuation differs from scored token count")
             for arm in result["arms"]:
                 kl, top1 = arrays[f"{arm}_kl"], arrays[f"{arm}_top1_agrees"]
@@ -198,6 +268,13 @@ def summarize(output, inputs=None):
                         raise ValueError(f"saved logits witness does not reproduce {arm}'s scored positions")
             rows.append({arm: metrics({key: arrays[f"{arm}_{key}"] for key in ("kl", "top1_agrees")})
                          for arm in result["arms"]})
+            if fab:
+                if len(arrays["token_mean_K"]) != result["removal"]["matched"]:
+                    raise ValueError("stored per-token deviation differs from the matched count")
+                fab_rows.append({"handoff": hid, "arms": rows[-1], "removal": result["removal"],
+                                 "probe": result["probe"]})
+            if not with_attention:
+                continue
             attention = arrays["attention"]
             row = {f"{name}_{stat}": reducer(attention[..., index].flatten())
                    for index, name in enumerate(("weighted_delta", "tail_attention_mass", "matched_attention_mass"))
@@ -217,6 +294,10 @@ def summarize(output, inputs=None):
             "attention": {key: summary([row[key] for row in attention_rows if row[key] is not None])
                           if any(row[key] is not None for row in attention_rows) else None
                           for key in attention_rows[0]} if attention_rows else {}}
+    if not with_attention:
+        body["attention"] = "not computed: attention_queries = 0"
+    if fab:
+        body["fab"] = fab_pairs.pair_summary(report, manifest, fab_rows)
     write(output / "summary.json", body)
     return body
 
@@ -233,6 +314,16 @@ def run(args, cfg, manifest):
     if (any(not 0 < f <= 1 for f in list(cfg["oracle_fractions"]) + list(random_fractions))
             or len({arm for arm, _ in arm_fractions}) != len(arm_fractions)):
         raise ValueError("oracle fractions must be in (0, 1] with distinct labels")
+    fab = is_fab(cfg)
+    if fab:
+        if cfg["attention_queries"] != 0 or len(arm_fractions) != 3:
+            raise ValueError("the paired sub-call cell reads no attention slice and no oracle arm")
+        first = not (args.output / "report.json").exists()
+        if first and (args.stop_at is None or bool(args.cross_check_inputs) == bool(args.no_cross_check)):
+            raise ValueError("the first launch fixes --stop-at and exactly one of --cross-check-inputs, "
+                             "--no-cross-check")
+        if args.stop_at is not None:
+            fab_pairs.parse_stamp(args.stop_at)
     # Set before loading CUDA tensors; deterministic cuBLAS otherwise refuses GEMMs.
     os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     if os.environ["CUBLAS_WORKSPACE_CONFIG"] != ":4096:8":
@@ -254,7 +345,8 @@ def run(args, cfg, manifest):
     freq = model.model.rotary_emb.inv_freq.detach().cpu()
     args.output.mkdir(parents=True, exist_ok=True)
     report_path = args.output / "report.json"
-    source_hashes = {name: digest(Path(__file__).with_name(name)) for name in ("run.py", "core.py")}
+    source_hashes = {name: digest(Path(__file__).with_name(name))
+                     for name in ("run.py", "core.py") + (("fab_pairs.py",) if fab else ())}
     identity = {"config_sha256": digest(args.config), "manifest_sha256": digest(args.inputs / "manifest.json"),
                 "code_sha256": source_hashes, "transformers": transformers.__version__, "torch": torch.__version__,
                 "gpu": torch.cuda.get_device_name(device), "cuda": torch.version.cuda,
@@ -265,6 +357,15 @@ def run(args, cfg, manifest):
         report = json.loads(report_path.read_text())
         if report["identity"] != identity:
             raise ValueError("resume identity differs (code, inputs, configuration, runtime, or GPU)")
+        if fab and (args.stop_at not in (None, report["stop_at"])
+                    or (args.no_cross_check and report["cross_check"]["branch"] != "not staged")
+                    or (args.cross_check_inputs and report["cross_check"]["branch"] != "run")):
+            raise ValueError("a resume keeps the first launch's stop time and cross-check branch")
+        if fab:
+            check_lock(args, report)
+            if report.get("in_flight"):       # a step started and not finished: the process ended during it
+                report.setdefault("ended_in_flight", []).append({**report.pop("in_flight"), "found": now_stamp()})
+                write(report_path, report)
         summarize(args.output, args.inputs)
     else:
         report = {"identity": identity, "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
@@ -272,22 +373,50 @@ def run(args, cfg, manifest):
                   "rope": model_cfg.rope_parameters, "attention_scaling": model.model.rotary_emb.attention_scaling,
                   "inv_freq_sha256": hashlib.sha256(freq.numpy().tobytes()).hexdigest(),
                   "scores": {}, "excluded": [r for r in manifest["records"] if r["excluded"]], "complete": False}
+        if fab:
+            # Fixed before the probe pair and kept on every resume: the wall-time stop and the cross-check branch.
+            branch = "not staged" if args.no_cross_check else "run"
+            report.update(cell=fab_pairs.CELL, attention_queries=0, stop_at=args.stop_at,
+                          archive_bridge="not computed: no archive holds these pairs",
+                          cross_check={"branch": branch, "label": fab_pairs.CROSS_CHECK_LABELS[branch],
+                                       "result": None}, ended_in_flight=[])
+            launch_lock(args, report)
     order = ordered_records(manifest)
     report["run_order"] = [r["handoff"] for r in order]
     write(report_path, report)
+    if fab:
+        if report["cross_check"]["branch"] == "run" and report["cross_check"]["result"] is None:
+            if not args.cross_check_inputs:
+                raise ValueError("the cross-instrument control is pending; pass --cross-check-inputs")
+            cross_check(args, cfg, model, freq, report, report_path)
+        if report["cross_check"]["result"] is not None and not report["cross_check"]["result"]["passed"]:
+            raise ValueError("the cross-instrument control failed; no pair is read")
     for index, record in enumerate(order[:1] if args.probe else order):
         hid = record["handoff"]
         if hid in report["scores"]:
             continue
+        if fab and datetime.now(timezone.utc) >= fab_pairs.parse_stamp(report["stop_at"]):
+            report["stopped"] = {"at": now_stamp(),
+                                 "reason": "the registered wall-time limit", "read": len(report["scores"])}
+            write(report_path, report)
+            summarize(args.output, args.inputs)    # the summary carries the stop record, as the report does
+            print(f"stopped at the wall-time limit: {len(report['scores'])}/{len(order)} read", flush=True)
+            break
+        if fab:                                # the start marker: a kill during this pair is attributable to it
+            report["in_flight"] = {"step": hid, "started": now_stamp()}
+            write(report_path, report)
+        started = time.perf_counter()
         with np.load(args.inputs / record["file"], allow_pickle=False) as arrays:
-            sender, receiver, pairs, continuation, delta, tail = (arrays[key] for key in
-                                                                ("sender", "receiver", "pairs", "continuation", "delta_K", "tail_K"))
+            sender, receiver, pairs, continuation = (arrays[key] for key in
+                                                     ("sender", "receiver", "pairs", "continuation"))
+            delta, tail = (None, None) if fab else (arrays["delta_K"], arrays["tail_K"])
+        fits(cfg, sender, receiver, continuation)
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats(device)
         observer = TailObserver(model, len(receiver), pairs, delta, cfg["attention_queries"],
-                                cfg["tau_K"], cfg["attention_query_chunk"], tail)
+                                cfg["tau_K"], cfg["attention_query_chunk"], tail) if cfg["attention_queries"] else None
         cache = prefill(model, receiver, cfg["chunk_tokens"])
-        attention = observer.close()
+        attention = observer.close() if observer is not None else None
         fresh_states = matched(cache, pairs[:, 1])
         fresh_logits = continuation_logits(model, cache, continuation, cfg["continuation_chunk"])
         del cache
@@ -309,6 +438,9 @@ def run(args, cfg, manifest):
                 model, copied, continuation, cfg["continuation_chunk"]))
             controls["prefix_copy"] = {**metrics(compared), "max_logit_error": compared["max_logit_error"]}
             del copied, prefix_states
+            # Every config: an identical repeat of the fresh pass must be exact (0074).
+            if controls["fresh_repeat"]["max_logit_error"] != 0:
+                raise ValueError(f"fresh repeat is not exact: {controls}")
             if max(c["max_logit_error"] for c in controls.values()) > cfg["control_max_logit_error"]:
                 raise ValueError(f"fresh/prefix identity control failed: {controls}")
         sender_cache = prefill(model, sender, cfg["chunk_tokens"])
@@ -316,13 +448,20 @@ def run(args, cfg, manifest):
         del sender_cache
         reused = relocated_candidate(source, pairs, freq)
         bridge = deviation_means(fresh_states, reused, pairs, freq)
-        for key in ("K", "V"):
-            reference = record["archived_mean"][key]
-            if abs(bridge[key] - reference) > cfg["bridge_absolute_tolerance"] + cfg["bridge_relative_tolerance"] * abs(reference):
-                raise ValueError(f"archive/runtime deviation bridge failed: {hid} {key} {bridge[key]} vs {reference}")
-        outputs = {"attention": attention, "continuation": continuation,
-                   "receiver_query_positions":
-                   np.arange(max(0, len(receiver) - cfg["attention_queries"]), len(receiver))}
+        if fab:
+            # No archive holds these pairs: the per-token deviation is computed here and checked against the
+            # same arithmetic's mean before it is used.
+            per_token = token_mean(token_deviation(fresh_states, reused, pairs, freq))
+            removal = fab_pairs.removal(per_token, bridge, cfg["tau_K"])
+            outputs = {"token_mean_K": per_token}
+        else:
+            for key in ("K", "V"):
+                reference = record["archived_mean"][key]
+                if abs(bridge[key] - reference) > cfg["bridge_absolute_tolerance"] + cfg["bridge_relative_tolerance"] * abs(reference):
+                    raise ValueError(f"archive/runtime deviation bridge failed: {hid} {key} {bridge[key]} vs {reference}")
+            outputs = {"attention": attention, "continuation": continuation,
+                       "receiver_query_positions":
+                       np.arange(max(0, len(receiver) - cfg["attention_queries"]), len(receiver))}
         witness_count = min(4, len(fresh_logits)) if index == 0 else 0
         if witness_count:
             outputs.update(fresh_witness=fresh_logits[:witness_count].numpy(),
@@ -353,16 +492,64 @@ def run(args, cfg, manifest):
         sync(device)
         destination = args.output / record["file"]
         np.savez_compressed(destination, **outputs)
-        report["scores"][hid] = {"file": destination.name, "sha256": digest(destination), "arms": arms,
-                                  "controls": controls, "archive_bridge_mean": bridge,
-                                  "witness_count": witness_count,
-                                  "scored_continuation_tokens": len(continuation) - 1,
-                                  "peak_allocated_GiB": torch.cuda.max_memory_allocated(device) / 2**30}
+        score = {"file": destination.name, "sha256": digest(destination), "arms": arms,
+                 "controls": controls, "archive_bridge_mean": bridge,
+                 "witness_count": witness_count,
+                 "scored_continuation_tokens": len(continuation) - 1,
+                 "peak_allocated_GiB": torch.cuda.max_memory_allocated(device) / 2**30}
+        if fab:
+            del score["archive_bridge_mean"]       # recorded inside `removal` as deviation_means
+            score.update(removal=removal, probe=index == 0, continuation_tokens=len(continuation),
+                         continuation_sha256=hashlib.sha256(
+                             np.ascontiguousarray(continuation, dtype=np.int64).tobytes()).hexdigest(),
+                         minutes=(time.perf_counter() - started) / 60, host_peak_GiB=host_peak_gib())
+        report["scores"][hid] = score
+        report.pop("in_flight", None)
         report["complete"] = len(report["scores"]) == len(order)
         write(report_path, report)
         summarize(args.output, args.inputs)
         print(f"{len(report['scores'])}/{len(order)} {hid}", flush=True)
         del source, reused, fresh_states, fresh_logits
+
+
+def cross_check(args, cfg, model, freq, report, report_path):
+    # The cross-instrument control, before any pair: this driver's per-token deviation on 0049's probe handoff
+    # against E9-long's archived delta_K for it, at 0047's bridge tolerance applied per token. The archive's f*
+    # there is 0, so the per-token comparison is the informative part. A failure stops the run.
+    spec = cfg["cross_check"]
+    manifest_path = args.cross_check_inputs / "manifest.json"
+    if digest(manifest_path) != spec["manifest_sha256"]:
+        raise ValueError("cross-check manifest is not 0049's")
+    record = next(r for r in json.loads(manifest_path.read_text())["records"] if r["handoff"] == spec["handoff"])
+    path = args.cross_check_inputs / record["file"]
+    if record["sha256"] != spec["file_sha256"] or digest(path) != spec["file_sha256"]:
+        raise ValueError("cross-check input is not 0049's probe handoff")
+    with np.load(path, allow_pickle=False) as arrays:
+        sender, receiver, pairs, delta = (arrays[key] for key in ("sender", "receiver", "pairs", "delta_K"))
+    validate_pairs(sender, receiver, pairs)
+    if len(sender) > cfg["context_cap"] or len(receiver) > cfg["context_cap"]:
+        raise ValueError("cross-check prompt exceeds the registered context cap")
+    report["in_flight"] = {"step": "cross-instrument control", "started": now_stamp()}
+    write(report_path, report)
+    started = time.perf_counter()
+    cache = prefill(model, receiver, cfg["chunk_tokens"])
+    fresh_states = matched(cache, pairs[:, 1])
+    del cache
+    sender_cache = prefill(model, sender, cfg["chunk_tokens"])
+    source = matched(sender_cache, pairs[:, 0])
+    del sender_cache
+    reused = relocated_candidate(source, pairs, freq)
+    deviation = deviation_means(fresh_states, reused, pairs, freq)
+    per_token = token_mean(token_deviation(fresh_states, reused, pairs, freq))
+    result = {**fab_pairs.cross_check_compare(per_token, token_mean(delta), cfg),
+              "handoff": spec["handoff"], "identity": fab_pairs.removal(per_token, deviation, cfg["tau_K"]),
+              "archived_mean": record["archived_mean"], "minutes": (time.perf_counter() - started) / 60}
+    report["cross_check"]["result"] = result
+    report.pop("in_flight", None)
+    write(report_path, report)
+    print(f"cross-instrument control {'passed' if result['passed'] else 'FAILED'}", flush=True)
+    del fresh_states, source, reused
+    gc.collect()
 
 
 def main():
@@ -378,9 +565,20 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--resume", action="store_true")
+    # The paired sub-call cell (config/cache-behavior-fab.toml) only.
+    parser.add_argument("--runs-root", type=Path, help="the run's folder (private, outside the repository)")
+    parser.add_argument("--tokenizer-json", type=Path, help="the reader's tokenizer.json")
+    parser.add_argument("--stop-at", help="the sitting's wall-time limit, YYYY-MM-DDTHH:MM:SSZ, fixed at first launch")
+    parser.add_argument("--cross-check-inputs", type=Path, help="0049's prepared inputs folder")
+    parser.add_argument("--no-cross-check", action="store_true")
     args = parser.parse_args()
     cfg = tomllib.loads(args.config.read_text())
-    if args.prepare:
+    if args.prepare and is_fab(cfg):
+        if args.runs_root is None or args.tokenizer_json is None:
+            parser.error("--prepare of the paired sub-call cell requires --runs-root and --tokenizer-json")
+        manifest = fab_pairs.prepare(args, cfg, ROOT, digest, write)
+        print(f"Prepared {manifest['selected']} pairs; run --check before GPU use.")
+    elif args.prepare:
         if args.archive is None or args.traces is None or args.evidence_sha256 is None:
             parser.error("--prepare requires --archive, --traces, and --evidence-sha256")
         prepare(args, cfg)
