@@ -5476,3 +5476,77 @@ no second reader; a registration, not a result.
 free number after this entry: 0077.
 
 prior-entries-sha256: 9cc634b6bfb8cf197063a3e6abfcccdc215e28496449f2779f4c8e8b0ae9904a
+
+### 0077 — 2026-11-20 — Window amendment to 0076, before any pair is built: two settings of its config change, the window end, now 2026-11-20T06:30:00Z instead of 2026-11-20T12:00:00Z, set after the run had ended, so the window holds the same whole run, and the cell's gate, which now names this entry too; nothing else in 0076 changes; descriptive, no cell moves
+
+**What changes.** Two settings of 0076's config, `config/cache-behavior-fab.toml`. Its `window_end`, from
+`2026-11-20T12:00:00Z` to `2026-11-20T06:30:00Z`: 0076's window rule (line 5279) reads with the new time, so a question
+is read only if every one of its launches has ended, each with its launch record written and its `end` at or before
+2026-11-20T06:30:00Z, and its comparison with 0049 (line 5428) reads "the window, questions that ended by
+2026-11-20T06:30:00Z". And its gate, which names this entry as well: `tools/cache_behavior/run.py --prepare` and the
+driver refuse until the committed ledger holds 0075, 0076 and 0077, so the new value is not acted on before this entry
+is committed, and 0076's gate sentences (lines 5254, 5449 and 5451: "until the committed ledger holds 0075 and 0076";
+line 5256: "until the committed ledger holds 0076") read with 0077 added. The config's header comment, the two tests
+that pin the registered config and the gate, and the cell's section of `docs/agent/experiment-commands.md` change with
+them.
+
+**Why.** 0076 set its window end before the run had ended, as a cutoff on which questions are read. The run has ended,
+so no time at or after its last `end` selects among them, and the new value, the first whole minute after that `end`,
+lets the build, which refuses before the window ends (line 5449), follow the run instead of a time fixed before the
+run's end was known.
+
+**Why it cannot change which trajectories are read.** When the value was set, the run 0075 registers had ended. Its
+launch records (the sha256 of their bytes, concatenated in row order, is `6f791514aca1…`) give 27 records, one for each
+of the 27 public questions, each the question's only launch and each a launch whose record marks a trajectory; every
+launch's output file has its record; and the latest `end` is 2026-11-20T06:29:49Z. Every question's records therefore
+end at or before both times, and the window holds the whole run under either, as 0076 provides (line 5287): "If the run
+has ended by then, the window holds the whole run." The cell's own window rule (`window` in
+`tools/cache_behavior/fab_pairs.py`) puts the same 27 questions in the window at 2026-11-20T12:00:00Z, at
+2026-11-20T06:30:00Z and at 2026-11-20T06:29:49Z. Any window end at or after 2026-11-20T06:29:49Z selects the same
+questions, so the choice between the two cannot select among them.
+
+**What had been done when this was written.** No input had been prepared, no pair built, no manifest written, and the
+driver had not run; nothing exists under `results/cache-behavior-fab/`. 0075's summary, which reads the run's logs, had
+been computed after the run ended and before this value was set. 0076 says (line 5251) that every rule it registers, the
+window among them, was fixed before any content of the run's logs was read. That holds for the window's rule and for
+every other value 0076 registers. It does not hold for the two settings this entry changes, which were set after 0075's
+summary had been computed. For setting them and for this entry, of the run's files nothing was read but its launch
+records, the wrapper's own progress lines, and the names, sizes and times of the launches' output files: no content of
+the run's logs and none of the summary's values. It cannot matter to which questions are read: the same 27 are selected
+under either time.
+
+**Registered before any pair is built.** 0076 was registered before any pair was built (line 5254: "The inputs are built
+after this entry's commit"), and so is this entry: the build refuses until the committed ledger holds it.
+
+**What does not change.** Everything else 0076 registers, each fixed, as line 5251 says, before any content of the run's
+logs was read: the trajectories by 0075's code, the pair rule, the floor of 64 matched tokens, the ceiling of 60 pairs
+and the registered order, the length rule and the cap, the host-memory rule, what is scored, the oracle removal
+fraction, the cross-instrument control, the controls, the probe and the stop, one preparation of the inputs, no
+interval, and the summary's fields. These files are the blobs 0076's commit left: `tools/cache_behavior/fab_pairs.py`
+(blob `ae05c2c8a4d4…`, sha256 `c3323d44f67c…`), `tools/cache_behavior/run.py` (blob `820145c9d48f…`, sha256
+`055d8eaccf78…`), `tools/cache_behavior/core.py` (blob `84071606a15a…`, sha256 `128eea9649fb…`),
+`src/linear_ceiling/fab_reuse.py` (blob `7c225428eca1…`, sha256 `b884ec174132…`), `config/fab-reuse.toml` (blob
+`4f369aed2139…`, sha256 `773ddef7e2c2…`), `config/cache-behavior.toml` (blob `8e0cfb170d2a…`, sha256 `53c664556d18…`).
+Nor does any cell or verdict change, or any other entry, config, record or output tree.
+
+**Pinned at append.** `config/cache-behavior-fab.toml` (blob `62560c19d57b…`, sha256 `93d05ca402fd…`) and
+`tests/test_cache_behavior_fab.py` (blob `779d63dd071b…`, sha256 `f088ca2746d8…`), which 0076 pinned (line 5457) as blob
+`90d23e40587d…`, sha256 `78560c47b389…` and blob `f0f5844c85dc…`, sha256 `edd79d597ca6…`, and
+`docs/agent/experiment-commands.md` (blob `669761f5b0e0…`, sha256 `78c1ef018d3e…`), which 0076 did not pin. This script
+refuses unless the three are committed as-is, the config differs from 0076's in `window_end` and the gate only, by the
+values stated here, the test file differs from 0076's only in those two tests, and `docs/agent/experiment-commands.md`
+only in the cell's heading and its two comments; unless the other files are 0076's blobs; unless 0076's commit is dated
+before the run's last `end`; unless the launch records' bytes have the digest stated here, give the facts stated here,
+and the cell's `window` puts every question in the window at each of the three times; unless the drafts README stages
+it; and unless nothing exists under `results/cache-behavior-fab/`.
+
+**Consequences in this commit set.** `config/cache-behavior-fab.toml` (the value, the gate and the header comment),
+`tests/test_cache_behavior_fab.py` (the two tests above), the cell's section heading and two comments in
+`docs/agent/experiment-commands.md`, and the drafts README's allocator. Nothing under `results/`.
+
+**Scope.** Two settings of one registration's config, the window end and the gate; a registration, not a result.
+
+**Numbering.** 0077 is the number the drafts README allocates at staging; ordering guard 0076 present, 0077 absent. Next
+free number after this entry: 0078.
+
+prior-entries-sha256: 922b10787053a7ccbeee7ac1ae6e64f92f92dfb1afa9001a50d34376c505e6c4
