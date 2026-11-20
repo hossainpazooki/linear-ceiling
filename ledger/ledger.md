@@ -5235,3 +5235,244 @@ logged helper sub-calls; a registration, not a result.
 free number after this entry: 0076.
 
 prior-entries-sha256: cf0d8e47597454fca7c8087bcea164afa3cb64c2d8d437e21ae2aea5ff36016e
+
+### 0076 — 2026-11-20 — Cache reading of the Finance Agent run's paired helper sub-calls registered before any pair is built: next-token sensitivity of Qwen3-1.7B to reading a logged helper sub-call with its matched document states taken from one earlier sub-call of the same trajectory, fresh vs reused with RANDOM and CYCLIC controls, and the oracle removal fraction at τ_K; the pairs derived by 0075's code; descriptive, no band, no hypothesis row, no cell moves
+
+**Why.** 0049 (line 3732) reads an assembled same-model cache from one agent to another: on 0036's 35 long handoffs the
+receiver reads the sender's states for the tokens they share. 0075 (line 5013) counts, in the helper sub-calls of the
+Finance Agent Benchmark v2 run, the document tokens a sub-call carries that an earlier sub-call of the same trajectory
+already carried: an upper bound on the reuse opportunity, with no carryover effect read. This entry registers the
+reading of that opportunity by 0049's reader, on 0049's axis: for a pair of sub-calls of one trajectory, B and an
+earlier A, how much reading B with A's states for their shared document tokens changes the reader's next-token
+predictions on B's logged response, and the oracle removal fraction of those states at τ_K. It measures prediction
+sensitivity on fixed logged text, not task quality, free generation or speed; 0047's standing sentence (line 3219) "No
+downstream task-quality number is claimed" stands. **No band, no hypothesis row, no `verdict:` line, no cell moves.**
+
+**What was seen before this text.** Every rule here was fixed before any content of the run's logs was read: the window,
+the pair rule, the floor, the ceiling and its order, what is scored, and the length rule, which was chosen before any
+length was seen. Until this entry was committed, the work for it read no log's content: only synthetic logs, and at most
+the layout of row 1's logs (file names and record schemas). The inputs are built after this entry's commit: the build
+refuses until the committed ledger holds 0075 and 0076, so nothing the build shows can change this text. The build's
+counts are carried by its manifest, not here: this entry states no expected count. The driver reads no pair until the
+committed ledger holds 0076.
+
+**The trajectories, by 0075's code.** The run is the one 0075 registers on the 27 public questions of Finance Agent
+Benchmark v2 at `25b6cab9bcb4`, served by `anthropic/claude-opus-5-5-no-fallback`. This cell's pairs are derived by
+0075's own code, imported and not copied: `src/linear_ceiling/fab_reuse.py` (blob `7c225428eca1…`, sha256
+`b884ec174132…`) with `config/fab-reuse.toml` (blob `4f369aed2139…`, sha256 `773ddef7e2c2…`), both as they landed with
+0075. Its sub-calls (0075, line 5067), their order, the rebuilt prompts, the document tokens and their identities (line
+5077: "Its identity is the retrieved document's sha256, the token's character span in that document and its token id"),
+SAME and DIFFERENT OFFSET (line 5082), and the last turn SET ASIDE when a trajectory ended without its final record
+(line 5102) are all 0075's. A trajectory gives pairs only if 0075 measures it. A trajectory with no final record (the
+wrapper ended it, or its process ended) has its last turn set aside by 0075 and is measured over the turns before it;
+this cell reads it the same way: no sub-call of the set-aside turn is an A or a B, and the earlier turns' pairs are
+built and read like any other trajectory's. A trajectory that did not end by itself but wrote its final record is read
+over every turn it completed, as 0075 reads it. The summary does not split pairs by how their trajectory ended: each
+per-pair row carries its `task_id` and `ended_by_itself`, 0075's value for that trajectory, and the pairs of a
+trajectory that did not end by itself lie in turns it completed; 0075's summary lists those trajectories with their stop
+reasons. The build refuses a trajectory served by another model; one whose serving model cannot be read is one 0075 does
+not measure (an unreadable record), so it gives no pair. The adapter derives each sub-call's document tokens again with
+0075's `document_tokens`, and refuses unless its totals equal those of 0075's `measure_trajectory` for the trajectory
+(sub-calls, prompt tokens, document tokens, SAME OFFSET, DIFFERENT OFFSET and NEW). A trajectory 0075 does not measure
+gives no pair and is named under 0075's reason.
+
+**The window: one run, one window.** A question is read only if every one of its launches has ended, each with its
+launch record written and its `end` at or before 2026-11-20T12:00:00Z. The run's wrapper writes a launch's record once,
+when it ends, and creates the launch's output file when it starts; a launch with that file and no record has not ended,
+and it bars its question whatever the question's earlier records say: the question is not read, and is named under "a
+launch with no end record at the build". Only the two names are looked at. Only the log directories an in-window record
+lists are read, and every file read must have the sha256 that the record gives it, or the build refuses. Every other
+question is named with its status: no launch record; a launch with no end record at the build; outside the window (an
+`end` after it, or a record that does not decode); no trajectory in its launch records (failed launches only); or not
+measured by 0075, with 0075's reason. If the run has ended by then, the window holds the whole run. The run goes on
+after the window closes, and no later trajectory is read under this entry.
+
+**Pairs.** B is a sub-call carrying at least one document token whose identity an earlier sub-call of its trajectory
+carried. A is the latest earlier sub-call of that trajectory carrying at least one of B's document-token identities: one
+pair per B. A is a single writer, so B's reused document tokens that only other earlier sub-calls carried are
+recomputed, not taken from A; each pair reports the matched set's size over B's reused document tokens as 0075 counts
+them (`matched_share_of_reused`). The matched set M is B's document tokens whose identity occurs exactly once in A and
+once in B, as position pairs (p_A, p_B) in B's order, less those with p_A = p_B inside the longest common token prefix
+of A and B: under causal attention their reused and fresh states coincide, so they are recomputed and counted
+(`matched_in_common_prefix`). An identity repeated within A or within B is recomputed and counted too
+(`repeated_key_tokens`). A pair whose M is empty is not read: it is "prefix" if the common-prefix rule removed at least
+one of its tokens (an exact prefix cache serves those, so there is no carryover to read), else "repeated keys only". A
+read pair is SAME-OFFSET if p_A = p_B over all of M, and DIFFERENT-OFFSET otherwise, which includes pairs where only
+part of M moved; each pair reports the share of M at a different offset (`different_offset_share`). The two classes are
+reported apart and pooled.
+
+**The length rule, chosen before any length was seen: exclude, never truncate.** The cap is 0047's, 81,920 tokens under
+YaRN 2.5. A is prefilled only through the end of the 256-token prefill chunk that holds its last matched token (the
+first chunk boundary after that token), or all of A if A ends sooner. With the driver's 256-token chunks under causal
+attention, the states read at A's matched positions are then bit-identical to those of a prefill of all of A, which a
+test in this commit set shows on a synthetic case; nothing that is read is cut. A pair is read only if that prefill of A
+is at most 81,920 tokens, and so is B with its continuation less one token (the continuation's positions follow B's);
+otherwise it is "over the cap". B is never cut, so the scored response is the response to the prompt that is read. The
+host memory a pair needs is fixed now as well, from the manifest alone: a pair is read only if its predicted host
+memory, 12 GiB plus 917,504 bytes per token of M, is at most 88 GiB, otherwise it is "over host memory". The bytes are
+four float32 copies of M's keys and values on the host at once (FRESH's, A's, the relocated ones and one arm's, over 28
+layers, 8 KV heads and 128 dimensions); the fixed part covers the runtime, the logits and the per-layer work. Each
+candidate's manifest record carries its prediction (`predicted_host_GiB`). At these settings the rule excludes no pair
+the cap admits: M is shorter than the cap, and 81,920 tokens predict 82.0 GiB. The reading needs a machine with at least
+88 GiB of host memory. The outcome reports the pairs the cap leaves out, their share of all candidate pairs' matched
+tokens (`over_the_cap_matched_share`), and 0075's two counts at the cap (line 5136).
+
+**Exclusions, in order, each counted and named.** A candidate pair takes the first of these that applies: "prefix";
+"repeated keys only"; "below the matched-token floor"; "no logged response"; "fewer than two continuation tokens"; "over
+the cap"; "over host memory"; "beyond the ceiling". "Below the matched-token floor" is |M| < 64; "beyond the ceiling" is
+a pair after the registered order's first 60. 0014 (line 781): "never a zero (entry 0006's rule, generalized from Lane A
+to every class)." An excluded pair carries no reading and no zero.
+
+**Order and ceiling.** Fixed with `make_rng(20261001)`. It depends only on which pairs are eligible, keyed by task id
+and by B's turn and tool: lengths and counts decide eligibility, before the order, and no length or text enters it. The
+in-window trajectories with an eligible pair, sorted by task id, are permuted; each one's eligible pairs, sorted by B's
+turn and tool, are permuted; the pairs are taken round robin, one from each trajectory before any trajectory's second.
+The first 60 are selected. The adapter's manifest records every candidate with its reason, the registered order and the
+selection, with each input's digest. The driver refuses a selection that is not the order's first pairs or that exceeds
+60, and the outcome reports the counts with the manifest's digest.
+
+**What is scored.** The continuation C is B's logged helper response (its record's `query_result.output_text`) in the
+reader's tokenizer: its first 256 tokens, including the unscored conditioning token C[0], teacher-forced after B, as
+0047 scores the recorded continuation. The harness sent B as one user message through a chat interface; the reader reads
+the logged text with no chat template. FRESH is the reader's chunked prefill of all of B. REUSE takes A's states at p_A
+for every token of M, keys relocated to p_B under the same fixed schedule and values unrotated, and computes the rest of
+B in B's order against the cache assembled so far: 0047's REUSE-ALL (line 3234) with this M. RANDOM and CYCLIC are
+0047's controls, unchanged. Per pair: the mean of KL(p_FRESH ‖ p_ARM) over the scored tokens, its p90, and top-1
+agreement. Every figure carries the label "next-token sensitivity of the reader (Qwen3-1.7B, YaRN 2.5) to reading B with
+its matched document states taken from an earlier sub-call A of the same agent; teacher-forced on the serving model's
+logged response to B, not the reader's own generation; the harness sent B as one user message through a chat interface,
+and the reader reads the logged text with no chat template; f* is the oracle removal fraction (0058), computed by this
+driver on the logged pairs, not by the E9 instrument".
+
+**The oracle removal fraction, computed in this driver.** For each token of M, layer and KV head, δ_K is ‖K_REUSE −
+K_FRESH‖² over SST_K / |M|, where SST_K is the layer-head's centered sum of squares of the fresh keys over M, with keys
+unrotated to position 0 and in float64: `deviation_means`' arithmetic kept per token (`token_deviation`,
+`tools/cache_behavior/core.py`), then averaged per token over layers and heads. The normalisation is per pair: SST_K is
+taken over the pair's own M, so f* depends on which tokens M holds. The driver stops unless the mean of those token
+means equals `deviation_means`' K to 1e-9 relative. f* is `e9_pertoken.f_star` of the token means at τ_K =
+0.3186442653116294, 0047's τ_K (line 3224), which there names the archived tail only and here also sets f*. f* is the
+oracle removal fraction (0058, line 3800), reported per pair beside the tokens over τ_K and the largest token mean
+(0045, line 2995). It is computed by this driver on the logged pairs, not by the E9 instrument.
+
+**The cross-instrument control, before any finance pair.** On 0049's probe handoff,
+`20241016_composio_swekit/django__django-11087_traj#152`, from 0049's prepared inputs (manifest `2aeee5769c0a…`, case
+file `3f79826e8a01…`), the driver computes its per-token δ_K as above and compares it with the E9-long archive's for the
+same matched tokens. It passes if every token's |driver − archive| ≤ 0.001 + 0.01 × the archive's value, which is 0047's
+registered archive-bridge tolerance (line 3245) applied per token, and if the two f* differ by at most one token's share
+of M; the two counts over τ_K are recorded, not gated. On that handoff the archive's f* is 0: the mean of its token
+means, 0.1120, is under τ_K, while 878 of its 23,155 matched tokens are over it. These three are computed from the case
+file's `delta_K` (shape [23155, 28, 8]) with `e9_pertoken.token_mean` and `f_star` at τ_K; the case file is not in the
+repository, and `docs/drafts/append_0076.py --case-file` recomputes them from it and refuses on a difference. The
+per-token comparison is therefore the informative part of the check. A failure stops the run before any finance pair is
+read. The branch and the wall-time limit are fixed once per manifest: the first launch writes them beside the manifest
+(`launch.json`, created only if absent), before the control runs; a first launch on a manifest that has one is refused,
+in a new output folder too, and a resume must match it. A failed control therefore ends this reading: a resume refuses
+it and no other launch on the manifest is accepted. The lock binds the copy of the inputs it sits beside, so the inputs
+are prepared once: no second manifest is built or read under this entry, and a manifest whose lock has no report beside
+it is not replaced. The outcome names every manifest built, its lock and every launch. If the control runs and passes,
+every f* carries "checked per token against the E9-long archive on one handoff". If its inputs cannot be staged for the
+sitting, it is recorded as not run and every f* carries "not cross-checked per token".
+
+**Controls, the probe and the stop.** The controls are 0047's (line 3243), on the probe pair only, as 0073 (line 4945)
+states for both earlier runs. The fresh repeat must reproduce the first FRESH pass's logits exactly, and the driver now
+stops on any nonzero error under every config, the condition 0074 sets (line 5000). The prefix copy over 128 tokens
+stays at most 0.0005. TF32 is off, algorithms are deterministic, and `CUBLAS_WORKSPACE_CONFIG=:4096:8`. There is no
+archive bridge, since no archive holds these pairs; the identity check and the cross-instrument control stand in its
+place. There is no attention slice (`attention_queries = 0`): it needs the deviation before the fresh pass, which only
+an archive supplied. The report records both as not computed. The largest selected pair, by the larger of A's prefill
+and B with its continuation less one, is read first as the memory probe, as in 0047 (line 3246: "The largest sender is
+scored first as the retained memory probe."). It is selected by size, not by the order, and flagged in the per-pair rows
+(`probe`); the rest follow in the registered order. The sitting's wall-time limit is a UTC time fixed at its first
+launch, before the probe pair is read, and recorded in the report and in `launch.json`; a resume keeps it and the
+cross-check branch, and the driver starts no pair after it. Between the probe and the rest, only the controls, the
+cross-check, peak memory and minutes are read off the report: no pair's reading is inspected before the sitting stops.
+The read set is therefore the probe pair plus a prefix of the registered order; the summary states the read count and
+names the selected pairs not read. The stopping rule is 0047's: a failed control, identity check or hash, or an
+out-of-memory, stops the run; the completed prefix is kept; a resume needs unchanged code, inputs, config and runtime.
+Before each step, the cross-instrument control and then each pair, the driver records the step as under way
+(`in_flight`, with its start time) and clears it when the step's result is written. A resume moves a step it finds under
+way to `ended_in_flight`, with the time it found it, and reads that step again, since the read set stays a prefix of the
+order; so a process that ends during a step, by a kill or an error, is attributed to that step.
+
+**Summary, fixed now.** Over the read pairs, each pair one unit, the headline as the 35-handoff row's unit is a handoff:
+the median with p10 and p90, by the repository's one convention (0013, line 745), of f* and of each arm's three
+statistics. Beside it, a trajectory-level summary, since the pairs of one trajectory share documents and are not
+independent: the same convention over trajectories, of each trajectory's median. Both are given for all read pairs and
+for each class, with the number of trajectories the pairs come from. No interval is reported: p10 and p90 are the spread
+of the pairs' or of the trajectories' values, not an interval on the median. `results/cache-behavior-fab/summary.json`
+holds the driver's report fields, with the attention slice as not computed, and a `fab` block holding `label`,
+`cross_check_label`, `cross_check`, `read`, `selected`, `not_read`, `stop_at`, `stopped`, `ended_in_flight`,
+`probe_pair`, `built`, `candidates`, `eligible`, `exclusions`, `excluded`, `over_the_cap_matched_share`,
+`reused_within_cap_0075`, `questions`, `all`, `same_offset`, `different_offset`, `per_pair`. `all`, `same_offset` and
+`different_offset` each hold `pairs`, `trajectories`, `pair_level`, `trajectory_level`; each of `pair_level` and
+`trajectory_level` holds `n`, `median`, `p10` and `p90` of `f_star_K` and of `mean_kl`, `p90_kl`, `top1_agreement` for
+each arm, as `reuse_…`, `random_…` and `scrambled_…` (CYCLIC). `per_pair` holds, for each read pair, the same statistics
+with `handoff`, `task_id`, `class`, `probe`, `ended_by_itself`, `matched`, `matched_in_common_prefix`,
+`repeated_key_tokens`, `matched_share_of_reused`, `different_offset_share`, `sender_tokens`, `a_tokens`,
+`receiver_tokens`, `continuation_tokens`, `tokens_over_tau_K`, `max_token_mean_K`; in it A is `sender_tokens` (A's
+prefill through the cut, of `a_tokens` in all), B is `receiver_tokens`, and CYCLIC's statistics are the `scrambled_…`
+ones. `excluded` names the candidates under each reason, `questions` the task ids under each status, `not_read` the
+selected pairs not read and `stopped` the time and the read count if the limit stopped the sitting. `ended_in_flight`
+lists each step started and not finished, with its start time and, if a resume found it, that time. `built` is the
+manifest's build time (UTC), and `reused_within_cap_0075` holds 0075's two counts at the cap, `reused_in_capped_prompts`
+and `reused_in_capped_pairs`, summed over the measured in-window trajectories, with their number. `cross_check` holds
+`branch`, `label` and `result`: null until the control has run, then `matched`, `tokens_outside_tolerance`, `max_gap`,
+`max_gap_over_bound`, `f_star_driver`, `f_star_archive`, `tokens_over_tau_K_driver`, `tokens_over_tau_K_archive`,
+`passed`, `handoff`, `identity`, `archived_mean`, `minutes`. A field with nothing to report is null, never a zero.
+
+**What stands beside what.** This cell is on the same axis as 0049's 35-handoff REUSE-ALL row (line 3761) and stands
+beside it, never pooled with it. These differences remain: the text, a finance agent's helper prompts holding filings
+and web pages, against coding agents' handoffs; the pairing rule, sub-call to sub-call inside one agent's trajectory,
+not agent to agent; the single writer, A being one earlier sub-call; the matched set, 0075's exact document-token
+identities against 0036's archived alignment pairs (line 2178); the continuation, the serving model's logged response
+read with no chat template, against the recorded receiver response; the window, questions that ended by
+2026-11-20T12:00:00Z; and the cap, pairs within 81,920 tokens, against 0049's receivers of at most 25,073. There is no
+attention slice and no archive bridge here, and f* is this driver's.
+
+**The logs' text.** The logs hold the text of filings and web pages. The adapter writes its inputs, as token ids, into a
+private folder outside this repository; the logged prompts go to the pod as token ids, and nowhere else, and they are
+removed from the pod before it is released. The outputs hold no token of the logs (each continuation is kept as its
+length and the sha256 of its ids), and the manifest holds digests, counts, task ids and turn and tool numbers. The
+outputs do hold the reader's outputs on the logged text: per-token KL, top-1 agreement and deviations, and on the probe
+pair the witness, the reader's logits at up to four continuation positions for FRESH and each arm. They are kept private
+with the output tree, which is copied from the pod into a private folder and verified there by digest; for this sitting
+it is not backed up to the Hub. Nothing of the logs is committed or republished.
+
+**The earlier runs.** Every driver change is selected by this cell's config except two, which make every config
+stricter: the exact fresh repeat (0074), and a guard refusing a prompt and its continuation past the cap (0049's
+receivers are at most 25,073 tokens). Tests in this commit set show both committed configs passing the driver's check,
+and an earlier run's summary byte-identical under this driver and under the one 0069 ran (`tools/cache_behavior/run.py`
+blob `a80fbc28a2d5…` and `core.py` blob `04fab278e7d1…`, at `f98d53b`); 0049's and 0069's own output trees, outside the
+repository, also re-summarise byte-identical under this driver. 0049 and 0069 stay pinned by their commits.
+
+**Gate and enforcement.** `tools/cache_behavior/run.py --prepare --config config/cache-behavior-fab.toml` builds the
+inputs with no model. It refuses before the window ends, until the committed ledger holds 0075 and 0076, on an existing
+manifest, on a tokenizer other than 0075's, on a file read whose bytes differ from its launch record, on a walk that
+does not reproduce 0075's counts, on two trajectories for one question, and on another serving model. The driver refuses
+until the committed ledger holds 0075 and 0076; on a manifest whose config or code digests differ from the tree's; on a
+selection other than the order's first pairs; on any input whose digest or lengths differ from the manifest; on a first
+launch without a wall-time limit and one cross-check branch, or on a manifest that already has a `launch.json`; and on a
+resume that changes either or differs from `launch.json`. This script refuses unless the cell's files are committed
+as-is, 0075's module and config are the blobs that landed with 0075, the cell's gate names 0075 and 0076, its shared
+settings equal `config/cache-behavior.toml`'s, and nothing exists under `results/cache-behavior-fab/`. Pinned at append:
+`config/cache-behavior-fab.toml` (blob `90d23e40587d…`, sha256 `78560c47b389…`), `tools/cache_behavior/fab_pairs.py`
+(blob `ae05c2c8a4d4…`, sha256 `c3323d44f67c…`), `tools/cache_behavior/run.py` (blob `820145c9d48f…`, sha256
+`055d8eaccf78…`), `tools/cache_behavior/core.py` (blob `84071606a15a…`, sha256 `128eea9649fb…`),
+`tests/test_cache_behavior_fab.py` (blob `f0f5844c85dc…`, sha256 `edd79d597ca6…`).
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule and the bands; entries 0047, 0049, 0061, 0069 and
+0075, their configs and records; every other output tree; the figure set 0072 lists.
+
+**Consequences in this commit set.** `config/cache-behavior-fab.toml`, `tools/cache_behavior/fab_pairs.py`,
+`tests/test_cache_behavior_fab.py`, the changes to `tools/cache_behavior/run.py` and `tools/cache_behavior/core.py`, a
+section in `docs/agent/experiment-commands.md`, a line in `docs/agent/repo-architecture.md`, and the drafts README's
+allocator. Nothing under `results/`.
+
+**Scope.** One reader, Qwen3-1.7B at YaRN 2.5, cap 81,920; one run of one serving model, on the public questions in the
+window; pairs within a trajectory; fixed logged text, so KL and top-1 agreement are not task outcomes; same-model only;
+no second reader; a registration, not a result.
+
+**Numbering.** 0076 is the number the drafts README allocates at staging; ordering guard 0075 present, 0076 absent. Next
+free number after this entry: 0077.
+
+prior-entries-sha256: 9cc634b6bfb8cf197063a3e6abfcccdc215e28496449f2779f4c8e8b0ae9904a
