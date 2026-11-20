@@ -485,3 +485,18 @@ and the run's last `end`). Checks the ledger against HEAD and runs `ledger_check
 `verdict:` line, no hypothesis row. Ordering guard: 0076 last, 0077 absent. Next free number: **0078**.
 
 *(2026-11-20: **0077 APPENDED** (`05e2f11`, chain `922b1078…`; script retired in the retire commit; run with `--date 2026-11-20`). File order now ends 0076, 0077. Still staged: nothing. Next free number: **0078**.)*
+
+**Staged 2026-11-20: `append_0078.py` — the FAB v2 document-reuse opportunity's figures (registered by 0075).** Runs
+the module's gate and `linear_ceiling.fab_reuse.summarize` in-process over the run's private log root, and refuses
+unless the result is the summary of record (`results/fab-reuse/summary.json`, written once by the module's command,
+pinned by sha256) byte for byte, and unless every log file the summary read carries the sha256 the wrapper's manifest
+recorded when its question ended. Reads when the summary was written from the summarizer's own output log, passed by
+argument and pinned by sha256. Asserts the config, module and test pins 0075 states. Run facts (each launch's start,
+end and what ended it, the launches by question, the questions started before 0075's commit, the stops of new starts,
+the restarts and whether the spend limit rose) are recounted from the wrapper's launch records and the run's output
+logs, passed by argument and pinned by sha256; no spend, limit amount or estimate enters the entry. States the
+User-Agent change by its diff, computed from the pinned tarball and the run's harness file, the contact elided, and
+checks every other file of the tarball byte-identical in the run's harness folder. Checks the ledger against HEAD and
+runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row, nothing under `results/`
+committed. Edits `docs/agent/experiment-commands.md`, whose FAB heading still read registered only. Ordering guard: 0075
+present, 0077 last, 0078 absent. Next free number: **0079**.
