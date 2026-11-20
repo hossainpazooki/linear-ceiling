@@ -5550,3 +5550,161 @@ it; and unless nothing exists under `results/cache-behavior-fab/`.
 free number after this entry: 0078.
 
 prior-entries-sha256: 922b10787053a7ccbeee7ac1ae6e64f92f92dfb1afa9001a50d34376c505e6c4
+
+### 0078 — 2026-11-20 — FAB v2 document-reuse opportunity ran `[BASELINE, DESCRIPTIVE]`: the document tokens a logged helper sub-call of a Finance Agent Benchmark v2 trajectory carries that an earlier sub-call of the same trajectory already carried, over 27 of 27 questions, one run each; an upper bound, not a realized saving; no band, no cell moves
+
+**Setup, as registered (0075).** `vals-ai/finance-agent-v2` at `25b6cab9bcb4`, from the pinned tarball
+(`cacbd021374a…`), run locally in single-task mode, one question per process, serving model
+`anthropic/claude-opus-5-5-no-fallback` at the registry's default effort; at most 2 questions at once, the wrapper
+ending a question at 8,100 s of wall time or 3,000,000 input tokens, last start 2026-11-20T17:00:00Z. Config
+`773ddef7e2c2…`, `fab_reuse.py` `b884ec174132…` and `test_fab_reuse.py` `8c9b4438918e…` as 0075 pins them (line 5195),
+committed in `45e3e7e`, the first commit of 0075's set, and unchanged since; the summary's `sources` are these three
+hashes. Reader `Qwen/Qwen3-1.7B@70d244cc86cc`, `tokenizer.json` `aeb13307a71a…`, tokenizers 0.23.1. The summary,
+`results/fab-reuse/summary.json` (`b0325c4bbf19…`), was written once by the module's command after its gate passed, from
+2026-11-20T06:30:35Z to 2026-11-20T06:31:27Z with rc 0, after the run's end; it is not committed (nothing under
+`results/fab-reuse/` is tracked). This entry's script ran the gate again, recomputed the summary in-process with the
+committed module, and refuses unless it is that file byte for byte. As 0075 asks (line 5222), the summarizer's figures
+enter by this entry: each one under **Figures** below is read from that recomputation, and none is typed; the times of
+the run's events are read from the wrapper's launch records and output logs, which the script also pins by sha256. Each
+of the 1,469 log files the summary read has the sha256 the wrapper's manifest recorded when its question ended.
+
+**The run.** Row 1's smoke, its one run, started 2026-11-19T18:40:08Z and ended 2026-11-19T19:51:40Z, before the token
+ceiling and the number of questions run at once were set (line 5022). The other 26 questions started in the registered
+order (4, 7, 10, 13, 16, 19, 22, 25, 2, 5, 8, 11, 14, 17, 20, 23, 26, 3, 6, 9, 12, 15, 18, 21, 24, 27) from
+2026-11-19T20:53:54Z to 2026-11-20T06:17:46Z; the last ended 2026-11-20T06:29:49Z. As 0075 asks (line 5028): 12
+questions had started before its commit (`7e772ef`, 2026-11-19T23:30:51Z), rows 1, 4, 7, 10, 13, 16, 19, 22, 25, 2, 5,
+8; the other 15 started after the last commit of its set (2026-11-19T23:30:53Z), and no start falls between that set's
+first and last commit. Questions run: 27 of 27; NOT RUN: none. Launches by question (line 5062): 1 for 27 questions, 27
+in all; failed launches: none. Ended by a wrapper limit: `row14` at its token ceiling, at 2026-11-20T01:02:03Z, with no
+final record, its last turn (turn 35) set aside, which holds no logged sub-call; `row18` at its token ceiling, at
+2026-11-20T05:35:55Z, with no final record, its last turn (turn 41) set aside, which holds no logged sub-call; every
+other question ended with its own final record.
+
+**Stops and restarts (line 5215).** New starts stopped 3 times before the run's end: 2026-11-20T01:18:30Z, the spend
+check failed with nothing running; 2026-11-20T01:44:19Z, free disk on the run's drive fell under the 6 GB floor;
+2026-11-20T05:36:00Z, the spend check failed with nothing running. After each, the questions in flight, if any, ran to
+their own end, and once nothing ran the wrapper was started again with the same config pin, model and arguments, the
+spend limit aside: 2026-11-20T01:18:51Z with the limit raised; 2026-11-20T03:27:25Z with the limit unchanged;
+2026-11-20T05:40:31Z with the limit raised. As 0075 asks (line 5213), the spend limit was raised 2 times, at each
+restart after a failed spend check and never lowered, before the last start time; its amount is not stated. The restart
+after the disk-floor stop kept the limit; it was made once space had been freed on the run's drive. 0075 gives no rule
+for a restart after a disk-floor stop: it says only that such a failed check stops new starts at once (line 5211). The
+run's last session ended at 2026-11-20T06:29:50Z: every question in the order had started and the last had ended. As
+0075 asks (line 5217): no question was started from a part of the order and no stop by hand was used; a part of the
+order was given once, at 2026-11-20T01:18:43Z, row20 alone, with the wrapper's dry-run flag, which runs its checks and
+starts nothing, to read the spend check before a restart.
+
+**The local change (line 5051).** The page fetcher's User-Agent header, which at the commit carries another party's
+contact, takes the run's own contact from the environment. The diff of `finance_agent/tools.py`, tarball
+(`d58fc6af24f5…`) to run (`ee32f478a2ab…`), the hard-coded contact elided; the other 19 files of the tarball are
+byte-identical in the run's harness folder:
+
+```diff
+@@ -418,6 +418,13 @@
+     }
+     required = ["url", "key"]
+ 
++    def __init__(self) -> None:
++        # Local patch: the contact comes from FAB_CONTACT in the operator's .env; built after load_dotenv, so a
++        # missing or empty value stops the process before the first model call.
++        self._user_agent = os.environ["FAB_CONTACT"].strip()
++        if "@" not in self._user_agent:
++            raise ValueError("FAB_CONTACT holds no contact address")
++
+     async def _parse_html_page(self, url: str) -> str:
+         @retry_with_policy(get_retry_policy(url))
+         async def _fetch(fetch_url: str) -> str:
+@@ -426,7 +433,7 @@
+                     async with session.get(
+                         fetch_url,
+                         timeout=aiohttp.ClientTimeout(total=60),
+-                        headers={"User-Agent": "ValsAI/<contact elided>"},
++                        headers={"User-Agent": self._user_agent},
+                     ) as response:
+                         response.raise_for_status()
+                         return await response.text()
+```
+
+**Figures (`fab_reuse.summarize` in-process).** Every reuse figure below carries 0075's label (line 5172), verbatim:
+"reuse OPPORTUNITY: an upper bound on the document KV a cache keyed on the retrieved document's sha256 could reuse
+across a trajectory's logged sub-calls, which the harness sent with prompt caching off; not a realized saving; a cache
+keyed on content could reuse more, and prefix_shared is not bounded by it; no carryover, key or KL statistic; counts in
+the reader's tokenizer (Qwen3-1.7B), not the serving model's; a trajectory that did not end by itself is read over the
+turns it completed, and aggregates_ended_by_itself leaves it out". The input share, the main-loop caching and the reuse
+gap carry their own labels (`labels` in the summary), verbatim: input share "input SHARE: the helper sub-calls' input
+tokens over those of the helper sub-calls and the main agent's turn queries, in the provider's counts; descriptive; not
+compared with the reuse counts (another tokenizer)"; main-loop caching "REALIZED caching on the main loop: cache-read
+input tokens over all input tokens of the main agent's turn queries, in the provider's counts; the main loop only; the
+helper sub-calls, which carry the documents, were sent with prompt caching off; with questions run at once, a cache read
+can include a prefix another question wrote"; reuse gap "reuse GAP: the estimated start-to-start time from the latest
+earlier sub-call that carried the same document (turn timestamps plus tool durations, leaving out the harness's log
+writes); descriptive; not a cache hit". None is compared with the reuse counts. Measured 27 of 27; NOT MEASURABLE by
+reason: no sub-call 0, no document token 0, reconstruction 0, tokenization 0, unreadable record 0.
+`not_ended_by_itself`: `row14` (absent); `row18` (absent). By question type (`by_question_type`, listed, not compared):
+General Qualitative Analysis: `row01`, `row02`, `row03`; General Quantitative Analysis: `row04`, `row05`, `row06`;
+Market Analysis: `row07`, `row08`, `row09`; Comparables: `row10`, `row11`, `row12`; Precedents: `row13`, `row14`,
+`row15`; Adjustments: `row16`, `row17`, `row18`; Earnings Analysis: `row19`, `row20`, `row21`; Disclosure Analysis:
+`row22`, `row23`, `row24`; Financial Modeling: `row25`, `row26`, `row27`.
+
+*All 27 trajectories (27 measured).*
+- **Pooled** over the measured trajectories: 11,668,119 document tokens in 11,694,309 prompt tokens; SAME OFFSET 0, DIFFERENT OFFSET 3,661,594, NEW 8,006,525; `reused_fraction` 0.3138 (`same_offset_fraction` 0.0000, `different_offset_fraction` 0.3138), `new_fraction` 0.6862; `prefix_shared_fraction` 0.0001 (1,359 of the prompt tokens); within the cap, `capped_prompt_share` 0.3468 (1,269,708), `capped_pair_share` 0.3468 (1,269,708).
+- **Per trajectory**, median (p10, p90): `reused_fraction` 0.2882 (p10 0.0000, p90 0.6484; n = 27); `same_offset_fraction` 0.0000 (p10 0.0000, p90 0.0000; n = 27); `different_offset_fraction` 0.2882 (p10 0.0000, p90 0.6484; n = 27); `new_fraction` 0.7118 (p10 0.3516, p90 1.0000; n = 27); sub-calls 7 (p10 4, p90 14; n = 27).
+- **Input share**: over 27 trajectories, helper 16,059,920 and main 19,055,361 input tokens, pooled 0.4573; per trajectory 0.5919 (p10 0.1407, p90 0.7464; n = 27); compaction input tokens 0, unknown for `row14`, `row18`.
+- **Main-loop caching**: 16,103,581 cache-read of 19,055,361 input tokens, pooled 0.8451; per trajectory 0.8279 (p10 0.7413, p90 0.9289; n = 27).
+- **Reuse gap**: 56 gaps over 27 timed trajectories, seconds 455.8 (p10 80.3, p90 1820.3; n = 56); 0.3929 within 300 s, 1.0000 within 3,600 s; untimed none.
+
+*The 25 trajectories that ended by themselves (25 measured; `aggregates_ended_by_itself`).*
+- **Pooled** over the measured trajectories: 11,151,467 document tokens in 11,175,197 prompt tokens; SAME OFFSET 0, DIFFERENT OFFSET 3,494,330, NEW 7,657,137; `reused_fraction` 0.3134 (`same_offset_fraction` 0.0000, `different_offset_fraction` 0.3134), `new_fraction` 0.6866; `prefix_shared_fraction` 0.0001 (1,304 of the prompt tokens); within the cap, `capped_prompt_share` 0.3155 (1,102,444), `capped_pair_share` 0.3155 (1,102,444).
+- **Per trajectory**, median (p10, p90): `reused_fraction` 0.2882 (p10 0.0000, p90 0.6236; n = 25); `same_offset_fraction` 0.0000 (p10 0.0000, p90 0.0000; n = 25); `different_offset_fraction` 0.2882 (p10 0.0000, p90 0.6236; n = 25); `new_fraction` 0.7118 (p10 0.3764, p90 1.0000; n = 25); sub-calls 7 (p10 4, p90 10; n = 25).
+- **Input share**: over 25 trajectories, helper 15,342,926 and main 13,592,952 input tokens, pooled 0.5302; per trajectory 0.5997 (p10 0.2374, p90 0.7464; n = 25); compaction input tokens 0, unknown for none.
+- **Main-loop caching**: 11,195,874 cache-read of 13,592,952 input tokens, pooled 0.8237; per trajectory 0.8190 (p10 0.7413, p90 0.9289; n = 25).
+- **Reuse gap**: 51 gaps over 25 timed trajectories, seconds 448.3 (p10 99.1, p90 1665.3; n = 51); 0.3922 within 300 s, 1.0000 within 3,600 s; untimed none.
+
+*Each trajectory* (`trajectories`; fractions of its document tokens, prefix-shared of its prompt tokens):
+- `row01` (General Qualitative Analysis; ended by itself; 24 turns, 15 sub-calls): 295,313 document tokens, `reused_fraction` 0.2483 (same 0.0000, different 0.2483), `prefix_shared_fraction` 0.0004, 7 documents; input share 0.2791, main-loop cache read 0.7526.
+- `row02` (General Qualitative Analysis; ended by itself; 25 turns, 10 sub-calls): 517,602 document tokens, `reused_fraction` 0.2996 (same 0.0000, different 0.2996), `prefix_shared_fraction` 0.0001, 8 documents; input share 0.3444, main-loop cache read 0.8847.
+- `row03` (General Qualitative Analysis; ended by itself; 17 turns, 10 sub-calls): 830,890 document tokens, `reused_fraction` 0.3840 (same 0.0000, different 0.3840), `prefix_shared_fraction` 0.0000, 7 documents; input share 0.6369, main-loop cache read 0.7946.
+- `row04` (General Quantitative Analysis; ended by itself; 8 turns, 4 sub-calls): 434,361 document tokens, `reused_fraction` 0.0000 (same 0.0000, different 0.0000), `prefix_shared_fraction` 0.0002, 4 documents; input share 0.8798, main-loop cache read 0.8279.
+- `row05` (General Quantitative Analysis; ended by itself; 12 turns, 5 sub-calls): 652,487 document tokens, `reused_fraction` 0.0000 (same 0.0000, different 0.0000), `prefix_shared_fraction` 0.0001, 5 documents; input share 0.6597, main-loop cache read 0.7367.
+- `row06` (General Quantitative Analysis; ended by itself; 10 turns, 4 sub-calls): 320,608 document tokens, `reused_fraction` 0.5000 (same 0.0000, different 0.5000), `prefix_shared_fraction` 0.0001, 2 documents; input share 0.7961, main-loop cache read 0.8537.
+- `row07` (Market Analysis; ended by itself; 15 turns, 4 sub-calls): 14,502 document tokens, `reused_fraction` 0.0000 (same 0.0000, different 0.0000), `prefix_shared_fraction` 0.0003, 5 documents; input share 0.0552, main-loop cache read 0.8907.
+- `row08` (Market Analysis; ended by itself; 20 turns, 7 sub-calls): 581,600 document tokens, `reused_fraction` 0.0000 (same 0.0000, different 0.0000), `prefix_shared_fraction` 0.0000, 7 documents; input share 0.6544, main-loop cache read 0.9289.
+- `row09` (Market Analysis; ended by itself; 10 turns, 3 sub-calls): 280,278 document tokens, `reused_fraction` 0.0000 (same 0.0000, different 0.0000), `prefix_shared_fraction` 0.0000, 3 documents; input share 0.6613, main-loop cache read 0.7822.
+- `row10` (Comparables; ended by itself; 12 turns, 6 sub-calls): 425,448 document tokens, `reused_fraction` 0.3194 (same 0.0000, different 0.3194), `prefix_shared_fraction` 0.0001, 4 documents; input share 0.4019, main-loop cache read 0.7539.
+- `row11` (Comparables; ended by itself; 14 turns, 9 sub-calls): 495,875 document tokens, `reused_fraction` 0.6236 (same 0.0000, different 0.6236), `prefix_shared_fraction` 0.0001, 5 documents; input share 0.6115, main-loop cache read 0.8190.
+- `row12` (Comparables; ended by itself; 11 turns, 5 sub-calls): 397,978 document tokens, `reused_fraction` 0.6005 (same 0.0000, different 0.6005), `prefix_shared_fraction` 0.0001, 2 documents; input share 0.7152, main-loop cache read 0.8360.
+- `row13` (Precedents; ended by itself; 17 turns, 7 sub-calls): 180,220 document tokens, `reused_fraction` 0.0603 (same 0.0000, different 0.0603), `prefix_shared_fraction` 0.0000, 5 documents; input share 0.2717, main-loop cache read 0.7648.
+- `row14` (Precedents; did not end by itself (`stop_reason` absent); 35 turns, 16 sub-calls, turn 35 set aside with 0 logged sub-calls): 289,193 document tokens, `reused_fraction` 0.0684 (same 0.0000, different 0.0684), `prefix_shared_fraction` 0.0001, 12 documents; input share 0.1407, main-loop cache read 0.8672.
+- `row15` (Precedents; ended by itself; 14 turns, 8 sub-calls): 533,511 document tokens, `reused_fraction` 0.7428 (same 0.0000, different 0.7428), `prefix_shared_fraction` 0.0002, 3 documents; input share 0.7464, main-loop cache read 0.9190.
+- `row16` (Adjustments; ended by itself; 21 turns, 9 sub-calls): 1,207,986 document tokens, `reused_fraction` 0.1946 (same 0.0000, different 0.1946), `prefix_shared_fraction` 0.0001, 7 documents; input share 0.5997, main-loop cache read 0.7888.
+- `row17` (Adjustments; ended by itself; 10 turns, 4 sub-calls): 191,216 document tokens, `reused_fraction` 0.1279 (same 0.0000, different 0.1279), `prefix_shared_fraction` 0.0001, 2 documents; input share 0.7028, main-loop cache read 0.7997.
+- `row18` (Adjustments; did not end by itself (`stop_reason` absent); 41 turns, 12 sub-calls, turn 41 set aside with 0 logged sub-calls): 227,459 document tokens, `reused_fraction` 0.6484 (same 0.0000, different 0.6484), `prefix_shared_fraction` 0.0001, 12 documents; input share 0.0929, main-loop cache read 0.9262.
+- `row19` (Earnings Analysis; ended by itself; 23 turns, 8 sub-calls): 205,216 document tokens, `reused_fraction` 0.2882 (same 0.0000, different 0.2882), `prefix_shared_fraction` 0.0002, 7 documents; input share 0.2374, main-loop cache read 0.8172.
+- `row20` (Earnings Analysis; ended by itself; 15 turns, 7 sub-calls): 266,389 document tokens, `reused_fraction` 0.4021 (same 0.0000, different 0.4021), `prefix_shared_fraction` 0.0001, 6 documents; input share 0.5460, main-loop cache read 0.8941.
+- `row21` (Earnings Analysis; ended by itself; 11 turns, 14 sub-calls): 253,645 document tokens, `reused_fraction` 0.0000 (same 0.0000, different 0.0000), `prefix_shared_fraction` 0.0010, 13 documents; input share 0.5919, main-loop cache read 0.6859.
+- `row22` (Disclosure Analysis; ended by itself; 21 turns, 7 sub-calls): 1,129,326 document tokens, `reused_fraction` 0.5188 (same 0.0000, different 0.5188), `prefix_shared_fraction` 0.0000, 4 documents; input share 0.6678, main-loop cache read 0.8467.
+- `row23` (Disclosure Analysis; ended by itself; 21 turns, 8 sub-calls): 752,257 document tokens, `reused_fraction` 0.3433 (same 0.0000, different 0.3433), `prefix_shared_fraction` 0.0001, 6 documents; input share 0.5430, main-loop cache read 0.8106.
+- `row24` (Disclosure Analysis; ended by itself; 14 turns, 9 sub-calls): 542,472 document tokens, `reused_fraction` 0.2236 (same 0.0000, different 0.2236), `prefix_shared_fraction` 0.0002, 7 documents; input share 0.6077, main-loop cache read 0.7413.
+- `row25` (Financial Modeling; ended by itself; 24 turns, 4 sub-calls): 133,746 document tokens, `reused_fraction` 0.1915 (same 0.0000, different 0.1915), `prefix_shared_fraction` 0.0001, 2 documents; input share 0.2170, main-loop cache read 0.8914.
+- `row26` (Financial Modeling; ended by itself; 19 turns, 3 sub-calls): 312,636 document tokens, `reused_fraction` 0.6667 (same 0.0000, different 0.6667), `prefix_shared_fraction` 0.0000, 1 document; input share 0.5245, main-loop cache read 0.9350.
+- `row27` (Financial Modeling; ended by itself; 25 turns, 10 sub-calls): 195,905 document tokens, `reused_fraction` 0.3575 (same 0.0000, different 0.3575), `prefix_shared_fraction` 0.0002, 2 documents; input share 0.3162, main-loop cache read 0.9431.
+
+**Reading (descriptive; no band, no threshold).** These are counts in one trajectory's own logged helper sub-calls, in
+the reader's tokenizer: of the document tokens those sub-calls carried, the share an earlier sub-call of the same
+trajectory had already carried. It bounds from above what a cache keyed on the retrieved document's sha256 could have
+reused; the harness sent every sub-call with prompt caching off, so none of it was a realized saving, and a cache keyed
+on content could reuse more. PREFIX-SHARED is beside it and not bounded by it. The input share and the main-loop caching
+are in the provider's tokenizer and the reuse gap in seconds; they describe where the input went and the estimated time
+between carryings, not what a cache would have served. No carryover effect, key statistic or KL is read, and the
+benchmark's grading is its owner's: this run carries no score.
+
+**What this does NOT touch.** Every cell and verdict, every other config and output tree, the figure set 0072 lists, and
+entry 0076, whose reading of these trajectories enters by its own entry.
+
+**Scope.** One harness at one commit, one serving model, 27 questions, one run each, 27 run; the document text of one
+agent's logged helper sub-calls; an upper bound on one cache's opportunity, not a saving.
+
+**Numbering.** 0078 is the number the drafts README allocates at staging; ordering guard 0075 present, 0077 last, 0078
+absent. Next free number after this entry: 0079.
+
+prior-entries-sha256: 0c7392327da5386e9cbcf15f4cbc923b85c1e6fcbd7d11bcf6287b2638db7d5f
