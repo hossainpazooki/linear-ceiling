@@ -265,3 +265,21 @@ summarizer reads their logs where they are and writes figures only (counts, shar
 $PY -m pytest -q tests/test_fab_reuse.py
 $PY -m linear_ceiling.fab_reuse --runs <log root> --questions <harness>/data/public.csv --tokenizer-json <reader snapshot>/tokenizer.json   # gate first; writes results/fab-reuse/summary.json
 ```
+
+## FAB v2 paired sub-call cache reading (registered 0076; GPU; descriptive)
+`config/cache-behavior-fab.toml` runs the cache-behavior driver (`tools/cache_behavior/run.py`, `core.py`) on pairs of
+one trajectory's `retrieve_information` sub-calls that carry the same document, derived by 0075's `fab_reuse` code;
+`tools/cache_behavior/fab_pairs.py` is the cell's input adapter, its pairing, length, host-memory and exclusion
+rules, and the summary's `fab` block. `--prepare` needs no model: it reads the private log root and writes the inputs, as token ids,
+into a private folder outside this repository; nothing of the logs is committed. The first `--probe` or `--run` fixes
+`--stop-at` and exactly one of `--cross-check-inputs` (0049's prepared inputs; the control runs before any pair) and
+`--no-cross-check`, once per manifest: it writes them beside the manifest (`launch.json`), a later first launch on
+that manifest is refused, and a resume must match them.
+```
+$PY -m pytest -q tests/test_cache_behavior_fab.py
+$PY -m tools.cache_behavior.run --prepare --config config/cache-behavior-fab.toml --inputs <private inputs> --runs-root <log root> --tokenizer-json <reader snapshot>/tokenizer.json   # 0075 and 0076 on the ledger, after the window
+$PY -m tools.cache_behavior.run --check --config config/cache-behavior-fab.toml --inputs <inputs>   # 0075 and 0076 on the ledger
+$PY -m tools.cache_behavior.run --probe --config config/cache-behavior-fab.toml --inputs <inputs> --output results/cache-behavior-fab --stop-at <YYYY-MM-DDTHH:MM:SSZ> --cross-check-inputs <0049 inputs>
+$PY -m tools.cache_behavior.run --run --resume --config config/cache-behavior-fab.toml --inputs <inputs> --output results/cache-behavior-fab
+$PY -m tools.cache_behavior.run --summarize --config config/cache-behavior-fab.toml --inputs <inputs> --output results/cache-behavior-fab
+```

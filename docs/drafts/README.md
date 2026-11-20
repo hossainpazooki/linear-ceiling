@@ -456,3 +456,16 @@ serving model is the pinned one, the run's limits are set and nothing exists und
 ledger against HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row. Ordering guard: 0074 last, 0075 absent. Next free number: **0076**.
 
 *(2026-11-19: **0075 APPENDED** (`7e772ef`, chain `cf0d8e47…`; script retired in the retire commit; run with `--date 2026-11-19`). File order now ends 0074, 0075. Still staged: nothing. Next free number: **0076**.)*
+
+**Staged 2026-11-20: `append_0076.py` — the FAB v2 paired sub-call cache reading, registered before any pair is built.**
+Descriptive: 0047's fresh-vs-reused reading, with RANDOM and CYCLIC controls and the oracle removal fraction at τ_K, on
+pairs of one Finance Agent Benchmark v2 trajectory's `retrieve_information` sub-calls that carry the same document,
+derived by 0075's code; one run, one window, on 0049's axis beside its 35-handoff row and never pooled with it.
+Registers `config/cache-behavior-fab.toml`, `tools/cache_behavior/fab_pairs.py`, `tests/test_cache_behavior_fab.py`
+and the changes to `tools/cache_behavior/run.py` and `core.py`, each pinned by blob and sha256 at append; pins 0075's
+module and config by the blobs that landed with 0075, and locates every cited sentence by search. Refuses unless the
+cell's files are committed as-is, the config's gate names 0075 and the number, the window, floor, ceiling, cap,
+host-memory rule and cross-check are those the entry states and nothing exists under `results/cache-behavior-fab/`.
+With `--case-file` it recomputes the entry's three archive figures from 0049's probe input. Checks the ledger against
+HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row. Ordering guard: 0075
+last, 0076 absent. Next free number: **0077**.
