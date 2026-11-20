@@ -469,3 +469,5 @@ host-memory rule and cross-check are those the entry states and nothing exists u
 With `--case-file` it recomputes the entry's three archive figures from 0049's probe input. Checks the ledger against
 HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row. Ordering guard: 0075
 last, 0076 absent. Next free number: **0077**.
+
+*(2026-11-20: **0076 APPENDED** (`d8c648b`, chain `9cc634b6…`; script retired in the retire commit; run with `--date 2026-11-20`). File order now ends 0075, 0076. Still staged: nothing. Next free number: **0077**.)*
