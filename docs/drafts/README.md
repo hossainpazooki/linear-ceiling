@@ -483,3 +483,5 @@ exists under `results/cache-behavior-fab/`. `--runs-root` (required) checks the 
 launch facts the entry states from them and runs the cell's own `window` at three times (the old window end, the new one
 and the run's last `end`). Checks the ledger against HEAD and runs `ledger_check` before and after its write. No
 `verdict:` line, no hypothesis row. Ordering guard: 0076 last, 0077 absent. Next free number: **0078**.
+
+*(2026-11-20: **0077 APPENDED** (`05e2f11`, chain `922b1078…`; script retired in the retire commit; run with `--date 2026-11-20`). File order now ends 0076, 0077. Still staged: nothing. Next free number: **0078**.)*
