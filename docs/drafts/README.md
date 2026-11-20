@@ -471,3 +471,15 @@ HEAD and runs `ledger_check` before and after its write. No `verdict:` line, no 
 last, 0076 absent. Next free number: **0077**.
 
 *(2026-11-20: **0076 APPENDED** (`d8c648b`, chain `9cc634b6…`; script retired in the retire commit; run with `--date 2026-11-20`). File order now ends 0075, 0076. Still staged: nothing. Next free number: **0077**.)*
+
+**Staged 2026-11-20: `append_0077.py` — a window amendment to 0076, before any pair is built.**
+Descriptive: 0076's `window_end` moves from 2026-11-20T12:00:00Z to 2026-11-20T06:30:00Z, set after the run had ended,
+so the window holds the same whole run, and the cell's gate names 0077 as well. Pins `config/cache-behavior-fab.toml`
+and `tests/test_cache_behavior_fab.py` by blob and sha256 at append, beside 0076's pins of both, and
+`docs/agent/experiment-commands.md`. Refuses unless the three are committed as-is, the config differs from 0076's in the
+window end and the gate only, the test file in the two tests the entry names only, `docs/agent/experiment-commands.md`
+differs from 0076's only in the cell's heading and two comments, the other files 0076 pins are its blobs and nothing
+exists under `results/cache-behavior-fab/`. `--runs-root` (required) checks the launch records' digest, recomputes the
+launch facts the entry states from them and runs the cell's own `window` at three times (the old window end, the new one
+and the run's last `end`). Checks the ledger against HEAD and runs `ledger_check` before and after its write. No
+`verdict:` line, no hypothesis row. Ordering guard: 0076 last, 0077 absent. Next free number: **0078**.
