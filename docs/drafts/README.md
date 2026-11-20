@@ -500,3 +500,5 @@ checks every other file of the tarball byte-identical in the run's harness folde
 runs `ledger_check` before and after its write. No `verdict:` line, no hypothesis row, nothing under `results/`
 committed. Edits `docs/agent/experiment-commands.md`, whose FAB heading still read registered only. Ordering guard: 0075
 present, 0077 last, 0078 absent. Next free number: **0079**.
+
+*(2026-11-20: **0078 APPENDED** (`ca6ec8b`, chain `0c739232…`; script retired in the retire commit; run with `--date 2026-11-20`). File order now ends 0077, 0078. Still staged: nothing. Next free number: **0079**.)*
