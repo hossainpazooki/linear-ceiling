@@ -5708,3 +5708,224 @@ agent's logged helper sub-calls; an upper bound on one cache's opportunity, not 
 absent. Next free number after this entry: 0079.
 
 prior-entries-sha256: 0c7392327da5386e9cbcf15f4cbc923b85c1e6fcbd7d11bcf6287b2638db7d5f
+
+### 0079 — 2026-11-24 — Cache reading of the Finance Agent run's paired helper sub-calls ran `[BASELINE, DESCRIPTIVE]`: next-token sensitivity of Qwen3-1.7B to reading a logged helper sub-call with its matched document states taken from one earlier sub-call of the same trajectory, fresh vs reused with RANDOM and CYCLIC controls, and the oracle removal fraction at τ_K, over 36 pairs from 15 trajectories; descriptive, no band, no hypothesis row, no cell moves
+
+**What this reports.** The reading 0076 registers (line 5239), with the window end 0077 sets (line 5480), reported field
+by field under 0076's names. Every figure below is filled by this entry's script from the summary of record and the six
+records beside it, each named next. The summary of record is `summary.json` (sha256 `bf2523f47831…`), which the driver's
+own `--summarize` wrote from the output tree copied off the reading machine, with the code at `383605578d87`; the script
+checks that it holds the same values, and the same bytes up to line ends, as the `summary.json` the reading machine
+wrote, and recomputes every median, p10 and p90 below from the summary's per-pair rows by the repository's one
+convention (0013). Beside it the script reads, each pinned by sha256, the driver's report (sha256 `b07e61db6a3e…`), the
+lock `launch.json` (sha256 `74a931c8666c…`), the log of the launches (sha256 `8e0604fc14b8…`), the record of the inputs'
+removal (sha256 `95e54c53a3cb…`), and the driver's own logs of the first launch (sha256 `e923ef6e89fa…`) and of the
+resume (sha256 `638647693beb…`). None of these files is committed, and none holds any text of the Finance Agent run's
+logs. As 0076 asks (line 5341), every figure carries its label: "next-token sensitivity of the reader (Qwen3-1.7B, YaRN
+2.5) to reading B with its matched document states taken from an earlier sub-call A of the same agent; teacher-forced on
+the serving model's logged response to B, not the reader's own generation; the harness sent B as one user message
+through a chat interface, and the reader reads the logged text with no chat template; f* is the oracle removal fraction
+(0058), computed by this driver on the logged pairs, not by the E9 instrument". As 0076 asks (line 5372), since the
+control ran and passed, every f* carries "checked per token against the E9-long archive on one handoff". **No band, no
+hypothesis row, no `verdict:` line, no cell moves.** As 0076 fixes (line 5401), no interval is reported: p10 and p90 are
+the spread of the pairs' or of the trajectories' values.
+
+**The window and the questions.** 0076 reads a question only if every one of its launches had ended by the window end
+(line 5279); 0077 moved that end from 2026-11-20T12:00:00Z to 2026-11-20T06:30:00Z (line 5482), the `window_end` of the
+config the reading ran. `questions` names the run's 27 public questions under their statuses: `measured`: 27 (`row01`,
+`row02`, `row03`, `row04`, `row05`, `row06`, `row07`, `row08`, `row09`, `row10`, `row11`, `row12`, `row13`, `row14`,
+`row15`, `row16`, `row17`, `row18`, `row19`, `row20`, `row21`, `row22`, `row23`, `row24`, `row25`, `row26`, `row27`).
+
+**The manifest, its lock and the launches.** As 0076 asks (line 5372): the lock, the report and the log of the launches
+name one manifest, built at `built` 2026-11-20T11:29:10Z, sha256 `8465964c6147…`, the digest in the report's identity
+and in the lock, and its first twelve digits in the log's identity line. Its lock, `launch.json`, written at the first
+launch at 2026-11-20T16:26:02Z, holds the cross-check branch `run` and the wall-time limit 2026-11-20T22:27:29Z
+(`stop_at`). The driver was launched twice on that manifest, each launch its first attempt, and both exited 0: the
+first, at 16:25:54, ran the cross-instrument control and the probe pair, and a resume, at 16:41:47, read the other 35
+pairs in the registered order; both times are the reading machine's clock, as the log of the launches records them. No
+step was under way at a resume or at the end (`ended_in_flight` is empty), and nothing was relaunched.
+
+**Candidates, exclusions and the selection.** As 0076 asks (line 5332), with the manifest's digest above: 56 candidate
+pairs (`candidates`), 36 eligible (`eligible`). The exclusions, in 0076's order (line 5320): "prefix" 0; "repeated keys
+only" 0; "below the matched-token floor" 0; "no logged response" 0; "fewer than two continuation tokens" 0; "over the
+cap" 20; "over host memory" 0; "beyond the ceiling" 0. Named (`excluded`): "over the cap": `row03/t004.001<t003.001`,
+`row03/t015.000<t004.001`, `row06/t004.000<t003.000`, `row10/t006.000<t003.000`, `row11/t004.001<t004.000`,
+`row11/t010.000<t004.001`, `row15/t005.000<t004.000`, `row15/t006.000<t005.000`, `row15/t009.000<t006.000`,
+`row15/t012.000<t009.000`, `row16/t008.000<t003.000`, `row16/t011.000<t004.000`, `row20/t008.000<t007.000`,
+`row22/t005.000<t004.000`, `row22/t006.000<t005.000`, `row22/t013.000<t003.000`, `row23/t005.000<t003.000`,
+`row23/t012.000<t005.000`, `row26/t004.000<t003.000`, `row26/t004.001<t004.000`. As 0076 asks (line 5317), the pairs the
+cap leaves out hold 0.6584 of all candidate pairs' matched tokens (`over_the_cap_matched_share`), and 0075's two counts
+at the cap, summed over the 27 measured in-window trajectories, are 1,269,708 (`reused_in_capped_prompts`) and 1,269,708
+(`reused_in_capped_pairs`). 36 pairs are selected (`selected`), the registered order's first 36, under the ceiling of
+60. As 0076 asks (line 5389), 36 of them are read (`read`); no selected pair is unread (`not_read` is empty), and the
+wall-time limit did not stop the sitting (`stopped` is null).
+
+**The cross-instrument control.** Run first, as 0076 registers (line 5357), on 0049's probe handoff
+`20241016_composio_swekit/django__django-11087_traj#152` (`cross_check`, branch `run`): over 23,155 matched tokens, 0
+lie outside the per-token tolerance (`tokens_outside_tolerance`), the largest gap is 0.000130 (`max_gap`), 0.0421 of its
+token's bound (`max_gap_over_bound`); f* is 0.0000 by the driver and 0.0000 by the archive; 878 and 878 tokens are over
+τ_K (driver, archive; recorded, not gated); the driver's K deviation mean is 0.1120 against the archive's 0.1120
+(`identity`, `archived_mean`). `passed` is true, after 3.1 minutes (`minutes`).
+
+**The probe, the controls and the stop.** The probe pair, read first by size as 0076 asks (line 5383), is
+`row02/t004.000<t003.001` (`probe_pair`), flagged `probe` in the per-pair rows. On it alone ran the controls 0076 keeps
+from 0047 (line 5376), as the report records them: the fresh repeat reproduced the first FRESH pass's logits exactly, as
+0076 requires (line 5377), with a largest logit error of 0 (`fresh_repeat`, `max_logit_error`), and the prefix copy over
+128 tokens has a largest logit error of 0.000146 (`prefix_copy`, `max_logit_error`), within the 0.0005 that 0076 sets
+(line 5378). The reading is complete (`complete` true). The summary records the attention slice as "not computed:
+attention_queries = 0", and the report the archive bridge as "not computed: no archive holds these pairs", as 0076
+provides.
+
+**Allocator warnings.** The driver's logs of the two launches hold 32 `CUDACachingAllocator` warnings ("memory
+allocation failed with OOM on device 0"). The driver prints the control's line once its result is written and a pair's
+progress line once its score is written, so each warning is counted on the step whose line follows it, and a pair by its
+place in the order read (the order of the per-pair tables below). In the first launch, 3 during the cross-instrument
+control and 3 on the probe pair, pair 1; in the resume, 26: one on each of pairs 3, 4, 14, 15, 17, 18 and 27, 2 on each
+of pairs 5 and 19, 3 on each of pairs 6, 9, 21, 22 and 29, and none on the other 21 of the 35 pairs it read. None raised
+an error: neither log holds a traceback, both launches exited 0, and all 36 selected pairs were read. 0076's stopping
+rule is 0047's (line 5390): "a failed control, identity check or hash, or an out-of-memory, stops the run". By the
+operator's ruling (2026-11-11, restated 2026-11-13, and for this run on 2026-11-22) the reading given for 0061's run
+carries to this one. Verbatim, as 0070 quotes it (line 4746): "An OOM in that rule is an out-of-memory error that ends
+the driver or fails a handoff. A warning from the caching allocator that it freed its cache and retried, after which the
+handoff scored with every control passing, is not one." What held: the cross-instrument control passed, with 0 of its
+23,155 matched tokens outside the per-token tolerance; on the probe pair the fresh repeat reproduced the first FRESH
+pass's logits exactly and the prefix copy stayed within 0.0005; and the summary the driver's own `--summarize` wrote
+from the output tree copied off the reading machine holds the same values as the one the reading machine wrote.
+
+**The sitting.** One NVIDIA A100-SXM4-80GB, torch 2.14.0+cu130, transformers 5.17.0, CUDA 13.0,
+`CUBLAS_WORKSPACE_CONFIG=:4096:8`, from the report's identity; the reader `Qwen/Qwen3-1.7B` at revision `70d244cc86cc…`,
+YaRN 2.5; the code at `383605578d87` (the report's `git_commit`), whose config, `run.py`, `core.py` and `fab_pairs.py`
+have the sha256 0077 and 0076 pin (`93d05ca402fd…`, `055d8eaccf78…`, `128eea9649fb…`, `c3323d44f67c…`), in the report's
+identity and in the tree at this entry's append. As 0076 registers (line 5433), the inputs were removed from the reading
+machine: the removal record, which ends at 2026-11-20T19:05:41Z, finds no copy and no folder of them left. As 0076
+registers (line 5437), the per-pair arrays and the probe pair's witness rows stay private with the output tree.
+
+**Summary.** As 0076 fixes it (line 5397), over the read pairs, median (p10, p90). As 0076 asks (line 5301), the two
+classes apart and pooled: no read pair is SAME-OFFSET: `same_offset` is null, and `different_offset` holds the same 36
+pairs and the same figures as `all`, which are given once below.
+
+*`all`: 36 pairs from 15 trajectories.*
+- **Pair level** (`pair_level`, n = 36, each pair one unit):
+  - f* (`f_star_K`): 0.0000 (p10 0.0000, p90 0.0000)
+  - REUSE: mean KL 0.0275 (p10 0.0070, p90 0.1058); p90 KL 0.0335 (p10 0.0061, p90 0.0905); top-1 agreement 0.9647 (p10 0.9373, p90 0.9882)
+  - RANDOM: mean KL 2.2940 (p10 0.6184, p90 6.0672); p90 KL 5.4671 (p10 1.7658, p90 13.3139); top-1 agreement 0.4961 (p10 0.1490, p90 0.7451)
+  - CYCLIC: mean KL 0.1504 (p10 0.0324, p90 0.3747); p90 KL 0.2032 (p10 0.0154, p90 0.9592); top-1 agreement 0.9020 (p10 0.8314, p90 0.9765)
+- **Trajectory level** (`trajectory_level`, n = 15, each trajectory's median):
+  - f* (`f_star_K`): 0.0000 (p10 0.0000, p90 0.0000)
+  - REUSE: mean KL 0.0308 (p10 0.0168, p90 0.0611); p90 KL 0.0322 (p10 0.0079, p90 0.0805); top-1 agreement 0.9608 (p10 0.9451, p90 0.9784)
+  - RANDOM: mean KL 2.5593 (p10 0.8178, p90 4.1234); p90 KL 5.8332 (p10 2.7368, p90 10.5724); top-1 agreement 0.5333 (p10 0.3098, p90 0.7451)
+  - CYCLIC: mean KL 0.2087 (p10 0.0777, p90 0.3747); p90 KL 0.4270 (p10 0.0623, p90 0.8590); top-1 agreement 0.8922 (p10 0.8314, p90 0.9451)
+
+*`same_offset`: null (no read pair).*
+
+**Per pair (`per_pair`), in the order read.** The structure of each pair, with A's prefill through the cut
+(`sender_tokens`) of `a_tokens` in all, B (`receiver_tokens`) and the continuation (`continuation_tokens`).
+`matched_in_common_prefix` and `repeated_key_tokens` are 0 for every read pair, so the table leaves them out.
+`different_offset_share` is 1.0000 for every read pair: every matched token is at a different offset.
+
+| `handoff` | `ended_by_itself` | `matched` | `matched_share_of_reused` | `different_offset_share` | `sender_tokens` | `a_tokens` | `receiver_tokens` | `continuation_tokens` |
+|---|---|---|---|---|---|---|---|---|
+| `row02/t004.000<t003.001` (probe) | true | 81,417 | 1.0000 | 1.0000 | 81,587 | 81,587 | 81,572 | 256 |
+| `row14/t034.000<t033.000` | false | 14,681 | 1.0000 | 1.0000 | 14,848 | 32,689 | 23,185 | 256 |
+| `row18/t035.000<t006.000` | false | 49,163 | 1.0000 | 1.0000 | 49,286 | 49,286 | 49,235 | 256 |
+| `row11/t005.000<t003.001` | true | 60,367 | 1.0000 | 1.0000 | 60,480 | 60,480 | 60,488 | 256 |
+| `row06/t005.000<t003.001` | true | 75,093 | 1.0000 | 1.0000 | 75,245 | 75,245 | 75,203 | 256 |
+| `row03/t004.000<t003.000` | true | 78,254 | 1.0000 | 1.0000 | 78,377 | 78,377 | 78,435 | 256 |
+| `row01/t021.000<t008.000` | true | 8,577 | 1.0000 | 1.0000 | 12,032 | 27,062 | 8,663 | 256 |
+| `row24/t007.001<t003.001` | true | 43,506 | 1.0000 | 1.0000 | 43,646 | 43,646 | 43,668 | 256 |
+| `row12/t009.000<t005.000` | true | 79,980 | 1.0000 | 1.0000 | 80,070 | 80,070 | 80,107 | 256 |
+| `row13/t004.001<t003.001` | true | 5,434 | 1.0000 | 1.0000 | 5,596 | 5,596 | 5,519 | 256 |
+| `row17/t004.000<t003.000` | true | 12,224 | 1.0000 | 1.0000 | 12,356 | 12,356 | 12,289 | 256 |
+| `row27/t009.000<t008.000` | true | 12,613 | 1.0000 | 1.0000 | 12,735 | 12,735 | 18,513 | 256 |
+| `row25/t019.000<t004.000` | true | 12,805 | 1.0000 | 1.0000 | 12,995 | 12,995 | 13,012 | 256 |
+| `row19/t022.000<t010.000` | true | 59,135 | 1.0000 | 1.0000 | 59,323 | 59,323 | 59,240 | 256 |
+| `row10/t004.000<t003.001` | true | 49,560 | 1.0000 | 1.0000 | 49,758 | 49,758 | 49,720 | 256 |
+| `row14/t011.001<t006.000` | false | 5,094 | 1.0000 | 1.0000 | 5,376 | 13,178 | 5,182 | 256 |
+| `row18/t005.000<t004.001` | false | 49,163 | 1.0000 | 1.0000 | 49,254 | 49,254 | 49,290 | 256 |
+| `row11/t003.001<t003.000` | true | 60,367 | 1.0000 | 1.0000 | 60,523 | 60,523 | 60,480 | 256 |
+| `row02/t004.001<t003.000` | true | 73,669 | 1.0000 | 1.0000 | 73,828 | 73,828 | 73,813 | 256 |
+| `row01/t006.000<t004.000` | true | 5,222 | 0.3641 | 1.0000 | 5,632 | 28,925 | 14,496 | 256 |
+| `row24/t007.000<t003.000` | true | 77,809 | 1.0000 | 1.0000 | 77,969 | 77,969 | 78,062 | 256 |
+| `row12/t005.001<t003.001` | true | 79,019 | 1.0000 | 1.0000 | 79,301 | 79,301 | 79,111 | 256 |
+| `row13/t011.001<t004.001` | true | 5,434 | 1.0000 | 1.0000 | 5,519 | 5,519 | 5,536 | 256 |
+| `row17/t005.000<t004.000` | true | 12,224 | 1.0000 | 1.0000 | 12,289 | 12,289 | 12,397 | 256 |
+| `row27/t010.000<t009.000` | true | 18,315 | 1.0000 | 1.0000 | 18,513 | 18,513 | 18,390 | 256 |
+| `row25/t004.000<t003.000` | true | 12,805 | 1.0000 | 1.0000 | 12,974 | 12,974 | 12,995 | 256 |
+| `row18/t006.000<t005.000` | false | 49,163 | 1.0000 | 1.0000 | 49,290 | 49,290 | 49,286 | 256 |
+| `row01/t022.000<t003.000` | true | 20,305 | 1.0000 | 1.0000 | 20,480 | 34,647 | 20,431 | 256 |
+| `row12/t005.000<t003.000` | true | 79,980 | 1.0000 | 1.0000 | 80,269 | 80,269 | 80,070 | 256 |
+| `row27/t022.000<t010.000` | true | 18,314 | 1.0000 | 1.0000 | 18,390 | 18,390 | 38,798 | 256 |
+| `row01/t017.000<t006.000` | true | 1,764 | 0.0697 | 1.0000 | 14,496 | 14,496 | 25,435 | 256 |
+| `row27/t011.000<t007.000` | true | 20,786 | 1.0000 | 1.0000 | 20,866 | 20,866 | 20,837 | 235 |
+| `row01/t008.000<t007.000` | true | 975 | 1.0000 | 1.0000 | 40,321 | 40,321 | 27,062 | 256 |
+| `row01/t005.000<t004.000` | true | 1,243 | 1.0000 | 1.0000 | 28,925 | 28,925 | 28,430 | 256 |
+| `row01/t004.000<t003.000` | true | 1,717 | 1.0000 | 1.0000 | 34,647 | 34,647 | 28,925 | 256 |
+| `row01/t009.000<t008.000` | true | 880 | 1.0000 | 1.0000 | 27,062 | 27,062 | 26,170 | 256 |
+
+The readings of each pair: f* and the tokens over τ_K, the largest token mean, and each arm's mean KL, p90 KL and top-1
+agreement. f* is above 0 in 2 of the 36 read pairs, and 36 have at least one token over τ_K.
+
+| `handoff` | `f_star_K` | `tokens_over_tau_K` | `max_token_mean_K` | REUSE mean KL | REUSE p90 KL | REUSE top-1 | RANDOM mean KL | RANDOM p90 KL | RANDOM top-1 | CYCLIC mean KL | CYCLIC p90 KL | CYCLIC top-1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `row02/t004.000<t003.001` | 0.0000 | 183 | 1.1580 | 0.0619 | 0.0082 | 0.9725 | 2.3586 | 7.9024 | 0.5922 | 0.4961 | 1.2580 | 0.8784 |
+| `row14/t034.000<t033.000` | 0.0000 | 301 | 1.4987 | 0.0233 | 0.0336 | 0.9490 | 5.5779 | 11.0375 | 0.1608 | 0.1343 | 0.2632 | 0.8706 |
+| `row18/t035.000<t006.000` | 0.0000 | 33 | 1.1947 | 0.0124 | 0.0293 | 0.9686 | 0.2837 | 0.4834 | 0.8588 | 0.1444 | 0.1917 | 0.9137 |
+| `row11/t005.000<t003.001` | 0.0000 | 147 | 1.5479 | 0.0285 | 0.0561 | 0.9804 | 2.2295 | 5.3721 | 0.4392 | 0.2182 | 0.5154 | 0.8824 |
+| `row06/t005.000<t003.001` | 0.0000 | 202 | 1.1710 | 0.0027 | 0.0061 | 0.9882 | 0.8178 | 2.8643 | 0.7451 | 0.1633 | 0.4589 | 0.9176 |
+| `row03/t004.000<t003.000` | 0.0000 | 404 | 1.2416 | 0.0208 | 0.0530 | 0.9451 | 4.1234 | 9.3895 | 0.3098 | 0.2526 | 0.7009 | 0.8157 |
+| `row01/t021.000<t008.000` | 0.0000 | 368 | 2.3709 | 0.0323 | 0.0009 | 0.9804 | 9.4075 | 15.5953 | 0.0549 | 0.0418 | 0.0012 | 0.9765 |
+| `row24/t007.001<t003.001` | 0.0000 | 175 | 1.0350 | 0.0493 | 0.0491 | 0.9647 | 2.4058 | 5.3626 | 0.4627 | 0.0986 | 0.1841 | 0.9333 |
+| `row12/t009.000<t005.000` | 0.0000 | 380 | 1.7557 | 0.0285 | 0.0514 | 0.9412 | 1.8561 | 4.8039 | 0.5333 | 0.3717 | 0.8590 | 0.7882 |
+| `row13/t004.001<t003.001` | 0.0000 | 25 | 1.0162 | 0.0070 | 0.0023 | 1.0000 | 1.4139 | 4.9253 | 0.7059 | 0.0533 | 0.0026 | 0.9843 |
+| `row17/t004.000<t003.000` | 0.0000 | 33 | 1.0388 | 0.0313 | 0.0706 | 0.9412 | 2.1830 | 5.5620 | 0.4784 | 0.1593 | 0.3167 | 0.8745 |
+| `row27/t009.000<t008.000` | 0.0000 | 39 | 1.1438 | 0.0129 | 0.0170 | 0.9804 | 0.3186 | 0.8596 | 0.9020 | 0.0846 | 0.0499 | 0.9608 |
+| `row25/t019.000<t004.000` | 0.0000 | 30 | 0.8146 | 0.0165 | 0.0447 | 0.9647 | 0.9411 | 2.3030 | 0.6980 | 0.1019 | 0.1898 | 0.8980 |
+| `row19/t022.000<t010.000` | 0.0000 | 261 | 1.2668 | 0.0168 | 0.0306 | 0.9765 | 2.5822 | 5.8332 | 0.4275 | 0.2497 | 0.7999 | 0.8863 |
+| `row10/t004.000<t003.001` | 0.0000 | 318 | 1.4194 | 0.0548 | 0.0374 | 0.9412 | 2.9565 | 6.6990 | 0.4235 | 0.1952 | 0.4270 | 0.8431 |
+| `row14/t011.001<t006.000` | 0.0000 | 32 | 1.0485 | 0.0105 | 0.0284 | 0.9725 | 1.2713 | 3.9668 | 0.7294 | 0.0324 | 0.0826 | 0.9490 |
+| `row18/t005.000<t004.001` | 0.0000 | 20 | 0.9066 | 0.0308 | 0.0730 | 0.9490 | 0.6184 | 1.7658 | 0.7294 | 0.2398 | 0.4039 | 0.8588 |
+| `row11/t003.001<t003.000` | 0.0000 | 149 | 1.5352 | 0.1235 | 0.1343 | 0.9412 | 1.3468 | 3.9733 | 0.6314 | 0.7327 | 2.7922 | 0.7882 |
+| `row02/t004.001<t003.000` | 0.0000 | 213 | 1.2153 | 0.0060 | 0.0076 | 0.9843 | 4.0510 | 13.2425 | 0.5137 | 0.2011 | 0.1591 | 0.9098 |
+| `row01/t006.000<t004.000` | 0.0000 | 381 | 2.6911 | 0.0265 | 0.0634 | 0.9373 | 3.1346 | 6.5278 | 0.3176 | 0.0888 | 0.1340 | 0.8941 |
+| `row24/t007.000<t003.000` | 0.0000 | 290 | 1.1820 | 0.0241 | 0.0335 | 0.9686 | 3.8606 | 8.5201 | 0.2745 | 0.3187 | 0.9592 | 0.8353 |
+| `row12/t005.001<t003.001` | 0.0000 | 320 | 1.1612 | 0.0145 | 0.0164 | 0.9922 | 2.5108 | 6.5648 | 0.4784 | 0.3747 | 0.8270 | 0.8667 |
+| `row13/t011.001<t004.001` | 0.0000 | 11 | 1.0043 | 0.0786 | 0.0303 | 0.9216 | 0.2860 | 0.5482 | 0.8275 | 0.1020 | 0.1517 | 0.8980 |
+| `row17/t005.000<t004.000` | 0.0000 | 53 | 0.9768 | 0.0463 | 0.0905 | 0.9490 | 2.9356 | 6.8213 | 0.3569 | 0.0984 | 0.2147 | 0.9333 |
+| `row27/t010.000<t009.000` | 0.0000 | 39 | 1.0288 | 0.0102 | 0.0005 | 0.9882 | 1.8375 | 5.0399 | 0.6039 | 0.1231 | 0.0182 | 0.9882 |
+| `row25/t004.000<t003.000` | 0.0000 | 43 | 0.7821 | 0.1058 | 0.1076 | 0.9725 | 1.1918 | 4.1258 | 0.6745 | 0.3541 | 0.5610 | 0.8863 |
+| `row18/t006.000<t005.000` | 0.0000 | 25 | 1.1650 | 0.0318 | 0.0426 | 0.9569 | 1.2914 | 3.7320 | 0.6471 | 0.2773 | 0.5277 | 0.8627 |
+| `row01/t022.000<t003.000` | 0.0000 | 298 | 1.2557 | 0.0144 | 0.0197 | 0.9686 | 4.9541 | 11.5420 | 0.3020 | 0.0632 | 0.1575 | 0.9529 |
+| `row12/t005.000<t003.000` | 0.0000 | 423 | 1.1545 | 0.0389 | 0.0258 | 0.9569 | 1.3727 | 4.3918 | 0.6510 | 0.6108 | 1.5886 | 0.8314 |
+| `row27/t022.000<t010.000` | 0.0000 | 31 | 1.2060 | 0.0388 | 0.0111 | 0.9725 | 0.9509 | 3.0809 | 0.7020 | 0.0559 | 0.0237 | 0.9725 |
+| `row01/t017.000<t006.000` | 0.0000 | 369 | 2.0101 | 0.0034 | 0.0068 | 0.9922 | 9.7378 | 18.5061 | 0.0980 | 0.0037 | 0.0057 | 0.9922 |
+| `row27/t011.000<t007.000` | 0.0000 | 27 | 1.0245 | 0.0556 | 0.0718 | 0.9444 | 0.8987 | 2.4961 | 0.7179 | 0.2294 | 0.4193 | 0.9060 |
+| `row01/t008.000<t007.000` | 0.5138 | 752 | 2.0297 | 0.1542 | 0.1082 | 0.9137 | 6.0672 | 13.4915 | 0.1490 | 0.1565 | 0.0989 | 0.9294 |
+| `row01/t005.000<t004.000` | 0.0000 | 176 | 1.8298 | 0.0218 | 0.0448 | 0.9373 | 5.8637 | 13.3139 | 0.2235 | 0.0250 | 0.0709 | 0.9373 |
+| `row01/t004.000<t003.000` | 0.0000 | 412 | 2.7375 | 0.0092 | 0.0156 | 0.9608 | 6.6882 | 11.2629 | 0.0510 | 0.0139 | 0.0154 | 0.9529 |
+| `row01/t009.000<t008.000` | 0.0080 | 296 | 1.8718 | 0.1130 | 0.0574 | 0.9216 | 2.5274 | 6.0537 | 0.4392 | 0.1222 | 0.0537 | 0.9294 |
+
+**Reading.** These figures say only what they are: next-token sensitivities of Qwen3-1.7B, a reader that is not the
+serving model, on 36 pairs of one run's logged helper prompts, read with matched document states taken from an earlier
+sub-call of the same trajectory, teacher-forced on the serving model's logged responses; at the pair level REUSE's
+median mean KL is 0.0275 with median top-1 agreement 0.9647, RANDOM's 2.2940 and 0.4961, CYCLIC's 0.1504 and 0.9020, and
+the median f* is 0.0000. They are descriptive. No financial task outcome was measured, and no free generation by the
+reader was read; they come from one run of one harness, on the questions of 0076's window, within the cap, which leaves
+20 of the 56 candidate pairs, holding 0.6584 of all candidate pairs' matched tokens, over it and not read.
+
+**What stands beside what.** As 0076 states (line 5423), this cell stands beside 0049's 35-handoff REUSE-ALL row, on the
+same axis, and is never pooled with it; the differences 0076 lists remain, with the window as 0077 sets it.
+
+**What this does NOT touch.** Every cell and verdict; τ, the rule and the bands; entries 0047, 0049, 0069, 0070, 0075,
+0076, 0077 and 0078, their configs and records; every other output tree; the figure set 0072 lists.
+
+**Consequences in this commit set.** The cell's heading in `docs/agent/experiment-commands.md`, which now reads that it
+ran, with figures in 0079, and the drafts README's allocator. Nothing under `results/`.
+
+**Scope.** As 0076 states it (line 5471): one reader, Qwen3-1.7B at YaRN 2.5, cap 81,920; one run of one serving model,
+on the public questions in the window; pairs within a trajectory; fixed logged text, so KL and top-1 agreement are not
+task outcomes; same-model only; no second reader. A descriptive outcome, not a verdict.
+
+**Numbering.** 0079 is the number the drafts README allocates at staging; ordering guard 0076 and 0077 present, 0078
+last, 0079 absent. Next free number after this entry: 0080.
+
+prior-entries-sha256: 258d01a17d0179107475da5ce97424a85813450092224ed231e271d62ebe6177
