@@ -517,3 +517,5 @@ HEAD. Checks the ledger against HEAD and runs `ledger_check`
 before and after its write. No `verdict:` line, no hypothesis row, nothing under `results/` committed. Edits
 `docs/agent/experiment-commands.md`, whose heading for the cell still read registered only. Ordering guard: 0076 and
 0077 present, 0078 last, 0079 absent. Next free number: **0080**.
+
+*(2026-11-24: **0079 APPENDED** (`c9217a3`, chain `258d01a1…`; script retired in the retire commit; run with `--date 2026-11-24`). File order now ends 0078, 0079. Still staged: nothing. Next free number: **0080**.)*
