@@ -502,3 +502,18 @@ committed. Edits `docs/agent/experiment-commands.md`, whose FAB heading still re
 present, 0077 last, 0078 absent. Next free number: **0079**.
 
 *(2026-11-20: **0078 APPENDED** (`ca6ec8b`, chain `0c739232…`; script retired in the retire commit; run with `--date 2026-11-20`). File order now ends 0077, 0078. Still staged: nothing. Next free number: **0079**.)*
+
+**Staged 2026-11-24: `append_0079.py` — the outcome of 0076 (window end amended by 0077), the cache reading of the Finance
+Agent run's paired helper sub-calls.** Fills every figure from the driver's summary of record (`summary.json`, written
+by the driver's own `--summarize` from the output tree copied off the reading machine) and the six records beside it.
+The summary is passed by argument and pinned by sha256, and the script refuses unless it is that file byte for byte,
+unless the reading machine's own summary holds the same values and the same bytes up to line ends, and unless every
+median, p10 and p90 recomputes from its per-pair rows by `e7_stats.summary`. Reads, each passed by argument and pinned
+by sha256, the driver's report, the lock `launch.json`, the log of the launches, the record of the inputs' removal and
+the driver's own logs of the two launches, from which it counts the allocator's warnings by step, refusing on a
+traceback or on any line that is not a weight-loading bar, an allocator warning, the control's line or a progress
+line; and refuses unless the report's commit, code and config digests are the files 0076 and 0077 pin, unchanged to
+HEAD. Checks the ledger against HEAD and runs `ledger_check`
+before and after its write. No `verdict:` line, no hypothesis row, nothing under `results/` committed. Edits
+`docs/agent/experiment-commands.md`, whose heading for the cell still read registered only. Ordering guard: 0076 and
+0077 present, 0078 last, 0079 absent. Next free number: **0080**.

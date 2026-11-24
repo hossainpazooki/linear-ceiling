@@ -266,7 +266,7 @@ $PY -m pytest -q tests/test_fab_reuse.py
 $PY -m linear_ceiling.fab_reuse --runs <log root> --questions <harness>/data/public.csv --tokenizer-json <reader snapshot>/tokenizer.json   # gate first; writes results/fab-reuse/summary.json
 ```
 
-## FAB v2 paired sub-call cache reading (registered 0076, window end amended by 0077; GPU; descriptive)
+## FAB v2 paired sub-call cache reading (registered 0076, window end amended by 0077; ran: figures 0079; GPU; descriptive)
 `config/cache-behavior-fab.toml` runs the cache-behavior driver (`tools/cache_behavior/run.py`, `core.py`) on pairs of
 one trajectory's `retrieve_information` sub-calls that carry the same document, derived by 0075's `fab_reuse` code;
 `tools/cache_behavior/fab_pairs.py` is the cell's input adapter, its pairing, length, host-memory and exclusion
